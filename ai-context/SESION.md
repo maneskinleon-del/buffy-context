@@ -5,11 +5,69 @@
 
 ---
 
-# 🧠 SESION — Buffy Freebuff (2026-07-29 — memoria persistente + skill expandida)
+# 🧠 SESION — Buffy Freebuff (2026-07-29 — día completo: memoria + Knowledge + agentes + repo GitHub)
 
-> Contexto de todo lo implementado durante esta sesión.
+> Contexto de todo lo implementado durante la sesión completa del 2026-07-29.
 
 ---
+
+## 📦 Repo GitHub `buffy-context`
+
+### Creación del repositorio
+- **`~/buffy-context/`** creado con estructura: `ai-context/`, `Knowledge/`, `.agents/skills/`, `scripts/`
+- Git init + push a `github.com/maneskinleon-del/buffy-context` (público)
+- **MIT License** agregada
+- **README.md** profesional con badges, estructura, quick start, uso con agentes IA
+- **INSTALL.md** con instrucciones de setup
+- **6 commits** en `main`
+
+### Correcciones post-feedback del usuario
+Basado en análisis crítico de 5 puntos:
+
+1. **Carga condicional para 6 categorías** (antes solo Android):
+   - LOAD_CONTEXT.md reescrito con señales de activación para React, Linux, Git, Node y Shell
+   - Cada categoría con detección explícita (package.json, mención de tema, etc.)
+
+2. **Presupuesto de tokens + poda automática**:
+   - SESION.md: 720 → 81 líneas (archivado a SESION-archive.md)
+   - CHANGELOG.md: 429 → 132 líneas (archivado a CHANGELOG-archive.md)
+   - Headers de poda agregados a ambos archivos
+
+3. **Redundancia eliminada**:
+   - Sección "Jerarquía de contexto" (duplicada) eliminada de LOAD_CONTEXT.md
+
+4. **SYSTEM.md/SYSTEM_FULL.md deprecados**:
+   - Marcados DEPRECATED con redirect a INFO-core.md/INFO-full.md
+
+5. **Primera sesión**:
+   - LOAD_CONTEXT.md ahora dice qué hacer si CONTINUE.md no existe
+
+## 📚 Base de conocimiento `Knowledge/`
+
+16 archivos · 1,305 líneas · 6 categorías creadas:
+
+| Categoría | Archivos | Contenido |
+|-----------|----------|-----------|
+| Android | 6 | ADB, Shizuku, HyperOS, GameOptimization, scrcpy, Keymappers |
+| Linux | 2 | System (Arch/bspwm/systemd), Kernel |
+| React | 4 | React+TS, Vite, Tailwind v4, PWA |
+| Git | 1 | Commands + gh CLI |
+| Node | 1 | npm, package.json |
+| Shell | 1 | Bash/Zsh scripting |
+
+## 🤖 Android Agent
+
+- **Skill**: `.agents/skills/android-agent/SKILL.md` — detecta proyectos Android automáticamente
+- **Script**: `.local/bin/android-detect.sh` — diagnóstico con `--quick` y `--watch`
+- **Shizuku activado**: rish extraído del APK (Shizuku v13.7.0 corriendo en ZTE Nubia)
+- **DPI cambiado**: vía Shizuku, 480 físico → 280 override
+- **Free Fire diagnosticado**: CPU 0.8% (background), 13% jank sistema, temp 30.1°C
+
+## 🔍 Code Search adapter
+
+- **Skill portable**: `.agents/skills/code-search/SKILL.md` — funciona en Freebuff, Claude Code, Codex
+- 3 modos de búsqueda: agente nativo → CLI (ripgrep) → exploración manual
+- **search_criteria_v4**: skill de búsqueda estructurada copiada al repo
 
 ## 🎮 Skill scrcpy-freefire expandida
 
