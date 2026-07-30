@@ -21,7 +21,11 @@ if ! curl -sf http://localhost:11434/api/tags >/dev/null 2>&1; then
 fi
 
 # Verificar que el modelo existe
-if ! curl -sf http://localhost:11434/api/tags | python3 -c "import json,sys; models=[m['name'] for m in json.load(sys.stdin).get('models',[])]; sys.exit(0 if '$MODEL' in models else 1)" 2>/dev/null; then
+if ! curl -sf http://localhost:11434/api/tags | python3 -c "
+import json,sys
+data = json.load(sys.stdin)
+models = [m['name'].split(':')[0] for m in data.get('models',[])] + [m['name'] for m in data.get('models',[])]
+sys.exit(0 if '$MODEL' in models else 1)" 2>/dev/null; then
     echo "⚠️  Modelo '$MODEL' no encontrado. Instálalo con: ollama pull $MODEL"
     echo "   Modelos disponibles:"
     curl -sf http://localhost:11434/api/tags | python3 -c "import json,sys; [print(f'   - {m[\"name\"]}') for m in json.load(sys.stdin).get('models',[])]" 2>/dev/null
@@ -35,8 +39,10 @@ echo "---"
 
 START=$(date +%s.%N)
 
-curl -s http://localhost:11434/api/generate \
-  -d "$(python3 -c "
+# Crear payload JSON en archivo temporal para evitar límite de argumentos
+PAYLOAD=$(mktemp /tmp/see_payload.XXXXXX)
+trap 'rm -f "$PAYLOAD"' EXIT
+python3 -c "
 import json, base64
 with open('$IMG', 'rb') as f:
     b64 = base64.b64encode(f.read()).decode()
@@ -46,7 +52,10 @@ print(json.dumps({
     'images': [b64],
     'stream': False,
     'options': {'temperature': 0.1}
-}))")" | python3 -c '
+}))" > "$PAYLOAD"
+
+curl -s http://localhost:11434/api/generate \
+  -d @"$PAYLOAD" | python3 -c '
 import json, sys
 try:
     data = json.load(sys.stdin)
@@ -54,6 +63,8 @@ try:
 except Exception as e:
     print(f"Error: {e}")
 '
+
+rm -f "$PAYLOAD"
 
 END=$(date +%s.%N)
 DURATION=$(echo "$END - $START" | bc 2>/dev/null || echo "?")
