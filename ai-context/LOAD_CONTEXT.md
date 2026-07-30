@@ -174,6 +174,25 @@ múltiples búsquedas coordinadas).
 
 **Si se activa** → cargar `Knowledge/Shell/Shell.md`.
 
+### Visión/VLM (activación: imágenes, screenshots, capturas de Android)
+
+| Señal | Cómo detectar |
+|---|---|
+| El usuario comparte una imagen, screenshot o captura de pantalla | En el mensaje del usuario |
+| Menciona "VLM", "visión", "imagen", "screenshot", "captura" | En el mensaje del usuario |
+| Error de Android con UI visible | En el mensaje del usuario |
+| OCR en imágenes ("¿qué dice este texto?") | En el mensaje del usuario |
+
+**Si se activa** → cargar:
+- `.agents/skills/vision-adapter/SKILL.md` — adaptador portable de visión
+- `Knowledge/Vision.md` — referencia de modelos VLM
+- `scripts/see.sh` — script helper para analizar imágenes
+
+**Modelo recomendado**: `minicpm-v` (vía Ollama).
+**Alternativa ligera**: `moondream` si hay poca RAM.
+
+**Skills relacionadas**: `code-search` (para buscar basado en texto extraído de la imagen).
+
 ---
 
 ## 🧠 Arquitectura de memoria
