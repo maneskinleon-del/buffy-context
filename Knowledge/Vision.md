@@ -41,9 +41,34 @@ with open('imagen.png','rb') as f:
 adb exec-out screencap -p > /tmp/screen.png && see.sh /tmp/screen.png "Describe esta pantalla Android"
 ```
 
+## Gestión de memoria RAM
+
+> ⚠️ **Lección aprendida**: Ollama mantiene los modelos VLM cargados en memoria
+> después de usarlos. `moondream` (1.7GB en disco) puede ocupar **2.5GB+ en RAM**
+> (~40% extra) mientras el proceso `llama-server` está activo.
+
+### Liberar RAM cuando no se usa el VLM
+
+```bash
+# Mata solo el modelo VLM, mantiene ollama serve
+~/buffy-context/scripts/ollama-kill.sh
+
+# Ver consumo actual
+~/buffy-context/scripts/ollama-kill.sh --status
+
+# Matar todo (servidor + modelos)
+~/buffy-context/scripts/ollama-kill.sh --all
+```
+
+### Automatización (opcional)
+Agregar al cierre de sesión de bspwm (`bspwmrc`):
+```bash
+~/buffy-context/scripts/ollama-kill.sh
+```
+
 ## Troubleshooting
 
 - **Ollama no responde**: `systemctl --user restart ollama`
-- **Out of memory**: Usar modelo más pequeño (`moondream`), cerrar apps pesadas
+- **Out of memory**: Usar `ollama-kill.sh` para liberar, o usar `moondream` en vez de `minicpm-v`
 - **Primer token muy lento (~30-60s)**: Normal en CPU. Los siguientes son más rápidos
 - **Error de imagen**: Verificar que el archivo exista y sea PNG/JPG/WebP válido
