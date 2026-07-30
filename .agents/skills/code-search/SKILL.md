@@ -44,7 +44,7 @@ Si el agente nativo no está disponible o no alcanza, usar comandos directos:
 
 ```bash
 # Búsqueda por patrón (ripgrep > grep)
-rg -n "patrón" --type-add 'all:*' -g '*.{ts,tsx,kt,java,py,js,go}' 2>/dev/null || \
+rg -n "patrón" -g '*.{ts,tsx,kt,java,py,js,go}' 2>/dev/null || \
 grep -rn "patrón" --include='*.{ts,tsx,kt,java,py,js,go}' . 2>/dev/null | head -50
 
 # Búsqueda de archivos por nombre
@@ -136,9 +136,11 @@ Siempre estructurar los resultados de búsqueda así:
 
 ### Método usado: [Modo 1/2/3] — [herramienta]
 
-| Archivo | Línea | Contenido |
-|---------|-------|-----------|
+| Archivo | Línea | Contenido (±3 contexto) |
+|---------|-------|--------------------------|
 | src/foo.kt | 42 | `fun saveDpi(ctx: Context, dpi: Int)` |
+
+> Mostrar ±3 líneas de contexto alrededor del match para que la firma completa sea visible.
 
 ### Resumen
 [qué se encontró, dónde está, qué hace]
@@ -146,10 +148,11 @@ Siempre estructurar los resultados de búsqueda así:
 
 ---
 
-## Integración con Knowledge/
+## Integración con otras skills
 
-Si el proyecto tiene la carpeta `Knowledge/`:
-- **Knowledge/search_criteria_v4** — para generar consultas de búsqueda optimizadas
-- **Knowledge/Shell/Shell.md** — si necesita comandos avanzados de bash/grep/rg
+Skills relacionadas en `.agents/skills/`:
+- **`search_criteria_v4`** — para generar consultas de búsqueda optimizadas.
+  Cargar SOLO si necesitas más de 3 consultas de búsqueda para resolver el problema.
+- **Shell** (Knowledge/Shell/Shell.md) — si necesitas comandos avanzados de bash/grep/rg.
 
-Cargar solo si la tarea es compleja y requiere múltiples búsquedas coordinadas.
+Referencia Knowledge/ para shell scripting: `Knowledge/Shell/Shell.md`.
