@@ -54,19 +54,28 @@ print(json.dumps({
     'options': {'temperature': 0.1}
 }))" > "$PAYLOAD"
 
-curl -s http://localhost:11434/api/generate \
-  -d @"$PAYLOAD" | python3 -c '
+curl -s --max-time 180 http://localhost:11434/api/generate \
+  -d @"$PAYLOAD" 2>&1 | python3 -c '
 import json, sys
+raw = sys.stdin.read()
 try:
-    data = json.load(sys.stdin)
-    print(data.get("response", "⚠️  Sin respuesta del modelo"))
+    data = json.loads(raw)
+    msg = data.get("response", "")
+    if msg and msg.strip():
+        print(msg.strip())
+    else:
+        print(f"⚠️  Respuesta vacía o sin campo response")
+        print(f"   Claves disponibles: {list(data.keys())}")
+        print(f"   Done: {data.get(\"done\", \"?\")}")
+        if "error" in data:
+            print(f"   Error del modelo: {data[\"error\"]}")
 except Exception as e:
-    print(f"Error: {e}")
-'
-
-rm -f "$PAYLOAD"
+    print(f"Error parseando respuesta:")
+    print(f"  {e}")
+    print(f"  Primeros 300 chars: {raw[:300]}")
+' 2>&1
 
 END=$(date +%s.%N)
-DURATION=$(echo "$END - $START" | bc 2>/dev/null || echo "?")
+DURATION=$(echo "$END - $START" | bc 2>/dev/null) || DURATION="$(($(date +%s) - ${START%.*}))s"
 echo "---"
 echo "⏱  Tiempo: ${DURATION}s"
