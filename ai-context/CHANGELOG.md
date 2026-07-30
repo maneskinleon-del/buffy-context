@@ -1,4 +1,9 @@
+> ⚠️ **Poda automática**: Cuando este archivo supere ~30KB o ~5 entradas
+> recientes (sin contar archive), las entradas más viejas se mueven a
+> `CHANGELOG-archive.md`. Actualmente ~424 líneas — pendiente de archivar.
+
 ---
+
 version: 1.4
 updated: 2026-07-29
 schema: system-profile

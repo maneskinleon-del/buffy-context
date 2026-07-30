@@ -73,9 +73,10 @@ Se agrega una entrada al principio del archivo (no al final — así la info fre
 ...
 ```
 
-> ⚠️ **Poda**: SESION.md debe mantener máximo 5 entradas (~30KB aprox).
-> Si al agregar una nueva entrada se supera ese límite, las entradas más viejas
-> se mueven a `ai-context/SESION-archive.md` (que casi nunca se carga).
+> ⚠️ **Poda automática**: Cuando SESION.md o CHANGELOG.md superen ~30KB
+> o ~5 entradas (lo que se alcance primero), las entradas más viejas se mueven
+> a `*-archive.md`. Así el archivo activo se mantiene liviano (~30KB =
+> ~5-10% de la ventana de DeepSeek V4 Flash).
 
 ---
 
