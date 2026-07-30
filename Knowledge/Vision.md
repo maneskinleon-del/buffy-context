@@ -25,14 +25,20 @@ ollama list
 curl -s http://localhost:11434/api/generate \
   -d '{"model":"minicpm-v","prompt":"Di hola","stream":false}'
 
-# Analizar imagen (base64 inline)
-base64 -w0 imagen.png | curl -s http://localhost:11434/api/generate \
-  -d "{\"model\":\"minicpm-v\",\"prompt\":\"Describe\",\"images\":[\"$(base64 -w0 imagen.png)\"],\"stream\":false}"
+# Analizar imagen (usando see.sh — recomendado)
+see.sh imagen.png "Describe esta imagen"
+see.sh screenshot.png "Extrae el texto visible"
+
+# Analizar imagen (vía curl directo)
+curl -s http://localhost:11434/api/generate \
+  -d "$(python3 -c "
+import json, base64
+with open('imagen.png','rb') as f:
+    print(json.dumps({'model':'minicpm-v','prompt':'Describe','images':[base64.b64encode(f.read()).decode()]}))
+")" | python3 -c 'import json,sys; print(json.load(sys.stdin)["response"])'
 
 # Capturar y analizar screenshot de Android
-adb exec-out screencap -p > /tmp/screen.png
-base64 -w0 /tmp/screen.png | curl -s http://localhost:11434/api/generate \
-  -d "{\"model\":\"minicpm-v\",\"prompt\":\"Describe esta pantalla Android\",\"images\":[\"$(</dev/stdin)\"],\"stream\":false}"
+adb exec-out screencap -p > /tmp/screen.png && see.sh /tmp/screen.png "Describe esta pantalla Android"
 ```
 
 ## Troubleshooting
