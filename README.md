@@ -1,83 +1,154 @@
-# Buffy Context — AI Memory & Knowledge
+# Buffy Context
 
-> Sistema de memoria persistente, base de conocimiento y agentes especializados para el asistente de IA Buffy (Freebuff).
+> **Persistent AI memory, structured knowledge base, and specialized agents for AI coding assistants.**
 
-## ¿Qué es esto?
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![GitHub stars](https://img.shields.io/github/stars/maneskinleon-del/buffy-context?style=social)](https://github.com/maneskinleon-del/buffy-context)
+[![GitHub last commit](https://img.shields.io/github/last-commit/maneskinleon-del/buffy-context)](https://github.com/maneskinleon-del/buffy-context/commits/main)
 
-Este repositorio contiene todo lo necesario para que un agente de IA tenga **contexto persistente entre sesiones** y **conocimiento técnico estructurado** sobre tu stack de desarrollo.
+---
 
-Creado y mantenido por Buffy para el usuario **@mangonz**.
+## Overview
 
-## Estructura
+Buffy Context solves a fundamental problem with AI coding assistants: **every session starts from zero**.
+
+This repository provides the infrastructure for an AI agent to maintain persistent context across sessions, access structured technical knowledge, and automatically specialize based on the project and stack being worked on.
+
+### What's included
+
+| Component | Purpose |
+|---|---|
+| **Memory persistence** | Protocol for loading/saving session context so the AI never starts blank |
+| **Knowledge base** | 16 files of curated technical reference across 6 categories |
+| **Android Agent** | Dedicated skill that auto-detects Android projects and activates relevant tools |
+| **Detection scripts** | Shell scripts for system snapshots and Android diagnostics |
+
+---
+
+## Repository structure
 
 ```
 buffy-context/
-├── ai-context/                  → Memoria persistente (protocolo, handoff, sesiones)
-│   ├── LOAD_CONTEXT.md          → Protocolo de carga/cierre para agentes IA
-│   ├── CONTINUE.md              → Handoff entre sesiones (lo último que se hizo)
-│   ├── INFO-core.md             → Stack, preferencias, proyectos del usuario
-│   ├── INFO-full.md             → Perfil detallado del usuario
-│   ├── SESION.md                → Bitácora de sesiones
-│   ├── PROJECTS.md              → Proyectos activos
-│   ├── AGENTS.md                → Configuración de agentes
-│   ├── SYSTEM.md / SYSTEM_FULL.md → Info del sistema
-│   ├── CHANGELOG.md             → Historial de cambios
-│   └── v4_MANIFIESTO.md         → Manifiesto de la v4
+├── ai-context/                        # Session memory & protocol
+│   ├── LOAD_CONTEXT.md                # Load/save protocol for AI agents
+│   ├── CONTINUE.md                    # Session handoff (what was last done)
+│   ├── INFO-core.md                   # User profile, stack, preferences
+│   ├── INFO-full.md                   # Detailed user profile
+│   ├── SESION.md                      # Session log
+│   ├── PROJECTS.md                    # Active projects
+│   ├── SYSTEM.md                      # System information
+│   └── CHANGELOG.md                   # Change history
 │
-├── Knowledge/                   → Base de conocimiento técnico
+├── Knowledge/                         # Structured technical reference
 │   ├── Android/
-│   │   ├── ADB.md               → Comandos ADB esenciales
-│   │   ├── Shizuku.md           → Shizuku + rish reference
-│   │   ├── HyperOS.md           → Debloat y privacidad Xiaomi
-│   │   ├── GameOptimization.md  → Optimización para juegos
-│   │   ├── scrcpy.md            → scrcpy commandos y perfiles
-│   │   └── Keymappers.md        → GG Mouse, Mantis, Panda, Octopus
+│   │   ├── ADB.md                     # ADB commands
+│   │   ├── Shizuku.md                 # Shizuku + rish
+│   │   ├── HyperOS.md                 # Xiaomi debloat & privacy
+│   │   ├── GameOptimization.md        # Gaming performance tuning
+│   │   ├── scrcpy.md                  # scrcpy profiles & diagnosis
+│   │   └── Keymappers.md             # GG Mouse, Mantis, Panda, Octopus
 │   ├── Linux/
-│   │   ├── System.md            → Arch, bspwm, picom, systemd
-│   │   └── Kernel.md            → Parámetros, módulos, sysctl
+│   │   ├── System.md                  # Arch, bspwm, picom, systemd
+│   │   └── Kernel.md                  # Kernel params, modules, sysctl
 │   ├── React/
-│   │   ├── React.md             → Patrones TSX, hooks, performance
-│   │   ├── Vite.md              → Config, plugins, aliases, PWA
-│   │   ├── Tailwind.md          → v4, utilidades, dark mode
-│   │   └── PWA.md               → Manifest, service worker
+│   │   ├── React.md                   # Patterns, hooks, performance
+│   │   ├── Vite.md                    # Config, plugins, PWA
+│   │   ├── Tailwind.md               # v4 utilities, dark mode
+│   │   └── PWA.md                     # Manifest, service worker
 │   ├── Git/
-│   │   └── Commands.md          → Flujo diario, gh CLI
+│   │   └── Commands.md               # Daily workflow, gh CLI
 │   ├── Node/
-│   │   └── Node.md              → npm global, package.json
+│   │   └── Node.md                    # npm, package.json
 │   └── Shell/
-│       └── Shell.md             → Variables, awk, sed, trap
+│       └── Shell.md                   # Variables, awk, sed, trap
 │
-├── .agents/skills/
+├── .agents/skills/                    # AI agent skill definitions
 │   └── android-agent/
-│       └── SKILL.md             → Agente Android dedicado
+│       └── SKILL.md                   # Android detection & automation
 │
-├── scripts/
-│   ├── buffy-context.sh         → Genera SNAPSHOT.md del sistema
-│   └── android-detect.sh        → Diagnóstico automático Android
+├── scripts/                           # Utility scripts
+│   ├── buffy-context.sh               # System snapshot generator
+│   └── android-detect.sh              # Android project & device diagnosis
 │
-├── INSTALL.md                   → Instrucciones de setup
-└── .gitignore                   → Ignora SNAPSHOT.md y archivos generados
+├── INSTALL.md                         # Setup instructions
+├── LICENSE                            # MIT license
+└── .gitignore
 ```
 
-## Stack del usuario
+---
 
-| Componente | Valor |
-|---|---|
-| SO | EndeavourOS (Arch Linux) |
-| WM | bspwm (X11) |
-| Terminal | Alacritty |
-| Shell | Zsh 5.9.2 |
-| Editor | VS Code OSS |
-| Node | v26.4.0 · npm 11.18.0 |
-| Android | ZTE Nubia Z2352N · Android 13 · Unisoc T820 |
-| ADB | Conectado vía USB |
+## Quick start
 
-## Cómo usar
+### 1. Clone
 
-Cada sesión con Buffy (u otro agente que soporte el protocolo):
+```bash
+git clone https://github.com/maneskinleon-del/buffy-context.git
+cd buffy-context
+```
 
-1. **Al inicio**: leer `ai-context/CONTINUE.md` → `ai-context/INFO-core.md` → regenerar `SNAPSHOT.md`
-2. **Durante**: cargar skills y knowledge según el proyecto/stack detectado
-3. **Al cierre**: actualizar `CONTINUE.md` y `SESION.md`
+### 2. Link scripts (optional)
 
-Ver `ai-context/LOAD_CONTEXT.md` para el protocolo detallado.
+```bash
+ln -sf "$PWD/scripts/buffy-context.sh" ~/.local/bin/
+ln -sf "$PWD/scripts/android-detect.sh" ~/.local/bin/
+```
+
+### 3. Generate system snapshot
+
+```bash
+bash scripts/buffy-context.sh
+# Creates ai-context/SNAPSHOT.md with real-time system state
+```
+
+### 4. Run Android diagnosis (if device connected)
+
+```bash
+bash scripts/android-detect.sh        # Full report
+bash scripts/android-detect.sh --quick # One-line summary
+bash scripts/android-detect.sh --watch # Live monitoring
+```
+
+---
+
+## Usage with AI agents
+
+### For Buffy (Freebuff)
+
+Buffy reads these files automatically at session start following the protocol in `ai-context/LOAD_CONTEXT.md`:
+
+1. `ai-context/CONTINUE.md` — what was being worked on
+2. `ai-context/INFO-core.md` — user profile and stack
+3. `ai-context/SNAPSHOT.md` — system state (regenerated each session)
+
+At session end, Buffy updates `CONTINUE.md` and `SESION.md`.
+
+### For other AI agents (Claude Code, Codex, etc.)
+
+1. Point the agent to `ai-context/LOAD_CONTEXT.md` for the protocol
+2. Load `Knowledge/` for technical reference
+3. Load relevant `.agents/skills/` for specialized behavior
+
+---
+
+## Knowledge base categories
+
+| Category | Files | Covers |
+|---|---|---|
+| **Android** | 6 | ADB, Shizuku, HyperOS, game optimization, scrcpy, keymappers |
+| **Linux** | 2 | System administration, kernel tuning |
+| **React** | 4 | React patterns, Vite, Tailwind v4, PWA |
+| **Git** | 1 | Daily commands, GitHub CLI |
+| **Node** | 1 | npm, package.json |
+| **Shell** | 1 | Bash scripting, awk, sed |
+
+---
+
+## License
+
+[MIT](LICENSE) &mdash; feel free to use, modify, and share.
+
+---
+
+<p align="center">
+  <sub>Built with ♥ for better AI-assisted development.</sub>
+</p>
