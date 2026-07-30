@@ -105,6 +105,22 @@ la tarea la requiere. Usa estos criterios de activación:
 **Skills a cargar**: `android-adb`, `shizuku-rikka`, `android-game-opt`, `scrcpy-freefire`
 (y `android-agent` si se necesita diagnóstico completo).
 
+### Code Search (activación: tarea que requiere buscar, explorar o entender código)
+
+| Señal | Cómo detectar |
+|---|---|
+| Pide "busca X en el código" o "encuentra dónde se usa Y" | En el mensaje del usuario |
+| Error que requiere encontrar definiciones de funciones/clases | En el mensaje del usuario |
+| Necesita entender un flujo antes de modificarlo | En la tarea actual |
+
+**Si se activa** → cargar `.agents/skills/code-search/SKILL.md`:
+- Define 3 modos de búsqueda: agente nativo → CLI (ripgrep/grep) → exploración manual
+- Es portable entre Freebuff, Claude Code, Codex
+- Estructura resultados en tabla: archivo, línea, contenido
+
+**Skills relacionadas**: `search_criteria_v4` (para consultas complejas que requieren
+múltiples búsquedas coordinadas).
+
 ### React (activación: package.json con react, mención de JSX/TSX/Vite/Tailwind)
 
 | Señal | Cómo detectar |
