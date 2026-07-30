@@ -22,6 +22,8 @@ This repository provides the infrastructure for an AI agent to maintain persiste
 | **Knowledge base** | 16 files of curated technical reference across 6 categories |
 | **Android Agent** | Dedicated skill that auto-detects Android projects and activates relevant tools |
 | **Detection scripts** | Shell scripts for system snapshots and Android diagnostics |
+| **Conditional loading** | Token-aware protocol: carga solo lo necesario según el tema |
+| **Auto-pruning** | SESION.md mantiene máximo 5 entradas, el resto se archiva |
 
 ---
 
@@ -32,11 +34,13 @@ buffy-context/
 ├── ai-context/                        # Session memory & protocol
 │   ├── LOAD_CONTEXT.md                # Load/save protocol for AI agents
 │   ├── CONTINUE.md                    # Session handoff (what was last done)
-│   ├── INFO-core.md                   # User profile, stack, preferences
-│   ├── INFO-full.md                   # Detailed user profile
-│   ├── SESION.md                      # Session log
+│   ├── INFO-core.md                   # User profile, stack, preferences (SIEMPRE)
+│   ├── INFO-full.md                   # Detailed user profile (bajo demanda)
+│   ├── SESION.md                      # Últimas 3 sesiones (archivado automático)
+│   ├── SESION-archive.md              # Histórico completo de sesiones
 │   ├── PROJECTS.md                    # Active projects
-│   ├── SYSTEM.md                      # System information
+│   ├── SYSTEM.md                      # ⚠️ DEPRECATED → ver INFO-core.md
+│   ├── SYSTEM_FULL.md                 # ⚠️ DEPRECATED → ver INFO-full.md
 │   └── CHANGELOG.md                   # Change history
 │
 ├── Knowledge/                         # Structured technical reference

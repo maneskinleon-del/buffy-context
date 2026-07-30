@@ -2,6 +2,10 @@
 
 > Este archivo explica a CUALQUIER agente IA (Buffy, Claude, Antigravity, etc.)
 > cómo cargar el contexto de mangonz al inicio de una sesión.
+>
+> ⚠️ **IMPORTANTE — Presupuesto de tokens**: DeepSeek V4 Flash tiene una ventana
+> de contexto limitada. NO cargues archivos completos si no los necesitas.
+> Usa la carga condicional (sección más abajo) para decidir qué Knowledge/ cargar.
 
 ---
 
@@ -9,133 +13,182 @@
 
 Cuando comiences una sesión con mangonz, DEBES cargar estos archivos en este orden:
 
-### Paso 1 — Contexto base del sistema
-```
+### Paso 1 — Contexto base del sistema (SIEMPRE, ~3KB)
+```markdown
 ai-context/INFO-core.md
 ```
-Esto te da: OS, WM, shell, hardware, PATH, herramientas, reglas personales.
+Esto te da: OS, WM, shell, herramientas, reglas personales, stack de proyectos.
 
-### Paso 2 — Estado vivo del sistema
-```
+### Paso 2 — Estado vivo del sistema (SIEMPRE, ~5KB)
+```markdown
 ai-context/SNAPSHOT.md
 ```
-Esto te da: procesos actuales, RAM/disco, proyectos activos con estado git, scripts disponibles.
+Procesos actuales, RAM/disco, dispositivos ADB, estado git de proyectos activos.
+Si no existe o está vacío, ejecuta: `buffy-context.sh` (lo genera automáticamente).
 
-### Paso 3 — Handoff de la sesión anterior
-```
+### Paso 3 — Handoff de la sesión anterior (SIEMPRE)
+```markdown
 ai-context/CONTINUE.md
 ```
-Esto te dice: qué se hizo en la última sesión, en qué quedó cada cosa, qué archivos se tocaron, qué pendientes hay.
+Qué se hizo, en qué quedó, qué pendientes hay. **Es el archivo más importante.**
 
-### Paso 4 (opcional) — Más detalles
+> **🔰 Primera sesión**: Si `CONTINUE.md` no existe (repo recién clonado, primera vez):
+> - Lee `INFO-core.md` para conocer el stack del usuario
+> - Regenera `SNAPSHOT.md` con `buffy-context.sh`
+> - Crea `CONTINUE.md` inicial con: "Primera sesión — sin historial previo"
+> - Continúa normalmente
+
+### Paso 4 — Bitácora (OPCIONAL — con límite)
+```markdown
+ai-context/SESION.md     → SOLO las últimas 3 entradas (cabeceras visibles)
+                           El archivo completo puede ser grande. No lo leas entero
+                           a menos que la tarea requiera buscar algo específico.
+                           Histórico completo en ai-context/SESION-archive.md.
 ```
-ai-context/SESION.md     → Bitácora completa de sesiones anteriores
-ai-context/PROJECTS.md   → Detalle de cada proyecto
-ai-context/CHANGELOG.md  → Historial de cambios
-ai-context/AGENTS.md     → Notas técnicas para agentes
+```markdown
+ai-context/PROJECTS.md   → Solo si menciona un proyecto específico
+ai-context/CHANGELOG.md  → Solo si pregunta "¿qué cambió?" o busca un cambio anterior
+ai-context/AGENTS.md     → Solo si necesita notas técnicas de agentes previos
 ```
 
 ---
 
 ## 📝 Protocolo obligatorio al cerrar sesión
 
-Antes de finalizar, DEBES actualizar estos archivos:
-
 ### 1. `ai-context/CONTINUE.md` (SIEMPRE)
-Resumen ultra-conciso de:
+Resumen ultra-conciso (máximo 10 líneas, prioriza lo no obvio):
 - Qué se hizo esta sesión (3-5 líneas máximo)
-- Archivos modificados/creados
-- Pendientes para la próxima sesión
+- Archivos modificados/creados (solo los relevantes)
+- Pendientes para la próxima sesión (máximo 3)
 - Problemas conocidos no resueltos
 
 ### 2. `ai-context/SNAPSHOT.md` (SI SE MODIFICÓ EL SISTEMA)
 Si se instalaron paquetes, cambiaron proyectos, o se modificó la configuración del sistema.
-Se puede regenerar con: `buffy-context.sh`
+Se puede regenerar con: `bash buffy-context.sh`
 
 ### 3. `ai-context/SESION.md` (SI HUBO CAMBIOS SIGNIFICATIVOS)
-Bitácora detallada de la sesión. Se agrega al final del archivo existente con:
+Se agrega una entrada al principio del archivo (no al final — así la info fresca está arriba):
 ```markdown
-## 🧠 SESIÓN — [Fecha]
-...detalle de cambios...
+## 🧠 SESIÓN — [Fecha] (breve descripción)
+...
 ```
+
+> ⚠️ **Poda**: SESION.md debe mantener máximo 5 entradas (~30KB aprox).
+> Si al agregar una nueva entrada se supera ese límite, las entradas más viejas
+> se mueven a `ai-context/SESION-archive.md` (que casi nunca se carga).
+
+---
+
+## 🎯 Carga condicional — Knowledge/ y Skills
+
+**NO** cargues `Knowledge/` completo en cada sesión. Solo una categoría si y solo si
+la tarea la requiere. Usa estos criterios de activación:
+
+### Android (activación: proyecto Gradle, ADB, o mención de Android/scrcpy/Shizuku)
+
+| Señal | Cómo detectar |
+|---|---|
+| `build.gradle.kts` o `.gradle` en el proyecto | `ls *.gradle.kts *.gradle 2>/dev/null` |
+| ADB conectado | `adb devices | grep -v List` |
+| Menciona "scrcpy", "Shizuku", "ADB", "Nubia", "HyperOS", "auto.js" | En el mensaje del usuario |
+| Menciona "Free Fire", "GG Mouse", "game boost" | En el mensaje del usuario |
+
+**Si se activa** → cargar solo los archivos relevantes de `Knowledge/Android/` según la tarea:
+- ADB.md (comandos generales)
+- Shizuku.md (solo si menciona Shizuku o permisos)
+- scrcpy.md (solo si menciona scrcpy o mirroring)
+- GameOptimization.md (solo si menciona rendimiento, FPS, CPU tuning)
+- HyperOS.md (solo si menciona Xiaomi/HyperOS)
+- Keymappers.md (solo si menciona GG Mouse, Mantis, keymapping)
+
+**Skills a cargar**: `android-adb`, `shizuku-rikka`, `android-game-opt`, `scrcpy-freefire`
+(y `android-agent` si se necesita diagnóstico completo).
+
+### React (activación: package.json con react, mención de JSX/TSX/Vite/Tailwind)
+
+| Señal | Cómo detectar |
+|---|---|
+| `package.json` con `"react"` en dependencies | `cat package.json 2>/dev/null \| grep -iq react` |
+| Menciona "JSX", "TSX", "componente", "hook", "estado" | En el mensaje del usuario |
+| Proyecto PWA (widgetos, pwa_securguard, timemark) | En PROJECTS.md |
+
+**Si se activa** → cargar de `Knowledge/React/`:
+- React.md (patrones, hooks, performance) — casi siempre
+- Vite.md (solo si menciona build, config, dev server)
+- Tailwind.md (solo si menciona estilos, CSS, utilidades)
+- PWA.md (solo si es un proyecto PWA)
+
+### Linux (activación: mención de Arch, pacman, systemd, bspwm, kernel)
+
+| Señal | Cómo detectar |
+|---|---|
+| Menciona "pacman", "systemd", "kernel", "bspwm", "Hyprland" | En el mensaje del usuario |
+| Menciona "módulo", "driver", "sysctl", "dmesg" | En el mensaje del usuario |
+| Error de sistema, paquete, o servicio | En el mensaje del usuario |
+
+**Si se activa** → cargar de `Knowledge/Linux/`:
+- System.md (si es sobre config de sistema, WM, servicios) — casi siempre
+- Kernel.md (solo si menciona kernel, módulos, sysctl)
+
+### Git (activación: mención de commit, push, merge, rebase, conflictos)
+
+| Señal | Cómo detectar |
+|---|---|
+| Menciona "commit", "push", "pull", "merge", "rebase", "branch" | En el mensaje del usuario |
+| Menciona "git", "stash", "conflicto", "diff" | En el mensaje del usuario |
+
+**Si se activa** → cargar `Knowledge/Git/Commands.md`.
+
+### Node (activación: mención de npm, package.json, dependencias)
+
+| Señal | Cómo detectar |
+|---|---|
+| Menciona "npm", "npx", "package.json", "dependencia" | En el mensaje del usuario |
+| `package.json` presente sin React | En el directorio actual |
+
+**Si se activa** → cargar `Knowledge/Node/Node.md`.
+
+### Shell (activación: mención de bash, zsh, script, awk, sed)
+
+| Señal | Cómo detectar |
+|---|---|
+| Menciona "bash", "zsh", "script", "awk", "sed", "grep" | En el mensaje del usuario |
+| Escribe o pide modificar un script `.sh` | En el mensaje del usuario |
+
+**Si se activa** → cargar `Knowledge/Shell/Shell.md`.
 
 ---
 
 ## 🧠 Arquitectura de memoria
 
-```
+```markdown
 ai-context/
-├── INFO-core.md       → Contexto mínimo (cargar SIEMPRE)
-├── INFO-full.md       → Contexto detallado (bajo demanda)
-├── LOAD_CONTEXT.md    → Este archivo (protocolo de carga)
+├── LOAD_CONTEXT.md       ← Este archivo (protocolo de carga)
+├── INFO-core.md          ← Contexto mínimo (cargar SIEMPRE, ~3KB)
+├── INFO-full.md          ← Contexto detallado (rara vez)
 │
-├── SNAPSHOT.md        → Estado vivo del sistema (regenerable con buffy-context.sh)
-├── CONTINUE.md        → Handoff entre sesiones (actualizar cada cierre)
-├── SESION.md          → Bitácora histórica de sesiones
+├── SNAPSHOT.md           ← Estado vivo del sistema (cargar SIEMPRE, regenerable)
+├── CONTINUE.md           ← Handoff entre sesiones (cargar SIEMPRE)
 │
-├── PROJECTS.md        → Detalle de cada proyecto
-├── CHANGELOG.md       → Historial de cambios
-├── AGENTS.md          → Notas técnicas
+├── SESION.md             ← Últimas 3-5 entradas (cargar solo si la tarea lo requiere)
+├── SESION-archive.md     ← Histórico completo (casi nunca se carga)
 │
-└── SYSTEM.md          → Perfil de sistema (resumen)
-    SYSTEM_FULL.md     → Perfil detallado
+├── PROJECTS.md           ← Detalle de proyectos (cargar solo si menciona un proyecto)
+├── CHANGELOG.md          ← Historial de cambios (cargar solo si pregunta qué cambió)
+├── AGENTS.md             ← Notas técnicas de agentes (cargar bajo demanda)
+│
+├── SYSTEM.md             ← ⚠️ DEPRECATED — contenido fusionado en INFO-core.md
+├── SYSTEM_FULL.md        ← ⚠️ DEPRECATED — contenido fusionado en INFO-full.md
+└── README.md             ← Meta-información del directorio
 ```
 
 ---
 
 ## 💡 Tips para agentes
 
-- **SNAPSHOT.md** puede estar desactualizado. Si necesitas datos frescos, ejecuta `buffy-context.sh` o lee `/proc/` directamente.
-- **CONTINUE.md** es el archivo más importante para retomar trabajo. Si solo puedes leer uno, lee ese.
-- Si el usuario menciona un proyecto, busca en `PROJECTS.md` primero.
-- Si menciona un cambio anterior, busca en `CHANGELOG.md`.
-- Las reglas personales en `INFO-core.md` son **no negociables**.
-- Si tu agente no puede escribir archivos (modo read-only): al menos intenta leer `CONTINUE.md` para tener contexto de la sesión anterior.
-- El stack del usuario está en `INFO-core.md`. No duplicarlo en handoffs — referenciar ese archivo.
-
-## 🤖 Agente Android dedicado
-
-Si detectas contexto Android (proyecto con `build.gradle.kts`, dispositivo ADB conectado, o el usuario menciona Android/scrcpy/Shizuku), **activa el agente Android**:
-
-### 1. Cargar Knowledge/Android/
-```
-~/Knowledge/Android/ADB.md
-~/Knowledge/Android/Shizuku.md
-~/Knowledge/Android/scrcpy.md
-~/Knowledge/Android/GameOptimization.md
-~/Knowledge/Android/HyperOS.md
-~/Knowledge/Android/Keymappers.md
-```
-
-### 2. Activar skills Android
-```
-.agents/skills/android-adb/
-.agents/skills/shizuku-rikka/
-.agents/skills/scrcpy-freefire/
-.agents/skills/android-game-opt/
-.agents/skills/android-native-dev/
-.agents/skills/android-clean-architecture/
-.agents/skills/mobile-android-design/
-```
-
-### 3. Verificar conexión
-```bash
-# Diagnóstico rápido:
-~/.local/bin/android-detect.sh --quick
-```
-
-### 4. Seguir el protocolo de la skill
-```
-.agents/skills/android-agent/SKILL.md
-```
-
----
-
-## 🧠 Jerarquía de contexto para agentes
-
-Al iniciar una sesión, cargar en este orden:
-1. `ai-context/INFO-core.md` — sistema, reglas, stack
-2. `ai-context/SNAPSHOT.md` — estado vivo del sistema
-3. `ai-context/CONTINUE.md` — handoff de sesión anterior
-4. `ai-context/LOAD_CONTEXT.md` (este archivo) — protocolos especializados
-5. **Si es Android**: `android-detect.sh` + Knowledge/Android/ + skills Android
+- **SNAPSHOT.md puede estar desactualizado**. Si necesitas datos frescos, ejecuta `buffy-context.sh` o lee `/proc/` directamente.
+- **CONTINUE.md es el archivo más importante**. Si solo puedes leer uno, lee ese.
+- **Knowledge/ no se carga completo nunca**. Usa la carga condicional de la sección de arriba.
+- **NO dupliques información que ya está en INFO-core.md**. Referéncialo en vez de copiarlo.
+- **Si no puedes escribir archivos** (modo read-only): al menos lee CONTINUE.md + INFO-core.md.
+- **Las reglas personales en INFO-core.md son no negociables**.
