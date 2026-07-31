@@ -1,106 +1,59 @@
 # 🔄 CONTINUE — Handoff entre sesiones
 
 > ⚡ **PRÓXIMA SESIÓN: LEE ESTO PRIMERO**
-> Generado: 2026-07-29 (cierre de sesión — día completo)
+> Generado: 2026-07-30 (cierre de sesión — push GitHub + auditoría repo home)
 
 ---
 
 ## Resumen de la sesión
 
-**Tema principal:** Creación del sistema de memoria persistente `buffy-context` completo + base de conocimiento + agentes Android y búsqueda + repo GitHub público.
+**Tema principal:** Diagnosticar por qué no se veían los cambios de `buffy-context` en GitHub, subir los 12 commits pendientes (ahora 13 totales), y auditar el repo git accidental del home.
 
 ---
 
 ### ✅ Logros principales
 
-#### 1. 🧠 Memoria persistente (`ai-context/`)
-- **`LOAD_CONTEXT.md`** — Protocolo de carga/cierre para agentes:
-  - Carga condicional para **6 categorías** (Android, React, Linux, Git, Node, Shell) con señales de activación
-  - Presupuesto de tokens: advertencias y límites de tamaño
-  - Fallback para primera sesión (CONTINUE.md no existe)
-  - Sin redundancia (sección jerarquía eliminada)
-- **`CONTINUE.md`** — Handoff entre sesiones (este archivo)
-- **`SESION.md`** — Podado de 720 → 81 líneas (solo entrada más reciente)
-- **`SESION-archive.md`** — Histórico completo (639 líneas)
-- **`CHANGELOG.md`** — Podado de 429 → 132 líneas (últimas 5 entradas)
-- **`CHANGELOG-archive.md`** — Histórico completo (297 líneas)
-- **`SYSTEM.md` / `SYSTEM_FULL.md`** — Marcados como DEPRECATED → contenido en `INFO-core.md`/`INFO-full.md`
-- **`buffy-context.sh`** — Fix: detección dinámica de WM (XDG_CURRENT_DESKTOP > DESKTOP_SESSION > loginctl)
+#### 1. 📦 Repo GitHub `buffy-context` — push completado
+- **Problema**: los 12 commits locales existían pero nunca se subieron — el remote usaba **HTTPS sin credenciales** y el push fallaba en silencio. GitHub solo tenía el commit inicial `0c02f1a`.
+- **Solución**: remote cambiado de HTTPS → **SSH** (`git@github.com:maneskinleon-del/buffy-context.git`) usando la llave `~/.ssh/id_ed25519` ya registrada en GitHub como `maneskinleon-del`.
+- **Push exitoso** — GitHub ahora muestra los **13 commits** + README completo, verificado desde 3 fuentes: `git ls-remote`, GitHub API y navegador.
 
-#### 2. 📚 Base de conocimiento (`Knowledge/`)
-16 archivos · 1,305 líneas · 6 categorías:
-- **Android** (6): ADB, Shizuku, HyperOS, GameOptimization, scrcpy, Keymappers
-- **Linux** (2): System (Arch/bspwm), Kernel
-- **React** (4): React+TS, Vite, Tailwind v4, PWA
-- **Git** (1): Commands + gh CLI
-- **Node** (1): npm, package.json
-- **Shell** (1): Bash/Zsh scripting
+#### 2. 🗂️ Auditoría: repo git del home (`/home/mangonz`)
+- `/home/mangonz` es un repo git en rama `master`, **sin remote** (3 commits: codebuff-automation + GameBoost Pro).
+- Trackea **104 archivos**: `codebuff-automation/` completo + `proyectos/autoscript-mobile-interface/` (GameBoost Pro).
+- **Esos proyectos NO tienen su propio `.git`** → el repo del home es su ÚNICA historia git. Por eso NO se borró el `.git`.
+- **Decisión del usuario: dejarlo como está** (riesgo bajo sin remote). Opción de `.gitignore` agresivo queda disponible si molesta.
 
-#### 3. 🤖 Android Agent (`.agents/skills/android-agent/`)
-- **`SKILL.md`** — Detección automática de proyectos Android (build.gradle.kts, ADB conectado, mención de Android)
-- **`android-detect.sh`** — Script de diagnóstico con flags `--quick` y `--watch`
-- **Shizuku activado** en el dispositivo (rish extraído del APK, Shizuku v13.7.0 corriendo)
-- **DPI cambiado** vía Shizuku: 480 físico → 280 override (exitoso)
-- **Free Fire diagnosticado**: CPU 0.8% (en background), 13% jank en sistema, temp 30.1°C OK
-
-#### 4. 🔍 Code Search adapter (`.agents/skills/code-search/`)
-- **`SKILL.md`** — Adaptador portable de búsqueda entre Freebuff, Claude Code, Codex
-- 3 modos: agente nativo → CLI (ripgrep/grep) → exploración manual
-- Respuestas estructuradas con contexto ±3 líneas
-- **`search_criteria_v4`** copiado del sistema al repo
-
-#### 5. 📦 Repo GitHub `buffy-context`
-- **Creado**: `git init` + `git remote` + push a `github.com/maneskinleon-del/buffy-context`
-- **MIT License** agregada
-- **README.md** profesional con badges, estructura, quick start
-- **INSTALL.md** — instrucciones de setup
-- **6 commits** en `main`, 0c02f1a → 0213fcf
+#### 3. 🔄 SNAPSHOT regenerado
+- `buffy-context.sh` ejecutado → `~/ai-context/SNAPSHOT.md` actualizado (estado del sistema: bspwm, kernel 6.18.39-1-lts, uptime 14h).
 
 ---
 
-### 📁 Archivos modificados/creados (sesión completa)
+### 📁 Archivos modificados/creados (sesión)
 
 | Archivo | Cambio |
 |---------|--------|
-| `ai-context/LOAD_CONTEXT.md` | **NUEVO** → reescrito con carga condicional 6 cats, presupuesto tokens, fallback 1ra sesión |
 | `ai-context/CONTINUE.md` | ✅ Actualizado (este archivo) |
-| `ai-context/SESION.md` | ✅ Podado 720 → 81 líneas |
-| `ai-context/SESION-archive.md` | **NUEVO** — 639 líneas de histórico |
-| `ai-context/CHANGELOG.md` | ✅ Podado 429 → 132 líneas |
-| `ai-context/CHANGELOG-archive.md` | **NUEVO** — 297 líneas de histórico |
-| `ai-context/SYSTEM.md` | ✅ DEPRECATED |
-| `ai-context/SYSTEM_FULL.md` | ✅ DEPRECATED |
-| `Knowledge/` (16 archivos) | **NUEVO** — Base de conocimiento completa |
-| `.agents/skills/android-agent/SKILL.md` | **NUEVO** — Android Agent skill |
-| `.agents/skills/code-search/SKILL.md` | **NUEVO** — Code search adapter portable |
-| `.agents/skills/search_criteria_v4/SKILL.md` | **NUEVO** — Copiado al repo |
-| `.local/bin/android-detect.sh` | **NUEVO** — Script diagnóstico Android |
-| `.local/bin/buffy-context.sh` | ✅ Fix: WM detection |
-| `README.md` | **NUEVO** — Profesional con badges |
-| `LICENSE` | **NUEVO** — MIT |
-| `INSTALL.md` | **NUEVO** — Setup instructions |
-| `.gitignore` | **NUEVO** — Ignora SNAPSHOT.md |
+| `ai-context/SESION.md` | ✅ Nueva entrada 2026-07-30 |
+| `ai-context/SNAPSHOT.md` | ✅ Regenerado (en ~/ai-context/, gitignored en el repo) |
+| Remoto del repo | ✅ HTTPS → SSH |
 
 ---
 
 ### ⏳ Pendientes para próxima sesión
 
-1. **Shizuku + comando** — Quedó pendiente ejecutar un comando privilegiado (deshabilitar app, forzar GPU rendering, etc.). Shizuku ya está activo.
+1. **Shizuku + comando privilegiado** — Quedó pendiente ejecutar un comando privilegiado (deshabilitar app, forzar GPU rendering, etc.). Shizuku ya está activo en el ZTE.
 2. **Visión/VLM** — Agregar soporte de imágenes (Qwen2.5-VL, MiniCPM-V). Análisis de screenshots Android. Sigue siendo un agujero.
-3. **Agentes faltantes** — `file-picker`, `researcher-web`, `researcher-docs`, `basher` son agentes internos de Freebuff no versionables. El adapter `code-search` ya cubre la interfaz portable.
-4. **CHANGELOG.md** — Ya podado y con header de poda. El archive existirá como mecanismo automático cuando crezca de nuevo.
-5. **Diagonóstico Free Fire en vivo** — Ejecutar `dumpsys gfxinfo` + `SurfaceFlinger --latency` mientras el juego está activo para mediciones reales.
+3. **Diagnóstico Free Fire en vivo** — Ejecutar `dumpsys gfxinfo` + `SurfaceFlinger --latency` mientras el juego está activo para mediciones reales.
+4. **Opcional: limpiar repo del home** — Si algún día se le agrega un remote al repo de `/home/mangonz`, aplicar `.gitignore` agresivo antes.
 
 ---
 
 ### ⚠️ Problemas conocidos
 
-- **`scripts/ai-context.sh`** — Script legacy que genera zips de debugging. Obsoleto pero no interfiere.
-- **Push a GitHub requiere token** — El remote está sin credenciales. Para pushear, usar:
-  ```bash
-  git push https://<token>@github.com/maneskinleon-del/buffy-context.git main
-  ```
-- **Shizuku**: El método "Start via ADB" no creó `shizuku_starter.sh` automáticamente (Android 13). Se extrajo `rish` manualmente del APK. Al reiniciar el dispositivo, Shizuku se detiene y hay que volver a activarlo.
+- **Repo del home sin limpiar** — `git add -A` en `/home/mangonz` podría trackear cosas sensibles (`.gitconfig`, `.ollama/`, `.m2/`). Evitar sin fijarse.
+- **Shizuku**: Al reiniciar el dispositivo se detiene y hay que volver a activarlo.
+- **Push** — Ahora usa SSH (`git@github.com:`), ya no requiere token HTTPS.
 
 ---
 

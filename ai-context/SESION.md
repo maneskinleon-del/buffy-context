@@ -5,6 +5,37 @@
 
 ---
 
+# 🧠 SESION — Buffy Freebuff (2026-07-30 — push repo GitHub + auditoría repo git del home)
+
+> Tema: diagnosticar por qué "no se veían" los cambios en GitHub, subir los 12 commits pendientes, y auditar el repo git accidental del home.
+
+---
+
+## 📦 Repo GitHub `buffy-context` — push completado
+
+### Diagnóstico
+- Los cambios SÍ existían localmente (12 commits en `main`, incluyendo `aa556d9 Fix: token budget, conditional loading, pruning, deprecations`)
+- El remoto usaba **HTTPS sin credenciales** → el push fallaba en silencio
+- GitHub solo tenía el commit inicial `0c02f1a` (por eso "no se veía nada")
+
+### Solución
+- Cambiado el remote de HTTPS → **SSH** (`git@github.com:maneskinleon-del/buffy-context.git`), usando la llave `~/.ssh/id_ed25519` que ya estaba registrada en GitHub como `maneskinleon-del`
+- **Push exitoso**: GitHub ahora muestra los 13 commits + README completo
+- Verificado desde 3 fuentes: `git ls-remote`, GitHub API, navegador (13 commits, README "Buffy Context")
+
+### Nota: fechas "yesterday"
+- GitHub muestra la fecha de **autoría** (29/07), no la del push (30/07). Es comportamiento normal de git — los commits se escribieron ayer.
+
+## 🗂️ Auditoría: repo git del home (`/home/mangonz`)
+
+### Hallazgos
+- `/home/mangonz` es un repo git en rama `master`, **sin remote** (3 commits: codebuff-automation + GameBoost Pro)
+- Trackea **104 archivos**: `codebuff-automation/` completo + `proyectos/autoscript-mobile-interface/` (GameBoost Pro)
+- **Esos proyectos NO tienen su propio `.git`** → el repo del home es su ÚNICA historia git
+- **Decisión del usuario: dejarlo como está** (riesgo bajo sin remote). Opción de `.gitignore` agresivo queda disponible.
+
+---
+
 # 🧠 SESION — Buffy Freebuff (2026-07-29 — día completo: memoria + Knowledge + agentes + repo GitHub)
 
 > Contexto de todo lo implementado durante la sesión completa del 2026-07-29.
