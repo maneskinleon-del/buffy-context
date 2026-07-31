@@ -51,6 +51,7 @@
 
 ### ⚠️ Problemas conocidos
 
+- **`scripts/ai-context.sh`** — Script legacy que genera zips de debugging. Obsoleto pero no interfiere.
 - **Repo del home sin limpiar** — `git add -A` en `/home/mangonz` podría trackear cosas sensibles (`.gitconfig`, `.ollama/`, `.m2/`). Evitar sin fijarse.
 - **Shizuku**: Al reiniciar el dispositivo se detiene y hay que volver a activarlo.
 - **Push** — Ahora usa SSH (`git@github.com:`), ya no requiere token HTTPS.
