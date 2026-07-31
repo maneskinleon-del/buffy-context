@@ -1,40 +1,50 @@
 # 🔄 CONTINUE — Handoff entre sesiones
 
 > ⚡ **PRÓXIMA SESIÓN: LEE ESTO PRIMERO**
-> Generado: 2026-07-30 (cierre de sesión — push GitHub + auditoría repo home)
+> Generado: 2026-07-30 noche (cierre de sesión — RAM + watchdog MCP + force-stop Free Fire)
 
 ---
 
 ## Resumen de la sesión
 
-**Tema principal:** Diagnosticar por qué no se veían los cambios de `buffy-context` en GitHub, subir los 12 commits pendientes (ahora 13 totales), y auditar el repo git accidental del home.
+**Tema principal:** Limpieza de RAM (kill de procesos huérfanos), creación de un watchdog automático para chrome-devtools-mcp, y matanza de apps de terceros en el script de Free Fire.
 
 ---
 
 ### ✅ Logros principales
 
-#### 1. 📦 Repo GitHub `buffy-context` — push completado
-- **Problema**: los 12 commits locales existían pero nunca se subieron — el remote usaba **HTTPS sin credenciales** y el push fallaba en silencio. GitHub solo tenía el commit inicial `0c02f1a`.
-- **Solución**: remote cambiado de HTTPS → **SSH** (`git@github.com:maneskinleon-del/buffy-context.git`) usando la llave `~/.ssh/id_ed25519` ya registrada en GitHub como `maneskinleon-del`.
-- **Push exitoso** — GitHub ahora muestra los **13 commits** + README completo, verificado desde 3 fuentes: `git ls-remote`, GitHub API y navegador.
+#### 1. 🧹 Diagnóstico y limpieza de RAM
+- Top consumidores: Chrome (~1.1GB), open-webui/uvicorn (~1GB), freebuff (~515MB)
+- Se mató el **chrome-devtools-mcp huérfano** que quedó de la verificación de GitHub → **~1.1GB liberados**
 
-#### 2. 🗂️ Auditoría: repo git del home (`/home/mangonz`)
-- `/home/mangonz` es un repo git en rama `master`, **sin remote** (3 commits: codebuff-automation + GameBoost Pro).
-- Trackea **104 archivos**: `codebuff-automation/` completo + `proyectos/autoscript-mobile-interface/` (GameBoost Pro).
-- **Esos proyectos NO tienen su propio `.git`** → el repo del home es su ÚNICA historia git. Por eso NO se borró el `.git`.
-- **Decisión del usuario: dejarlo como está** (riesgo bajo sin remote). Opción de `.gitignore` agresivo queda disponible si molesta.
+#### 2. 🛡️ Watchdog automático `cleanup-mcp.sh`
+- Creado `~/.local/bin/cleanup-mcp.sh` + units systemd user (`mcp-cleanup.service` oneshot + `mcp-cleanup.timer` cada 5 min)
+- Regla: mata MCP con **edad > 10min** Y **CPU del árbol < 1% en 2 muestras** (4s + 6s + 4s)
+- Log: `~/.local/state/mcp-cleanup.log` · Verificado con timer activo y ejecución real
+- chrome-devtools-mcp **no tiene flag nativo de auto-exit** (se verificó su `--help` completo)
 
-#### 3. 🔄 SNAPSHOT regenerado
-- `buffy-context.sh` ejecutado → `~/ai-context/SNAPSHOT.md` actualizado (estado del sistema: bspwm, kernel 6.18.39-1-lts, uptime 14h).
+#### 3. 🎮 Force-stop de apps de terceros en `~/scripts/scrcpy-freefire.sh`
+- Función `kill_background_apps()`: `pm list packages -3` + `am force-stop` por app
+- **Excluye GG Mouse** (`com.zjx.ztezscreenshot`) y **Free Fire** (`com.dts.freefireth`)
+- Configurable: `KILL_BG_APPS="1"` + `KEEP_ALIVE_APPS="com.zjx.ztezscreenshot com.dts.freefireth"`
+- **Probado en el ZTE: 91 apps matadas, GG Mouse + FF intactos** ✅
+
+#### 4. 📦 (mañana) Push repo GitHub + auditoría repo home
+- Los 12 commits pendientes subidos a GitHub vía SSH (remote HTTPS→SSH con `~/.ssh/id_ed25519`)
+- Repo del home (`/home/mangonz`, master, sin remote) trackea 104 archivos — única historia de GameBoost Pro/codebuff-automation. **Dejado como está** por decisión del usuario.
 
 ---
 
-### 📁 Archivos modificados/creados (sesión)
+### 📁 Archivos modificados/creados (sesión completa)
 
 | Archivo | Cambio |
 |---------|--------|
+| `~/scripts/scrcpy-freefire.sh` | ✅ kill_background_apps() + toggles KILL_BG_APPS/KEEP_ALIVE_APPS |
+| `~/.local/bin/cleanup-mcp.sh` | **NUEVO** — watchdog MCP (ejecutable) |
+| `~/.config/systemd/user/mcp-cleanup.service` | **NUEVO** — servicio oneshot |
+| `~/.config/systemd/user/mcp-cleanup.timer` | **NUEVO** — timer cada 5 min (habilitado) |
 | `ai-context/CONTINUE.md` | ✅ Actualizado (este archivo) |
-| `ai-context/SESION.md` | ✅ Nueva entrada 2026-07-30 |
+| `ai-context/SESION.md` | ✅ Entrada 2026-07-30 noche |
 | `ai-context/SNAPSHOT.md` | ✅ Regenerado (en ~/ai-context/, gitignored en el repo) |
 | Remoto del repo | ✅ HTTPS → SSH |
 
@@ -42,10 +52,11 @@
 
 ### ⏳ Pendientes para próxima sesión
 
-1. **Shizuku + comando privilegiado** — Quedó pendiente ejecutar un comando privilegiado (deshabilitar app, forzar GPU rendering, etc.). Shizuku ya está activo en el ZTE.
-2. **Visión/VLM** — Agregar soporte de imágenes (Qwen2.5-VL, MiniCPM-V). Análisis de screenshots Android. Sigue siendo un agujero.
-3. **Diagnóstico Free Fire en vivo** — Ejecutar `dumpsys gfxinfo` + `SurfaceFlinger --latency` mientras el juego está activo para mediciones reales.
-4. **Opcional: limpiar repo del home** — Si algún día se le agrega un remote al repo de `/home/mangonz`, aplicar `.gitignore` agresivo antes.
+1. **Probar `scrcpy-freefire.sh` completo en vivo** — El force-stop está probado por separado, pero falta probar el script end-to-end con GG Mouse + Free Fire + scrcpy.
+2. **Shizuku + comando privilegiado** — Quedó pendiente ejecutar un comando privilegiado (deshabilitar app, forzar GPU rendering, etc.).
+3. **Visión/VLM** — Agregar soporte de imágenes (Qwen2.5-VL, MiniCPM-V). Análisis de screenshots Android.
+4. **Diagnóstico Free Fire en vivo** — `dumpsys gfxinfo` + `SurfaceFlinger --latency` con el juego activo.
+5. **Opcional: limpiar repo del home** — `.gitignore` agresivo si algún día se le agrega un remote.
 
 ---
 
@@ -55,6 +66,7 @@
 - **Repo del home sin limpiar** — `git add -A` en `/home/mangonz` podría trackear cosas sensibles (`.gitconfig`, `.ollama/`, `.m2/`). Evitar sin fijarse.
 - **Shizuku**: Al reiniciar el dispositivo se detiene y hay que volver a activarlo.
 - **Push** — Ahora usa SSH (`git@github.com:`), ya no requiere token HTTPS.
+- **`am force-stop` ruido** — Imprime "Force stopping..." por stdout en Android moderno (93 líneas). Inofensivo; si molesta: `>/dev/null 2>&1`.
 
 ---
 
