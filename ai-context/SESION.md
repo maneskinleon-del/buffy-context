@@ -32,12 +32,14 @@
 ## 💻 kimi_vision.js creado + repo clonado vía SSH
 
 - **`kimi_vision.js`** (raíz, Node 26, CommonJS): visión IA con Kimi K3 (`moonshotai/Kimi-K3`) vía API HF OpenAI-compatible (`router.huggingface.co/hf/v1`). Envía el screenshot en base64; el modelo devuelve JSON (tipo de permiso, app, botones, confianza) → mapeado a `pm grant`/`appops set` vía rish. Modos: `--img`, `--monitor`, `--watch`, `--screenshot`, `--grant`, `--pkg`, `--json`. Requiere `HF_TOKEN` + aceptar licencia gated del modelo. Probado con API simulada (extractJson 3 casos, mapeo, pipeline completo ✅).
-- **Repo `buffy-context` clonado en este dispositivo**: `~/buffy-context` (44 archivos, working tree limpio). Remote `origin` en **SSH** (`git@github.com:maneskinleon-del/buffy-context.git`). Clave ed25519 generada, **pendiente de registrar en GitHub** (`ssh -T git@github.com` → permission denied).
+- **Repo `buffy-context` clonado en este dispositivo**: `~/buffy-context` (44 archivos, working tree limpio). Remote `origin` en **SSH** (`git@github.com:maneskinleon-del/buffy-context.git`). Clave ed25519 registrada en GitHub ✅ y push exitoso (`7bcb639`).
+- **`kimi_vision.js` integrado al repo** (scripts/): copiado a `scripts/kimi_vision.js` (diff 0, `node --check` ✅), documentado en `Knowledge/AI/Kimi-K3.md` (sección "Script implementado") y en el árbol de `README.md`.
 
 ## 🔜 Pendientes
 
 - [x] `kimi_vision.js` creado — script de visión IA (upgrade de `auto_permiso.py`) ✅
-- [ ] Registrar clave SSH de este dispositivo en github.com/settings/keys y probar `git push`
+- [x] Clave SSH registrada en github.com/settings/keys y push por SSH funcionando ✅
+- [x] `kimi_vision.js` agregado al repo en `scripts/` y documentado ✅
 - [ ] Token HF con scope de inferencia + método de pago configurado
 - [ ] Probar `kimi_vision.js` con HF_TOKEN real + screenshot de diálogo real
 - [ ] Decidir si revocar el token GitHub expuesto en el chat

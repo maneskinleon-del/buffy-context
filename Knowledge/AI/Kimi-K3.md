@@ -64,6 +64,49 @@ curl https://router.huggingface.co/hf/v1/chat/completions \
 
 ---
 
+## 🖼️ Script implementado: `scripts/kimi_vision.js`
+
+> Detección de diálogos de permisos con visión IA (Kimi K3) — upgrade de `auto_permiso.py`.
+> En lugar de OCR (Tesseract), envía el screenshot a Kimi K3 para que interprete la imagen directamente.
+
+| Campo | Detalle |
+|---|---|
+| **Ubicación** | `scripts/kimi_vision.js` (raíz del proyecto Termux: `~/kimi_vision.js`) |
+| **Modelo** | `moonshotai/Kimi-K3` (env `KIMI_MODEL` para cambiar) |
+| **Endpoint** | `https://router.huggingface.co/hf/v1/chat/completions` (env `KIMI_ENDPOINT`) |
+| **Requisito** | `export HF_TOKEN=hf_xxx` (scope read/inference) + aceptar licencia gated del modelo |
+| **Stack** | Node 18+ (fetch global), CommonJS, `lib/logger.js`, `lib/utils.js` |
+
+### Modos CLI (igual que auto_permiso.py)
+
+```bash
+node kimi_vision.js --img screenshot.png
+node kimi_vision.js --img screenshot.png --pkg com.app --grant
+node kimi_vision.js --monitor --pkg com.app --grant   # [recomendado] espera screenshot manual
+node kimi_vision.js --watch --pkg com.app              # screencap cada N segundos
+node kimi_vision.js --screenshot --pkg com.app         # screencap + analiza
+node kimi_vision.js --img x.png --json                 # salida JSON cruda
+```
+
+Flags: `--pkg` (package name), `--grant` (concede vía rish), `--interval SEG`, `--min-confidence N` (default 50), `--json`.
+
+### Cómo funciona
+
+1. Lee el screenshot y lo codifica en base64 (`data:image/png;base64,...`)
+2. Envía a Kimi K3 con un prompt de sistema en español que pide JSON estricto: `es_dialogo_permiso`, `tipo_permiso` (camera/microphone/location/phone/sms/contacts/storage/overlay/notifications/accessibility/write_settings/install_packages/other), `app`, `titulo`, `botones`, `confianza`, `resumen`
+3. Mapea el tipo detectado → `pm grant` + `appops set ... allow` vía rish (mismo mapa que `auto_permiso.py`)
+4. Si `--grant`, concede automáticamente cuando `confianza >= --min-confidence`
+
+### Robustez
+
+- **Retry/backoff** en la API (429/5xx/network, 3 intentos) + timeout configurable (`KIMI_TIMEOUT_MS`)
+- **Parseo robusto** del JSON del modelo (fences de markdown, texto + JSON)
+- **Fallback a `other`** si el tipo no encaja en el mapa
+- Errores 401/403 muestran hint de la licencia gated
+- Verificado: `node --check` ✅ + prueba funcional con API simulada (pipeline completo: imagen → API → parseo → mapeo → grant)
+
+---
+
 ## 📌 Resumen
 
 - Kimi K3 = modelo multimodal 2.8T de Moonshot AI, 1M contexto, tool calling.

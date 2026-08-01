@@ -4,13 +4,23 @@
 
 ---
 
-version: 1.6
+version: 1.7
 updated: 2026-08-01
 schema: system-profile
 system-id: mangonz-desktop
 ---
 
 # CHANGELOG.md — Historial de cambios del sistema
+
+### 2026-08-01 — kimi_vision.js integrado al repo buffy-context
+
+**Pedido del usuario:** Agregar kimi_vision.js al repo: copiarlo a scripts/ y documentarlo en Knowledge/AI/Kimi-K3.md.
+
+**Cambios aplicados:**
+- **`scripts/kimi_vision.js`** (NUEVO): copia del script de visión IA (Kimi K3) para detectar diálogos de permisos — upgrade de auto_permiso.py. Idéntico al origen `~/kimi_vision.js` (22639 bytes, diff 0), `node --check` OK.
+- **`Knowledge/AI/Kimi-K3.md`**: Nueva sección "Script implementado: scripts/kimi_vision.js" — modos CLI, cómo funciona (base64 → Kimi K3 → JSON → mapeo rish), robustez (retry/backoff, parseo robusto, fallback other), verificación.
+- **`README.md`**: árbol de scripts actualizado con `kimi_vision.js`.
+
 
 ### 2026-08-01 — kimi_vision.js creado + repo clonado vía SSH
 
