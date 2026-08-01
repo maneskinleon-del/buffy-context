@@ -1,6 +1,6 @@
-# 🧠 SESION — Buffy Freebuff (2026-07-29 — día completo: memoria + Knowledge + agentes + repo GitHub)
+# 🧠 SESION — Buffy Freebuff (2026-07-29)
 
-> Contexto de todo lo implementado durante la sesión completa del 2026-07-29.
+> Contexto de todo lo implementado durante esta sesión.
 
 ---
 
