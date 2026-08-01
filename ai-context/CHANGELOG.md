@@ -12,6 +12,16 @@ system-id: mangonz-desktop
 
 # CHANGELOG.md — Historial de cambios del sistema
 
+### 2026-08-01 — Fix endpoint Kimi K3 (router.huggingface.co/v1, sin /hf)
+
+**Hallazgo:** El endpoint `/hf/v1/chat/completions` devuelve 404; el correcto es `https://router.huggingface.co/v1/chat/completions` (verificado con prueba real: HTTP 200, Kimi K3 respondió en 10.2s).
+
+**Cambios aplicados:**
+- **`scripts/kimi_vision.js`** (y `~/kimi_vision.js`): `KIMI_ENDPOINT` default corregido a `router.huggingface.co/v1/chat/completions` (header + constante), + hint de error para 404 que recomienda revisar `KIMI_ENDPOINT`.
+- **`Knowledge/AI/Kimi-K3.md`**: las 3 referencias al endpoint actualizadas a `/v1` (tabla de acceso, ejemplo curl, sección Script implementado).
+- **Nota:** las entradas históricas de este CHANGELOG mencionan `/hf/v1`; quedan como referencia del estado previo al fix.
+
+
 ### 2026-08-01 — kimi_vision.js integrado al repo buffy-context
 
 **Pedido del usuario:** Agregar kimi_vision.js al repo: copiarlo a scripts/ y documentarlo en Knowledge/AI/Kimi-K3.md.
