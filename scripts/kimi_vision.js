@@ -34,8 +34,26 @@ const log = require('./lib/logger');
 const { sleep } = require('./lib/utils');
 
 const HOME = process.env.HOME || '/data/data/com.termux/files/home';
-const RISH = 'rish';
+const RISH = resolveRish();
 const RISH_ENV = 'RISH_APPLICATION_ID=com.termux MANAGER_APPLICATION_ID=moe.shizuku.privileged.api';
+
+// rish puede no estar en PATH (Termux: suele vivir en ~/bin/rish).
+// Resuelve: env RISH > ~/bin/rish > rish en PATH > fallback 'rish'.
+function resolveRish() {
+  const candidates = [process.env.RISH, path.join(HOME, 'bin/rish'), 'rish'];
+  for (const c of candidates) {
+    if (!c) continue;
+    try {
+      if (path.isAbsolute(c)) {
+        if (fs.existsSync(c)) return c;
+      } else {
+        execSync(`command -v ${c}`, { stdio: 'ignore' });
+        return c;
+      }
+    } catch { /* probar siguiente candidato */ }
+  }
+  return 'rish';
+}
 const SCREENSHOT_PATH = '/sdcard/kimi_vision_temp.png';
 const SCREENSHOTS_DIR = '/sdcard/DCIM/Screenshots';
 
