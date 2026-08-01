@@ -1,3 +1,4 @@
+// ⚠️ Copia vendored para el repo buffy-context — actualizar desde ~/lib/ (origen).
 // ─────────────────────────────────────────────
 // lib/logger.js — Logging estructurado con niveles
 // ─────────────────────────────────────────────

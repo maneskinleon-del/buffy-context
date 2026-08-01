@@ -18,6 +18,7 @@ system-id: mangonz-desktop
 
 **Cambios aplicados:**
 - **`scripts/kimi_vision.js`** (NUEVO): copia del script de visión IA (Kimi K3) para detectar diálogos de permisos — upgrade de auto_permiso.py. Idéntico al origen `~/kimi_vision.js` (22639 bytes, diff 0), `node --check` OK.
+- **`scripts/lib/logger.js` + `scripts/lib/utils.js`** (NUEVOS, vendored): copias de `~/lib/` para que el script sea **autocontenido y ejecutable desde el repo** (verificado: `node scripts/kimi_vision.js --help` ✅). Marcados como copia vendored (actualizar desde `~/lib/`).
 - **`Knowledge/AI/Kimi-K3.md`**: Nueva sección "Script implementado: scripts/kimi_vision.js" — modos CLI, cómo funciona (base64 → Kimi K3 → JSON → mapeo rish), robustez (retry/backoff, parseo robusto, fallback other), verificación.
 - **`README.md`**: árbol de scripts actualizado con `kimi_vision.js`.
 
