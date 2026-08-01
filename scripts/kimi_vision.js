@@ -25,6 +25,7 @@
 //   KIMI_MODEL    (default: moonshotai/Kimi-K3)
 //   KIMI_ENDPOINT (default: https://router.huggingface.co/v1/chat/completions)
 //   KIMI_TIMEOUT_MS (default: 120000)
+//   RISH          (ruta al binario rish; si no, se busca en ~/bin/rish y luego en PATH)
 // ─────────────────────────────────────────────────────────────
 
 const fs = require('fs');
@@ -47,7 +48,7 @@ function resolveRish() {
       if (path.isAbsolute(c)) {
         if (fs.existsSync(c)) return c;
       } else {
-        execSync(`command -v ${c}`, { stdio: 'ignore' });
+        execSync(`command -v "${c}"`, { stdio: 'ignore' });
         return c;
       }
     } catch { /* probar siguiente candidato */ }
