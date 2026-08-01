@@ -270,6 +270,12 @@ async function callKimi(imgPath) {
         throw err;
       }
 
+      if (err.status === 404) {
+        log.error('  💡 Endpoint/modelo no encontrado. Revisa KIMI_ENDPOINT');
+        log.error('     (debe ser https://router.huggingface.co/v1, sin /hf) y KIMI_MODEL');
+        throw err;
+      }
+
       const retriable =
         err.name === 'AbortError' ||
         err.name === 'TypeError' ||

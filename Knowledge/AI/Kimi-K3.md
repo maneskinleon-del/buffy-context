@@ -24,7 +24,7 @@
 | Vía | Detalle |
 |---|---|
 | **HuggingChat web** | `huggingface.co/chat/models/moonshotai/Kimi-K3` — gratis, navegador |
-| **API HF (OpenAI-compatible)** | `https://router.huggingface.co/hf/v1` + token HF (scope read/inference) |
+| **API HF (OpenAI-compatible)** | `https://router.huggingface.co/v1` + token HF (scope read/inference) |
 | **API Moonshot** | `platform.kimi.ai` — OpenAI-compatible, pago por uso |
 | **Inference Providers** | `moonshotai/Kimi-K3:together`, `:fireworks-ai`, etc. |
 
@@ -33,7 +33,7 @@
 ```bash
 export HF_TOKEN="hf_xxx"  # scope: read o inference
 
-curl https://router.huggingface.co/hf/v1/chat/completions \
+curl https://router.huggingface.co/v1/chat/completions \
   -H "Authorization: Bearer $HF_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -73,7 +73,7 @@ curl https://router.huggingface.co/hf/v1/chat/completions \
 |---|---|
 | **Ubicación** | `scripts/kimi_vision.js` (raíz del proyecto Termux: `~/kimi_vision.js`) |
 | **Modelo** | `moonshotai/Kimi-K3` (env `KIMI_MODEL` para cambiar) |
-| **Endpoint** | `https://router.huggingface.co/hf/v1/chat/completions` (env `KIMI_ENDPOINT`) |
+| **Endpoint** | `https://router.huggingface.co/v1/chat/completions` (env `KIMI_ENDPOINT`) |
 | **Requisito** | `export HF_TOKEN=hf_xxx` (scope read/inference) + aceptar licencia gated del modelo |
 | **Stack** | Node 18+ (fetch global), CommonJS, `scripts/lib/logger.js` + `scripts/lib/utils.js` (vendored en el repo — autocontenido) |
 
