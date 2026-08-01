@@ -23,7 +23,7 @@
 //
 // Env vars opcionales:
 //   KIMI_MODEL    (default: moonshotai/Kimi-K3)
-//   KIMI_ENDPOINT (default: https://router.huggingface.co/hf/v1/chat/completions)
+//   KIMI_ENDPOINT (default: https://router.huggingface.co/v1/chat/completions)
 //   KIMI_TIMEOUT_MS (default: 120000)
 // ─────────────────────────────────────────────────────────────
 
@@ -41,7 +41,7 @@ const SCREENSHOTS_DIR = '/sdcard/DCIM/Screenshots';
 
 const HF_TOKEN = process.env.HF_TOKEN || '';
 const KIMI_MODEL = process.env.KIMI_MODEL || 'moonshotai/Kimi-K3';
-const KIMI_ENDPOINT = process.env.KIMI_ENDPOINT || 'https://router.huggingface.co/hf/v1/chat/completions';
+const KIMI_ENDPOINT = process.env.KIMI_ENDPOINT || 'https://router.huggingface.co/v1/chat/completions';
 const KIMI_TIMEOUT_MS = Number(process.env.KIMI_TIMEOUT_MS || 120000);
 const MAX_RETRIES = 3;
 
