@@ -1,10 +1,10 @@
 > ⚠️ **Poda automática**: Cuando este archivo supere ~30KB o ~5 entradas
 > recientes (sin contar archive), las entradas más viejas se mueven a
-> `CHANGELOG-archive.md`. Actualmente ~424 líneas — pendiente de archivar.
+> `CHANGELOG-archive.md`. Actualmente ~434 líneas — pendiente de archivar.
 
 ---
 
-version: 1.4
+version: 1.5
 updated: 2026-08-01
 schema: system-profile
 system-id: mangonz-desktop
