@@ -75,7 +75,7 @@ curl https://router.huggingface.co/hf/v1/chat/completions \
 | **Modelo** | `moonshotai/Kimi-K3` (env `KIMI_MODEL` para cambiar) |
 | **Endpoint** | `https://router.huggingface.co/hf/v1/chat/completions` (env `KIMI_ENDPOINT`) |
 | **Requisito** | `export HF_TOKEN=hf_xxx` (scope read/inference) + aceptar licencia gated del modelo |
-| **Stack** | Node 18+ (fetch global), CommonJS, `lib/logger.js`, `lib/utils.js` |
+| **Stack** | Node 18+ (fetch global), CommonJS, `scripts/lib/logger.js` + `scripts/lib/utils.js` (vendored en el repo — autocontenido) |
 
 ### Modos CLI (igual que auto_permiso.py)
 

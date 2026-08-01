@@ -1,6 +1,6 @@
 > ⚠️ **Poda automática**: Cuando este archivo supere ~30KB o ~5 entradas
 > recientes (sin contar archive), las entradas más viejas se mueven a
-> `CHANGELOG-archive.md`. Actualmente ~154 líneas — pendiente de archivar.
+> `CHANGELOG-archive.md`. Actualmente ~164 líneas — pendiente de archivar.
 
 ---
 

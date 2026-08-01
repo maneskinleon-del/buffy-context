@@ -73,7 +73,7 @@ buffy-context/
 ├── scripts/                           # Utility scripts
 │   ├── buffy-context.sh               # System snapshot generator
 │   ├── android-detect.sh              # Android project & device diagnosis
-│   └── kimi_vision.js                 # Permiso detection con visión IA (Kimi K3)
+│   └── kimi_vision.js                 # Detección de permisos con visión IA (Kimi K3)
 │
 ├── INSTALL.md                         # Setup instructions
 ├── LICENSE                            # MIT license
