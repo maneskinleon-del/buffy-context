@@ -5,12 +5,23 @@
 ---
 
 version: 1.4
-updated: 2026-07-29
+updated: 2026-08-01
 schema: system-profile
 system-id: mangonz-desktop
 ---
 
 # CHANGELOG.md — Historial de cambios del sistema
+
+### 2026-08-01 — Kimi K3 vía Hugging Face + MCP documentado
+
+**Pedido del usuario:** Investigar cómo usar Kimi K3 (Moonshot AI) desde Hugging Face vía MCP y documentar el hallazgo en el repo.
+
+**Cambios aplicados:**
+- **`Knowledge/AI/Kimi-K3.md`** (NUEVO): Referencia del modelo — 2.8T params MoE, multimodal nativo, 1M contexto, tool calling. Acceso: HuggingChat web, API OpenAI-compatible `router.huggingface.co/hf/v1` + token HF (pago por uso), API Moonshot. Aclaración clave: MCP conecta herramientas, NO es la forma de usar el modelo (HuggingChat es cliente MCP; el MCP oficial de HF expone el Hub). Casos de uso: visión de screenshots (upgrade OCR/auto_permiso.py), análisis de contexto 1M (CSVs SecurGuard, dumpsys, logcat), segunda opinión de código, JSON estructurado.
+- **`Knowledge/README.md`**: Nueva categoría `AI/` indexada en el árbol + fecha actualizada a 2026-08-01.
+- **`ai-context/SESION.md`**: Sesión 2026-08-01 registrada; sesión 07-29 archivada (poda automática).
+- **`ai-context/SESION-archive.md`**: Sesión 07-29 (día completo) movida al archivo.
+
 
 ### 2026-07-29 — Integración modo-autónomo y optimización Free Fire (pantalla alargada + ggmouse)
 
