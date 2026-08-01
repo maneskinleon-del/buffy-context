@@ -40,8 +40,9 @@
 - [x] `kimi_vision.js` creado — script de visión IA (upgrade de `auto_permiso.py`) ✅
 - [x] Clave SSH registrada en github.com/settings/keys y push por SSH funcionando ✅
 - [x] `kimi_vision.js` agregado al repo en `scripts/` y documentado ✅
-- [ ] Token HF con scope de inferencia + método de pago configurado
-- [ ] Probar `kimi_vision.js` con HF_TOKEN real + screenshot de diálogo real
+- [ ] Token HF con scope de inferencia + método de pago configurado (el scope de inferencia ya se validó con la prueba real ✅; falta método de pago)
+- [x] Probar `kimi_vision.js` con HF_TOKEN real ✅ (Kimi K3 respondió en 10.2s; identificó correctamente que el screenshot NO era un diálogo de permiso)
+- [ ] Probar `kimi_vision.js` contra un screenshot de un diálogo de permiso real (con `--grant`)
 - [ ] Decidir si revocar el token GitHub expuesto en el chat
 
 ---
