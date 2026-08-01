@@ -96,5 +96,3 @@
 - Trackea **104 archivos**: `codebuff-automation/` completo + `proyectos/autoscript-mobile-interface/` (GameBoost Pro)
 - **Esos proyectos NO tienen su propio `.git`** → el repo del home es su ÚNICA historia git
 - **Decisión del usuario: dejarlo como está** (riesgo bajo sin remote). Opción de `.gitignore` agresivo queda disponible.
-
----
