@@ -1,16 +1,27 @@
 > ⚠️ **Poda automática**: Cuando este archivo supere ~30KB o ~5 entradas
 > recientes (sin contar archive), las entradas más viejas se mueven a
-> `CHANGELOG-archive.md`. Actualmente ~434 líneas — pendiente de archivar.
+> `CHANGELOG-archive.md`. Actualmente ~154 líneas — pendiente de archivar.
 
 ---
 
-version: 1.5
+version: 1.6
 updated: 2026-08-01
 schema: system-profile
 system-id: mangonz-desktop
 ---
 
 # CHANGELOG.md — Historial de cambios del sistema
+
+### 2026-08-01 — kimi_vision.js creado + repo clonado vía SSH
+
+**Pedido del usuario:** Crear el script kimi_vision.js (visión IA con Kimi K3 para detectar diálogos de permisos, upgrade de auto_permiso.py) y sincronizar buffy-context con un clon local vía SSH.
+
+**Cambios aplicados:**
+- **`~/kimi_vision.js`** (NUEVO, fuera del repo): visión IA con `moonshotai/Kimi-K3` vía API HF OpenAI-compatible (`router.huggingface.co/hf/v1/chat/completions`). Screenshot en base64 → modelo devuelve JSON (tipo de permiso, app, botones, confianza) → mapeado a `pm grant`/`appops set` vía rish. Modos: `--img`, `--monitor`, `--watch`, `--screenshot`, `--grant`, `--pkg`, `--json`. Requiere `HF_TOKEN` + licencia gated aceptada. Probado con API simulada ✅ (extractJson 3 casos, mapeo, pipeline completo); 2 pasadas de code review (fixes: mtime en monitorLoop, orden help-vs-token, Number.isFinite en args).
+- **Repo clonado**: `~/buffy-context` vía HTTPS + remote `origin` en SSH (`git@github.com:...`). 44 archivos, working tree limpio, los 5 commits del doc Kimi K3 presentes.
+- **`ai-context/SESION.md`**: Sesión 2026-08-01 actualizada — kimi_vision.js + clon SSH + pendientes (clave SSH por registrar, HF_TOKEN, prueba real).
+- **Clave SSH**: ed25519 generada en este dispositivo; **pendiente de registrar** en github.com/settings/keys (el token actual no tiene scope `admin:public_key`).
+
 
 ### 2026-08-01 — Kimi K3 vía Hugging Face + MCP documentado
 

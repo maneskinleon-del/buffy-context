@@ -29,10 +29,17 @@
 - ✅ Actualizado `Knowledge/README.md` — nueva categoría AI + fecha
 - ✅ Sesión registrada en `SESION.md`
 
+## 💻 kimi_vision.js creado + repo clonado vía SSH
+
+- **`kimi_vision.js`** (raíz, Node 26, CommonJS): visión IA con Kimi K3 (`moonshotai/Kimi-K3`) vía API HF OpenAI-compatible (`router.huggingface.co/hf/v1`). Envía el screenshot en base64; el modelo devuelve JSON (tipo de permiso, app, botones, confianza) → mapeado a `pm grant`/`appops set` vía rish. Modos: `--img`, `--monitor`, `--watch`, `--screenshot`, `--grant`, `--pkg`, `--json`. Requiere `HF_TOKEN` + aceptar licencia gated del modelo. Probado con API simulada (extractJson 3 casos, mapeo, pipeline completo ✅).
+- **Repo `buffy-context` clonado en este dispositivo**: `~/buffy-context` (44 archivos, working tree limpio). Remote `origin` en **SSH** (`git@github.com:maneskinleon-del/buffy-context.git`). Clave ed25519 generada, **pendiente de registrar en GitHub** (`ssh -T git@github.com` → permission denied).
+
 ## 🔜 Pendientes
 
-- [ ] Script de prueba `kimi_vision.js`/`.py` — enviar screenshot a Kimi K3 y detectar diálogo de permiso (upgrade de `auto_permiso.py`)
+- [x] `kimi_vision.js` creado — script de visión IA (upgrade de `auto_permiso.py`) ✅
+- [ ] Registrar clave SSH de este dispositivo en github.com/settings/keys y probar `git push`
 - [ ] Token HF con scope de inferencia + método de pago configurado
+- [ ] Probar `kimi_vision.js` con HF_TOKEN real + screenshot de diálogo real
 - [ ] Decidir si revocar el token GitHub expuesto en el chat
 
 ---
