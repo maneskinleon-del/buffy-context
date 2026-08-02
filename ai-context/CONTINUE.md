@@ -1,37 +1,49 @@
 # 🔄 CONTINUE — Handoff entre sesiones
 
 > ⚡ **PRÓXIMA SESIÓN: LEE ESTO PRIMERO**
-> Generado: 2026-07-30 noche (cierre de sesión — RAM + watchdog MCP + force-stop Free Fire)
+> Generado: 2026-08-02 (cierre de sesión — skills propias + triaje de repos maneskinleon-del + fixes)
 
 ---
 
 ## Resumen de la sesión
 
-**Tema principal:** Limpieza de RAM (kill de procesos huérfanos), creación de un watchdog automático para chrome-devtools-mcp, y matanza de apps de terceros en el script de Free Fire.
+**Tema principal:** Instalación de skills de ComposioHQ (skill-creator, changelog-generator), creación de la skill propia `android-project-setup`, triaje general de los 6 repos públicos de `maneskinleon-del`, y fixes en 3 de ellos (porteria_pwa, pwa_securguard, data_car).
 
 ---
 
 ### ✅ Logros principales
 
-#### 1. 🧹 Diagnóstico y limpieza de RAM
-- Top consumidores: Chrome (~1.1GB), open-webui/uvicorn (~1GB), freebuff (~515MB)
-- Se mató el **chrome-devtools-mcp huérfano** que quedó de la verificación de GitHub → **~1.1GB liberados**
+#### 1. 🧩 Skills de ComposioHQ instaladas
+- **`skill-creator`** y **`changelog-generator`** instaladas desde `ComposioHQ/awesome-claude-skills` (ya estaban `file-organizer` + las precargadas)
+- Probada `changelog-generator`: generó `buffy-context/CHANGELOG.md` (release notes, categorizado ✨/🔧/🐛) — **commiteado junto a la skill**
 
-#### 2. 🛡️ Watchdog automático `cleanup-mcp.sh`
-- Creado `~/.local/bin/cleanup-mcp.sh` + units systemd user (`mcp-cleanup.service` oneshot + `mcp-cleanup.timer` cada 5 min)
-- Regla: mata MCP con **edad > 10min** Y **CPU del árbol < 1% en 2 muestras** (4s + 6s + 4s)
-- Log: `~/.local/state/mcp-cleanup.log` · Verificado con timer activo y ejecución real
-- chrome-devtools-mcp **no tiene flag nativo de auto-exit** (se verificó su `--help` completo)
+#### 2. 🛠️ Skill propia `android-project-setup` creada + versionada
+- Creada con skill-creator en `~/.agents/skills/android-project-setup/` (SKILL.md + scripts/check_device, build_install, grant_permissions + references/devices, permissions)
+- **Probada en vivo contra el ZTE Nubia real** (serial 320344802623): permisos Shizuku/overlay/batería/notificaciones OK; plataforma real `ums9620` documentada
+- Revisada por code-reviewer (fixes: POST_NOTIFICATION faltante, build que instalaba APK viejo al fallar, parseo applicationId robusto)
+- Registrada en `skills-lock.json` y pusheada al repo: **commit `7df99bd`** (`.agents/skills/android-project-setup/` + CHANGELOG + README)
+- Registrada en el stack: **commit `14dcf56`** (INFO-core.md sección Skills + LOAD_CONTEXT.md carga condicional Android)
 
-#### 3. 🎮 Force-stop de apps de terceros en `~/scripts/scrcpy-freefire.sh`
-- Función `kill_background_apps()`: `pm list packages -3` + `am force-stop` por app
-- **Excluye GG Mouse** (`com.zjx.ztezscreenshot`) y **Free Fire** (`com.dts.freefireth`)
-- Configurable: `KILL_BG_APPS="1"` + `KEEP_ALIVE_APPS="com.zjx.ztezscreenshot com.dts.freefireth"`
-- **Probado en el ZTE: 91 apps matadas, GG Mouse + FF intactos** ✅
+#### 3. 🔍 Triaje de repos `maneskinleon-del` (6 repos, typecheck + build + secrets)
+| Repo | Estado |
+|---|---|
+| `porteria_pwa` | ❌ 5 errores TS → **fixeado** (tabs minúsculas + Toast `toastMessage`), commit `d97ed4c` local en `~/proyectos/porteria_pwa` — **sin push** |
+| `pwa_securguard` | ⚠️ Reporte CSV roto → **fixeado + pusheado** (commit `a375c88`) |
+| `data_car` | ⚠️ Código muerto (server.ts + Tachometer.tsx) → **eliminado + pusheado** (commit `642f72a`) |
+| `timemark`, `lista_supermercado`, `enerador-de-boletas` | ✅ Sanos (solo console.log) — `enerador-de-boletas` tiene **typo en el nombre** (→ `generador-de-boletas`) |
+| `core-termux-brain` | Vacío (0 KB) |
 
-#### 4. 📦 (mañana) Push repo GitHub + auditoría repo home
-- Los 12 commits pendientes subidos a GitHub vía SSH (remote HTTPS→SSH con `~/.ssh/id_ed25519`)
-- Repo del home (`/home/mangonz`, master, sin remote) trackea 104 archivos — única historia de GameBoost Pro/codebuff-automation. **Dejado como está** por decisión del usuario.
+#### 4. 🐛 Fix reporte CSV de `pwa_securguard` (incidencias)
+- **`sep=,`** como primera línea → fuerza coma en Excel es-CL (el bug "todo en una columna" en el teléfono)
+- `flatText()` → aplana saltos de línea de descripciones (celda gigante "hacia abajo")
+- `csvRow()` en metadatos (la coma de `Fecha de Exportación` estaba sin escapar)
+- Línea en blanco antes de `--- INFORME DE INCIDENCIAS ---`
+- **`date` en `IncidentReport`**: el CSV muestra la fecha real del incidente, no la de exportación + `sanitizeIncidents` (backfill para incidencias viejas)
+- Push vía **SSH** (remote HTTPS→SSH, la clave ed25519 ya estaba en GitHub)
+
+#### 5. 📝 Revisión del script git del usuario
+- 2 bugs críticos confirmados por ejecución: `sed` que destruye la URL HTTPS (`https://` a secas) y `-c` minúscula en ssh-keygen (debería ser `-C` — "Too many arguments"). Token en URL = mala práctica.
+- **Decisión**: no arreglarlo — el setup ya usa SSH y funciona.
 
 ---
 
@@ -39,34 +51,35 @@
 
 | Archivo | Cambio |
 |---------|--------|
-| `~/scripts/scrcpy-freefire.sh` | ✅ kill_background_apps() + toggles KILL_BG_APPS/KEEP_ALIVE_APPS |
-| `~/.local/bin/cleanup-mcp.sh` | **NUEVO** — watchdog MCP (ejecutable) |
-| `~/.config/systemd/user/mcp-cleanup.service` | **NUEVO** — servicio oneshot |
-| `~/.config/systemd/user/mcp-cleanup.timer` | **NUEVO** — timer cada 5 min (habilitado) |
+| `~/.agents/skills/android-project-setup/` | **NUEVO** — skill completa (SKILL.md, scripts, references) |
+| `buffy-context/.agents/skills/android-project-setup/` | **NUEVO** — versión versionada (commit `7df99bd`) |
+| `buffy-context/CHANGELOG.md` | **NUEVO** — release notes (changelog-generator) |
+| `buffy-context/README.md` | Árbol actualizado con la skill |
+| `buffy-context/ai-context/INFO-core.md` | Sección "Skills instaladas" + fecha (commit `14dcf56`) |
+| `buffy-context/ai-context/LOAD_CONTEXT.md` | `android-project-setup` en carga condicional Android |
+| `~/proyectos/porteria_pwa/src/App.tsx` | Fix tabs (ids del store) + Toast `toastMessage` |
+| `~/proyectos/pwa_securguard/src/utils/report.ts` | `sep=,` + flatText + csvRow + `i.date` |
+| `~/proyectos/pwa_securguard/src/{types,useAppState,Modals,SettingsTab,mockData}.tsx/ts` | Campo `date` en IncidentReport |
+| `~/proyectos/data_car/{server.ts,src/components/Tachometer.tsx}` | **Eliminados** (código muerto) |
 | `ai-context/CONTINUE.md` | ✅ Actualizado (este archivo) |
-| `ai-context/SESION.md` | ✅ Entrada 2026-07-30 noche |
-| `ai-context/SNAPSHOT.md` | ✅ Regenerado (en ~/ai-context/, gitignored en el repo) |
-| Remoto del repo | ✅ HTTPS → SSH |
+| `ai-context/SESION.md` | ✅ Entrada 2026-08-02 segunda parte |
 
 ---
 
 ### ⏳ Pendientes para próxima sesión
 
-1. **Probar `scrcpy-freefire.sh` completo en vivo** — El force-stop está probado por separado, pero falta probar el script end-to-end con GG Mouse + Free Fire + scrcpy.
-2. **Shizuku + comando privilegiado** — Quedó pendiente ejecutar un comando privilegiado (deshabilitar app, forzar GPU rendering, etc.).
-3. **Visión/VLM** — Agregar soporte de imágenes (Qwen2.5-VL, MiniCPM-V). Análisis de screenshots Android.
-4. **Diagnóstico Free Fire en vivo** — `dumpsys gfxinfo` + `SurfaceFlinger --latency` con el juego activo.
-5. **Opcional: limpiar repo del home** — `.gitignore` agresivo si algún día se le agrega un remote.
+1. **`gh auth login`** — quedó pendiente de que el usuario lo corra (en curso). Con eso: renombrar `enerador-de-boletas` → `generador-de-boletas` por API + **pushear `porteria_pwa`** (commit `d97ed4c` ya listo; cambiar remote a SSH como en pwa_securguard).
+2. **Aplicar `sep=,` a los otros exports CSV** de pwa_securguard (`csvDownload` de LogsTab/PersonasTab) — mismo problema es-CL.
+3. **Opcional**: deploy de pwa_securguard a Vercel para probar el reporte nuevo; limpiar los clones temporales en `/tmp/repo_triage/`.
 
 ---
 
 ### ⚠️ Problemas conocidos
 
-- **`scripts/ai-context.sh`** — Script legacy que genera zips de debugging. Obsoleto pero no interfiere.
-- **Repo del home sin limpiar** — `git add -A` en `/home/mangonz` podría trackear cosas sensibles (`.gitconfig`, `.ollama/`, `.m2/`). Evitar sin fijarse.
-- **Shizuku**: Al reiniciar el dispositivo se detiene y hay que volver a activarlo.
-- **Push** — Ahora usa SSH (`git@github.com:`), ya no requiere token HTTPS.
-- **`am force-stop` ruido** — Imprime "Force stopping..." por stdout en Android moderno (93 líneas). Inofensivo; si molesta: `>/dev/null 2>&1`.
+- **`gh` sin autenticar** — todo push va por SSH (funciona con `~/.ssh/id_ed25519`).
+- **`porteria_pwa` sin pushear** — remote HTTPS sin credenciales; fix `d97ed4c` esperando en `~/proyectos/porteria_pwa`.
+- **Incidencias viejas de pwa_securguard** — al rehidratar quedan con fecha de hoy (no había forma de saber la real; solo tenían hora).
+- **Repos clonados en `/tmp/repo_triage/`** — temporales del triaje, se pueden borrar.
 
 ---
 
@@ -77,8 +90,10 @@ OS:    EndeavourOS (Arch) · kernel 6.18.39-1-lts
 WM:    bspwm (X11) · rice gh0stzk/cynthia · picom
 Shell: zsh (Oh My Zsh + Starship) · alacritty · editor VSCodium
 CPU:   Ryzen 5 3400G (4C/8T) + Vega 11 · 13GB RAM · 1360x768
-Phone: ZTE Nubia Z2352N · Android 13 · Unisoc T820 · ADB + Shizuku activo
+Phone: ZTE Nubia Z2352N · Android 13 · Unisoc T820 (ums9620) · ADB + Shizuku
+Disk:  39% usado / 126G libres · ollama + backups en HDD (/media/datos)
 Stack: React + TS + Tailwind v4 + Vite → GitHub (maneskinleon-del) → Vercel
-Node:  v26.4.0 · npm 11.18.0 · gh CLI 2.96.0
-Git:   maneskinleon-del / mangonz970@gmail.com
+Node:  v26.4.0 · npm 11.18.0 · gh CLI (sin auth)
+Git:   maneskinleon-del / mangonz970@gmail.com · push por SSH
+Skills: 41 instaladas (~/.agents/skills/) · android-project-setup propia
 ```

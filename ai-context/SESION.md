@@ -1198,3 +1198,83 @@ El usuario ya tenía una carpeta `ai-context/` con archivos manualmente mantenid
 - Commit en buffy-context con la unificación.
 
 *Fin de la sesión — Última actualización: 2026-08-02*
+
+---
+
+# 🧠 SESION — Buffy Freebuff (2026-08-02 — segunda parte: skills propias + triaje de repos + fixes)
+
+> Tema: instalar skills de ComposioHQ (skill-creator, changelog-generator), crear la skill propia `android-project-setup`, auditar los 6 repos públicos de maneskinleon-del y arreglar los que tenían bugs (porteria_pwa, pwa_securguard, data_car).
+
+---
+
+## 🧩 Skills de ComposioHQ instaladas
+
+- **`skill-creator`** y **`changelog-generator`** instaladas desde `ComposioHQ/awesome-claude-skills` con `npx skills add` (quedan en `~/.agents/skills/`, ya son 41 skills).
+- **`changelog-generator` probada**: generó `buffy-context/CHANGELOG.md` a partir de los 43 commits del repo (29-jul → 2-ago), categorizado ✨/🔧/🐛 y en lenguaje user-friendly (filtra el ruido de commits docs).
+
+## 🛠️ Skill propia `android-project-setup` (creada con skill-creator)
+
+- **Estructura**: `~/.agents/skills/android-project-setup/` = SKILL.md + `scripts/{check_device,build_install,grant_permissions}.sh` + `references/{devices,permissions}.md`.
+- **Workflow**: build gradle → install APK → permisos Shizuku/overlay/batería → launch, contra el ZTE Nubia (serial `320344802623`).
+- **Probada en vivo**: `check_device.sh` detectó la plataforma real **`ums9620`** (corregida en references — decía ums9230); `grant_permissions.sh` concedió los 6 permisos (incluye POST_NOTIFICATION) con verificación solo-lectura.
+- **Code review aplicado**: fix al build que instalaba APK viejo si fallaba (ahora aborta sin `BUILD SUCCESSFUL`), parseo de applicationId robusto (comillas simples/dobles), simplificación de multi-dispositivo.
+- **Versionada en el repo** (commit `7df99bd`): `.agents/skills/android-project-setup/` + entrada en CHANGELOG.md + árbol del README. **Registrada en el stack** (commit `14dcf56`): sección Skills en `INFO-core.md` + carga condicional Android en `LOAD_CONTEXT.md`.
+
+## 🔍 Triaje de repos `maneskinleon-del` (6 repos)
+
+Typecheck real (`tsc --noEmit`) + build + escaneo de secrets/TODOs en los 6 repos (4 clonados frescos en /tmp + data_car/pwa_securguard locales):
+
+| Repo | Estado | Hallazgo |
+|---|---|---|
+| `porteria_pwa` | ❌ 5 errores TS | Tabs con ids MAYÚSCULAS (`'INGRESO'`) vs store en minúsculas (`'registro'`) → contenido de tabs nunca renderizaba al cargar; Toast leía `toast.message` (no existe, el store tiene `toastMessage`) → nunca se mostraba |
+| `pwa_securguard` | ⚠️ 1 bug funcional | Reporte CSV de incidencias se veía roto en Excel es-CL (ver sección abajo) |
+| `data_car` | ⚠️ código muerto | `server.ts` (Express+Gemini, deps NO en package.json, `app` antes de declarar) y `Tachometer.tsx` (import `TelemetryStats` inexistente, sin uso) |
+| `timemark` | ✅ sano | 3 console.log |
+| `lista_supermercado` | ✅ sano | 10 console.log |
+| `enerador-de-boletas` | ✅ sano | **typo en el nombre del repo** (→ `generador-de-boletas`), package.json ya dice el nombre correcto |
+
+- Sin secrets filtrados: todos los `.env` son `.env.example` correctamente gitignored.
+- `core-termux-brain` está vacío (0 KB) — candidato a borrar en GitHub.
+
+## 🐛 Fix `porteria_pwa` (bugs de UI)
+
+- `src/App.tsx`: ids de tabs unificados a los del store (`registro`/`frecuentes`/`exportar`/`importar`) + `as const` + eliminado el `as any`; Toast ahora lee `toastMessage`.
+- Verificado: `tsc --noEmit` EXIT 0 (antes 5 errores) + `vite build` OK.
+- Commit `d97ed4c` en `~/proyectos/porteria_pwa` — **pendiente de push** (remote HTTPS sin credenciales; falta `gh auth` o cambiar a SSH).
+
+## 🐛 Fix `pwa_securguard` — reporte CSV de incidencias
+
+El CSV exportado se veía "todo en una columna" / "incidencia hacia abajo en una sola celda" al abrirlo en **Excel móvil con configuración regional es-CL** (usa `;` como separador). Fix en `src/utils/report.ts`:
+
+1. **`sep=,`** como primera línea — fuerza el delimitador coma en Excel sin importar la regional.
+2. **`flatText()`** — normaliza saltos de línea de la descripción (textarea) a un espacio: cada incidente queda en UNA fila.
+3. **`csvRow()` en metadatos** — la coma de `Fecha de Exportación: 02-08-2026, 5:22 p. m.` estaba sin escapar (3 columnas).
+4. **Línea en blanco** antes de `--- INFORME DE INCIDENCIAS ---` (las otras secciones sí la tenían).
+
+### Campo `date` en IncidentReport (fecha real, no de exportación)
+
+- `types.ts`: `date: string` (fecha REAL del incidente). `useAppState.handleSaveIncident` la setea con `getLocalDateISO()`.
+- **`sanitizeIncidents`** nuevo (sigue el patrón `sanitizeLogs`/`sanitizePersonas`): al rehidratar backfillea `date` a hoy para incidencias viejas y valida categoría → el tipo queda honesto y sin fallbacks duplicados.
+- `SettingsTab` muestra `FECHA: {inc.date}` en la tarjeta.
+- Verificado: typecheck EXIT 0, build OK, test funcional muestra `2026-07-25` (fecha real) en vez de la de exportación.
+- **Commit `a375c88` pusheado** — el remote estaba en HTTPS sin credenciales, se cambió a **SSH** (`git@github.com:`) con la clave ed25519 existente.
+
+## 🐛 Fix `data_car` — código muerto eliminado
+
+- `git rm server.ts` (-194 líneas) y `src/components/Tachometer.tsx` (-209 líneas). Verificado antes con grep que nadie los referencia (ni .ts/.tsx/.json/.sh/.md; el `server:` de vite.config.ts es el dev server de Vite).
+- Typecheck pasó de 5 errores a **EXIT 0**; build OK. Commit `642f72a` pusheado.
+
+## 📝 Revisión del script git del usuario (descartado)
+
+- Script de configuración git (identidad + HTTPS/PAT o SSH) con 2 bugs críticos **confirmados por ejecución**: el `sed` de limpieza de URL devuelve `https://` a secas con URLs normales (come el path), y `ssh-keygen -t ed25519 -c` (minúscula) da "Too many arguments" — debe ser `-C`. Además inyecta el token en el remote (mala práctica).
+- **Decisión**: no arreglarlo — el setup real ya usa SSH y funciona.
+
+## 🔜 Pendientes
+
+- [ ] `gh auth login` (lo iba a correr el usuario) → luego renombrar `enerador-de-boletas` → `generador-de-boletas` por API y **pushear `porteria_pwa`** (cambiar remote a SSH).
+- [ ] Aplicar `sep=,` a los exports CSV simples de pwa_securguard (`csvDownload` en LogsTab/PersonasTab).
+- [ ] Limpiar `/tmp/repo_triage/` (clones temporales del triaje).
+
+---
+
+*Fin de la sesión — Última actualización: 2026-08-02*
