@@ -2,7 +2,7 @@
 
 > Base de conocimiento estructurada para consulta rápida por agentes IA.
 > Contenido extraído y resumido de skills, proyectos y experiencia acumulada.
-> Actualizado: 2026-07-29
+> Actualizado: 2026-08-01
 
 ---
 
@@ -10,6 +10,9 @@
 
 ```
 Knowledge/
+├── AI/                     → Modelos LLM vía Hugging Face
+│   └── Kimi-K3.md          → Kimi K3: acceso API, MCP vs modelo, casos de uso
+│
 ├── Android/                → ADB, Shizuku, HyperOS, juegos, scrcpy, keymappers
 │   ├── ADB.md              → Comandos ADB generales (dispositivos, apps, permisos)
 │   ├── Shizuku.md          → Shizuku + rish (privilegios sin root)
@@ -68,6 +71,7 @@ Para **mangonz**: cuando aprendas algo nuevo y quieras guardarlo:
 | `React/Tailwind.md` | `.agents/skills/tailwind-design-system/` |
 | `React/PWA.md` | Proyectos `pwa_securguard`, `widgetos` |
 | `Shell/Shell.md` | `.agents/skills/modo-autonomo/` |
+| `AI/Kimi-K3.md` | — (referencia, sin skill aún) |
 
 > Las skills son instrucciones **ejecutables** para el agente.
 > Knowledge/ es **referencia** para consulta rápida.

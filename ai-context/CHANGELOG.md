@@ -1,3 +1,17 @@
+> ⚠️ **Poda automática**: Cuando este archivo supere ~30KB o ~5 entradas
+> recientes (sin contar archive), las entradas más viejas se mueven a
+> `CHANGELOG-archive.md`. Actualmente ~175 líneas — pendiente de archivar.
+
+---
+
+version: 1.7
+updated: 2026-08-01
+schema: system-profile
+system-id: mangonz-desktop
+---
+
+# CHANGELOG.md — Historial de cambios del sistema
+
 ### 2026-08-01 — systemd-boot fix + ask-model.js "segundo cerebro" + kimi_vision.js adoptado
 
 **Pedido del usuario:** (1) arreglar que el menú de arranque esperara Enter, (2) montar un complemento para consultar otros modelos (local/nube) cuando yo tenga dudas, (3) adoptar la mejora kimi_vision.js del repo buffy-context.
@@ -16,12 +30,6 @@
 ---
 version: 1.4
 updated: 2026-07-29
-schema: system-profile
-system-id: mangonz-desktop
----
-
-# CHANGELOG.md — Historial de cambios del sistema
-
 ### 2026-08-01 — Cleanup real al salir en scrcpy-freefire.sh + limpieza del teléfono (laboratorio)
 
 **Pedido del usuario:** al cerrar el script de Free Fire, cerrar las apps abiertas y apagar la pantalla (las apps seguían corriendo y gastaban batería). Además, empezar a limpiar el teléfono como laboratorio de pruebas.
@@ -78,6 +86,56 @@ system-id: mangonz-desktop
 - `openclaw-gateway.service`: `OPENCLAW_SERVICE_MANAGED_ENV_KEYS` → solo `KIMCHI_API_KEY`
 - Gateway ✅ active · `.last-good` regenerado sin nous · backup en `openclaw.json.bak-hermes-removal`
 - Pendiente: proxy blockrun (8402) no está corriendo — OpenClaw usa fallback ollama local mientras tanto
+### 2026-08-01 — Fix ruta de rish + prueba real de --grant con diálogo de permiso
+
+**Hallazgo:** En la primera prueba real con `--grant`, el script fallaba con `rish: not found` porque rish vive en `~/bin/rish` y no está en PATH en este dispositivo.
+
+**Cambios aplicados:**
+- **`scripts/kimi_vision.js`** (y `~/kimi_vision.js`): nueva función `resolveRish()` — resuelve la ruta con prioridad env `RISH` > `~/bin/rish` (si existe) > `rish` en PATH (vía `command -v`) > fallback `rish`. La constante `RISH` usa ahora la ruta resuelta.
+- **Prueba real completada**: diálogo de notificaciones de VInstall (`com.vinstall.alwiz`) detectado por Kimi K3 al 98% (título, botones PERMITIR/NO PERMITIR) y concedido: `pm grant POST_NOTIFICATIONS` + `appops POST_NOTIFICATION=allow`. Verificado: `granted=true`, appop `allow`.
+
+
+### 2026-08-01 — Fix endpoint Kimi K3 (router.huggingface.co/v1, sin /hf)
+
+**Hallazgo:** El endpoint `/hf/v1/chat/completions` devuelve 404; el correcto es `https://router.huggingface.co/v1/chat/completions` (verificado con prueba real: HTTP 200, Kimi K3 respondió en 10.2s).
+
+**Cambios aplicados:**
+- **`scripts/kimi_vision.js`** (y `~/kimi_vision.js`): `KIMI_ENDPOINT` default corregido a `router.huggingface.co/v1/chat/completions` (header + constante), + hint de error para 404 que recomienda revisar `KIMI_ENDPOINT`.
+- **`Knowledge/AI/Kimi-K3.md`**: las 3 referencias al endpoint actualizadas a `/v1` (tabla de acceso, ejemplo curl, sección Script implementado).
+- **Nota:** las entradas históricas de este CHANGELOG mencionan `/hf/v1`; quedan como referencia del estado previo al fix.
+
+
+### 2026-08-01 — kimi_vision.js integrado al repo buffy-context
+
+**Pedido del usuario:** Agregar kimi_vision.js al repo: copiarlo a scripts/ y documentarlo en Knowledge/AI/Kimi-K3.md.
+
+**Cambios aplicados:**
+- **`scripts/kimi_vision.js`** (NUEVO): copia del script de visión IA (Kimi K3) para detectar diálogos de permisos — upgrade de auto_permiso.py. Idéntico al origen `~/kimi_vision.js` (22639 bytes, diff 0), `node --check` OK.
+- **`scripts/lib/logger.js` + `scripts/lib/utils.js`** (NUEVOS, vendored): copias de `~/lib/` para que el script sea **autocontenido y ejecutable desde el repo** (verificado: `node scripts/kimi_vision.js --help` ✅). Marcados como copia vendored (actualizar desde `~/lib/`).
+- **`Knowledge/AI/Kimi-K3.md`**: Nueva sección "Script implementado: scripts/kimi_vision.js" — modos CLI, cómo funciona (base64 → Kimi K3 → JSON → mapeo rish), robustez (retry/backoff, parseo robusto, fallback other), verificación.
+- **`README.md`**: árbol de scripts actualizado con `kimi_vision.js`.
+
+
+### 2026-08-01 — kimi_vision.js creado + repo clonado vía SSH
+
+**Pedido del usuario:** Crear el script kimi_vision.js (visión IA con Kimi K3 para detectar diálogos de permisos, upgrade de auto_permiso.py) y sincronizar buffy-context con un clon local vía SSH.
+
+**Cambios aplicados:**
+- **`~/kimi_vision.js`** (NUEVO, fuera del repo): visión IA con `moonshotai/Kimi-K3` vía API HF OpenAI-compatible (`router.huggingface.co/hf/v1/chat/completions`). Screenshot en base64 → modelo devuelve JSON (tipo de permiso, app, botones, confianza) → mapeado a `pm grant`/`appops set` vía rish. Modos: `--img`, `--monitor`, `--watch`, `--screenshot`, `--grant`, `--pkg`, `--json`. Requiere `HF_TOKEN` + licencia gated aceptada. Probado con API simulada ✅ (extractJson 3 casos, mapeo, pipeline completo); 2 pasadas de code review (fixes: mtime en monitorLoop, orden help-vs-token, Number.isFinite en args).
+- **Repo clonado**: `~/buffy-context` vía HTTPS + remote `origin` en SSH (`git@github.com:...`). 44 archivos, working tree limpio, los 5 commits del doc Kimi K3 presentes.
+- **`ai-context/SESION.md`**: Sesión 2026-08-01 actualizada — kimi_vision.js + clon SSH + pendientes (clave SSH por registrar, HF_TOKEN, prueba real).
+- **Clave SSH**: ed25519 generada en este dispositivo; **pendiente de registrar** en github.com/settings/keys (el token actual no tiene scope `admin:public_key`).
+
+
+### 2026-08-01 — Kimi K3 vía Hugging Face + MCP documentado
+
+**Pedido del usuario:** Investigar cómo usar Kimi K3 (Moonshot AI) desde Hugging Face vía MCP y documentar el hallazgo en el repo.
+
+**Cambios aplicados:**
+- **`Knowledge/AI/Kimi-K3.md`** (NUEVO): Referencia del modelo — 2.8T params MoE, multimodal nativo, 1M contexto, tool calling. Acceso: HuggingChat web, API OpenAI-compatible `router.huggingface.co/hf/v1` + token HF (pago por uso), API Moonshot. Aclaración clave: MCP conecta herramientas, NO es la forma de usar el modelo (HuggingChat es cliente MCP; el MCP oficial de HF expone el Hub). Casos de uso: visión de screenshots (upgrade OCR/auto_permiso.py), análisis de contexto 1M (CSVs SecurGuard, dumpsys, logcat), segunda opinión de código, JSON estructurado.
+- **`Knowledge/README.md`**: Nueva categoría `AI/` indexada en el árbol + fecha actualizada a 2026-08-01.
+- **`ai-context/SESION.md`**: Sesión 2026-08-01 registrada; sesión 07-29 archivada (poda automática).
+- **`ai-context/SESION-archive.md`**: Sesión 07-29 (día completo) movida al archivo.
 
 ### 2026-07-29 — Integración modo-autónomo y optimización Free Fire (pantalla alargada + ggmouse)
 

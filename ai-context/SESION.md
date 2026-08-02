@@ -906,6 +906,48 @@ Tasker y Automate eran **Device Admins activos** → Android bloquea su desinsta
 
 ---
 
+# 🧠 SESION — Buffy Freebuff (2026-08-01 — Kimi K3 vía Hugging Face + MCP)
+
+> Tema: investigación de cómo usar Kimi K3 (Moonshot AI) desde Hugging Face, aclaración de MCP vs modelo, y documentación en Knowledge/.
+
+---
+
+## 🤖 Kimi K3 — hallazgo documentado
+
+- **Qué es:** modelo multimodal 2.8T (MoE) de Moonshot AI, 1M tokens de contexto, tool calling ✅
+- **Acceso:** HuggingChat web (gratis) | API OpenAI-compatible `https://router.huggingface.co/v1` + token HF (pago por uso) | API Moonshot `platform.kimi.ai`
+- **Model ID:** `moonshotai/Kimi-K3`
+
+## ⚠️ Aclaración clave: MCP vs modelo
+
+- **MCP conecta herramientas**, no es la forma de "usar el modelo"
+- HuggingChat es **cliente** MCP; el servidor MCP oficial de HF (`@huggingface/mcp-server`) expone el Hub, no chat con modelos
+- Para usar Kimi K3 como cerebro: API OpenAI-compatible o HuggingChat web
+
+## 📂 Acciones
+
+- ✅ Creado `Knowledge/AI/Kimi-K3.md` — referencia completa (acceso, ejemplos curl, casos de uso)
+- ✅ Actualizado `Knowledge/README.md` — nueva categoría AI + fecha
+- ✅ Sesión registrada en `SESION.md`
+
+## 💻 kimi_vision.js creado + repo clonado vía SSH
+
+- **`kimi_vision.js`** (raíz, Node 26, CommonJS): visión IA con Kimi K3 (`moonshotai/Kimi-K3`) vía API HF OpenAI-compatible (`router.huggingface.co/v1`). Envía el screenshot en base64; el modelo devuelve JSON (tipo de permiso, app, botones, confianza) → mapeado a `pm grant`/`appops set` vía rish (ruta resuelta automáticamente: env RISH > ~/bin/rish > PATH). Modos: `--img`, `--monitor`, `--watch`, `--screenshot`, `--grant`, `--pkg`, `--json`. Requiere `HF_TOKEN` + aceptar licencia gated del modelo. Probado con API simulada ✅, con HF_TOKEN real ✅ y con diálogo real + `--grant` ✅ (notificaciones VInstall, 98%).
+- **Repo `buffy-context` clonado en este dispositivo**: `~/buffy-context` (44 archivos, working tree limpio). Remote `origin` en **SSH** (`git@github.com:maneskinleon-del/buffy-context.git`). Clave ed25519 registrada en GitHub ✅ y push exitoso (`7bcb639`).
+- **`kimi_vision.js` integrado al repo** (scripts/): copiado a `scripts/kimi_vision.js` (diff 0, `node --check` ✅), documentado en `Knowledge/AI/Kimi-K3.md` (sección "Script implementado") y en el árbol de `README.md`.
+
+## 🔜 Pendientes
+
+- [x] `kimi_vision.js` creado — script de visión IA (upgrade de `auto_permiso.py`) ✅
+- [x] Clave SSH registrada en github.com/settings/keys y push por SSH funcionando ✅
+- [x] `kimi_vision.js` agregado al repo en `scripts/` y documentado ✅
+- [ ] Token HF con scope de inferencia + método de pago configurado (el scope de inferencia ya se validó con la prueba real ✅; falta método de pago)
+- [x] Probar `kimi_vision.js` con HF_TOKEN real ✅ (Kimi K3 respondió en 10.2s; identificó correctamente que el screenshot NO era un diálogo de permiso)
+- [x] Probar `kimi_vision.js` contra un screenshot de un diálogo de permiso real (con `--grant`) ✅ — diálogo de notificaciones de VInstall (`com.vinstall.alwiz`) detectado al 98% y concedido: `pm grant POST_NOTIFICATIONS` + `appops POST_NOTIFICATION=allow`, verificado `granted=true`
+- [ ] Decidir si revocar el token GitHub expuesto en el chat
+
+---
+
 # 🧠 SESION — Buffy Freebuff (2026-07-30 noche — RAM + watchdog MCP + force-stop en scrcpy-freefire)
 
 > Tema: diagnóstico de RAM, cleanup automático de chrome-devtools-mcp huérfanos, y matanza de apps de terceros antes de Free Fire.
