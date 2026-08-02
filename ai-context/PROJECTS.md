@@ -1,6 +1,6 @@
 ---
-version: 1.2
-updated: 2026-07-27
+version: 1.3
+updated: 2026-07-31
 schema: system-profile
 system-id: mangonz-desktop
 ---
@@ -26,8 +26,8 @@ system-id: mangonz-desktop
 - **Stack:** React + TypeScript + Tailwind v4 + Vite
 - **Repo:** `maneskinleon-del/data_car`
 - **Deploy:** `scuderia-data.vercel.app`
-- **Ruta:** `~/data_car/` (también referenciado en `~/antigravity/scuderia-data/`)
-- **Estado:** telemetría falsa/contenido IA removido; IndexedDB para PDFs (SOAP, revisión técnica); campos chasis/marca/dueño editables inline
+- **Ruta:** `~/data_car/` (restaurado desde el repo el 2026-07-31 — el path local faltaba; `~/antigravity/scuderia-data/` no existe)
+- **Estado:** telemetría falsa/contenido IA removido; IndexedDB para PDFs (SOAP, revisión técnica); campos chasis/marca/dueño editables inline; **fix de persistencia desplegado** — write-through síncrono + flush en pagehide/visibilitychange, verificado e2e en producción (el último registro sobrevive al cierre abrupto)
 
 ## Generador de Boletas (billing PWA Chile)
 - **Objetivo:** boletas/facturación chilena
