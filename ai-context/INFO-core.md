@@ -1,7 +1,7 @@
 # 🖥️ INFO-CORE — mangonz (cargar siempre)
 
 > Contexto mínimo para cualquier agente IA. Para detalle histórico, hardware completo, changelog o checklist de capacidades → ver `INFO-full.md`.
-> Actualizado: 2026-07-26
+> Actualizado: 2026-08-02
 
 ## Sistema
 - OS: EndeavourOS (Arch) — kernel 6.18.39-1-lts
@@ -28,6 +28,15 @@ git 2.55.0 · node v26.4.0 · npm 11.18.0 · python3 3.14.6 · cargo/rustc · ad
 
 ## IA/CLI instaladas
 freebuff · Antigravity
+
+## Skills instaladas (`~/.agents/skills/`)
+| Skill | Uso |
+|---|---|
+| **android-project-setup** | Setup Android: build gradle → install APK → permisos Shizuku/overlay/batería → launch. Scripts en `.agents/skills/android-project-setup/scripts/` (check_device, build_install, grant_permissions) + referencias. Probada en vivo con el ZTE Nubia. |
+| android-agent · android-adb · shizuku-rikka · scrcpy-freefire · xiaomi-adb-tricks · hyperos-hardening | Android: diagnóstico, ADB, Shizuku, Free Fire, permisos |
+| code-search · vision-adapter · skill-creator · changelog-generator · file-organizer | Búsqueda de código, visión, creación de skills, changelogs, organización |
+
+Cargar la skill relevante según la tarea (ver `ai-context/LOAD_CONTEXT.md` — protocolo de carga condicional).
 
 ## Reglas personales (no negociables)
 ```yaml
