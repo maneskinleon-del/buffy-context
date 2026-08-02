@@ -67,8 +67,12 @@ buffy-context/
 │       └── Shell.md                   # Variables, awk, sed, trap
 │
 ├── .agents/skills/                    # AI agent skill definitions
-│   └── android-agent/
-│       └── SKILL.md                   # Android detection & automation
+│   ├── android-agent/
+│   │   └── SKILL.md                   # Android detection & automation
+│   └── android-project-setup/
+│       ├── SKILL.md                   # Build → install → permisos → launch
+│       ├── scripts/                   # check_device, build_install, grant_permissions
+│       └── references/                # Dispositivos y permisos del usuario
 │
 ├── scripts/                           # Utility scripts
 │   ├── buffy-context.sh               # System snapshot generator
