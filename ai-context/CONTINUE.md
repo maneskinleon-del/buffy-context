@@ -27,7 +27,7 @@
 #### 3. 🔍 Triaje de repos `maneskinleon-del` (6 repos, typecheck + build + secrets)
 | Repo | Estado |
 |---|---|
-| `porteria_pwa` | ❌ 5 errores TS → **fixeado** (tabs minúsculas + Toast `toastMessage`), commit `d97ed4c` local en `~/proyectos/porteria_pwa` — **sin push** |
+| `porteria_pwa` | ❌ 5 errores TS → **fixeado + pusheado** (tabs minúsculas + Toast `toastMessage`), commit `d97ed4c` (remote HTTPS→SSH) |
 | `pwa_securguard` | ⚠️ Reporte CSV roto → **fixeado + pusheado** (commit `a375c88`) |
 | `data_car` | ⚠️ Código muerto (server.ts + Tachometer.tsx) → **eliminado + pusheado** (commit `642f72a`) |
 | `timemark`, `lista_supermercado`, `enerador-de-boletas` | ✅ Sanos (solo console.log) — `enerador-de-boletas` tiene **typo en el nombre** (→ `generador-de-boletas`) |
@@ -68,16 +68,14 @@
 
 ### ⏳ Pendientes para próxima sesión
 
-1. **`gh auth login`** — quedó pendiente de que el usuario lo corra (en curso). Con eso: renombrar `enerador-de-boletas` → `generador-de-boletas` por API + **pushear `porteria_pwa`** (commit `d97ed4c` ya listo; cambiar remote a SSH como en pwa_securguard).
-2. **Aplicar `sep=,` a los otros exports CSV** de pwa_securguard (`csvDownload` de LogsTab/PersonasTab) — mismo problema es-CL.
-3. **Opcional**: deploy de pwa_securguard a Vercel para probar el reporte nuevo; limpiar los clones temporales en `/tmp/repo_triage/`.
+1. **`gh auth login`** — quedó pendiente de que el usuario lo corra (en curso). Con eso: renombrar `enerador-de-boletas` → `generador-de-boletas` por API. *(porteria_pwa ya fue pusheado — remote cambiado a SSH, commit `d97ed4c` en GitHub)*
+2. **Opcional**: deploy de pwa_securguard a Vercel para probar el reporte nuevo; limpiar los clones temporales en `/tmp/repo_triage/`.
 
 ---
 
 ### ⚠️ Problemas conocidos
 
 - **`gh` sin autenticar** — todo push va por SSH (funciona con `~/.ssh/id_ed25519`).
-- **`porteria_pwa` sin pushear** — remote HTTPS sin credenciales; fix `d97ed4c` esperando en `~/proyectos/porteria_pwa`.
 - **Incidencias viejas de pwa_securguard** — al rehidratar quedan con fecha de hoy (no había forma de saber la real; solo tenían hora).
 - **Repos clonados en `/tmp/repo_triage/`** — temporales del triaje, se pueden borrar.
 
