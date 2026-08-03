@@ -41,8 +41,7 @@ buffy-context/
 │   ├── SESION.md                      # Últimas 3 sesiones (archivado automático)
 │   ├── SESION-archive.md              # Histórico completo de sesiones
 │   ├── PROJECTS.md                    # Active projects
-│   ├── SYSTEM.md                      # ⚠️ DEPRECATED → ver INFO-core.md
-│   ├── SYSTEM_FULL.md                 # ⚠️ DEPRECATED → ver INFO-full.md
+│   ├── deprecated/                    # Stubs SYSTEM.md/SYSTEM_FULL.md (migrados 2026-08-03)
 │   └── CHANGELOG.md                   # Change history
 │
 ├── Knowledge/                         # Structured technical reference

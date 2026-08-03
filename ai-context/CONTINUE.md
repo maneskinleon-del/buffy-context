@@ -57,7 +57,7 @@
 
 1. **README desactualizado** (§7.3 del digest): el árbol de skills/Knowledge no refleja las 13 skills nuevas + 3 migradas. No causa drift, pero es doc deshonesta.
 2. **Schema-lite para ai-context (B1)** (§7.4): JSON Schema + test para INFO-core/CONTINUE/LOAD_CONTEXT (opcional).
-3. **Decisiones tuyas**: (a) migración SYSTEM.md → INFO-core (siguen vivos con DEPRECATED); (b) versiones mínimas de scrcpy/Ollama desde el PC para documentarlas.
+3. **Decisiones tuyas**: (a) ~~migración SYSTEM.md → INFO-core~~ — **HECHA (2026-08-03)** vía migrate-system.sh, stubs en `ai-context/deprecated/`; (b) versiones mínimas de scrcpy/Ollama desde el PC para documentarlas.
 4. **`gh auth login`** — sigue pendiente (los push van por SSH y funcionan).
 5. Renombrar repo `enerador-de-boletas` → `generador-de-boletas` (requiere gh auth).
 

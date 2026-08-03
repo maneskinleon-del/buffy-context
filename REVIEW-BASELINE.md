@@ -108,8 +108,10 @@ Estos son los problemas actuales del proyecto, en orden de prioridad:
    contra lo ya archivado), front-matter duplicado eliminado (un solo bloque arriba,
    `version: 1.7` / `updated: 2026-08-03`), 13 entradas recientes (08-01 a 08-03)
    ordenadas. Pendiente opcional: que `changelog-entry.sh` archive automáticamente.
-3. **Migración SYSTEM.md → INFO-core pendiente** (decisión del usuario): `SYSTEM.md` y
-   `SYSTEM_FULL.md` están marcados DEPRECATED pero siguen vivos.
+3. ~~**Migración SYSTEM.md → INFO-core**~~ — **HECHA (2026-08-03)**: los stubs
+   `SYSTEM.md`/`SYSTEM_FULL.md` (ya vacíos, apuntaban a INFO-core/full) se movieron a
+   `ai-context/deprecated/` vía `migrate-system.sh`; referencias corregidas a
+   INFO-core/INFO-full. El doctor ya no reporta `DEPRECATED_FILE`.
 4. **README promete más de lo que hay:** el árbol de Knowledge/skills en README no coincide
    con el disco — es el origen del drift.
 
