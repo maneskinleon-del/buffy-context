@@ -15,7 +15,14 @@ git clone https://github.com/tu-usuario/buffy-context.git ~/buffy-context
 
 # (Opcional) Vincular scripts al PATH
 ln -sf ~/buffy-context/scripts/buffy-context.sh ~/.local/bin/
+ln -sf ~/buffy-context/scripts/buffy-doctor.sh ~/.local/bin/
+ln -sf ~/buffy-context/scripts/buffy-repair.sh ~/.local/bin/
+ln -sf ~/buffy-context/scripts/buffy-agent.sh ~/.local/bin/
+ln -sf ~/buffy-context/scripts/buffy-router.sh ~/.local/bin/
 ln -sf ~/buffy-context/scripts/android-detect.sh ~/.local/bin/
+
+# Nota Termux: si /usr/bin/env no existe, ejecuta con bash explícito:
+#   bash ~/.local/bin/buffy-doctor.sh --quick
 ```
 
 ## Vincular ai-context original
@@ -56,3 +63,27 @@ bash ~/buffy-context/scripts/android-detect.sh    # Completo
 bash ~/buffy-context/scripts/android-detect.sh --quick  # Resumen
 bash ~/buffy-context/scripts/android-detect.sh --watch   # Live loop
 ```
+
+## Ciclo operativo (doctor → repair → agent)
+
+Buffy puede diagnosticar su propio estado, corregir lo seguro y verificar antes de trabajar:
+
+```bash
+# Auditoría de salud del ecosistema (humano o JSON)
+bash ~/buffy-context/scripts/buffy-doctor.sh
+bash ~/buffy-context/scripts/buffy-doctor.sh --json
+
+# Plan de reparación (dry-run, no aplica nada)
+bash ~/buffy-context/scripts/buffy-repair.sh
+
+# Aplicar solo fixes AUTO_SAFE y verificar
+bash ~/buffy-context/scripts/buffy-repair.sh --auto
+
+# Ciclo completo: preflight → repair → verify → carga de contexto
+bash ~/buffy-context/scripts/buffy-agent.sh "tu mensaje"
+bash ~/buffy-context/scripts/buffy-agent.sh --json
+```
+
+Exit codes: `buffy-agent` y `buffy-repair` usan `0` = consistente, `1` = drift que requiere decisión humana, `2` = error de uso.
+
+En Termux, ejecuta siempre con `bash` explícito (ver nota arriba).

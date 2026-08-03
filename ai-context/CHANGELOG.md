@@ -12,6 +12,27 @@ system-id: mangonz-desktop
 
 # CHANGELOG.md — Historial de cambios del sistema
 
+### 2026-08-03 — Ciclo operativo completo: doctor --json con catálogo fix_id + buffy-repair + buffy-agent
+
+**Pedido del usuario:** Cerrar el lazo doctor → decisión → acción (antes el sistema solo detectaba problemas, no actuaba). Diseño acordado: catálogo de `fix_id` en doctor --json (evita un sistema de parches), ajustes de base en buffy-context.sh, actuador buffy-repair.sh con clasificación AUTO_SAFE/REVIEW_REQUIRED, y orquestador buffy-agent.sh al final (envoltura de piezas confiables).
+
+**Cambios aplicados:**
+- **`scripts/buffy-doctor.sh`** (NUEVO): auditoría con `--json` — cada item accionable lleva identidad `{id, fix, safe, target}` (p.ej. `MISSING_SKILL / create_skill_dir / safe:true / "android-agent"`). Catálogo FIX_SAFE: AUTO_SAFE (regenerate_snapshot, create_ai_context_dir, create_skill_dir, chmod_plus_x) vs REVIEW_REQUIRED (create_*file, copy/migrate_skill, remove_or_merge, git_init, update_index). Detección de SNAPSHOT stale (STALE_SNAPSHOT) parseando `Generated:`. Errores con identidad (INVALID_REPO, UNKNOWN_OPTION); stderr limpio en modo JSON. Validado: 10/10 tests.
+- **`scripts/buffy-context.sh`**: shebang zsh → bash (consistencia con doctor/router; `--watch` re-ejecuta con bash), exit codes reales (0 éxito / 1 fallo verificable), header `> ⏱️ Generated: <ts>` en SNAPSHOT.md (frescura medible), `mkdir -p` del directorio destino (bug latente en sistemas sin ~/ai-context).
+- **`scripts/buffy-repair.sh`** (NUEVO): actuador con `case "$fix"` puro (sin parseo de mensajes). Dry-run por defecto; `--auto` solo AUTO_SAFE; `--fix NOMBRE`; `--json`; loop doctor → repair → verify con delta reportado. Exit codes honestos (0 limpio / 1 review pendiente o fixes fallidos / 2 error).
+- **`scripts/buffy-agent.sh`** (NUEVO): orquestador del ciclo — preflight (doctor --json) → repair --auto si hay drift → verify (doctor --json) → load (buffy-router) si hay mensaje. JSON final `{repo, preflight, repair, verify, load, ready}` para CI/protocolo. Validado: 18/18 tests (sandbox: drift 19→0 errores, 19 skills creadas en disco).
+- **`scripts/buffy-router.sh`** (NUEVO, ya existía localmente): carga condicional de contexto por categorías (base/knowledge/skills/scripts) con `--json`.
+- **`.agents/skills/`**: 5 skills nuevas con contenido curado (android-adb, android-game-opt, hyperos-hardening, scrcpy-freefire, shizuku-rikka).
+- **Bugs de bash encontrados en el camino**: `${arr[]}` con subscript vacío escupe "bad array subscript" (guard en jitem); `local skill="$1" dir="...$skill..."` expande con el valor viejo → skills se creaban en el dir equivocado (locals separados en fix_create_skill_dir).
+
+**Archivos modificados/creados:**
+- `scripts/buffy-doctor.sh`, `scripts/buffy-repair.sh`, `scripts/buffy-agent.sh`, `scripts/buffy-router.sh` — NUEVOS
+- `scripts/buffy-context.sh` — modificado
+- `.agents/skills/{android-adb,android-game-opt,hyperos-hardening,scrcpy-freefire,shizuku-rikka}/` — NUEVOS
+- `README.md`, `INSTALL.md`, `ai-context/CHANGELOG.md` — actualizados
+
+---
+
 ### 2026-08-01 — Fix ruta de rish + prueba real de --grant con diálogo de permiso
 
 **Hallazgo:** En la primera prueba real con `--grant`, el script fallaba con `rish: not found` porque rish vive en `~/bin/rish` y no está en PATH en este dispositivo.
