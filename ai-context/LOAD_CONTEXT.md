@@ -104,6 +104,9 @@ la tarea la requiere. Usa estos criterios de activación:
 
 **Skills a cargar**: `android-adb`, `shizuku-rikka`, `android-game-opt`, `scrcpy-freefire`
 (y `android-agent` si se necesita diagnóstico completo).
+Si la tarea es compilar/instalar/probar una app o conceder permisos → cargar
+`.agents/skills/android-project-setup/SKILL.md` (build → install → permisos → launch,
+probada en vivo con el ZTE Nubia).
 
 ### Code Search (activación: tarea que requiere buscar, explorar o entender código)
 

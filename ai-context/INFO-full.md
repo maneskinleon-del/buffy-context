@@ -93,9 +93,9 @@ Solo existe en `.zshrc`; nada en `.bashrc`.
 ├── Pictures/Screenshots/
 ├── scripts/
 ├── antigravity/{superlista, scuderia-data, SecurGuard-AI}/
-├── data_car/ lista_fresh/ lista_supermercado/ odysseus/ timemark/
+├── data_car/ lista_fresh/ lista_supermercado/ timemark/
 ├── .config/ .local/ .cache/
-├── .claude/ .codex/ .gemini/ .cline/ .mimocode/
+├── .gemini/
 ├── .android/ .npm-global/ .cargo/ .ssh/
 └── INFO.md
 ```
@@ -136,7 +136,7 @@ Solo existe en `.zshrc`; nada en `.bashrc`.
   paleta púrpura oscura → `~/proyectos/ManUninstaller/`
 - 29 tests pasan, build exitoso
 
-**Nuevas herramientas:** `buffy-context.sh`, `morph()` (MorphLLM CLI),
+**Nuevas herramientas:** `buffy-context.sh`,
   10 skills instaladas (android, vite, vitest, tailwind, typescript, etc.)
 
 ---
@@ -172,7 +172,7 @@ Cambio definitivo de compositor. Hyprland + dotfiles Caelestia quedan retirados;
 
 **Redes:** ssh · rsync · curl · wget
 
-**IA/CLI:** freebuff · Antigravity · uv · gh · vercel · morph (MorphLLM)
+**IA/CLI:** freebuff · Antigravity · uv · gh · vercel
 
 **Paquetes:** pacman · paru · yay · npm · cargo · pip · flatpak
 
