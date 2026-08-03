@@ -1283,7 +1283,7 @@ El CSV exportado se veía "todo en una columna" / "incidencia hacia abajo en una
 
 # 🧠 SESION — Buffy Freebuff (2026-08-03 — PC: digest leído + router con manifests + migración + B1 + C2)
 
-> Tema: retomada desde el PC (Mi 10 por USB). Se leyó el digest `BUFFY-PC-CONTEXT.md` dejado desde el teléfono, se sincronizó el repo y se saldaron **todos los pendientes del digest**: router con manifests, migración SYSTEM→INFO-core, versiones mínimas scrcpy/Ollama, README al día, fix H2, schema-lite B1 y BUFFY_HOME (C2). CI verde en cada commit.
+> Tema: retomada desde el PC (Mi 10 por USB). Se leyó el digest `BUFFY-PC-CONTEXT.md` dejado desde el teléfono, se sincronizó el repo y se saldaron **todos los pendientes del digest**: router con manifests, migración SYSTEM→INFO-core, versiones mínimas scrcpy/Ollama, README al día, fix H2, schema-lite B1 y BUFFY_HOME (C2). CI verde en cada commit. Por la tarde, con el ZTE Nubia como laboratorio: ManUninstaller revisado con skills, instalado y funcionando (Shizuku ACTIVE · 329 apps), purga de 22 apps de usuario + 25 bloat de fábrica deshabilitados.
 
 ---
 
@@ -1333,8 +1333,22 @@ El CSV exportado se veía "todo en una columna" / "incidencia hacia abajo en una
 - **`test-common.sh`** (NUEVO, 6 tests). Fix del reviewer: `test_doctor_catalog` ahora usa HOME aislado en fixture (era dependiente del entorno).
 - Docs: INSTALL.md (sección BUFFY_HOME), README, REVIEW-BASELINE §2.1. Suite: 105→116 quick / 121→132 full. Commit `033e6dc`.
 
+## 🎮 Laboratorio ZTE Nubia — ManUninstaller revisado, instalado y purga de apps (tarde)
+
+- **Revisión de ManUninstaller v2.1.0 con las skills android-native-dev + clean-architecture + adb** (contra código real, no solo docs): Clean Architecture (domain Kotlin puro → data → presentation → service AIDL). Seguridad verificada: `parseCommandSafe` (ProcessBuilder con args separados, rechaza metacaracteres `[;|&$(){}<>![]~#]`, sin `sh -c` en el path de uninstall), `DeviceAdminUtils.removeAdmin` (valida `ComponentName` antes de `dpm remove-active-admin`), `ShizukuProvider` sin `grantUriPermissions`, regex estricta de paquete en `du`, `deleteRecursively` seguro contra symlinks, `isCriticalApp` protege apps del sistema + diálogo de advertencia, concurrencia `limitedParallelism(8)`.
+- **Hallazgos menores (no bloquean)**: `versionName = "2.0.0"` en build.gradle.kts vs CHANGELOG v2.1.0; README menciona `AppViewModelTest` inexistente; `trim-caches` 4GB fijo.
+- **Instalación**: en el Mi 10 (`d2c6cbda`) bloqueada por el toggle "Instalar vía USB" de HyperOS — no modificable por ADB (intentado: `adb_install_need_confirm=0`, `pm clear-user-restriction`, `cmd user remove-user-restriction` no existe en la ROM, diálogo MiuiResolverActivity que se cancela solo). **En el ZTE Nubia Z2352N (`320344802623`) `pm install` → Success** (Android 13 stock sin el bloqueo).
+- **En vivo verificado**: `SHIZUKU: ACTIVE · 329 apps · 1 admin · 38 grandes`, sin crashes (logcat limpio).
+- **Purga de apps de usuario (90 → 68, 22 borradas, 0 fallaron)**: `com.example`, 4 PWAs webapk huérfanas, 9 apps de IA (ChatGPT, Claude, Grok, DeepSeek, Kimi, Gemini Pro, Qwen, Perplexity, Bard) y 8 financieras (MercadoPago, MercadoLibre, PayPal, Tenpo, Onepay, Tapp, WOM, Binance).
+- **Bloat de fábrica ZTE deshabilitado (25, reversible con `pm enable`)**: filer, recorder, storagecleanup, privacyzone, onekeycp, alarmclock, livewallpaper, easymode, linkspeedup, womreceiver, inspiredwallpaper, beautify(+adapter), appsimcardfilter, externdevice, ztescreenshot, gamehighlights, gamenotes, flagreset, heartyservice, zbackup, aiengine, burntest.camera, gamehelperline, gamehelpmodule.
+- **Preservado (verificado 1 a 1)**: Free Fire, Termux, Shizuku (corriendo), AutoJS6, MacroDroid (único Device Admin), ManUninstaller, launcher Hype/GG Mouse, ReVanced, sndcpy, Canta, Apktool, AppOps + las del gaming `cn.nubia.gamelauncher`/`keymapcenter`/`gamepad` + `com.zte.emode` (engineering mode) + críticas (launcher MiFavor, keyguard, setupwizard, faceverify, fingerprints).
+- **Espacio**: las 22 desinstaladas ≈ 1.8–2.2 GB (APK + datos); `pm disable-user` no libera disco (solo RAM/batería). Disco 230G → 163G libres (70%), sin residuos en `/data/data` ni `/data/user/0`.
+
 ## 🔜 Pendientes
 
+- [ ] **ManUninstaller**: fix `versionName` 2.0.0 → 2.1.0 en `proyectos/ManUninstaller/app/build.gradle.kts` (1 línea) + rebuild e instalación en el Nubia.
+- [ ] **Mi 10**: toggle "Instalar vía USB" (Ajustes → Ajustes adicionales → Privacidad) requiere toque manual en el teléfono — no se puede activar por ADB.
+- [ ] **Nubia (opcional)**: revisar restantes de usuario (Truecaller, Waze, WhatsApp, Telegram+, Excel, Sony headphones) y documentar el setup del lab en `Knowledge/Android/`.
 - [ ] `gh auth login` → luego renombrar `enerador-de-boletas` → `generador-de-boletas` por API.
 - [ ] Baja prioridad (D1/D2 del roadmap): sandbox hardening + installer; adapters VLM/LLM (YAGNI — solo existe un backend HF).
 - [ ] Pendiente del usuario desde el teléfono: pushear `porteria_pwa` (cambiar remote a SSH), `sep=,` en exports CSV de pwa_securguard.

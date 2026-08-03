@@ -1,13 +1,13 @@
 # 🔄 CONTINUE — Handoff entre sesiones
 
 > ⚡ **PRÓXIMA SESIÓN: LEE ESTO PRIMERO**
-> Generado: 2026-08-03 (PC — digest del teléfono leído + router con manifests implementado)
+> Generado: 2026-08-03 (PC — digest del teléfono leído + router con manifests + laboratorio ZTE Nubia)
 
 ---
 
 ## Resumen de la sesión
 
-**Tema principal:** Retomada desde el PC con el Mi 10 conectado por USB. Se leyó el digest `BUFFY-PC-CONTEXT.md` que dejaste desde el teléfono (Termux), se sincronizó el repo (2 commits atrás) y se implementó el pendiente prioritario del digest: **el router ahora consume los manifests skill.yaml**.
+**Tema principal:** Retomada desde el PC con el Mi 10 conectado por USB. Se leyó el digest `BUFFY-PC-CONTEXT.md` que dejaste desde el teléfono (Termux), se sincronizó el repo (2 commits atrás) y se implementó el pendiente prioritario del digest: **el router ahora consume los manifests skill.yaml**. Por la tarde: **laboratorio ZTE Nubia** — ManUninstaller revisado con skills, instalado y verificado en vivo, purga de 22 apps de usuario y 25 bloat de fábrica ZTE deshabilitados.
 
 ---
 
@@ -51,6 +51,12 @@
 | `BUFFY-PC-CONTEXT.md` | §7.2 marcado como HECHO |
 | `REVIEW-BASELINE.md` | §2.4 actualizado (router consume manifests) |
 
+#### 6. 🎮 Laboratorio ZTE Nubia (tarde)
+- **ManUninstaller v2.1.0 revisado** con las skills android-native-dev + clean-architecture + adb contra el código real: seguridad sólida (ProcessBuilder sin `sh -c`, validación de paquetes, protección de apps críticas). Hallazgo menor: `versionName` 2.0.0 en build.gradle.kts vs v2.1.0 del CHANGELOG.
+- **Instalado en el Nubia Z2352N** (`pm install` → Success; el Mi 10 lo bloquea por el toggle "Instalar vía USB" de HyperOS, no modificable por ADB). Verificado en vivo: `SHIZUKU: ACTIVE · 329 apps`, sin crashes.
+- **Purga**: 22 apps de usuario borradas (9 IA + 8 finanzas + 4 PWAs + com.example; 90 → 68) y **25 bloat de fábrica ZTE deshabilitados** (`pm disable-user`, reversible). Stack gaming intacto (Free Fire, Termux, Shizuku, AutoJS6, MacroDroid, ManUninstaller, gamelauncher/keymapcenter/gamepad).
+- **Espacio**: ~2 GB liberados por las desinstaladas; disco 70% libre. Sin residuos en `/data/data`.
+
 ---
 
 ### ⏳ Pendientes para próxima sesión
@@ -61,6 +67,9 @@
 4. **`gh auth login`** — sigue pendiente (los push van por SSH y funcionan).
 5. ~~**BUFFY_HOME / common.sh (C2, opt-in)**~~ — **HECHO (2026-08-03)**: `scripts/lib/common.sh` exporta BUFFY_HOME (default $HOME) + helpers buffy_home/buffy_ai_context/buffy_snapshot; cableado en buffy-context/doctor/repair/router (solo estado generado). 6 tests nuevos. Verificado sin y con BUFFY_HOME.
 6. Renombrar repo `enerador-de-boletas` → `generador-de-boletas` (requiere gh auth).
+7. **ManUninstaller**: fix `versionName` 2.0.0 → 2.1.0 en `proyectos/ManUninstaller/app/build.gradle.kts` (1 línea) + rebuild/instalar en el Nubia.
+8. **Mi 10**: toggle "Instalar vía USB" (HyperOS, Ajustes → Ajustes adicionales → Privacidad) requiere toque manual — no activable por ADB.
+9. **Nubia (opcional)**: revisar apps restantes de usuario (Truecaller, Waze, WhatsApp, Telegram+, Excel, Sony headphones) y documentar el setup del lab en `Knowledge/Android/`.
 
 ---
 
@@ -79,7 +88,7 @@ OS:    EndeavourOS (Arch) · kernel 6.18.39-1-lts
 WM:    bspwm (X11) · rice gh0stzk/cynthia · picom
 Shell: zsh (Oh My Zsh + Starship) · alacritty · editor VSCodium
 CPU:   Ryzen 5 3400G (4C/8T) + Vega 11 · 13GB RAM · 1360x768
-Phone: Mi 10 (d2c6cbda, conectado hoy) · ZTE Nubia Z2352N · ADB + Shizuku
+Phone: ZTE Nubia Z2352N = laboratorio (Shizuku + ManUninstaller activos · 68 apps de usuario) · Mi 10 (tethering; toggle Instalar vía USB pendiente de toque manual)
 Disk:  39% usado / 126G libres · ollama + backups en HDD (/media/datos)
 Stack: React + TS + Tailwind v4 + Vite → GitHub (maneskinleon-del) → Vercel
 Node:  v26.4.0 · npm 11.18.0 · gh CLI (sin auth)
