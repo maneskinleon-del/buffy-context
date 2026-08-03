@@ -20,12 +20,14 @@ This repository provides the infrastructure for an AI agent to maintain persiste
 | Component | Purpose |
 |---|---|
 | **Memory persistence** | Protocol for loading/saving session context so the AI never starts blank |
-| **Knowledge base** | 16 files of curated technical reference across 6 categories |
+| **Knowledge base** | 17 files of curated technical reference across 7 categories + Vision.md |
+| **23 skills** | Especializadas por dominio, cada una con `skill.yaml` machine-readable |
 | **Android Agent** | Dedicated skill that auto-detects Android projects and activates relevant tools |
 | **Detection scripts** | Shell scripts for system snapshots and Android diagnostics |
 | **Self-diagnostics** | doctor --json detecta drift, repair corrige lo seguro, agent orquesta el ciclo |
 | **Conditional loading** | Token-aware protocol: carga solo lo necesario según el tema |
 | **Auto-pruning** | SESION.md mantiene máximo 5 entradas, el resto se archiva |
+| **CI verde** | Suite 106 checks + doctor baseline 0 en cada push/PR |
 
 ---
 
@@ -45,12 +47,14 @@ buffy-context/
 │   └── CHANGELOG.md                   # Change history
 │
 ├── Knowledge/                         # Structured technical reference
+│   ├── AI/
+│   │   └── Kimi-K3.md                 # Kimi K3 (Moonshot) — acceso y casos de uso
 │   ├── Android/
 │   │   ├── ADB.md                     # ADB commands
 │   │   ├── Shizuku.md                 # Shizuku + rish
 │   │   ├── HyperOS.md                 # Xiaomi debloat & privacy
 │   │   ├── GameOptimization.md        # Gaming performance tuning
-│   │   ├── scrcpy.md                  # scrcpy profiles & diagnosis
+│   │   ├── scrcpy.md                  # scrcpy profiles, diagnosis, versiones mínimas
 │   │   └── Keymappers.md             # GG Mouse, Mantis, Panda, Octopus
 │   ├── Linux/
 │   │   ├── System.md                  # Arch, bspwm, picom, systemd
@@ -64,31 +68,61 @@ buffy-context/
 │   │   └── Commands.md               # Daily workflow, gh CLI
 │   ├── Node/
 │   │   └── Node.md                    # npm, package.json
-│   └── Shell/
-│       └── Shell.md                   # Variables, awk, sed, trap
+│   ├── Shell/
+│   │   └── Shell.md                   # Variables, awk, sed, trap
+│   ├── Vision.md                      # VLM local (Ollama): modelos, RAM, versiones
+│   └── README.md                      # Knowledge index
 │
-├── .agents/skills/                    # AI agent skill definitions
-│   ├── android-agent/                 # Android detection & automation
-│   ├── android-project-setup/         # Build → install → permisos → launch
-│   │   ├── scripts/                   # check_device, build_install, grant_permissions
-│   │   └── references/                # Dispositivos y permisos del usuario
-│   ├── android-adb/                   # Comandos ADB generales
-│   ├── android-game-opt/              # Optimización de juegos vía Shizuku/ADB
-│   ├── hyperos-hardening/             # Blindaje contra restricciones MIUI/HyperOS
-│   ├── scrcpy-freefire/               # Mirroring y keymappers para Free Fire
-│   ├── shizuku-rikka/                 # Escalación sin root (Shizuku + rish)
-│   ├── code-search/                   # Búsqueda portable de código entre asistentes IA
-│   ├── search_criteria_v4/            # Genera consultas de búsqueda estructuradas
-│   └── vision-adapter/                # Visión/VLM local (Ollama) para imágenes
+├── .agents/skills/                    # 23 AI agent skills (cada una con skill.yaml)
+│   ├── Android/
+│   │   ├── android-adb/               # Comandos ADB generales
+│   │   ├── android-agent/             # Detección y diagnóstico Android (logcat, dumpsys)
+│   │   ├── android-game-opt/          # Optimización de juegos vía Shizuku/ADB
+│   │   ├── android-project-setup/     # Build → install → permisos → launch
+│   │   │   ├── scripts/               # check_device, build_install, grant_permissions
+│   │   │   └── references/            # Dispositivos y permisos del usuario
+│   │   ├── hyperos-hardening/         # Blindaje contra restricciones MIUI/HyperOS
+│   │   ├── scrcpy-freefire/           # Mirroring y keymappers para Free Fire
+│   │   ├── shizuku-rikka/             # Escalación sin root (Shizuku + rish)
+│   │   └── xiaomi-adb-tricks/         # Workarounds ADB/rish/Shizuku Xiaomi
+│   ├── Web/
+│   │   ├── form-filler/               # Llenado automático de formularios (Puppeteer)
+│   │   └── image-analyzer/            # Análisis y procesamiento de imágenes
+│   ├── Framework v4 (investigación)/
+│   │   ├── exploratory_validation_v4/ # Orquestador: coordina las 4 fases
+│   │   ├── filter_heuristics_v4/      # Fase 2: filtra fuentes candidatas
+│   │   ├── integration_templates_v4/  # Fase 3: adapta código/docs externas
+│   │   ├── cross_validation_v4/       # Fase 4: contrasta fuentes, confianza final
+│   │   └── search_criteria_v4/        # Genera consultas de búsqueda estructuradas
+│   ├── Code & research/
+│   │   ├── code-search/               # Búsqueda portable de código entre asistentes IA
+│   │   └── context7/                  # Docs actualizadas de librerías vía ctx7
+│   ├── Frontend/
+│   │   ├── vite/                      # Referencia Vite para React + TS
+│   │   ├── tailwind-design-system/    # Design system con Tailwind v4
+│   │   ├── typescript-advanced-types/ # Tipos avanzados de TypeScript
+│   │   └── vercel-react-best-practices/ # Buenas prácticas React + TS para Vercel
+│   ├── Operación/
+│   │   ├── modo-autonomo/             # Protocolo de operación autónoma del agente
+│   │   └── vision-adapter/            # Visión/VLM local (Ollama) para imágenes
 │
 ├── scripts/                           # Utility scripts
 │   ├── buffy-context.sh               # System snapshot generator
 │   ├── buffy-doctor.sh                # Auditoría de salud del ecosistema (--json)
 │   ├── buffy-repair.sh                # Aplica fixes AUTO_SAFE y verifica
 │   ├── buffy-agent.sh                 # Orquestador: doctor → repair → verify → load
-│   ├── buffy-router.sh                # Carga condicional de contexto (--json)
+│   ├── buffy-router.sh                # Carga condicional de contexto (--json, manifests)
+│   ├── skill-lint.sh                  # Valida los skill.yaml (gate 23/23)
+│   ├── migrate-system.sh              # Migra stubs deprecated → ai-context/deprecated/
+│   ├── set-version.sh                 # Versionado semver + tag
+│   ├── changelog-entry.sh             # Entrada de release automática en CHANGELOG
 │   ├── android-detect.sh              # Android project & device diagnosis
-│   └── kimi_vision.js                 # Detección de permisos con visión IA (Kimi K3)
+│   ├── ollama-kill.sh                 # Libera RAM de modelos VLM (mantiene serve)
+│   ├── see.sh                         # Analiza imágenes con VLM local
+│   ├── kimi_vision.js                 # Detección de permisos con visión IA (Kimi K3)
+│   ├── lib/                           # yaml.sh (parsing compartido) + logger/utils.js
+│   ├── hooks/                         # install.sh + pre-commit.sh (suite --quick)
+│   └── tests/                         # run-tests.sh + 8 test_*.sh (suite 106 checks)
 │
 ├── INSTALL.md                         # Setup instructions
 ├── LICENSE                            # MIT license
@@ -309,12 +343,29 @@ Exit codes: `0` consistente · `1` queda drift que requiere decisión humana · 
 
 | Category | Files | Covers |
 |---|---|---|
-| **Android** | 6 | ADB, Shizuku, HyperOS, game optimization, scrcpy, keymappers |
+| **AI** | 1 | Kimi K3 — acceso, API, casos de uso |
+| **Android** | 6 | ADB, Shizuku, HyperOS, game optimization, scrcpy (con versiones mínimas), keymappers |
 | **Linux** | 2 | System administration, kernel tuning |
 | **React** | 4 | React patterns, Vite, Tailwind v4, PWA |
 | **Git** | 1 | Daily commands, GitHub CLI |
 | **Node** | 1 | npm, package.json |
 | **Shell** | 1 | Bash scripting, awk, sed |
+| **Vision** | 1 | VLM local (Ollama) — modelos, RAM, versiones |
+
+## Skills (23 en disco)
+
+Cada skill tiene `SKILL.md` (documentación humana) + `skill.yaml` (manifest
+machine-readable validado por `scripts/skill-lint.sh` — gate activo en CI).
+`buffy-router.sh` las descubre por sus `triggers` sin hardcodear rutas.
+
+| Grupo | Skills |
+|---|---|
+| **Android** | android-adb, android-agent, android-game-opt, android-project-setup, hyperos-hardening, scrcpy-freefire, shizuku-rikka, xiaomi-adb-tricks |
+| **Web** | form-filler, image-analyzer |
+| **Framework v4** | exploratory_validation_v4, filter_heuristics_v4, integration_templates_v4, cross_validation_v4, search_criteria_v4 |
+| **Code & research** | code-search, context7 |
+| **Frontend** | vite, tailwind-design-system, typescript-advanced-types, vercel-react-best-practices |
+| **Operación** | modo-autonomo, vision-adapter |
 
 ---
 
