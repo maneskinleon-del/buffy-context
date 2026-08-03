@@ -5,6 +5,9 @@
 > comprobados contra el código real, los errores que las revisiones de IA repiten, lo que ya
 > está hecho y lo que realmente falta. Si una revisión contradice esto, lo más probable es
 > que esté mirando una foto anterior del repo o asumiendo sin verificar.
+>
+> Para el digest de sesiones orientado a **continuar el trabajo** (qué se hizo, estado
+> actual, pendientes y cómo proceder), ver **BUFFY-PC-CONTEXT.md** en la raíz del repo.
 
 ---
 
