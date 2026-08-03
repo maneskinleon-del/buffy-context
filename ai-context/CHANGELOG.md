@@ -12,6 +12,24 @@ system-id: mangonz-desktop
 
 # CHANGELOG.md — Historial de cambios del sistema
 
+### 2026-08-03 — Pendientes de infraestructura: CONTRIBUTING, versionado semántico, modo --quick, installer mejorado, migración SYSTEM.md
+
+**Cambios aplicados:**
+- **`CONTRIBUTING.md`** (NUEVO): guía para contribuidores corregida a la realidad del repo (remote GitHub real, suite bash puro, hook instalado vía `scripts/hooks/install.sh`).
+- **`VERSION`** (NUEVO, `v1.0.0`) + **`scripts/set-version.sh`** (NUEVO): versionado semántico — valida `vX.Y.Z`, corre la suite, commitea `VERSION`, crea tag anotado y lo pushea. Sección `## Versioning` en README.
+- **`scripts/tests/run-tests.sh`**: nuevo flag `--quick` que salta los ciclos de sandbox (heurística automática: cualquier test cuyo cuerpo llame `setup_sandbox` se omite) — rápido para hooks/CI. Nuevo **`scripts/tests/test-runner.sh`** (self-tests del runner con invocación filtrada para evitar recursión).
+- **`scripts/hooks/pre-commit.sh`**: ahora corre la suite en modo `--quick` por defecto; `BUFFY_HOOK_FULL=1` fuerza la suite completa puntualmente.
+- **`scripts/hooks/install.sh`**: opciones `--install/--uninstall/--check/--force/--no-test/--help`, manteniendo el mecanismo de escribir el hook con el shebang real (fix Termux).
+- **`scripts/migrate-system.sh`** (NUEVO): migración SYSTEM.md/SYSTEM_FULL.md → AGENTS.md con `find` agrupado correctamente (`\( -o \)`), `sed` seguro (excluye .git/, deprecated/ y los archivos a mover), mudanza a `ai-context/deprecated/` con timestamp y verificación con la suite `--quick`. **Validado en sandbox; NO ejecutado aún en el repo real** (requiere decisión del usuario). El doctor ya marca ambos archivos como DEPRECATED, así que la migración reduce advertencias.
+- **`README.md`**: sección `## Versioning` + docs del modo `--quick` y de las variantes del hook (`BUFFY_HOOK_FULL`, re-instalación con `--force`).
+- **Validación**: suite completa 66/66 + suite `--quick` + reviewer con sign-off.
+
+**Archivos modificados/creados:**
+- `CONTRIBUTING.md`, `VERSION`, `scripts/set-version.sh`, `scripts/migrate-system.sh`, `scripts/tests/test-runner.sh` — NUEVOS
+- `scripts/tests/run-tests.sh`, `scripts/hooks/pre-commit.sh`, `scripts/hooks/install.sh`, `README.md` — MODIFICADOS
+
+---
+
 ### 2026-08-03 — Suite de tests permanente + pre-commit hook
 
 **Pedido del usuario:** Convertir los checks ad-hoc (18/18 doctor/repair/agent) en una suite versionada con runner único, y añadir hook de pre-commit que ejecute la suite antes de cada commit.

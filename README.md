@@ -155,11 +155,19 @@ bash scripts/tests/run-tests.sh doctor   # solo test-doctor.sh
 bash scripts/tests/run-tests.sh agent    # solo test-agent.sh
 ```
 
+Fast mode (skips the sandbox cycles — the slow part that copies the repo):
+
+```bash
+bash scripts/tests/run-tests.sh --quick
+```
+
+Used by the pre-commit hook and `scripts/migrate-system.sh`; the read-only checks on the real repo still run.
+
 La suite es **determinística y segura**: todo lo que escribe (repair `--auto`, ciclo del agent) corre en un sandbox con HOME aislado; el repo real solo se lee (doctor, dry-run, `--no-repair`).
 
 ### Pre-commit hook
 
-La suite corre automáticamente antes de cada commit (aborta si algo falla):
+La suite corre automáticamente antes de cada commit en modo **`--quick`** (aborta si algo falla):
 
 ```bash
 bash scripts/hooks/install.sh
@@ -167,7 +175,36 @@ bash scripts/hooks/install.sh
 
 El installer genera `.git/hooks/pre-commit` con el shebang de bash **real de este sistema** (necesario en Termux, donde `/usr/bin/env` no existe y git ejecuta los hooks con `exec` directo). En Linux normal también funciona. El hook está versionado en `scripts/hooks/pre-commit.sh` — no se pierde en clones.
 
-Saltar puntualmente: `git commit --no-verify`.
+Opciones del installer: `--install` (por defecto), `--uninstall`, `--check` (verifica hook + shebang), `--force` (sobrescribe), `--no-test`, `--help`.
+
+Variantes del commit:
+
+```bash
+git commit                      # suite --quick
+BUFFY_HOOK_FULL=1 git commit    # suite completa (una vez)
+git commit --no-verify          # saltar los tests (no recomendado)
+```
+
+Si actualizas `scripts/hooks/pre-commit.sh`, re-ejecuta `bash scripts/hooks/install.sh --force` para regenerar el hook instalado.
+
+## Versioning
+
+This project follows [Semantic Versioning](https://semver.org/).
+
+- `vX.Y.Z` — Stable releases (see tags)
+- `main` — Development branch
+
+Check the latest version:
+
+```bash
+cat VERSION
+```
+
+Create a new release (validates the version, runs the test suite, commits `VERSION`, creates an annotated tag and pushes it):
+
+```bash
+bash scripts/set-version.sh v1.1.0
+```
 
 ---
 
