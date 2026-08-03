@@ -15,10 +15,13 @@ bash --version | head -1     # Bash 5+
 git --version                # Git
 node -v                      # Node 18+ (solo kimi_vision.js)
 
-# Opcionales
-adb version                  # ADB (agente Android)
-scrcpy --version             # scrcpy (mirroring)
-ollama version               # Ollama (LLM local)
+# Opcionales (si falta la herramienta, no pasa nada — son opcionales)
+adb version || echo "adb no instalado"
+scrcpy --version || echo "scrcpy no instalado"
+ollama version || echo "ollama no instalado"
+
+# Salida aceptable: node → v18.x o superior. Las opcionales no tienen versión
+# mínima documentada — usa la del repositorio de tu distro.
 ```
 
 ## Setup rápido
@@ -28,7 +31,11 @@ ollama version               # Ollama (LLM local)
 git clone https://github.com/maneskinleon-del/buffy-context.git ~/buffy-context
 cd ~/buffy-context
 
-# (Opcional) Vincular scripts al PATH
+# (Opcional) Vincular scripts al PATH — para invocarlos como binarios (buffy-doctor.sh)
+mkdir -p ~/.local/bin
+chmod +x "$PWD/scripts/"*.sh      # marca los scripts como ejecutables
+# ⚠️ En Termux la invocación directa NO funciona: los scripts usan shebang
+#    #!/usr/bin/env bash y /usr/bin/env no existe ahí — usa siempre bash script.sh.
 # NOTA: ln -sf SOBRESCRIBE binarios existentes con el mismo nombre en ~/.local/bin.
 # Verifica primero:  ls ~/.local/bin/ | grep buffy
 ln -sf "$PWD/scripts/buffy-context.sh" ~/.local/bin/
@@ -42,9 +49,7 @@ ln -sf "$PWD/scripts/android-detect.sh" ~/.local/bin/
 # (si no, añádelo en ~/.bashrc o ~/.zshrc:  export PATH="$HOME/.local/bin:$PATH" )
 echo "$PATH" | tr ':' '\n' | grep -q "$HOME/.local/bin" && echo "OK: en PATH" || echo "FALTA: ~/.local/bin no está en PATH"
 
-# (Opcional) Ejecutar directamente sin 'bash' — los scripts del repo se invocan
-# con 'bash script.sh' (no requieren bit de ejecución). Si quieres ejecutarlos
-# como binarios:  chmod +x scripts/*.sh
+# Los scripts también pueden ejecutarse con 'bash script.sh' (no requieren bit de ejecución).
 ```
 
 ### Nota Termux
@@ -76,6 +81,10 @@ bash scripts/buffy-doctor.sh --quick
 
 # 3. Suite de tests rápida (salta ciclos de sandbox)
 bash scripts/tests/run-tests.sh --quick
+
+# 4. (Si linkeaste al PATH) probar invocación directa como binario
+#    (solo en Linux — en Termux no hay /usr/bin/env, usa bash script.sh)
+command -v buffy-doctor.sh && buffy-doctor.sh --quick
 ```
 
 ## Dependencias opcionales
@@ -87,7 +96,8 @@ bash scripts/tests/run-tests.sh --quick
 | **scrcpy** | Mirroring de Android | Arch: `pacman -S scrcpy` · Debian/Ubuntu: `apt install scrcpy` · Termux: `pkg install scrcpy` |
 | **Ollama** | LLM local (opcional) | [ollama.com](https://ollama.com) — script oficial de instalación |
 
-> `kimi_vision.js` necesita además `HF_TOKEN` (ver `Knowledge/AI/Kimi-K3.md`).
+> `kimi_vision.js` necesita además `HF_TOKEN` — token de Hugging Face (scope read/inference),
+> **no** una API key de Kimi — y aceptar la licencia del modelo gated. Ver `Knowledge/AI/Kimi-K3.md`.
 
 ## Seguridad / sandbox
 
@@ -105,8 +115,10 @@ bash scripts/buffy-repair.sh --auto     # aplica solo lo seguro
 Si ya tienes `~/ai-context/` funcionando y quieres mantener ambos sincronizados:
 
 ```bash
-# El repo es la fuente de verdad. Copia los archivos del repo a ~/ai-context/:
-cp -r ~/buffy-context/ai-context/* ~/ai-context/
+# El repo es la fuente de verdad. Copia sin sobrescribir archivos existentes:
+cp -rn ~/buffy-context/ai-context/* ~/ai-context/
+# Alternativa con backup de lo que se sobrescriba (requiere rsync):
+# rsync -a --backup --suffix=.bak ~/buffy-context/ai-context/ ~/ai-context/
 
 # Y viceversa (después de una sesión):
 cp ~/ai-context/CONTINUE.md ~/ai-context/SESION.md ~/buffy-context/ai-context/
