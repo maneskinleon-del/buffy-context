@@ -18,8 +18,8 @@
   `system-id: mangonz-desktop`.
 - **Repo:** `buffy-context/` → `github.com:maneskinleon-del/buffy-context.git`
 - **Estado actual:** CI verde · doctor con **0 errores** (baseline 0) ·
-  **23 skills** con manifest machine-readable (23/23) · suite **75 OK** (--quick)
-  / **91 OK** (completa).
+  **23 skills** con manifest machine-readable (23/23) · suite **105 OK** (--quick)
+  / **121 OK** (completa).
 
 ## 2. Qué se hizo en estas sesiones (commits)
 
@@ -94,16 +94,20 @@ prefijo `skills/`.
 
 ```bash
 # Suite (gate de CI)
-bash scripts/tests/run-tests.sh           # 91 OK esperado
-bash scripts/tests/run-tests.sh --quick   # 75 OK / 7 SKIP esperado
+bash scripts/tests/run-tests.sh           # 121 OK esperado
+bash scripts/tests/run-tests.sh --quick   # 105 OK esperado
 
-# Doctor (drift) — 0 errors / 4 warnings de entorno
+# Doctor (drift) — 0 errors / 1 warning de entorno
 bash scripts/buffy-doctor.sh --json
 bash scripts/buffy-doctor.sh --quick
 
 # Linter de manifests — 23/23, gate activo
 bash scripts/skill-lint.sh
 bash scripts/skill-lint.sh --require-all  # exit 0 (todas con manifest)
+
+# Linter estructural de ai-context (B1)
+bash scripts/ai-context-lint.sh           # 0 errores esperado
+bash scripts/ai-context-lint.sh --json
 
 # Versionado (solo para releases)
 bash scripts/changelog-entry.sh --dry-run v1.1.0
@@ -123,12 +127,15 @@ bash scripts/hooks/install.sh --check
    (barrido por triggers del manifest, ≥1 match). Rutas hardcodeadas eliminadas; una skill
    nueva con manifest se activa sola. `lib/yaml.sh` compartido con skill-lint (sin duplicación).
    Suite: 75→90 OK (quick) / 91→106 OK (full). Fix bonus: mensaje vacío → exit 1.
-3. **README desactualizado**: el árbol de skills/Knowledge en README no refleja
-   el disco (no menciona las 13 creadas ni las 3 migradas). No causa drift (no
-   usa el patrón skills/), pero es doc deshonesta.
-4. **Schema/validador para ai-context (B1)**: JSON Schema + test que valide
-   INFO-core/CONTINUE/LOAD_CONTEXT (opcional — los consumidores son LLMs que leen
-   markdown; un schema-lite cubre el 80% del valor).
+3. ~~**README desactualizado**~~ — **HECHO (2026-08-03, PC)**: árbol de skills
+   (23 agrupadas por dominio), Knowledge (AI/+Vision), scripts (16) y conteos al
+   día con el disco.
+4. ~~**Schema/validador para ai-context (B1)**~~ — **HECHO (2026-08-03, PC)**:
+   `scripts/ai-context-lint.sh` valida las secciones obligatorias de
+   INFO-core/CONTINUE/LOAD_CONTEXT (las que LOAD_CONTEXT.md promete SIEMPRE) +
+   front-matter semver-lite X.Y/X.Y.Z + updated ISO. 5 tests en la suite
+   (--json schema, stderr limpio, fixtures sin sandbox → corren en --quick).
+   Suite: 105 OK quick / 121 OK full.
 5. **BUFFY_HOME / common.sh (C2, opt-in)**: script común que exporte BUFFY_HOME
    para instalaciones alternativas (hoy los scripts usan `$HOME/ai-context` y
    rutas relativas — diseño deliberado, no romper).

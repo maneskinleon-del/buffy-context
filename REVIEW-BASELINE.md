@@ -26,7 +26,7 @@ Componentes reales y funcionales:
 | Skills | `.agents/skills/` — **23 skills en disco** (10 originales + 10 creadas 2026-08-03 + 3 migradas de ~/.agents/skills/) | ✅ Funcionales, **23/23 con skill.yaml** (B2 completo) + linter con gate |
 | Orquestación | `scripts/buffy-doctor.sh`, `buffy-repair.sh`, `buffy-agent.sh`, `buffy-router.sh` | ✅ Ciclo doctor→repair→agent funcional |
 | Visión | `scripts/kimi_vision.js` + `Knowledge/AI/Kimi-K3.md` | ✅ Funcional (solo backend HF) |
-| Suite de tests | `scripts/tests/run-tests.sh` | ✅ 70 checks full / 54 quick |
+| Suite de tests | `scripts/tests/run-tests.sh` | ✅ 121 checks full / 105 quick |
 | CI | `.github/workflows/ci.yml` | ✅ En cada push/PR |
 | Hooks | `scripts/hooks/install.sh` + `pre-commit.sh` | ✅ Portable (Termux-safe) |
 | Versionado | `scripts/set-version.sh` + `scripts/changelog-entry.sh` | ✅ Semver + CHANGELOG auto |
@@ -90,8 +90,9 @@ Este trabajo se completó y pusheó en esta sesión (todos verdes):
   mkdir/chmod para symlinks, nota Termux + `/usr/bin/env`, dependencias opcionales, sandbox,
   smoke test post-instalación, `cp -rn`/rsync, `command -v >/dev/null`, ejemplo fish.
 - ✅ **README unificado**: ruta de SNAPSHOT corregida a `~/ai-context/`.
-- ✅ **Suite determinística**: 70 checks full / 54 `--quick` (7 SKIP: 4 sandbox + 3 changelog).
+- ✅ **Suite determinística**: 121 checks full / 105 `--quick` (7 SKIP: 4 sandbox + 3 changelog).
 - ✅ **Skill manifests (B2) completo**: las **23/23 skills** tienen `skill.yaml` (derivados del front-matter/contenido real de cada SKILL.md) + linter `scripts/skill-lint.sh` (valida id/version/entry/safe/triggers, cross-check con el front-matter, cobertura). **Gate activo**: test en la suite (`--require-all` → exit 0) + paso explícito en el job `suite` de CI — cualquier skill nueva sin manifest rompe CI (2026-08-03).
+- ✅ **Schema-lite ai-context (B1) completo**: `scripts/ai-context-lint.sh` valida las secciones obligatorias de INFO-core/CONTINUE/LOAD_CONTEXT (las que LOAD_CONTEXT.md promete SIEMPRE) + front-matter semver-lite X.Y/X.Y.Z + updated ISO. 5 tests en la suite (--json schema, stderr limpio, fixtures sin sandbox → corren en --quick). Detectó 3 front-matters con version X.Y (aceptado como convención del repo). Suite: 105 quick / 121 full (2026-08-03).
 
 ---
 
@@ -114,8 +115,9 @@ Estos son los problemas actuales del proyecto, en orden de prioridad:
    `SYSTEM.md`/`SYSTEM_FULL.md` (ya vacíos, apuntaban a INFO-core/full) se movieron a
    `ai-context/deprecated/` vía `migrate-system.sh`; referencias corregidas a
    INFO-core/INFO-full. El doctor ya no reporta `DEPRECATED_FILE`.
-4. **README promete más de lo que hay:** el árbol de Knowledge/skills en README no coincide
-   con el disco — es el origen del drift.
+4. ~~**README promete más de lo que hay**~~ — **ACTUALIZADO (2026-08-03)**: el árbol de
+   Knowledge/skills en README refleja el disco (23 skills por dominio, AI/+Vision, scripts
+   completos).
 
 ---
 
@@ -137,16 +139,20 @@ Estos son los problemas actuales del proyecto, en orden de prioridad:
 
 ```bash
 # Suite completa (gate de CI)
-bash scripts/tests/run-tests.sh           # 70 OK esperado
-bash scripts/tests/run-tests.sh --quick   # 54 OK / 7 SKIP esperado
+bash scripts/tests/run-tests.sh           # 121 OK esperado
+bash scripts/tests/run-tests.sh --quick   # 105 OK esperado
 
 # Doctor (drift)
-bash scripts/buffy-doctor.sh --json       # 0 errors / ~4 warnings en local (desde 2026-08-03)
+bash scripts/buffy-doctor.sh --json       # 0 errors / 1 warning en local (desde 2026-08-03)
 bash scripts/buffy-doctor.sh --quick
 
 # Linter de manifests (B2)
 bash scripts/skill-lint.sh                 # 0 errores · cobertura 23/23
 bash scripts/skill-lint.sh --require-all   # gate activo en CI: TODAS las skills con manifest (exit 0)
+
+# Linter estructural de ai-context (B1)
+bash scripts/ai-context-lint.sh            # 0 errores esperado
+bash scripts/ai-context-lint.sh --json
 
 # Versionado
 bash scripts/changelog-entry.sh --dry-run v1.1.0
