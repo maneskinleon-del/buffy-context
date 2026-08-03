@@ -25,6 +25,8 @@ CYAN='\033[0;36m'
 NC='\033[0m'
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/yaml.sh
+source "$SCRIPT_DIR/lib/yaml.sh"
 REPO_DIR="${SCRIPT_DIR%/scripts}"
 MODE="normal"   # normal | json | quick
 
@@ -62,7 +64,9 @@ if [ $# -gt 0 ]; then
   MESSAGE="$*"
 elif [ ! -t 0 ]; then
   MESSAGE=$(timeout 5 cat 2>/dev/null || true)
-else
+fi
+# Sin mensaje en ninguna parte (ni args ni stdin) → error de uso.
+if [ -z "$MESSAGE" ]; then
   echo -e "${RED}❌ Falta el mensaje. Uso: buffy-router.sh \"mensaje del usuario\"${NC}" >&2
   exit 1
 fi
@@ -76,6 +80,67 @@ MSG_LOWER="$(normalize "$MESSAGE")"
 
 has() { grep -qiE "$1" <<< "$MSG_LOWER" && return 0 || return 1; }
 
+# ── Manifests de skills (contrato B2) ─────────────────────
+# El router resuelve las skills desde su skill.yaml (id/entry/safe/triggers)
+# en vez de rutas hardcodeadas: el manifest es la fuente de verdad.
+#   SKILLS_DIR   → .agents/skills/
+#   skill_path   → devuelve el SKILL.md del directorio <id> si existe
+#   skill_manifest → devuelve la ruta al skill.yaml de <id> (vacío si no hay)
+#   skill_triggers → lista de triggers del manifest unida por '|' (regex)
+#   skill_safe     → 'true'/'false' según el manifest (vacío si no hay)
+#   add_skill      → registra la skill <id> SOLO si su manifest existe
+#   add_by_triggers→ registra todas las skills cuyo manifest matchee la regex
+#                    (≥1 trigger). Skills sin manifest se omiten con warning.
+SKILLS_DIR="$REPO_DIR/.agents/skills"
+
+skill_path() {
+  printf '%s' ".agents/skills/$1/SKILL.md"
+}
+
+skill_manifest() {
+  local mf="$SKILLS_DIR/$1/skill.yaml"
+  [ -f "$mf" ] && printf '%s' "$mf"
+}
+
+skill_triggers() {
+  local mf; mf="$(skill_manifest "$1")"
+  [ -n "$mf" ] && yaml_list "$mf" triggers
+}
+
+skill_safe() {
+  local mf; mf="$(skill_manifest "$1")"
+  [ -n "$mf" ] && yaml_val "$mf" safe
+}
+
+add_skill() {  # <id> — registra la skill si su manifest existe
+  local id="$1" mf
+  mf="$(skill_manifest "$id")"
+  if [ -n "$mf" ]; then
+    SKILL_FILES+=("$(skill_path "$id")")
+  else
+    MISSING_MANIFESTS+=("$id")
+  fi
+}
+
+skill_matches() {  # <id> — true si ≥1 trigger del manifest matchea el mensaje
+  local trigs; trigs="$(skill_triggers "$1")"
+  [ -n "$trigs" ] && has "$trigs"
+}
+
+discover_skills() {  # añade toda skill cuyo manifest matchee el mensaje (y no esté ya)
+  local d id f found
+  for d in "$SKILLS_DIR"/*/; do
+    [ -d "$d" ] || continue
+    id="$(basename "$d")"
+    found=0
+    for f in "${SKILL_FILES[@]}"; do
+      [ "$f" = "$(skill_path "$id")" ] && found=1 && break
+    done
+    [ "$found" = 1 ] && continue
+    skill_matches "$id" && add_skill "$id"
+  done
+}
+
 # ── Detección de proyectos (señales de archivo) ────────────
 detect_android_project() { ls *.gradle.kts *.gradle 2>/dev/null | grep -q .; }
 detect_android_manifest() { [ -f app/src/main/AndroidManifest.xml ]; }
@@ -88,6 +153,7 @@ CATS=()
 KNOWLEDGE_FILES=()
 SKILL_FILES=()
 SCRIPT_FILES=()
+MISSING_MANIFESTS=()
 
 # BASE — siempre
 BASE_FILES=(
@@ -127,39 +193,39 @@ if has 'android|adb|scrcpy|shizuku|nubia|hyperos|xiaomi|miui|free fire|gg mouse|
   CATS+=("Android")
 
   KNOWLEDGE_FILES+=("Knowledge/Android/ADB.md")
-  SKILL_FILES+=(".agents/skills/android-adb/SKILL.md")
+  add_skill android-adb
 
   if has 'shizuku|rish|permiso|privilegios|appops'; then
     KNOWLEDGE_FILES+=("Knowledge/Android/Shizuku.md")
-    SKILL_FILES+=(".agents/skills/shizuku-rikka/SKILL.md")
+    add_skill shizuku-rikka
   fi
   if has 'scrcpy|mirror|streaming'; then
     KNOWLEDGE_FILES+=("Knowledge/Android/scrcpy.md")
-    SKILL_FILES+=(".agents/skills/scrcpy-freefire/SKILL.md")
+    add_skill scrcpy-freefire
   fi
   if has 'rendimiento|fps|lag|optimiz|cpu|gpu|thermal|temperatura|juego|game'; then
     KNOWLEDGE_FILES+=("Knowledge/Android/GameOptimization.md")
-    SKILL_FILES+=(".agents/skills/android-game-opt/SKILL.md")
+    add_skill android-game-opt
   fi
   if has 'hyperos|xiaomi|miui'; then
     KNOWLEDGE_FILES+=("Knowledge/Android/HyperOS.md")
-    SKILL_FILES+=(".agents/skills/hyperos-hardening/SKILL.md")
+    add_skill hyperos-hardening
   fi
   if has 'gg mouse|mantis|keymapper|keymapping'; then
     KNOWLEDGE_FILES+=("Knowledge/Android/Keymappers.md")
-    SKILL_FILES+=(".agents/skills/scrcpy-freefire/SKILL.md")
+    add_skill scrcpy-freefire
   fi
   if has 'diagnostico|diagnóstico'; then
-    SKILL_FILES+=(".agents/skills/android-agent/SKILL.md")
+    add_skill android-agent
   fi
 fi
 
 # ── CODE SEARCH ────────────────────────────────────────────
 if has 'busca .*codigo|busca .*código|encuentra donde|encuentra dónde|buscar en|buscar donde|definicion|definición|explora el codigo|entiende el flujo|donde se usa|dónde se usa'; then
   CATS+=("Code Search")
-  SKILL_FILES+=(".agents/skills/code-search/SKILL.md")
+  add_skill code-search
   if has 'compleja|complejo|varias busquedas|varias búsquedas|multiple|múltiple'; then
-    SKILL_FILES+=(".agents/skills/search_criteria_v4/SKILL.md")
+    add_skill search_criteria_v4
   fi
 fi
 
@@ -209,10 +275,15 @@ fi
 if has 'imagen|screenshot|captura|vlm|vision|visión|ocr|ve esta|mira esta|error en pantalla|ui visible'; then
   CATS+=("Visión/VLM")
   KNOWLEDGE_FILES+=("Knowledge/Vision.md")
-  SKILL_FILES+=(".agents/skills/vision-adapter/SKILL.md")
-  SKILL_FILES+=(".agents/skills/code-search/SKILL.md")
+  add_skill vision-adapter
+  add_skill code-search
   SCRIPT_FILES+=("scripts/see.sh")
 fi
+
+# ── Descubrimiento por manifests (contrato B2) ─────────────
+# Después de la lógica de categorías, se descubren automáticamente las skills
+# cuyo skill.yaml matchee el mensaje (triggers) y que no estén ya registradas.
+discover_skills
 
 # ── Deduplicar y resolver ──────────────────────────────────
 dedupe() {
@@ -369,12 +440,23 @@ if [ ${#SKILL_FILES[@]} -gt 0 ]; then
   section "🎯 Skills"
   while IFS= read -r f; do
     if exists "$f"; then
-      ok "$f"
+      if [ "$(skill_safe "$(basename "$(dirname "$f")")")" = true ]; then
+        ok "$f ${YELLOW}⚡ AUTO_SAFE${NC}"
+      else
+        ok "$f"
+      fi
     else
       miss "$f — referenciada pero inexistente (drift)"
     fi
     TOTAL_TOKENS=$((TOTAL_TOKENS + $(est_tokens "$f")))
   done < <(dedupe "${SKILL_FILES[@]}")
+fi
+
+if [ ${#MISSING_MANIFESTS[@]} -gt 0 ]; then
+  section "⚠️  Skills sin manifest (drift B2)"
+  for id in "${MISSING_MANIFESTS[@]}"; do
+    warn "$id — falta skill.yaml (corre: bash scripts/skill-lint.sh)"
+  done
 fi
 
 if [ ${#SCRIPT_FILES[@]} -gt 0 ]; then

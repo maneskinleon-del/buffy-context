@@ -21,6 +21,8 @@
 
 set -u
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/yaml.sh
+source "$SCRIPT_DIR/lib/yaml.sh"
 REPO_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 SKILLS_DIR="$REPO_DIR/.agents/skills"
 REQUIRE_ALL=false
@@ -47,20 +49,6 @@ done
 ERRORS=0
 WARNINGS=0
 N_MANIFESTS=0
-
-# yaml_val <archivo> <clave> — valor escalar simple (quita comillas envolventes)
-yaml_val() {
-  local v
-  v=$(sed -n "s/^${2}:[[:space:]]*\(.*\)$/\1/p" "$1" | head -1)
-  v=${v#\"}; v=${v%\"}
-  v=${v#\'}; v=${v%\'}
-  printf '%s' "$v"
-}
-
-# yaml_items <archivo> <clave> — nº de items '- ' de la lista <clave>
-yaml_items() {
-  awk -v k="$2" 'index($0,k":")==1 {f=1; next} f && /^[a-z_]+:/ {f=0} f && /^[[:space:]]*- / {n++} END {print n+0}' "$1"
-}
 
 err() {  # <msg> — cuenta y muestra (solo en modo humano)
   ERRORS=$((ERRORS+1))

@@ -40,6 +40,8 @@ source "$SCRIPT_DIR/test-runner.sh"
 source "$SCRIPT_DIR/test-changelog.sh"
 # shellcheck source=test-skill-lint.sh
 source "$SCRIPT_DIR/test-skill-lint.sh"
+# shellcheck source=test-router.sh
+source "$SCRIPT_DIR/test-router.sh"
 
 trap teardown_sandbox EXIT
 
