@@ -28,14 +28,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     env:
-      # Baseline de errores conocidos MEDIDO EN CI (2026-08-03): 16 MISSING_SKILL.
-      # OJO: en un runner con HOME limpio el doctor ve 16 errores (3 más que en local:
-      # las skills que solo existen en ~/.agents/skills/ localmente pasan de
-      # SKILL_NOT_IN_REPO [warn] a MISSING_SKILL [err]). El job falla SOLO si el
-      # drift AUMENTA sobre este baseline.
-      # Para medirlo: bash scripts/buffy-doctor.sh --json | python3 -c \
-      #   'import json,sys; print(json.load(sys.stdin)["errors"])'
-      BASELINE_ERRORS: "16"
+      # Baseline de errores conocidos: 0 — el drift (13 MISSING_SKILL) se resolvió
+      # el 2026-08-03 creando las skills documentadas en .agents/skills/ + migrando
+      # las 3 locales (form-filler, image-analyzer, xiaomi-adb-tricks).
+      # El job falla ante CUALQUIER drift nuevo (errors > 0).
+      BASELINE_ERRORS: "0"
     steps:
       - uses: actions/checkout@v4
 
