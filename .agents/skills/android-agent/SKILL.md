@@ -3,8 +3,8 @@ name: android-agent
 description: >
   Agente Android dedicado. Detecta automáticamente proyectos Android,
   verifica conexión ADB, carga Knowledge/Android/*, activa skills relevantes
-  (ADB, Shizuku, scrcpy, game-opt, clean-arch) y ofrece herramientas de
-  diagnóstico (logcat, dumpsys, device info).
+  (ADB, Shizuku, scrcpy, game-opt, project-setup, hardening) y ofrece
+  herramientas de diagnóstico (logcat, dumpsys, device info).
 ---
 
 # 🤖 Android Agent — Agente dedicado
@@ -58,15 +58,15 @@ Lee estos archivos con `read_files`:
 ```
 
 ### 2. Skills activas
-Carga estas skills con `skill`:
+Carga estas skills con `skill` (todas vienen con el repo — `.agents/skills/`):
 ```
-skill: android-adb        → Comandos ADB generales
-skill: shizuku-rikka      → Shizoku + rish
-skill: scrcpy-freefire    → scrcpy + Free Fire
-skill: android-game-opt   → Optimización de juegos
-skill: android-native-dev → Desarrollo Android nativo
-skill: android-clean-architecture → Clean Architecture
-skill: mobile-android-design → Material Design 3
+skill: android-adb            → Comandos ADB generales
+skill: shizuku-rikka          → Shizoku + rish
+skill: scrcpy-freefire        → scrcpy + Free Fire
+skill: android-game-opt       → Optimización de juegos
+skill: android-project-setup  → Build → install → permisos → launch (dev nativo)
+skill: hyperos-hardening      → Hardening HyperOS/Xiaomi
+skill: xiaomi-adb-tricks      → Workarounds ADB/rish/Shizuku Xiaomi
 ```
 
 ### 3. Verificación de conexión
