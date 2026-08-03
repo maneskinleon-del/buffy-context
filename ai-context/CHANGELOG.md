@@ -57,13 +57,29 @@ system-id: mangonz-desktop
 - **`scripts/tests/run-tests.sh`**: nuevo flag `--quick` que salta los ciclos de sandbox (heurística automática: cualquier test cuyo cuerpo llame `setup_sandbox` se omite) — rápido para hooks/CI. Nuevo **`scripts/tests/test-runner.sh`** (self-tests del runner con invocación filtrada para evitar recursión).
 - **`scripts/hooks/pre-commit.sh`**: ahora corre la suite en modo `--quick` por defecto; `BUFFY_HOOK_FULL=1` fuerza la suite completa puntualmente.
 - **`scripts/hooks/install.sh`**: opciones `--install/--uninstall/--check/--force/--no-test/--help`, manteniendo el mecanismo de escribir el hook con el shebang real (fix Termux).
-- **`scripts/migrate-system.sh`** (NUEVO): migración SYSTEM.md/SYSTEM_FULL.md → AGENTS.md con `find` agrupado correctamente (`\( -o \)`), `sed` seguro (excluye .git/, deprecated/ y los archivos a mover), mudanza a `ai-context/deprecated/` con timestamp y verificación con la suite `--quick`. **Validado en sandbox; NO ejecutado aún en el repo real** (requiere decisión del usuario). El doctor ya marca ambos archivos como DEPRECATED, así que la migración reduce advertencias.
+- **`scripts/migrate-system.sh`** (NUEVO): migración de los stubs `SYSTEM.md`/`SYSTEM_FULL.md` (contenido ya fusionado en `INFO-core.md`/`INFO-full.md`) a `ai-context/deprecated/` con timestamp, sed de referencias y verificación con la suite `--quick`. **EJECUTADO en el repo real el 2026-08-03** (decisión del usuario) — ver entrada de migración más abajo.
 - **`README.md`**: sección `## Versioning` + docs del modo `--quick` y de las variantes del hook (`BUFFY_HOOK_FULL`, re-instalación con `--force`).
 - **Validación**: suite completa 66/66 + suite `--quick` + reviewer con sign-off.
 
 **Archivos modificados/creados:**
 - `CONTRIBUTING.md`, `VERSION`, `scripts/set-version.sh`, `scripts/migrate-system.sh`, `scripts/tests/test-runner.sh` — NUEVOS
 - `scripts/tests/run-tests.sh`, `scripts/hooks/pre-commit.sh`, `scripts/hooks/install.sh`, `README.md` — MODIFICADOS
+
+---
+
+### 2026-08-03 — Migración SYSTEM.md/SYSTEM_FULL.md → deprecated/ (ejecutada)
+
+**Decisión del usuario:** marcar como 🔴 crítica la migración de los stubs SYSTEM.md/SYSTEM_FULL.md (contenido ya fusionado en INFO-core/INFO-full desde antes).
+
+**Cambios aplicados:**
+- **`scripts/migrate-system.sh`** EJECUTADO: los 2 stubs movidos a `ai-context/deprecated/` (con timestamp), referencias en `.md`/`.sh` actualizadas (AGENTS.md, README, LOAD_CONTEXT, CHANGELOG, CONTINUE, BUFFY-PC-CONTEXT, REVIEW-BASELINE).
+- **Correcciones manuales post-sed**: el sed global reemplazó `SYSTEM.md`→`AGENTS.md` ciegamente — se corrigió a mano: `ai-context/AGENTS.md` y `ai-context/README.md` ahora apuntan a `INFO-core.md`/`INFO-full.md` (destino real del contenido); árbol de `LOAD_CONTEXT.md` y `README.md` raíz muestran `deprecated/`; bitácoras históricas (SESION.md, SESION-archive.md) revertidas (no se reescriben).
+- **Doctor**: ya no reporta `DEPRECATED_FILE` (los archivos ya no están en `ai-context/`).
+- **Validación**: suite `--quick` ✅ (corrida por el propio script) + suite completa + doctor 0 errores.
+
+**Archivos modificados/creados:**
+- `ai-context/deprecated/{SYSTEM.md,SYSTEM_FULL.md}.20260803_150816` — MOVIDOS
+- `ai-context/AGENTS.md`, `ai-context/README.md`, `ai-context/LOAD_CONTEXT.md`, `README.md`, `BUFFY-PC-CONTEXT.md`, `REVIEW-BASELINE.md`, `ai-context/CHANGELOG.md`, `ai-context/CONTINUE.md` — MODIFICADOS
 
 ---
 

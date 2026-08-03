@@ -12,19 +12,19 @@ que trabaje en este sistema.
 
 ## Antes de empezar
 
-1. Leé `/home/mangonz/ai-context/SYSTEM.md` con tu herramienta de lectura de archivos. Es contexto
+1. Leé `/home/mangonz/ai-context/INFO-core.md` con tu herramienta de lectura de archivos. Es contexto
    base: sistema operativo, WM, reglas, stack típico. Cargalo siempre, salga lo que salga
    la tarea.
 2. Consultá la tabla de abajo para saber si necesitás algo más.
-3. Respetá las reglas de la sección "Reglas" de `SYSTEM.md`. No son sugerencias.
+3. Respetá las reglas de la sección "Reglas" de `INFO-core.md`. No son sugerencias.
 4. Preguntá antes de usar `sudo` o tocar `/etc`.
 
 ## Glosario — qué archivo leer, cuándo, y para qué
 
 | Archivo | Cuándo leerlo | Para qué sirve | Qué NO tiene |
 |---|---|---|---|
-| `/home/mangonz/ai-context/SYSTEM.md` | Siempre, al iniciar cualquier tarea | SO, WM actual (bspwm, X11), hardware, PATH, herramientas frecuentes, reglas no negociables | Detalle de versiones exactas, changelog, proyectos |
-| `/home/mangonz/ai-context/SYSTEM_FULL.md` | Solo si la tarea toca: portales XDG/Wayland, versiones exactas de paquetes, guía completa de Shizuku/rish, checklist de capacidades | Referencia técnica exhaustiva | Historial de cambios (eso está en CHANGELOG.md) |
+| `/home/mangonz/ai-context/INFO-core.md` | Siempre, al iniciar cualquier tarea | SO, WM actual (bspwm, X11), hardware, PATH, herramientas frecuentes, reglas no negociables | Detalle de versiones exactas, changelog, proyectos |
+| `/home/mangonz/ai-context/INFO-full.md` | Solo si la tarea toca: portales XDG/Wayland, versiones exactas de paquetes, guía completa de Shizuku/rish, checklist de capacidades | Referencia técnica exhaustiva | Historial de cambios (eso está en CHANGELOG.md) |
 | `/home/mangonz/ai-context/CHANGELOG.md` | Solo si necesitás entender por qué algo quedó configurado así, o si algo que "debería funcionar" según docs viejas no anda | Historial de decisiones y cambios del sistema (ej. migración Hyprland → Mango) | Contexto de proyectos individuales |
 | `/home/mangonz/ai-context/PROJECTS.md` | Cuando la tarea es sobre un proyecto específico (TimeMark, SecurGuard, data_car, etc.) | Objetivo, stack, estado y rutas de cada proyecto activo | Contexto de sistema operativo/hardware |
 | `/home/mangonz/ai-context/README.md` | Rara vez — es el punto de entrada para un agente nuevo que nunca vio esta carpeta | Resumen de 6 líneas del protocolo completo | Nada específico, es solo el índice |
@@ -55,7 +55,7 @@ que trabaje en este sistema.
 
 ## Reglas de eficiencia (kimchi y agentes de coding en general)
 
-- No cargues `SYSTEM_FULL.md` ni `PROJECTS.md` completos si la tarea no los necesita —
+- No cargues `INFO-full.md` ni `PROJECTS.md` completos si la tarea no los necesita —
   cada uno cuesta tokens que no vuelven.
 - Si vas a tocar un proyecto puntual, leé solo su sección en `PROJECTS.md`, no el archivo
   entero si es muy largo.

@@ -216,8 +216,7 @@ ai-context/
 ├── CHANGELOG.md          ← Historial de cambios (cargar solo si pregunta qué cambió)
 ├── AGENTS.md             ← Notas técnicas de agentes (cargar bajo demanda)
 │
-├── SYSTEM.md             ← ⚠️ DEPRECATED — contenido fusionado en INFO-core.md
-├── SYSTEM_FULL.md        ← ⚠️ DEPRECATED — contenido fusionado en INFO-full.md
+├── deprecated/           ← Archivos obsoletos (SYSTEM.md, SYSTEM_FULL.md — NO usar)
 └── README.md             ← Meta-información del directorio
 ```
 

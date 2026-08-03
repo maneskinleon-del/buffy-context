@@ -7,10 +7,10 @@ system-id: mangonz-desktop
 
 # Si eres un agente
 
-1. Lee `SYSTEM.md`.
-2. No cargues `SYSTEM_FULL.md` salvo necesidad puntual (changelog, versiones exactas, detalle Wayland/Shizuku).
+1. Lee `INFO-core.md`.
+2. No cargues `INFO-full.md` salvo necesidad puntual (changelog, versiones exactas, detalle Wayland/Shizuku).
 3. Si vas a trabajar en un proyecto específico, lee la sección correspondiente en `PROJECTS.md`.
-4. Respetá las reglas de `SYSTEM.md` (sección Reglas).
+4. Respetá las reglas de `INFO-core.md` (sección Reglas).
 5. Preferí CLI sobre GUI cuando exista.
 6. Preguntá antes de usar `sudo` o tocar `/etc`.
 

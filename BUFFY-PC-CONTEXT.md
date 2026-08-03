@@ -132,9 +132,11 @@ bash scripts/hooks/install.sh --check
 5. **BUFFY_HOME / common.sh (C2, opt-in)**: script común que exporte BUFFY_HOME
    para instalaciones alternativas (hoy los scripts usan `$HOME/ai-context` y
    rutas relativas — diseño deliberado, no romper).
-6. **Decisiones del usuario pendientes**: (a) migración SYSTEM.md → INFO-core
-   (SYSTEM.md y SYSTEM_FULL.md están marcados DEPRECATED pero siguen vivos);
-   (b) versiones mínimas de scrcpy/Ollama desde el PC para documentarlas.
+6. **Decisiones del usuario pendientes**: (a) ~~migración SYSTEM.md → INFO-core~~ —
+   **HECHA (2026-08-03, PC)**: stubs movidos a `ai-context/deprecated/` vía
+   `migrate-system.sh` (referencias corregidas a INFO-core/INFO-full; doctor ya no
+   reporta DEPRECATED_FILE); (b) versiones mínimas de scrcpy/Ollama desde el PC para
+   documentarlas.
 7. **Bajo prioridad**: sandbox hardening + installer (D1/D2 del roadmap), y
    adapters VLM/LLM (YAGNI — solo existe un backend HF).
 
