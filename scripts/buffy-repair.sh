@@ -24,6 +24,8 @@ if command -v readlink >/dev/null 2>&1; then
 fi
 SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_SRC")" && pwd)"
 REPO_DIR="${SCRIPT_DIR%/scripts}"
+# shellcheck source=lib/common.sh
+source "$SCRIPT_DIR/lib/common.sh"
 DOCTOR="$SCRIPT_DIR/buffy-doctor.sh"
 AUTO=false
 JSON_OUT=false
@@ -95,7 +97,7 @@ done <<< "$ACTIONS"
 # ── Fixes AUTO_SAFE ───────────────────────────────────────
 fix_regenerate_snapshot() { # regenerar SNAPSHOT.md vía buffy-context.sh
   (cd "$REPO_DIR" && bash scripts/buffy-context.sh >/dev/null 2>&1)
-  [ -s "$HOME/ai-context/SNAPSHOT.md" ] || [ -s "$REPO_DIR/ai-context/SNAPSHOT.md" ]
+  [ -s "$(buffy_snapshot)" ] || [ -s "$REPO_DIR/ai-context/SNAPSHOT.md" ]
 }
 fix_create_ai_context_dir() { # crear ~/ai-context
   mkdir -p "$1"

@@ -155,7 +155,8 @@ ln -sf "$PWD/scripts/android-detect.sh" ~/.local/bin/
 
 ```bash
 bash scripts/buffy-context.sh
-# Creates ~/ai-context/SNAPSHOT.md (outside the repo) with real-time system state
+# Creates the system snapshot in the generated state dir (default ~/ai-context/SNAPSHOT.md,
+# outside the repo; redirectable via the BUFFY_HOME env var — see INSTALL.md)
 ```
 
 ### 4. Run Android diagnosis (if device connected)
@@ -263,7 +264,7 @@ Buffy reads these files automatically at session start following the protocol in
 
 1. `ai-context/CONTINUE.md` — what was being worked on
 2. `ai-context/INFO-core.md` — user profile and stack
-3. `~/ai-context/SNAPSHOT.md` — system state (regenerated each session, outside the repo)
+3. `~/ai-context/SNAPSHOT.md` — system state (regenerated each session, outside the repo; con `BUFFY_HOME` definida vive en `$BUFFY_HOME/ai-context/SNAPSHOT.md` — ver INSTALL.md)
 
 At session end, Buffy updates `CONTINUE.md` and `SESION.md`.
 

@@ -18,8 +18,8 @@
   `system-id: mangonz-desktop`.
 - **Repo:** `buffy-context/` → `github.com:maneskinleon-del/buffy-context.git`
 - **Estado actual:** CI verde · doctor con **0 errores** (baseline 0) ·
-  **23 skills** con manifest machine-readable (23/23) · suite **105 OK** (--quick)
-  / **121 OK** (completa).
+  **23 skills** con manifest machine-readable (23/23) · suite **116 OK** (--quick)
+  / **132 OK** (completa).
 
 ## 2. Qué se hizo en estas sesiones (commits)
 
@@ -94,8 +94,8 @@ prefijo `skills/`.
 
 ```bash
 # Suite (gate de CI)
-bash scripts/tests/run-tests.sh           # 121 OK esperado
-bash scripts/tests/run-tests.sh --quick   # 105 OK esperado
+bash scripts/tests/run-tests.sh           # 132 OK esperado
+bash scripts/tests/run-tests.sh --quick   # 116 OK esperado
 
 # Doctor (drift) — 0 errors / 1 warning de entorno
 bash scripts/buffy-doctor.sh --json
@@ -136,9 +136,7 @@ bash scripts/hooks/install.sh --check
    front-matter semver-lite X.Y/X.Y.Z + updated ISO. 5 tests en la suite
    (--json schema, stderr limpio, fixtures sin sandbox → corren en --quick).
    Suite: 105 OK quick / 121 OK full.
-5. **BUFFY_HOME / common.sh (C2, opt-in)**: script común que exporte BUFFY_HOME
-   para instalaciones alternativas (hoy los scripts usan `$HOME/ai-context` y
-   rutas relativas — diseño deliberado, no romper).
+5. ~~**BUFFY_HOME / common.sh (C2, opt-in)**~~ — **HECHO (2026-08-03, PC)**: `scripts/lib/common.sh` (NUEVO) exporta BUFFY_HOME (default `$HOME`) + helpers buffy_home/buffy_ai_context/buffy_snapshot. Cableado en buffy-context/doctor/repair/router — redirige SOLO el estado generado (ai-context/ + SNAPSHOT); el escaneo del entorno del usuario sigue con $HOME real. Sin BUFFY_HOME → comportamiento idéntico (verificado). 6 tests nuevos; doc en INSTALL.md.
 6. **Decisiones del usuario pendientes**: (a) ~~migración SYSTEM.md → INFO-core~~ —
    **HECHA (2026-08-03, PC)**: stubs movidos a `ai-context/deprecated/` vía
    `migrate-system.sh` (referencias corregidas a INFO-core/INFO-full; doctor ya no

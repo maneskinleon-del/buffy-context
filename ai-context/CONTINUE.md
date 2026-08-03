@@ -59,7 +59,8 @@
 2. ~~**Schema-lite para ai-context (B1)**~~ — **HECHO (2026-08-03)**: `scripts/ai-context-lint.sh` valida secciones obligatorias de INFO-core/CONTINUE/LOAD_CONTEXT + front-matter semver-lite; 5 tests nuevos en la suite (105 OK quick / 121 OK full).
 3. **Decisiones tuyas**: (a) ~~migración SYSTEM.md → INFO-core~~ — **HECHA (2026-08-03)** vía migrate-system.sh, stubs en `ai-context/deprecated/`; (b) ~~versiones mínimas scrcpy/Ollama~~ — **HECHA (2026-08-03)**: scrcpy ≥ 3.3.1 / Ollama ≥ 0.30, en Knowledge/Android/scrcpy.md y Knowledge/Vision.md.
 4. **`gh auth login`** — sigue pendiente (los push van por SSH y funcionan).
-5. Renombrar repo `enerador-de-boletas` → `generador-de-boletas` (requiere gh auth).
+5. ~~**BUFFY_HOME / common.sh (C2, opt-in)**~~ — **HECHO (2026-08-03)**: `scripts/lib/common.sh` exporta BUFFY_HOME (default $HOME) + helpers buffy_home/buffy_ai_context/buffy_snapshot; cableado en buffy-context/doctor/repair/router (solo estado generado). 6 tests nuevos. Verificado sin y con BUFFY_HOME.
+6. Renombrar repo `enerador-de-boletas` → `generador-de-boletas` (requiere gh auth).
 
 ---
 
@@ -84,5 +85,5 @@ Stack: React + TS + Tailwind v4 + Vite → GitHub (maneskinleon-del) → Vercel
 Node:  v26.4.0 · npm 11.18.0 · gh CLI (sin auth)
 Git:   maneskinleon-del / mangonz970@gmail.com · push por SSH
 Repo:  buffy-context (al día con origin/main)
-Suite: 105 OK quick / 121 OK full · doctor 0 · linter 23/23
+Suite: 116 OK quick / 132 OK full · doctor 0 · linter 23/23
 ```

@@ -52,6 +52,28 @@ echo "$PATH" | tr ':' '\n' | grep -q "$HOME/.local/bin" && echo "OK: en PATH" ||
 # Los scripts también pueden ejecutarse con 'bash script.sh' (no requieren bit de ejecución).
 ```
 
+## Configuración opcional: BUFFY_HOME (C2)
+
+Por defecto el **estado generado** (SNAPSHOT.md y su directorio `ai-context/`) vive en
+`$HOME/ai-context/`. Si quieres una **instalación alternativa** (otro usuario, contenedor,
+ruta montada), define la variable de entorno `BUFFY_HOME` con la raíz deseada:
+
+```bash
+# En ~/.bashrc / ~/.zshrc / config de tu shell:
+export BUFFY_HOME=/ruta/alternativa
+
+# Ahora SNAPSHOT.md se genera en $BUFFY_HOME/ai-context/SNAPSHOT.md
+bash scripts/buffy-context.sh
+test -f "$BUFFY_HOME/ai-context/SNAPSHOT.md" && echo "✅ SNAPSHOT bajo BUFFY_HOME"
+```
+
+- **Sin `BUFFY_HOME` definida** → comportamiento idéntico al actual (`$HOME/ai-context/`).
+- **Alcance deliberado**: `BUFFY_HOME` redirige solo el estado generado. El escaneo del
+  entorno del usuario (`$HOME/proyectos`, `$HOME/scripts`, `$HOME/.agents/skills`,
+  historial) sigue usando el `$HOME` real — es el entorno del usuario, no la instalación.
+- Respeta `BUFFY_HOME`: `buffy-context.sh`, `buffy-doctor.sh`, `buffy-repair.sh`,
+  `buffy-router.sh` (vía `scripts/lib/common.sh`).
+
 ### Nota Termux
 
 En Termux `/usr/bin/env` no existe (bash real: `$PREFIX/bin/bash`). Por eso:
@@ -142,6 +164,7 @@ Si quieres que otro agente IA (Antigravity, Claude, etc.) use el mismo contexto:
 bash ~/buffy-context/scripts/buffy-context.sh
 # Se crea en ~/ai-context/SNAPSHOT.md  ($HOME/ai-context/ — NO en el repo)
 # (No está en git — se regenera cada sesión)
+# Con BUFFY_HOME definida: $BUFFY_HOME/ai-context/SNAPSHOT.md
 ```
 
 ## Diagnóstico Android
