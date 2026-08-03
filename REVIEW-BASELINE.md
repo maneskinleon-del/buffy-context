@@ -101,9 +101,11 @@ Estos son los problemas actuales del proyecto, en orden de prioridad:
    modo-autonomo) y las 3 que solo vivían en `~/.agents/skills/` (form-filler, image-analyzer,
    xiaomi-adb-tricks) se migraron al repo. Baseline de CI ahora `0`. El doctor reporta
    **0 errores** (quedan warnings de entorno: NO_AI_CONTEXT_DIR, MISSING_SNAPSHOT, DEPRECATED).
-2. **CHANGELOG caótico:** múltiples bloques front-matter duplicados (`version: 1.7` y
-   `version: 1.4` a mitad de archivo), entradas desordenadas, ~175 líneas pendientes de poda.
-   La herramienta que genera entradas (`changelog-entry.sh`) debería también limpiarlo.
+2. ~~**CHANGELOG caótico**~~ — **LIMPIO (2026-08-03)**: poda ejecutada (661 → 216
+   líneas; entradas 2026-07-31 y anteriores movidas a CHANGELOG-archive.md con dedupe
+   contra lo ya archivado), front-matter duplicado eliminado (un solo bloque arriba,
+   `version: 1.7` / `updated: 2026-08-03`), 13 entradas recientes (08-01 a 08-03)
+   ordenadas. Pendiente opcional: que `changelog-entry.sh` archive automáticamente.
 3. **Migración SYSTEM.md → INFO-core pendiente** (decisión del usuario): `SYSTEM.md` y
    `SYSTEM_FULL.md` están marcados DEPRECATED pero siguen vivos.
 4. **README promete más de lo que hay:** el árbol de Knowledge/skills en README no coincide
