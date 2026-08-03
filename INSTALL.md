@@ -46,7 +46,7 @@ ln -sf "$PWD/scripts/buffy-router.sh" ~/.local/bin/
 ln -sf "$PWD/scripts/android-detect.sh" ~/.local/bin/
 
 # Asegúrate de que ~/.local/bin esté en $PATH
-# (si no, añádelo en ~/.bashrc o ~/.zshrc:  export PATH="$HOME/.local/bin:$PATH" )
+# (si no, añádelo en tu rc:  bash/zsh → export PATH="$HOME/.local/bin:$PATH" ; fish → fish_add_path ~/.local/bin)
 echo "$PATH" | tr ':' '\n' | grep -q "$HOME/.local/bin" && echo "OK: en PATH" || echo "FALTA: ~/.local/bin no está en PATH"
 
 # Los scripts también pueden ejecutarse con 'bash script.sh' (no requieren bit de ejecución).
@@ -84,7 +84,7 @@ bash scripts/tests/run-tests.sh --quick
 
 # 4. (Si linkeaste al PATH) probar invocación directa como binario
 #    (solo en Linux — en Termux no hay /usr/bin/env, usa bash script.sh)
-command -v buffy-doctor.sh && buffy-doctor.sh --quick
+command -v buffy-doctor.sh >/dev/null 2>&1 && buffy-doctor.sh --quick
 ```
 
 ## Dependencias opcionales
@@ -96,8 +96,9 @@ command -v buffy-doctor.sh && buffy-doctor.sh --quick
 | **scrcpy** | Mirroring de Android | Arch: `pacman -S scrcpy` · Debian/Ubuntu: `apt install scrcpy` · Termux: `pkg install scrcpy` |
 | **Ollama** | LLM local (opcional) | [ollama.com](https://ollama.com) — script oficial de instalación |
 
-> `kimi_vision.js` necesita además `HF_TOKEN` — token de Hugging Face (scope read/inference),
-> **no** una API key de Kimi — y aceptar la licencia del modelo gated. Ver `Knowledge/AI/Kimi-K3.md`.
+> `kimi_vision.js` necesita **siempre** `HF_TOKEN` — token de Hugging Face (scope read/inference),
+> **no** una API key de Kimi — y aceptar la licencia del modelo gated. No hay modo local:
+> el script solo llama a la API hosted de HF. Ver `Knowledge/AI/Kimi-K3.md`.
 
 ## Seguridad / sandbox
 
