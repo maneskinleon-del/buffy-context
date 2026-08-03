@@ -69,6 +69,9 @@ buffy-context/
 │
 ├── .agents/skills/                    # AI agent skill definitions
 │   ├── android-agent/                 # Android detection & automation
+│   ├── android-project-setup/         # Build → install → permisos → launch
+│   │   ├── scripts/                   # check_device, build_install, grant_permissions
+│   │   └── references/                # Dispositivos y permisos del usuario
 │   ├── android-adb/                   # Comandos ADB generales
 │   ├── android-game-opt/              # Optimización de juegos vía Shizuku/ADB
 │   ├── hyperos-hardening/             # Blindaje contra restricciones MIUI/HyperOS
