@@ -2,28 +2,103 @@
 
 ## Requisitos
 
-- Linux (probado en Arch/EndeavourOS)
-- Bash 5+ / Zsh
+- Linux (probado en Arch/EndeavourOS) o Termux
+- Bash 5+ (o Zsh; los scripts se ejecutan con `bash`)
 - Git
-- (Opcional) ADB para el agente Android
+- Node.js 18+ — **solo** para `scripts/kimi_vision.js` (usa `fetch` global)
+- (Opcional) ADB, scrcpy, Ollama — ver [Dependencias opcionales](#dependencias-opcionales)
+
+### Verificar dependencias
+
+```bash
+bash --version | head -1     # Bash 5+
+git --version                # Git
+node -v                      # Node 18+ (solo kimi_vision.js)
+
+# Opcionales
+adb version                  # ADB (agente Android)
+scrcpy --version             # scrcpy (mirroring)
+ollama version               # Ollama (LLM local)
+```
 
 ## Setup rápido
 
 ```bash
-# Clonar
-git clone https://github.com/tu-usuario/buffy-context.git ~/buffy-context
+# Clonar (repositorio real)
+git clone https://github.com/maneskinleon-del/buffy-context.git ~/buffy-context
+cd ~/buffy-context
 
 # (Opcional) Vincular scripts al PATH
-ln -sf ~/buffy-context/scripts/buffy-context.sh ~/.local/bin/
-ln -sf ~/buffy-context/scripts/buffy-doctor.sh ~/.local/bin/
-ln -sf ~/buffy-context/scripts/buffy-repair.sh ~/.local/bin/
-ln -sf ~/buffy-context/scripts/buffy-agent.sh ~/.local/bin/
-ln -sf ~/buffy-context/scripts/buffy-router.sh ~/.local/bin/
-ln -sf ~/buffy-context/scripts/android-detect.sh ~/.local/bin/
+# NOTA: ln -sf SOBRESCRIBE binarios existentes con el mismo nombre en ~/.local/bin.
+# Verifica primero:  ls ~/.local/bin/ | grep buffy
+ln -sf "$PWD/scripts/buffy-context.sh" ~/.local/bin/
+ln -sf "$PWD/scripts/buffy-doctor.sh" ~/.local/bin/
+ln -sf "$PWD/scripts/buffy-repair.sh" ~/.local/bin/
+ln -sf "$PWD/scripts/buffy-agent.sh" ~/.local/bin/
+ln -sf "$PWD/scripts/buffy-router.sh" ~/.local/bin/
+ln -sf "$PWD/scripts/android-detect.sh" ~/.local/bin/
 
-# Nota Termux: si /usr/bin/env no existe, ejecuta con bash explícito:
-#   bash ~/.local/bin/buffy-doctor.sh --quick
+# Asegúrate de que ~/.local/bin esté en $PATH
+# (si no, añádelo en ~/.bashrc o ~/.zshrc:  export PATH="$HOME/.local/bin:$PATH" )
+echo "$PATH" | tr ':' '\n' | grep -q "$HOME/.local/bin" && echo "OK: en PATH" || echo "FALTA: ~/.local/bin no está en PATH"
+
+# (Opcional) Ejecutar directamente sin 'bash' — los scripts del repo se invocan
+# con 'bash script.sh' (no requieren bit de ejecución). Si quieres ejecutarlos
+# como binarios:  chmod +x scripts/*.sh
 ```
+
+### Nota Termux
+
+En Termux `/usr/bin/env` no existe (bash real: `$PREFIX/bin/bash`). Por eso:
+
+- Ejecuta siempre con `bash` explícito: `bash scripts/buffy-doctor.sh --quick`
+- El pre-commit hook se instala con el shebang real del sistema mediante el installer:
+
+```bash
+bash scripts/hooks/install.sh          # instala .git/hooks/pre-commit
+bash scripts/hooks/install.sh --check  # verifica hook + shebang
+```
+
+> Detalle completo del hook en el README (sección Testing → Pre-commit hook).
+
+## Smoke test (post-instalación)
+
+Confirma que todo funciona:
+
+```bash
+# 1. Generar snapshot del sistema (se escribe en $HOME/ai-context/)
+bash scripts/buffy-context.sh
+test -f ~/ai-context/SNAPSHOT.md && echo "✅ SNAPSHOT.md generado"
+
+# 2. Auditoría de salud (resumen de una línea)
+# NOTA: con drift conocido sale con exit 1 — es su comportamiento normal.
+bash scripts/buffy-doctor.sh --quick
+
+# 3. Suite de tests rápida (salta ciclos de sandbox)
+bash scripts/tests/run-tests.sh --quick
+```
+
+## Dependencias opcionales
+
+| Herramienta | Para qué | Instalación (ejemplos) |
+|---|---|---|
+| **Node 18+** | `scripts/kimi_vision.js` (visión IA) | Arch: `pacman -S nodejs` · Debian/Ubuntu: `apt install nodejs` · Termux: `pkg install node` |
+| **ADB** | Diagnóstico y automatización Android | Arch: `pacman -S android-tools` · Debian/Ubuntu: `apt install adb` · Termux: `pkg install android-tools` |
+| **scrcpy** | Mirroring de Android | Arch: `pacman -S scrcpy` · Debian/Ubuntu: `apt install scrcpy` · Termux: `pkg install scrcpy` |
+| **Ollama** | LLM local (opcional) | [ollama.com](https://ollama.com) — script oficial de instalación |
+
+> `kimi_vision.js` necesita además `HF_TOKEN` (ver `Knowledge/AI/Kimi-K3.md`).
+
+## Seguridad / sandbox
+
+- `buffy-repair --auto` aplica **solo fixes AUTO_SAFE** y verifica. Antes de aplicar, revisa el plan:
+
+```bash
+bash scripts/buffy-repair.sh            # plan (dry-run, no aplica nada)
+bash scripts/buffy-repair.sh --auto     # aplica solo lo seguro
+```
+
+- Las operaciones que escriben (repair/agent) corren en un **sandbox con HOME aislado** dentro de la suite de tests; el repo real solo se lee (doctor, dry-run, `--no-repair`).
 
 ## Vincular ai-context original
 
@@ -52,7 +127,7 @@ Si quieres que otro agente IA (Antigravity, Claude, etc.) use el mismo contexto:
 
 ```bash
 bash ~/buffy-context/scripts/buffy-context.sh
-# Se crea en ~/buffy-context/ai-context/SNAPSHOT.md
+# Se crea en ~/ai-context/SNAPSHOT.md  ($HOME/ai-context/ — NO en el repo)
 # (No está en git — se regenera cada sesión)
 ```
 
