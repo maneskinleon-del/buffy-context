@@ -1,4 +1,4 @@
-#!/usr/bin/env zsh
+#!/usr/bin/env bash
 # buffy-context.sh — Genera un snapshot del sistema para que Buffy sepa
 # qué está pasando sin que tengas que explicarle nada.
 #
@@ -23,6 +23,9 @@ while [[ $# -gt 0 ]]; do
   shift
 done
 
+# ── Asegurar directorio destino (exit-code verificable) ──
+mkdir -p "$(dirname "$SNAPSHOT")" || { echo "❌ No se pudo crear $(dirname "$SNAPSHOT")" >&2; exit 1; }
+
 # ── Construir snapshot en temp file ──────────────────────
 {
   echo "# 🧠 SNAPSHOT — Contexto vivo de mangonz"
@@ -31,6 +34,7 @@ done
   echo "> Cargar este archivo para contexto fresco del sistema."
   echo ""
   echo "📅 Fecha: $(date '+%Y-%m-%d %H:%M:%S')"
+  echo "> ⏱️  Generated: $(date '+%Y-%m-%d %H:%M:%S')"
   echo ""
 
   # ── Sistema ──────────────────────────────────────────────
@@ -134,6 +138,12 @@ done
 # ── Mover atómicamente ────────────────────────────────────
 mv "$TEMP" "$SNAPSHOT"
 
+# ── Señalizar éxito/fallo (exit codes para buffy-doctor/repair) ──
+if [ ! -s "$SNAPSHOT" ]; then
+  echo "❌ Fallo generando SNAPSHOT (archivo vacío o no creado)" >&2
+  exit 1
+fi
+
 SIZE=$(wc -c < "$SNAPSHOT")
 echo "✅ Snapshot: $SNAPSHOT ($(echo $SIZE | numfmt --to=iec 2>/dev/null || echo "${SIZE}B"))"
 
@@ -144,6 +154,8 @@ fi
 if [[ "$WATCH" == true ]]; then
   echo "👀 Watch activo: regenerando cada 30s..."
   while sleep 30; do
-    zsh "$0" 2>/dev/null
+    bash "$0" 2>/dev/null
   done
 fi
+
+exit 0
