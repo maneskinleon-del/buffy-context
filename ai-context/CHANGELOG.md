@@ -12,6 +12,23 @@ system-id: mangonz-desktop
 
 # CHANGELOG.md — Historial de cambios del sistema
 
+### 2026-08-03 — CI en GitHub Actions: suite completa + doctor con baseline de drift
+
+**Pedido del usuario:** crear un workflow que corra la suite completa y el doctor en cada push/PR. Decisión autónoma: el doctor bloquea **solo drift nuevo** (baseline medido en CI) para no dejar el CI permanentemente rojo.
+
+**Cambios aplicados:**
+- **`.github/workflows/ci.yml`** (NUEVO): dos jobs paralelos en `ubuntu-latest` — (1) **suite**: `run-tests.sh --json` como gate obligatorio; (2) **doctor**: `buffy-doctor.sh --json` con `BASELINE_ERRORS=16` (configurable) — el parseo es directo en python (una sola llamada, imprime resumen + lista ERR, falla con `::error::` solo si el drift aumenta; JSON no parseable → job falla en voz alta). `permissions: contents: read`, `timeout-minutes`, `concurrency` (cancela runs superseded), push en todas las ramas + PRs.
+- **Hallazgo de validación**: en un runner con HOME limpio el doctor ve **16 errores, no 13** — las skills que solo existen en `~/.agents/skills/` localmente pasan de `SKILL_NOT_IN_REPO` (warn) a `MISSING_SKILL` (err). El baseline se fijó a 16 (medido en clon fresco con HOME aislado). También se detectó un YAML inválido (python inline a columna 1 dentro del bloque `run: |`) y se corrigió indentándolo.
+- **`README.md`**: badge de CI + sección "GitHub Actions" en Testing (nota del baseline 16 vs 13 local).
+- **`CONTRIBUTING.md`**: nota sobre CI en la sección Tests (el doctor falla si un PR introduce drift nuevo).
+- **Validación**: YAML parseable (pyyaml), simulación del job doctor en clon fresco con HOME aislado (errors=16 = baseline → pasa; baseline=10 → falla, probando el gate), suite local, reviewer con sign-off.
+
+**Archivos modificados/creados:**
+- `.github/workflows/ci.yml` — NUEVO
+- `README.md`, `CONTRIBUTING.md` — MODIFICADOS
+
+---
+
 ### 2026-08-03 — Entrada de release automática en el CHANGELOG (set-version + changelog-entry)
 
 **Pedido del usuario:** integrar `set-version.sh` con el changelog para generar la entrada de release automáticamente.
