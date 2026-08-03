@@ -12,6 +12,24 @@ system-id: mangonz-desktop
 
 # CHANGELOG.md — Historial de cambios del sistema
 
+### 2026-08-03 — Entrada de release automática en el CHANGELOG (set-version + changelog-entry)
+
+**Pedido del usuario:** integrar `set-version.sh` con el changelog para generar la entrada de release automáticamente.
+
+**Cambios aplicados:**
+- **`scripts/changelog-entry.sh`** (NUEVO): genera la entrada de release desde git log — título `### <fecha> — Release vX.Y.Z`, sección **Cambios incluidos** (asuntos de commits desde el último tag) y **Archivos modificados/creados** (git diff --name-status). Modo `--dry-run` (previsualiza sin escribir), inserta tras la cabecera del CHANGELOG y actualiza el front matter `updated:`. **Sanitiza referencias `skills/<nombre>`** para que el doctor no las tome como skills documentadas (drift falso).
+- **`scripts/set-version.sh`**: ahora genera la entrada del CHANGELOG antes del commit de release y commitea `VERSION` + `ai-context/CHANGELOG.md` juntos; si la generación falla advierte y continúa; si el commit falla restaura VERSION y hace checkout del CHANGELOG.
+- **`scripts/tests/test-changelog.sh`** (NUEVO): 3 tests de sandbox — estructura del `--dry-run` (cabecera + commits + archivos), sanitización de `skills/` (no expone el nombre), inserción real en copia (cabecera intacta, nueva entrada al inicio, +1 entrada).
+- **`scripts/tests/run-tests.sh`**: `changelog-entry.sh` añadido al bash -n previo + source del nuevo test file.
+- **`README.md`**: sección Versioning actualizada (generación automática + `--dry-run`).
+- **Validación**: suite completa + suite `--quick` + reviewer con sign-off.
+
+**Archivos modificados/creados:**
+- `scripts/changelog-entry.sh`, `scripts/tests/test-changelog.sh` — NUEVOS
+- `scripts/set-version.sh`, `scripts/tests/run-tests.sh`, `README.md` — MODIFICADOS
+
+---
+
 ### 2026-08-03 — Pendientes de infraestructura: CONTRIBUTING, versionado semántico, modo --quick, installer mejorado, migración SYSTEM.md
 
 **Cambios aplicados:**
