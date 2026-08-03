@@ -3,6 +3,19 @@
 > Modelos de Vision Language Model (VLM) locales para analizar imágenes
 > sin depender de APIs externas.
 
+## Versión de Ollama (verificada 2026-08-03)
+
+- **Mínimo recomendado**: **≥ 0.30** (sirve `qwen2.5:7b`, VLM y la API local).
+- **Verificado en el PC** (EndeavourOS/Arch): binario `/usr/local/bin/ollama` **0.30.7**
+  (el que sirve en `:11434`), paquete pacman `0.32.1-1`. Última release upstream: v0.32.5.
+- **Servicio**: `ollama.service` de sistema (`/etc/systemd/system/`) — el servicio de
+  usuario (`~/.config/systemd/user/ollama.service`) quedó **deshabilitado** (crash-loop
+  por conflicto de puerto con el de sistema, 2026-08-02).
+- **Bug conocido**: `ollama run` hace timeout en este entorno → usar siempre la API:
+  `curl http://localhost:11434/api/generate`.
+- Nota: los tags `:cloud` (p.ej. `nemotron-3-super:cloud`) corren en servidores de
+  Ollama, no local — no ocupan RAM pero requieren cuenta en ollama.com.
+
 ## Modelos disponibles en Ollama
 
 | Modelo | Tamaño | RAM estimada | Velocidad CPU | Calidad |

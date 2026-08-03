@@ -135,8 +135,10 @@ bash scripts/hooks/install.sh --check
 6. **Decisiones del usuario pendientes**: (a) ~~migración SYSTEM.md → INFO-core~~ —
    **HECHA (2026-08-03, PC)**: stubs movidos a `ai-context/deprecated/` vía
    `migrate-system.sh` (referencias corregidas a INFO-core/INFO-full; doctor ya no
-   reporta DEPRECATED_FILE); (b) versiones mínimas de scrcpy/Ollama desde el PC para
-   documentarlas.
+   reporta DEPRECATED_FILE); (b) ~~versiones mínimas de scrcpy/Ollama~~ — **HECHA
+   (2026-08-03, PC)**: scrcpy ≥ 3.3.1 recomendado (UHID v2.0 + fix --power-off-on-close
+   3.3.1; verificado 4.1-1) y Ollama ≥ 0.30 (verificado 0.30.7) — documentadas en
+   `Knowledge/Android/scrcpy.md` y `Knowledge/Vision.md` con fuente.
 7. **Bajo prioridad**: sandbox hardening + installer (D1/D2 del roadmap), y
    adapters VLM/LLM (YAGNI — solo existe un backend HF).
 
