@@ -118,10 +118,11 @@ bash scripts/hooks/install.sh --check
 1. ~~**CHANGELOG caótico (A2)**~~ — **LIMPIO (2026-08-03)**: 661 → 216 líneas;
    front-matter único (versión duplicada eliminada); entradas ≤ 2026-07-31 movidas
    a CHANGELOG-archive.md con dedupe; quedan 13 recientes (08-01 a 08-03).
-   Pendiente opcional: que `changelog-entry.sh` archive automáticamente.
-2. **Router con manifests (siguiente recomendado)**: `buffy-router.sh` debería
-   leer id/triggers/safe de los skill.yaml en vez de listas hardcodeadas
-   (SKILL_FILES). El contrato ya existe (23/23) — falta consumirlo.
+   Pendiente opcional: que `changelog-entry.sh` archive automáticamente.2. ~~**Router con manifests**~~ — **HECHO (2026-08-03, PC)**: `buffy-router.sh` ya resuelve las
+   skills desde su skill.yaml (id/entry/safe/triggers) vía `add_skill()` + `discover_skills()`
+   (barrido por triggers del manifest, ≥1 match). Rutas hardcodeadas eliminadas; una skill
+   nueva con manifest se activa sola. `lib/yaml.sh` compartido con skill-lint (sin duplicación).
+   Suite: 75→90 OK (quick) / 91→106 OK (full). Fix bonus: mensaje vacío → exit 1.
 3. **README desactualizado**: el árbol de skills/Knowledge en README no refleja
    el disco (no menciona las 13 creadas ni las 3 migradas). No causa drift (no
    usa el patrón skills/), pero es doc deshonesta.

@@ -56,9 +56,11 @@ los han afirmado mal repetidamente:
 - Las rutas absolutas viven solo en **docs** (INSTALL.md usa `~/buffy-context/scripts/...`),
   no en código.
 
-### 2.4 buffy-router.sh SÍ tiene descubrimiento de skills
-- **Verdad:** el router tiene listas explícitas (`SKILL_FILES+=(".agents/skills/<nombre>/SKILL.md")`)
-  y `detect_android_project()`. Lo que **falta** es un formato estándar (manifest), no el descubrimiento.
+### 2.4 buffy-router.sh consume los manifests (desde 2026-08-03)
+- **Verdad:** el router resolvía skills con rutas hardcodeadas. Desde 2026-08-03 lee
+  `skill.yaml` (id/entry/safe/triggers) vía `add_skill()` + `discover_skills()` (barrido por
+  triggers, ≥1 match). `lib/yaml.sh` es compartido con skill-lint. Skills nuevas con manifest
+  se descubren sin editar el router.
 
 ### 2.5 Termux: no existe /usr/bin/env
 - **Verdad:** los 6 scripts linkeables usan shebang `#!/usr/bin/env bash`; en Termux eso falla
