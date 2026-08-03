@@ -27,9 +27,15 @@ test_doctor_json_schema() {
 }
 
 test_doctor_catalog() {
+  # Determinístico: HOME aislado SIN ~/ai-context → el doctor SIEMPRE reporta
+  # items accionables (NO_AI_CONTEXT_DIR + MISSING_SNAPSHOT). No depende del
+  # estado del HOME real (que puede tener SNAPSHOT y quedar sin warnings).
   suite "doctor: catálogo fix_id"
+  local BH="${TMPDIR:-/tmp}/buffy-doctor-cat-$$"
+  rm -rf "$BH"; mkdir -p "$BH"
+  trap 'rm -rf "$BH"' RETURN
   local OUT
-  OUT=$(bash "$SCRIPTS_DIR/buffy-doctor.sh" --json 2>/dev/null)
+  OUT=$(HOME="$BH" bash "$SCRIPTS_DIR/buffy-doctor.sh" --json 2>/dev/null)
   jassert "items accionables tienen identidad (id/fix/safe/target)" "$OUT" 'import json,sys; d=json.load(sys.stdin); a=[i for i in d["items"] if i.get("fix")]; assert len(a)>0, "sin items accionables"; assert all(("id" in i) and ("safe" in i) and ("target" in i) for i in a), [i for i in a if not ("id" in i and "safe" in i and "target" in i)]'
   jassert "safe coherente con FIX_SAFE (AUTO_SAFE)" "$OUT" 'import json,sys; d=json.load(sys.stdin); SAFE={"regenerate_snapshot","create_ai_context_dir","create_skill_dir","chmod_plus_x"}; assert all(i["safe"]==(i["fix"] in SAFE) for i in d["items"] if i.get("fix")), [(i["fix"], i["safe"]) for i in d["items"] if i.get("fix") and i["safe"]!=(i["fix"] in SAFE)]'
   jassert "safe es booleano" "$OUT" 'import json,sys; d=json.load(sys.stdin); assert all(isinstance(i["safe"], bool) for i in d["items"] if "safe" in i)'

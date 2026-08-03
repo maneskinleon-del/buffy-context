@@ -14,6 +14,39 @@ system-id: mangonz-desktop
 # CHANGELOG.md — Historial de cambios del sistema
 
 
+### 2026-08-03 — BUFFY_HOME / common.sh (C2, opt-in): instalaciones alternativas sin romper el diseño
+
+**Pendiente §7.5 del digest ejecutado en modo autónomo** (Buffy PC): script común que
+exporta BUFFY_HOME para redirigir el estado generado a una raíz alternativa.
+
+**Cambios aplicados:**
+- **`scripts/lib/common.sh`** (NUEVO): configuración compartida — `BUFFY_HOME`
+  (default `$HOME`, opt-in), helpers `buffy_home`/`buffy_ai_context`/`buffy_snapshot`.
+  **Alcance deliberado**: BUFFY_HOME redirige SOLO el estado generado (ai-context/ +
+  SNAPSHOT); el escaneo del entorno del usuario ($HOME/proyectos, $HOME/scripts,
+  $HOME/.agents/skills, historial) sigue con el $HOME real.
+- **Scripts cableados**: `buffy-context.sh` (SNAPSHOT), `buffy-doctor.sh`
+  (detección/frescura), `buffy-repair.sh` (fix_regenerate_snapshot),
+  `buffy-router.sh` (base incluye SNAPSHOT) — todos vía `source lib/common.sh`.
+  Sin BUFFY_HOME definida → comportamiento idéntico (verificado).
+- **`scripts/tests/test-common.sh`** (NUEVO): 6 tests — helpers default/custom,
+  buffy-context genera SNAPSHOT bajo BUFFY_HOME, sin BUFFY_HOME no rompe,
+  doctor/router respetan BUFFY_HOME. Sin sandbox → corren en --quick.
+- **`scripts/tests/run-tests.sh`**: source del nuevo test + bash -n incluye los
+  scripts ya listados (common.sh se valida por el test de helpers).
+- **`INSTALL.md`**: sección "Configuración opcional: BUFFY_HOME (C2)" — qué redirige,
+  qué no, y qué scripts lo respetan.
+- **Validación**: suite `--quick` **116 OK** / completa **132 OK** · doctor 0
+  errores · bash -n OK · prueba real: SNAPSHOT generado en `/tmp/...` con
+  BUFFY_HOME y en `$HOME` sin él.
+
+**Archivos modificados/creados:**
+- `scripts/lib/common.sh`, `scripts/tests/test-common.sh` — NUEVOS
+- `scripts/buffy-context.sh`, `scripts/buffy-doctor.sh`, `scripts/buffy-repair.sh`,
+  `scripts/buffy-router.sh`, `scripts/tests/run-tests.sh`, `INSTALL.md` — MODIFICADOS
+
+---
+
 ### 2026-08-03 — Schema-lite B1: validador estructural de ai-context (ai-context-lint.sh)
 
 **Pendiente §7.4 del digest ejecutado en modo autónomo** (Buffy PC): JSON Schema + test

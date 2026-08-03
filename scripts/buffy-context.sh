@@ -10,7 +10,10 @@
 #
 # Creado: 2026-07-20
 
-SNAPSHOT="$HOME/ai-context/SNAPSHOT.md"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/common.sh
+source "$SCRIPT_DIR/lib/common.sh"
+SNAPSHOT="$(buffy_snapshot)"
 TEMP="${SNAPSHOT}.tmp"
 INCLUDE_HISTORY=false
 

@@ -27,6 +27,8 @@ NC='\033[0m'
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=lib/yaml.sh
 source "$SCRIPT_DIR/lib/yaml.sh"
+# shellcheck source=lib/common.sh
+source "$SCRIPT_DIR/lib/common.sh"
 REPO_DIR="${SCRIPT_DIR%/scripts}"
 MODE="normal"   # normal | json | quick
 
@@ -160,9 +162,9 @@ BASE_FILES=(
   "ai-context/INFO-core.md"
   "ai-context/CONTINUE.md"
 )
-# SNAPSHOT: se resuelve entre ~/ai-context/ y el repo (solo rutas reales)
-if [ -f "$HOME/ai-context/SNAPSHOT.md" ]; then
-  BASE_FILES+=("$HOME/ai-context/SNAPSHOT.md")
+# SNAPSHOT: se resuelve entre el estado generado (BUFFY_HOME/ai-context) y el repo
+if [ -f "$(buffy_snapshot)" ]; then
+  BASE_FILES+=("$(buffy_snapshot)")
 else
   BASE_FILES+=("ai-context/SNAPSHOT.md")
 fi

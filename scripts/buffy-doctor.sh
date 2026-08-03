@@ -30,6 +30,8 @@ if command -v readlink >/dev/null 2>&1; then
 fi
 SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_SRC")" && pwd)"
 REPO_DIR="${SCRIPT_DIR%/scripts}"
+# shellcheck source=lib/common.sh
+source "$SCRIPT_DIR/lib/common.sh"
 QUICK_MODE=false
 JSON_MODE=false
 
@@ -145,18 +147,18 @@ fi
 section "🏗️  Infraestructura"
 # ══════════════════════════════════════════════════════════
 
-HOME_AI_CONTEXT="$HOME/ai-context"
+HOME_AI_CONTEXT="$(buffy_ai_context)"
 if [ -d "$HOME_AI_CONTEXT" ]; then
-  ok "~/ai-context/ existe (destino de SNAPSHOT.md)"
+  ok "$HOME_AI_CONTEXT existe (destino de SNAPSHOT.md)"
 else
-  warn "~/ai-context/ no existe — SNAPSHOT.md se generará con: bash scripts/buffy-context.sh" "NO_AI_CONTEXT_DIR" "create_ai_context_dir" "$HOME/ai-context"
+  warn "$(buffy_ai_context) no existe — SNAPSHOT.md se generará con: bash scripts/buffy-context.sh" "NO_AI_CONTEXT_DIR" "create_ai_context_dir" "$HOME_AI_CONTEXT"
 fi
 
-# buffy-context.sh genera SNAPSHOT en $HOME/ai-context/; el repo puede tener copia gitignored.
+# buffy-context.sh genera SNAPSHOT en el estado generado (buffy_ai_context); el repo puede tener copia gitignored.
 # Frescura: parsea 'Generated:' que buffy-context.sh embebe en la cabecera.
 SNAP_FOUND=""
 [ -f "$REPO_DIR/ai-context/SNAPSHOT.md" ] && SNAP_FOUND="$REPO_DIR/ai-context/SNAPSHOT.md"
-[ -z "$SNAP_FOUND" ] && [ -f "$HOME/ai-context/SNAPSHOT.md" ] && SNAP_FOUND="$HOME/ai-context/SNAPSHOT.md"
+[ -z "$SNAP_FOUND" ] && [ -f "$(buffy_snapshot)" ] && SNAP_FOUND="$(buffy_snapshot)"
 if [ -n "$SNAP_FOUND" ]; then
   GENERATED_TS=$(grep -m1 'Generated:' "$SNAP_FOUND" 2>/dev/null | sed 's/.*Generated:[[:space:]]*//')
   if [ -n "$GENERATED_TS" ]; then

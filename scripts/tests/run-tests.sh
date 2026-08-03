@@ -42,6 +42,8 @@ source "$SCRIPT_DIR/test-changelog.sh"
 source "$SCRIPT_DIR/test-skill-lint.sh"
 # shellcheck source=test-ai-context-lint.sh
 source "$SCRIPT_DIR/test-ai-context-lint.sh"
+# shellcheck source=test-common.sh
+source "$SCRIPT_DIR/test-common.sh"
 # shellcheck source=test-router.sh
 source "$SCRIPT_DIR/test-router.sh"
 

@@ -26,7 +26,7 @@ Componentes reales y funcionales:
 | Skills | `.agents/skills/` — **23 skills en disco** (10 originales + 10 creadas 2026-08-03 + 3 migradas de ~/.agents/skills/) | ✅ Funcionales, **23/23 con skill.yaml** (B2 completo) + linter con gate |
 | Orquestación | `scripts/buffy-doctor.sh`, `buffy-repair.sh`, `buffy-agent.sh`, `buffy-router.sh` | ✅ Ciclo doctor→repair→agent funcional |
 | Visión | `scripts/kimi_vision.js` + `Knowledge/AI/Kimi-K3.md` | ✅ Funcional (solo backend HF) |
-| Suite de tests | `scripts/tests/run-tests.sh` | ✅ 121 checks full / 105 quick |
+| Suite de tests | `scripts/tests/run-tests.sh` | ✅ 132 checks full / 116 quick |
 | CI | `.github/workflows/ci.yml` | ✅ En cada push/PR |
 | Hooks | `scripts/hooks/install.sh` + `pre-commit.sh` | ✅ Portable (Termux-safe) |
 | Versionado | `scripts/set-version.sh` + `scripts/changelog-entry.sh` | ✅ Semver + CHANGELOG auto |
@@ -39,9 +39,13 @@ Estos puntos fueron **verificados con comandos reales** en esta sesión. Las rev
 los han afirmado mal repetidamente:
 
 ### 2.1 SNAPSHOT.md se escribe FUERA del repo
-- **Verdad:** `scripts/buffy-context.sh` línea 13: `SNAPSHOT="$HOME/ai-context/SNAPSHOT.md"`.
-  Se crea en `~/ai-context/`, **no** en `ai-context/` dentro del repo.
-- README e INSTALL.md ya están corregidos y unificados (commit `eac6536`).
+- **Verdad:** `scripts/buffy-context.sh` usa `$(buffy_snapshot)` (vía `lib/common.sh`),
+  que por defecto es `$HOME/ai-context/SNAPSHOT.md`. Se crea en el **estado generado**
+  (`$BUFFY_HOME/ai-context/` si la variable está definida, sino `~/ai-context/`), **no**
+  en `ai-context/` dentro del repo.
+- `BUFFY_HOME` (C2, opt-in, 2026-08-03) redirige solo el estado generado; el escaneo
+  del entorno del usuario sigue con `$HOME` real. Doc: INSTALL.md.
+- README e INSTALL.md ya están corregidos y unificados (commit `eac6536` + C2).
 
 ### 2.2 kimi_vision.js: NO existe modo local/Ollama
 - **Verdad:** usa **solo** la API hosted de Hugging Face (`KIMI_ENDPOINT` default
@@ -90,9 +94,10 @@ Este trabajo se completó y pusheó en esta sesión (todos verdes):
   mkdir/chmod para symlinks, nota Termux + `/usr/bin/env`, dependencias opcionales, sandbox,
   smoke test post-instalación, `cp -rn`/rsync, `command -v >/dev/null`, ejemplo fish.
 - ✅ **README unificado**: ruta de SNAPSHOT corregida a `~/ai-context/`.
-- ✅ **Suite determinística**: 121 checks full / 105 `--quick` (7 SKIP: 4 sandbox + 3 changelog).
+- ✅ **Suite determinística**: 132 checks full / 116 `--quick` (7 SKIP: 4 sandbox + 3 changelog).
 - ✅ **Skill manifests (B2) completo**: las **23/23 skills** tienen `skill.yaml` (derivados del front-matter/contenido real de cada SKILL.md) + linter `scripts/skill-lint.sh` (valida id/version/entry/safe/triggers, cross-check con el front-matter, cobertura). **Gate activo**: test en la suite (`--require-all` → exit 0) + paso explícito en el job `suite` de CI — cualquier skill nueva sin manifest rompe CI (2026-08-03).
 - ✅ **Schema-lite ai-context (B1) completo**: `scripts/ai-context-lint.sh` valida las secciones obligatorias de INFO-core/CONTINUE/LOAD_CONTEXT (las que LOAD_CONTEXT.md promete SIEMPRE) + front-matter semver-lite X.Y/X.Y.Z + updated ISO. 5 tests en la suite (--json schema, stderr limpio, fixtures sin sandbox → corren en --quick). Detectó 3 front-matters con version X.Y (aceptado como convención del repo). Suite: 105 quick / 121 full (2026-08-03).
+- ✅ **BUFFY_HOME / common.sh (C2, opt-in) completo**: `scripts/lib/common.sh` exporta BUFFY_HOME (default `$HOME`) + helpers buffy_home/buffy_ai_context/buffy_snapshot; cableado en buffy-context/doctor/repair/router — redirige solo el estado generado, sin BUFFY_HOME el comportamiento es idéntico. 6 tests nuevos. Suite: 116 quick / 132 full (2026-08-03).
 
 ---
 
@@ -139,8 +144,8 @@ Estos son los problemas actuales del proyecto, en orden de prioridad:
 
 ```bash
 # Suite completa (gate de CI)
-bash scripts/tests/run-tests.sh           # 121 OK esperado
-bash scripts/tests/run-tests.sh --quick   # 105 OK esperado
+bash scripts/tests/run-tests.sh           # 132 OK esperado
+bash scripts/tests/run-tests.sh --quick   # 116 OK esperado
 
 # Doctor (drift)
 bash scripts/buffy-doctor.sh --json       # 0 errors / 1 warning en local (desde 2026-08-03)
