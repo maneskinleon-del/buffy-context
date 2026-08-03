@@ -4,8 +4,9 @@
 # Uso:
 #   bash scripts/set-version.sh v1.0.0
 #
-# Valida el formato semver, verifica que la suite pase, commitea VERSION,
-# crea un tag anotado y lo pushea (rama main + tag).
+# Valida el formato semver, verifica que la suite pase, genera la entrada de
+# release en ai-context/CHANGELOG.md (scripts/changelog-entry.sh), commitea
+# VERSION + CHANGELOG, crea un tag anotado y lo pushea (rama main + tag).
 #
 # Exit: 0 éxito · 1 error (uso, formato, tests, git).
 
@@ -14,6 +15,8 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 cd "$REPO_ROOT"
+
+CHANGELOG_FILE="ai-context/CHANGELOG.md"
 
 VERSION="${1:-}"
 if [ -z "$VERSION" ]; then
@@ -54,9 +57,29 @@ if ! bash scripts/tests/run-tests.sh; then
   exit 1
 fi
 
-# Commit + tag + push
+# Generar la entrada de release en el CHANGELOG (git log desde el último tag).
+echo "📝 Generando entrada de CHANGELOG..."
+CHANGELOG_UPDATED=false
+if bash scripts/changelog-entry.sh "$VERSION"; then
+  CHANGELOG_UPDATED=true
+else
+  echo "⚠️  No se pudo generar la entrada de CHANGELOG — el release continúa sin ella."
+fi
+
+# Commit + tag + push (VERSION + CHANGELOG en el mismo commit)
 git add VERSION
-git commit -m "chore: release $VERSION"
+[ "$CHANGELOG_UPDATED" = true ] && git add "$CHANGELOG_FILE"
+if ! git commit -m "chore: release $VERSION"; then
+  echo "❌ Commit falló. Restaurando..."
+  if [ -n "$PREV_VERSION" ]; then
+    echo "$PREV_VERSION" > VERSION
+    echo "   VERSION restaurado a $PREV_VERSION"
+  else
+    rm -f VERSION
+  fi
+  [ "$CHANGELOG_UPDATED" = true ] && git checkout -- "$CHANGELOG_FILE"
+  exit 1
+fi
 git tag -a "$VERSION" -m "Release $VERSION"
 git push origin main "$VERSION"
 

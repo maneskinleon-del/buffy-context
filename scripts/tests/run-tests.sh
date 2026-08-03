@@ -36,6 +36,8 @@ source "$SCRIPT_DIR/test-repair.sh"
 source "$SCRIPT_DIR/test-agent.sh"
 # shellcheck source=test-runner.sh
 source "$SCRIPT_DIR/test-runner.sh"
+# shellcheck source=test-changelog.sh
+source "$SCRIPT_DIR/test-changelog.sh"
 
 trap teardown_sandbox EXIT
 
@@ -47,7 +49,7 @@ echo "   bash puro (bats no requerido) · python3 para asserts JSON"
 
 # ── 0. Sintaxis previa (todos los scripts) ─────────────────
 suite "Sintaxis (bash -n)"
-for s in buffy-doctor.sh buffy-repair.sh buffy-agent.sh buffy-router.sh buffy-context.sh set-version.sh migrate-system.sh; do
+for s in buffy-doctor.sh buffy-repair.sh buffy-agent.sh buffy-router.sh buffy-context.sh set-version.sh migrate-system.sh changelog-entry.sh; do
   if bash -n "$SCRIPTS_DIR/$s" 2>/dev/null; then
     ok "bash -n $s"
   else

@@ -200,10 +200,16 @@ Check the latest version:
 cat VERSION
 ```
 
-Create a new release (validates the version, runs the test suite, commits `VERSION`, creates an annotated tag and pushes it):
+Create a new release (validates the version, runs the full test suite, auto-generates the release entry in `ai-context/CHANGELOG.md` from the git log since the last tag, commits `VERSION` + `CHANGELOG.md`, creates an annotated tag and pushes it):
 
 ```bash
 bash scripts/set-version.sh v1.1.0
+```
+
+Preview the changelog entry without writing it:
+
+```bash
+bash scripts/changelog-entry.sh --dry-run v1.1.0
 ```
 
 ---
