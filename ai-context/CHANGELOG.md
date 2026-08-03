@@ -12,6 +12,27 @@ system-id: mangonz-desktop
 
 # CHANGELOG.md — Historial de cambios del sistema
 
+### 2026-08-03 — Suite de tests permanente + pre-commit hook
+
+**Pedido del usuario:** Convertir los checks ad-hoc (18/18 doctor/repair/agent) en una suite versionada con runner único, y añadir hook de pre-commit que ejecute la suite antes de cada commit.
+
+**Cambios aplicados:**
+- **`scripts/tests/`** (NUEVO): suite permanente en **bash puro** (bats no requerido — no está disponible en Termux). `run-tests.sh` es el runner único (bash -n previo de los 5 scripts, descubre `test_*` vía `declare -F`, `--json` para CI, filtro por nombre, `trap` que limpia el sandbox, exit 0/1 honesto). `helpers.sh` aporta `ok/bad/check/expect_exit/jassert` + `setup_sandbox` (copia del repo, HOME aislado, drift artificial: sin ~/ai-context y sin skills).
+- **`scripts/tests/test-doctor.sh`**: `--json` schema + conteos coherentes, catálogo fix_id (id/fix/safe/target + safe coherente con FIX_SAFE), errores con identidad (INVALID_REPO/UNKNOWN_OPTION), stderr limpio, `--quick` == `--json`, exit codes honestos.
+- **`scripts/tests/test-repair.sh`**: dry-run en repo real sin escribir (verificado con git status), `--auto` en sandbox reduce drift 26→0, regresión del bug `local skill dir` (cada skill en su dir con SKILL.md), `--fix` puntual, exit codes 0/1/2.
+- **`scripts/tests/test-agent.sh`**: ciclo completo en sandbox (drift→0, `repair.ran=true`, exit 0), `--no-repair` en repo real, exit condicional al estado real (suite determinística).
+- **`scripts/hooks/pre-commit.sh`** (NUEVO): hook versionado (no se pierde en clones) que ejecuta la suite y aborta el commit si falla.
+- **`scripts/hooks/install.sh`** (NUEVO): instalador que genera `.git/hooks/pre-commit` con el shebang de bash **real del sistema** — necesario en Termux, donde `/usr/bin/env` no existe y git ejecuta los hooks con exec directo (el primer commit falló con `cannot exec '.git/hooks/pre-commit': No such file or directory`; resuelto resolviendo `command -v bash`). `git commit --no-verify` para saltar.
+- **`README.md`**: sección `## Testing` (uso del runner, `--json` para CI, filtro, instalación del hook con `bash scripts/hooks/install.sh`).
+- **Validación**: 59/59 checks OK (1 ronda falló por resolución de rutas del runner — SCRIPT_DIR terminaba en /tests — y por regex ERE que interpretaba los paréntesis literales de `error(es)`; ambos corregidos). 2 rondas de code review con sign-off.
+
+**Archivos modificados/creados:**
+- `scripts/tests/{run-tests.sh,helpers.sh,test-doctor.sh,test-repair.sh,test-agent.sh}` — NUEVOS
+- `scripts/hooks/pre-commit.sh` — NUEVO
+- `README.md`, `ai-context/CHANGELOG.md` — actualizados
+
+---
+
 ### 2026-08-03 — Ciclo operativo completo: doctor --json con catálogo fix_id + buffy-repair + buffy-agent
 
 **Pedido del usuario:** Cerrar el lazo doctor → decisión → acción (antes el sistema solo detectaba problemas, no actuaba). Diseño acordado: catálogo de `fix_id` en doctor --json (evita un sistema de parches), ajustes de base en buffy-context.sh, actuador buffy-repair.sh con clasificación AUTO_SAFE/REVIEW_REQUIRED, y orquestador buffy-agent.sh al final (envoltura de piezas confiables).
