@@ -67,6 +67,23 @@ system-id: mangonz-desktop
 
 ---
 
+### 2026-08-03 — Versiones mínimas de scrcpy/Ollama documentadas
+
+**Decisión del usuario:** cerrar el pendiente (b) del digest — documentar las versiones mínimas verificadas desde el PC, con fuente.
+
+**Cambios aplicados:**
+- **`Knowledge/Android/scrcpy.md`**: sección "Versiones mínimas" — UHID ≥ 2.0 (release v2.0), `--video-buffer` ≥ 1.18, `--render-expired-frames` ≥ 1.19, `--stay-awake` ≥ 1.5, `--power-off-on-close` ≥ 1.20 con **fix en 3.3.1 (#6146)** → **mínimo recomendado ≥ 3.3.1** para el setup gaming. Verificado en el PC: `scrcpy 4.1-1` + `adb 1.0.41`.
+- **`Knowledge/Vision.md`**: sección "Versión de Ollama" — mínimo **≥ 0.30**, verificado binario `0.30.7` (sirviendo en `:11434`), paquete pacman `0.32.1-1`, último upstream v0.32.5. Notas: servicio de sistema activo (el de usuario deshabilitado), bug `ollama run` timeout → usar API, tags `:cloud` no ocupan RAM local.
+- **`BUFFY-PC-CONTEXT.md`** §7.6(b) y **`REVIEW-BASELINE.md`** §2.6: marcados como HECHA (antes "pendiente de decisión del usuario").
+- **`ai-context/CONTINUE.md`**: pendiente (b) resuelto.
+- **Validación**: doctor 0 errores + suite `--quick` (antes de commit).
+
+**Archivos modificados:**
+- `Knowledge/Android/scrcpy.md`, `Knowledge/Vision.md` — MODIFICADOS
+- `BUFFY-PC-CONTEXT.md`, `REVIEW-BASELINE.md`, `ai-context/CONTINUE.md` — MODIFICADOS
+
+---
+
 ### 2026-08-03 — Migración SYSTEM.md/SYSTEM_FULL.md → deprecated/ (ejecutada)
 
 **Decisión del usuario:** marcar como 🔴 crítica la migración de los stubs SYSTEM.md/SYSTEM_FULL.md (contenido ya fusionado en INFO-core/INFO-full desde antes).

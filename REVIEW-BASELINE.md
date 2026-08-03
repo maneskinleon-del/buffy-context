@@ -67,10 +67,12 @@ los han afirmado mal repetidamente:
   con invocación directa. Por eso: (a) todo se ejecuta con `bash script.sh` explícito,
   (b) el hook installer escribe el shebang real del sistema. INSTALL.md lo documenta.
 
-### 2.6 Versiones mínimas de scrcpy/Ollama: NO documentadas (a propósito)
-- Knowledge **no documenta** versiones mínimas de scrcpy ni Ollama. NO se han inventado
-  (las revisiones sugirieron `scrcpy >= 2.0`, `Ollama >= 0.3.x` sin fuente).
-- **Pendiente de decisión del usuario**: verificarlas desde el PC y luego documentarlas.
+### 2.6 Versiones mínimas de scrcpy/Ollama (documentadas 2026-08-03)
+- **scrcpy**: `Knowledge/Android/scrcpy.md` — mínimo recomendado **≥ 3.3.1** (UHID ≥ 2.0,
+  `--power-off-on-close` con fix en 3.3.1; verificado `4.1-1` + `adb 1.0.41`).
+- **Ollama**: `Knowledge/Vision.md` — mínimo **≥ 0.30** (verificado binario `0.30.7`
+  sirviendo en `:11434`, paquete pacman `0.32.1-1`; último upstream v0.32.5).
+- Verificadas desde el PC con fuente (release notes oficiales de scrcpy y ollama).
 
 ---
 

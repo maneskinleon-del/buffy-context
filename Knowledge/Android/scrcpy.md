@@ -2,6 +2,21 @@
 
 > scrcpy + Free Fire. Para troubleshooting completo → skill `.agents/skills/scrcpy-freefire/`.
 
+## Versiones mínimas (verificadas 2026-08-03)
+
+| Feature usada en el setup | Versión mínima | Fuente |
+|---|---|---|
+| `--mouse=uhid` / `--keyboard=uhid` (control HID) | **≥ 2.0** | release v2.0 |
+| `--video-buffer` | ≥ 1.18 | changelog oficial |
+| `--render-expired-frames` | ≥ 1.19 | changelog oficial |
+| `--stay-awake` | ≥ 1.5 | changelog oficial |
+| `--power-off-on-close` | ≥ 1.20 · **recomendado ≥ 3.3.1** (fix #6146) | changelog oficial |
+
+- **Mínimo recomendado para el setup gaming** (`scrcpy-freefire.sh`): **≥ 3.3.1**
+  (cubre UHID + el fix de `--power-off-on-close`).
+- **Verificado en el PC** (EndeavourOS/Arch): `scrcpy 4.1-1` (pacman) — `adb 1.0.41`.
+- Nota: la release v4.0 migró SDL2 → SDL3; v4.1 agrega VP8/VP9. Sin impacto en los flags de arriba.
+
 ## Comandos base
 
 ```bash
