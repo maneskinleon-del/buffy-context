@@ -2,11 +2,14 @@
 set -u
 # pre-commit.sh — ejecuta la suite de tests antes de cada commit.
 #
-# Versionado en el repo (NO perder en clones). Instalar:
-#   ln -sf ../../scripts/hooks/pre-commit.sh .git/hooks/pre-commit
-#   (o copiar: cp scripts/hooks/pre-commit.sh .git/hooks/pre-commit && chmod +x)
+# Versionado en el repo (NO perder en clones). Instalar con el installer
+# (escribe este archivo en .git/hooks/pre-commit con el shebang REAL del sistema):
+#   bash scripts/hooks/install.sh
 #
-# Saltar puntualmente: git commit --no-verify
+# Por defecto corre la suite en modo --quick (sin ciclos de sandbox, rápido).
+# Para un commit puntual con la suite completa:
+#   BUFFY_HOOK_FULL=1 git commit
+# Saltar los tests puntualmente: git commit --no-verify (no recomendado).
 #
 # Exit: 0 si todos los tests pasan · 1 si hay fallos (aborta el commit).
 
@@ -24,8 +27,13 @@ if [ ! -f "$RUNNER" ]; then
   exit 1
 fi
 
-echo "🔍 Ejecutando suite de tests (scripts/tests/run-tests.sh)..."
-OUT=$(bash "$RUNNER" 2>&1)
+if [ "${BUFFY_HOOK_FULL:-}" = "1" ]; then
+  echo "🔍 Ejecutando suite COMPLETA (BUFFY_HOOK_FULL=1)..."
+  OUT=$(bash "$RUNNER" 2>&1)
+else
+  echo "🔍 Ejecutando suite (--quick)..."
+  OUT=$(bash "$RUNNER" --quick 2>&1)
+fi
 RC=$?
 echo "$OUT" | tail -40
 
