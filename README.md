@@ -134,6 +134,43 @@ bash scripts/android-detect.sh --watch # Live monitoring
 
 ---
 
+## Testing
+
+Run the permanent test suite (pure Bash, no bats required):
+
+```bash
+bash scripts/tests/run-tests.sh
+```
+
+For CI integration (JSON summary, exit 0 = healthy):
+
+```bash
+bash scripts/tests/run-tests.sh --json
+```
+
+Run specific tests:
+
+```bash
+bash scripts/tests/run-tests.sh doctor   # solo test-doctor.sh
+bash scripts/tests/run-tests.sh agent    # solo test-agent.sh
+```
+
+La suite es **determinística y segura**: todo lo que escribe (repair `--auto`, ciclo del agent) corre en un sandbox con HOME aislado; el repo real solo se lee (doctor, dry-run, `--no-repair`).
+
+### Pre-commit hook
+
+La suite corre automáticamente antes de cada commit (aborta si algo falla):
+
+```bash
+bash scripts/hooks/install.sh
+```
+
+El installer genera `.git/hooks/pre-commit` con el shebang de bash **real de este sistema** (necesario en Termux, donde `/usr/bin/env` no existe y git ejecuta los hooks con `exec` directo). En Linux normal también funciona. El hook está versionado en `scripts/hooks/pre-commit.sh` — no se pierde en clones.
+
+Saltar puntualmente: `git commit --no-verify`.
+
+---
+
 ## Usage with AI agents
 
 ### For Buffy (Freebuff)
