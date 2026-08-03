@@ -1,0 +1,41 @@
+# skill.yaml — manifiesto machine-readable de la skill (contrato B2).
+# Complementa al SKILL.md (documentación humana). Validado por scripts/skill-lint.sh.
+# Convenciones:
+#   id       → DEBE coincidir con el nombre del directorio (.agents/skills/<id>/)
+#   entry    → archivo principal, relativo al directorio (normalmente SKILL.md)
+#   safe     → true = AUTO_SAFE (ejecutable sin confirmación humana)
+#   triggers → señales textuales de activación (las usa buffy-router.sh)
+
+id: android-agent
+name: Android Agent
+version: 1.0.0
+description: "Agente Android dedicado: detecta proyectos Android, verifica conexión ADB, activa skills y knowledge de Android, y ofrece diagnóstico (logcat, dumpsys, device info)."
+entry: SKILL.md
+safe: true
+requires_sudo: false
+platforms: [android, linux]
+triggers:
+  - android
+  - adb
+  - scrcpy
+  - shizuku
+  - logcat
+  - hyperos
+  - miui
+  - apk
+  - rom
+  - keymapper
+  - free fire
+  - game boost
+capabilities:
+  - device-management
+  - app-management
+  - permissions
+  - shizuku
+  - gaming
+  - diagnosis
+dependencies:
+  - android-adb
+  - shizuku-rikka
+  - scrcpy-freefire
+  - android-game-opt
