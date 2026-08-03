@@ -5,6 +5,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/maneskinleon-del/buffy-context?style=social)](https://github.com/maneskinleon-del/buffy-context)
 [![GitHub last commit](https://img.shields.io/github/last-commit/maneskinleon-del/buffy-context)](https://github.com/maneskinleon-del/buffy-context/commits/main)
+[![CI](https://github.com/maneskinleon-del/buffy-context/actions/workflows/ci.yml/badge.svg)](https://github.com/maneskinleon-del/buffy-context/actions/workflows/ci.yml)
 
 ---
 
@@ -147,6 +148,13 @@ For CI integration (JSON summary, exit 0 = healthy):
 ```bash
 bash scripts/tests/run-tests.sh --json
 ```
+
+### GitHub Actions
+
+CI corre automáticamente en cada push a `main` y en cada PR (`.github/workflows/ci.yml`):
+
+- **Suite completa** — `run-tests.sh --json` (gate obligatorio).
+- **Doctor con baseline** — audita `buffy-doctor.sh --json` y falla **solo si el drift aumenta** respecto al baseline de CI (16 errores conocidos, configurable vía `BASELINE_ERRORS`). Ojo: en un runner con HOME limpio el doctor ve 16 errores (3 más que en local, porque las skills que solo viven en `~/.agents/skills/` pasan de warn a err). El CI queda rojo únicamente cuando un push/PR introduce drift nuevo.
 
 Run specific tests:
 

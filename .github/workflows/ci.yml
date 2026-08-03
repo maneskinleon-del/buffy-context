@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  suite:
+    name: Suite completa (bash puro)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Ejecutar suite completa
+        run: bash scripts/tests/run-tests.sh --json
+
+  doctor:
+    name: Doctor — drift vs baseline
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      # Baseline de errores conocidos MEDIDO EN CI (2026-08-03): 16 MISSING_SKILL.
+      # OJO: en un runner con HOME limpio el doctor ve 16 errores (3 más que en local:
+      # las skills que solo existen en ~/.agents/skills/ localmente pasan de
+      # SKILL_NOT_IN_REPO [warn] a MISSING_SKILL [err]). El job falla SOLO si el
+      # drift AUMENTA sobre este baseline.
+      # Para medirlo: bash scripts/buffy-doctor.sh --json | python3 -c \
+      #   'import json,sys; print(json.load(sys.stdin)["errors"])'
+      BASELINE_ERRORS: "16"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Auditoría buffy-doctor
+        run: |
+          set -euo pipefail
+          OUT="$(bash scripts/buffy-doctor.sh --json 2>/dev/null || true)"
+          # Parseo directo: imprime resumen + lista ERR, y falla (exit 1) si el
+          # drift supera el baseline. Si el JSON no parsea, python falla → el
+          # job falla en voz alta (no hay paso silencioso).
+          printf '%s' "$OUT" | python3 -c '
+          import json, sys
+          d = json.load(sys.stdin)
+          errs = [i["message"] for i in d["items"] if i["level"] == "err"]
+          print("errors=%d warnings=%d ok=%d" % (d["errors"], d["warnings"], d["ok"]))
+          for m in errs:
+              print("  ERR: %s" % m)
+          baseline = int(sys.argv[1])
+          if d["errors"] > baseline:
+              sys.stderr.write("::error::Drift aumentó: %d > baseline %d — revisa los MISSING_* nuevos\n" % (d["errors"], baseline))
+              sys.exit(1)
+          sys.stderr.write("::notice::Doctor: errores=%d (baseline %d) — dentro del baseline\n" % (d["errors"], baseline))
+          ' "$BASELINE_ERRORS"

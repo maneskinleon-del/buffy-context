@@ -99,6 +99,8 @@ bash scripts/tests/run-tests.sh --quick
 bash scripts/tests/run-tests.sh --json
 ```
 
+**CI (GitHub Actions)**: cada push a `main` y cada PR ejecutan automáticamente la suite completa + el doctor (`.github/workflows/ci.yml`). El doctor falla solo si el drift supera el baseline de errores conocidos — si tu PR introduce drift nuevo, el CI se pondrá rojo.
+
 Reglas:
 
 - Todo PR debe pasar la suite completa.
