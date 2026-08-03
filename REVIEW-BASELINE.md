@@ -20,7 +20,7 @@ Componentes reales y funcionales:
 |---|---|---|
 | Memoria/protocolo | `ai-context/LOAD_CONTEXT.md`, `INFO-core.md`, `CONTINUE.md`, `SESION.md` | ✅ Funcional |
 | Knowledge base | `Knowledge/` (Android, Linux, React, Git, Node, Shell, AI) | ✅ 16 archivos |
-| Skills | `.agents/skills/` — **23 skills en disco** (10 originales + 10 creadas 2026-08-03 + 3 migradas de ~/.agents/skills/) | ✅ Funcionales, **1 manifest** (android-agent, ejemplo B2) + linter |
+| Skills | `.agents/skills/` — **23 skills en disco** (10 originales + 10 creadas 2026-08-03 + 3 migradas de ~/.agents/skills/) | ✅ Funcionales, **23/23 con skill.yaml** (B2 completo) + linter con gate |
 | Orquestación | `scripts/buffy-doctor.sh`, `buffy-repair.sh`, `buffy-agent.sh`, `buffy-router.sh` | ✅ Ciclo doctor→repair→agent funcional |
 | Visión | `scripts/kimi_vision.js` + `Knowledge/AI/Kimi-K3.md` | ✅ Funcional (solo backend HF) |
 | Suite de tests | `scripts/tests/run-tests.sh` | ✅ 70 checks full / 54 quick |
@@ -84,7 +84,7 @@ Este trabajo se completó y pusheó en esta sesión (todos verdes):
   smoke test post-instalación, `cp -rn`/rsync, `command -v >/dev/null`, ejemplo fish.
 - ✅ **README unificado**: ruta de SNAPSHOT corregida a `~/ai-context/`.
 - ✅ **Suite determinística**: 70 checks full / 54 `--quick` (7 SKIP: 4 sandbox + 3 changelog).
-- ✅ **Skill manifests (B2)**: `skill.yaml` de ejemplo en android-agent + linter `scripts/skill-lint.sh` (valida id/version/entry/safe/triggers, cross-check con el front-matter de SKILL.md, reporte de cobertura y `--require-all` como gate v1.0) integrado en la suite (2026-08-03).
+- ✅ **Skill manifests (B2) completo**: las **23/23 skills** tienen `skill.yaml` (derivados del front-matter/contenido real de cada SKILL.md) + linter `scripts/skill-lint.sh` (valida id/version/entry/safe/triggers, cross-check con el front-matter, cobertura). **Gate activo**: test en la suite (`--require-all` → exit 0) + paso explícito en el job `suite` de CI — cualquier skill nueva sin manifest rompe CI (2026-08-03).
 
 ---
 
@@ -134,8 +134,8 @@ bash scripts/buffy-doctor.sh --json       # 0 errors / ~4 warnings en local (des
 bash scripts/buffy-doctor.sh --quick
 
 # Linter de manifests (B2)
-bash scripts/skill-lint.sh                 # 0 errores · cobertura (1/23 hoy)
-bash scripts/skill-lint.sh --require-all   # gate v1.0: TODAS las skills con manifest
+bash scripts/skill-lint.sh                 # 0 errores · cobertura 23/23
+bash scripts/skill-lint.sh --require-all   # gate activo en CI: TODAS las skills con manifest (exit 0)
 
 # Versionado
 bash scripts/changelog-entry.sh --dry-run v1.1.0
@@ -156,6 +156,6 @@ archivos `.md` — el doctor los extrae como skills documentadas y crearía drif
 - **Bash puro sin bats**: bats no existe en Termux; la suite es determinística y sandboxed.
 - **SNAPSHOT fuera del repo**: es estado generado, no se versiona (`.gitignore`).
 - **Android en el core**: es el caso de uso principal del autor; "pluginizarlo" es opcional.
-- **Manifests machine-readable (B2)**: adoptado `skill.yaml` adyacente al SKILL.md — el SKILL.md sigue siendo documentación humana; el manifest es el contrato máquina (id, version, entry, safe, triggers). Ejemplo en android-agent; linter `scripts/skill-lint.sh` en la suite; `--require-all` como gate futuro.
+- **Manifests machine-readable (B2)**: adoptado `skill.yaml` adyacente al SKILL.md — el SKILL.md sigue siendo documentación humana; el manifest es el contrato máquina (id, version, entry, safe, triggers). **23/23 skills con manifest y `--require-all` como gate activo** en la suite (test) + CI (paso explícito).
 - **Proyecto personal**: el roadmap de "1.0 oficial con 6-12 sprints" es desproporcionado;
   las mejoras deben ser incrementales y de bajo riesgo.

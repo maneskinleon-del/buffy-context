@@ -1,0 +1,23 @@
+# skill.yaml — manifiesto machine-readable (contrato B2). Validado por scripts/skill-lint.sh.
+id: android-game-opt
+name: android-game-opt
+version: 1.0.0
+description: "Optimización de rendimiento para juegos en Android: GPU, animaciones, termales y settings globales vía ADB."
+entry: SKILL.md
+safe: false
+requires_sudo: false
+platforms: [android, linux]
+triggers:
+  - game
+  - boost
+  - fps
+  - gpu
+  - free fire
+  - optimization
+  - gaming
+capabilities:
+  - gaming
+  - performance
+  - device-tuning
+dependencies:
+  - android-adb

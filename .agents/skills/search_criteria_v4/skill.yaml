@@ -1,0 +1,18 @@
+# skill.yaml — manifiesto machine-readable (contrato B2). Validado por scripts/skill-lint.sh.
+id: search_criteria_v4
+name: search_criteria_v4
+version: 1.0.0
+description: "Genera consultas semánticas y sintácticas estructuradas para búsqueda de información técnica, priorizadas por probabilidad de recall."
+entry: SKILL.md
+safe: true
+requires_sudo: false
+platforms: [linux]
+triggers:
+  - busqueda
+  - consultas
+  - search
+  - v4
+capabilities:
+  - query-generation
+  - research
+dependencies: []

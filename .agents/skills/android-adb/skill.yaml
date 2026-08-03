@@ -1,0 +1,21 @@
+# skill.yaml — manifiesto machine-readable (contrato B2). Validado por scripts/skill-lint.sh.
+id: android-adb
+name: android-adb
+version: 1.0.0
+description: "Comandos ADB generales: dispositivos, logcat, dumpsys, pm/am, appops y shell. Base para el resto de skills Android."
+entry: SKILL.md
+safe: false
+requires_sudo: false
+platforms: [android, linux]
+triggers:
+  - adb
+  - android
+  - logcat
+  - dumpsys
+  - shell
+  - device
+capabilities:
+  - device-management
+  - diagnosis
+  - app-management
+dependencies: []

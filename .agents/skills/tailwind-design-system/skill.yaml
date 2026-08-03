@@ -1,0 +1,20 @@
+# skill.yaml — manifiesto machine-readable (contrato B2). Validado por scripts/skill-lint.sh.
+id: tailwind-design-system
+name: tailwind-design-system
+version: 1.0.0
+description: "Design system con Tailwind CSS v4 + convención de colores estilo Material Design 3 (surface, on-surface, primary, outline)."
+entry: SKILL.md
+safe: true
+requires_sudo: false
+platforms: [linux]
+triggers:
+  - tailwind
+  - design system
+  - material
+  - componentes
+  - css
+capabilities:
+  - design-system
+  - styling
+dependencies:
+  - vite

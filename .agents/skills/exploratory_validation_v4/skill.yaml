@@ -1,0 +1,22 @@
+# skill.yaml — manifiesto machine-readable (contrato B2). Validado por scripts/skill-lint.sh.
+id: exploratory_validation_v4
+name: exploratory_validation_v4
+version: 1.0.0
+description: "Orquestador del framework v4: coordina las 4 fases (search_criteria, filter_heuristics, integration_templates, cross_validation) y produce un diagnóstico consolidado con nivel de confianza."
+entry: SKILL.md
+safe: true
+requires_sudo: false
+platforms: [linux]
+triggers:
+  - v4
+  - diagnostico
+  - orquestar
+  - framework
+capabilities:
+  - orchestration
+  - diagnosis
+dependencies:
+  - search_criteria_v4
+  - filter_heuristics_v4
+  - integration_templates_v4
+  - cross_validation_v4

@@ -1,0 +1,18 @@
+# skill.yaml — manifiesto machine-readable (contrato B2). Validado por scripts/skill-lint.sh.
+id: vite
+name: vite
+version: 1.0.0
+description: "Referencia de Vite para React + TypeScript: config básica, plugins, path aliases, env vars y PWA."
+entry: SKILL.md
+safe: true
+requires_sudo: false
+platforms: [linux]
+triggers:
+  - vite
+  - build
+  - bundler
+  - react
+capabilities:
+  - build-tooling
+  - vite
+dependencies: []

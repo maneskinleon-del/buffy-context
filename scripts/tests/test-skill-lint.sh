@@ -34,6 +34,13 @@ test_skill_lint_repo_sano() {
   fi
 }
 
+test_skill_lint_require_all_gate() {
+  # Gate real de CI: TODAS las skills del repo deben tener skill.yaml.
+  # Si alguien añade una skill sin manifest, este test falla → hook y CI en rojo.
+  suite "skill-lint: gate --require-all en repo real"
+  expect_exit 0 "TODAS las skills con manifest (--require-all) → exit 0" bash "$SCRIPTS_DIR/skill-lint.sh" --require-all
+}
+
 test_skill_lint_android_example() {
   suite "skill-lint: ejemplo android-agent"
   local MF="$REPO_DIR/.agents/skills/android-agent/skill.yaml"

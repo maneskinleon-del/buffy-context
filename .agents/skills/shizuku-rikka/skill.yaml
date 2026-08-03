@@ -1,0 +1,19 @@
+# skill.yaml — manifiesto machine-readable (contrato B2). Validado por scripts/skill-lint.sh.
+id: shizuku-rikka
+name: shizuku-rikka
+version: 1.0.0
+description: "Shizuku + rish: comandos privilegiados en el dispositivo (pm, settings, appops) sin root completo."
+entry: SKILL.md
+safe: false
+requires_sudo: false
+platforms: [android, linux]
+triggers:
+  - shizuku
+  - rish
+  - permissions
+  - adb
+capabilities:
+  - shizuku
+  - permissions
+  - shell
+dependencies: []

@@ -1,0 +1,20 @@
+# skill.yaml — manifiesto machine-readable (contrato B2). Validado por scripts/skill-lint.sh.
+id: vercel-react-best-practices
+name: vercel-react-best-practices
+version: 1.0.0
+description: "Buenas prácticas React + TypeScript para proyectos en Vercel: patrones de componentes, state, performance (memo/useMemo/useCallback) y testing con Vitest."
+entry: SKILL.md
+safe: true
+requires_sudo: false
+platforms: [linux]
+triggers:
+  - react
+  - vercel
+  - componentes
+  - performance
+  - vitest
+capabilities:
+  - react
+  - performance
+  - testing
+dependencies: []
