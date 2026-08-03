@@ -154,7 +154,7 @@ bash scripts/tests/run-tests.sh --json
 CI corre automáticamente en cada push a `main` y en cada PR (`.github/workflows/ci.yml`):
 
 - **Suite completa** — `run-tests.sh --json` (gate obligatorio).
-- **Doctor con baseline** — audita `buffy-doctor.sh --json` y falla **solo si el drift aumenta** respecto al baseline de CI (16 errores conocidos, configurable vía `BASELINE_ERRORS`). Ojo: en un runner con HOME limpio el doctor ve 16 errores (3 más que en local, porque las skills que solo viven en `~/.agents/skills/` pasan de warn a err). El CI queda rojo únicamente cuando un push/PR introduce drift nuevo.
+- **Doctor con baseline** — audita `buffy-doctor.sh --json` y falla ante **cualquier drift** (`BASELINE_ERRORS=0`): las 13 skills documentadas que faltaban se crearon (2026-08-03) y las 3 que solo vivían en `~/.agents/skills/` se migraron al repo. El CI queda rojo cuando un push/PR introduce drift nuevo.
 
 Run specific tests:
 

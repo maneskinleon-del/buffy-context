@@ -64,7 +64,7 @@ Muchas pestañas abiertas (IAs, proyectos) haciendo la tab strip ilegible.
 
 ## 🎭 Playwright — Skill instalada
 
-- **Skill**: `microsoft/playwright-cli@playwright-cli` instalada en `.agents/skills/playwright-cli`
+- **Skill**: `microsoft/playwright-cli@playwright-cli` instalada vía `npx skills add` (carpeta playwright-cli en `~/.agents/skills/`)
 - **CLI**: `@playwright/cli` instalado globalmente via npm
 - **Browser**: Firefox 152.0.4 descargado para Playwright (~106MB) en `~/.cache/ms-playwright/firefox-1534`
 - **Comandos básicos**: `playwright-cli open`, `goto`, `screenshot`, `close`, `click`, `fill`, `snapshot`
@@ -110,7 +110,7 @@ Todos los cambios revertidos. Alacritty sigue siendo el terminal por defecto.
 | `~/.config/alacritty/fonts.toml` | Font size 14 → 11 |
 | `~/.local/share/applications/thunar.desktop` | **NUEVO** (creado, luego mantenido como backup) |
 | `~/.config/mozilla/firefox/pw5luhdq.default-release/user.js` | **NUEVO**: Pestañas verticales Firefox |
-| `~/.agents/skills/playwright-cli/` | **NUEVO**: Skill playwright-cli instalada |
+| `~/.agents/skills/` (carpeta playwright-cli) | **NUEVO**: Skill playwright-cli instalada |
 | `~/.config/bspwm/config/modules/05-foot.sh` | **NUEVO**: Módulo rice para Foot (inactivo — Wayland-only) |
 | `ai-context/CHANGELOG.md` | Actualizado con cambios de esta sesión |
 | `ai-context/SESION.md` | Actualizado con el intento Foot + revert |
@@ -1167,7 +1167,7 @@ El usuario ya tenía una carpeta `ai-context/` con archivos manualmente mantenid
 
 - Catálogo de 1000+ Claude Skills; 864 instalables en el repo (rama master, Apache 2.0).
 - El skill "WhatsApp Automation" del README **NO existe como carpeta** en el repo (2048 paths, 0 con whatsapp) — es un wrapper del SaaS de Composio (sección `composio-skills/` = embudo de marketing, lock-in + API key de su nube).
-- Instalada **file-organizer** (`npx skills add`) en `~/.agents/skills/file-organizer`.
+- Instalada **file-organizer** (`npx skills add`) en `~/.agents/skills/` (carpeta file-organizer).
 - Veredicto: pocas joyas reales para el stack (file-organizer, skill-creator, changelog-generator); el resto es específico de Claude Code o vendor-locked.
 
 ## 🗂️ Organización del home (disco del sistema: 67% → 39%)

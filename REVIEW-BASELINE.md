@@ -20,7 +20,7 @@ Componentes reales y funcionales:
 |---|---|---|
 | Memoria/protocolo | `ai-context/LOAD_CONTEXT.md`, `INFO-core.md`, `CONTINUE.md`, `SESION.md` | ✅ Funcional |
 | Knowledge base | `Knowledge/` (Android, Linux, React, Git, Node, Shell, AI) | ✅ 16 archivos |
-| Skills | `.agents/skills/` — **10 skills en disco** (android-adb, android-agent, android-game-opt, android-project-setup, code-search, hyperos-hardening, scrcpy-freefire, search_criteria_v4, shizuku-rikka, vision-adapter) | ✅ Funcionales, **sin manifest.yaml** |
+| Skills | `.agents/skills/` — **23 skills en disco** (10 originales + 10 creadas 2026-08-03 + 3 migradas de ~/.agents/skills/) | ✅ Funcionales, **sin manifest.yaml** |
 | Orquestación | `scripts/buffy-doctor.sh`, `buffy-repair.sh`, `buffy-agent.sh`, `buffy-router.sh` | ✅ Ciclo doctor→repair→agent funcional |
 | Visión | `scripts/kimi_vision.js` + `Knowledge/AI/Kimi-K3.md` | ✅ Funcional (solo backend HF) |
 | Suite de tests | `scripts/tests/run-tests.sh` | ✅ 70 checks full / 54 quick |
@@ -74,7 +74,7 @@ los han afirmado mal repetidamente:
 Este trabajo se completó y pusheó en esta sesión (todos verdes):
 
 - ✅ **CI en GitHub Actions** (`.github/workflows/ci.yml`): job `suite` (run-tests.sh --json)
-  + job `doctor` con `BASELINE_ERRORS=16` (falla solo si el drift aumenta).
+  + job `doctor` con `BASELINE_ERRORS=0` (falla ante cualquier drift — resuelto 2026-08-03).
 - ✅ **Versionado semver + CHANGELOG autogenerado**: `set-version.sh` valida semver, corre la
   suite, genera la entrada de release (`changelog-entry.sh`), crea tag anotado.
 - ✅ **Hook pre-commit portable**: `scripts/hooks/install.sh` con `--install/--uninstall/--check/
@@ -91,13 +91,12 @@ Este trabajo se completó y pusheó en esta sesión (todos verdes):
 
 Estos son los problemas actuales del proyecto, en orden de prioridad:
 
-1. **Drift conocido no resuelto (el más importante):** el doctor reporta **13 errores locales /
-   16 en CI limpio** — skills documentadas en docs/README que **no existen en disco**
-   (MISSING_SKILL): `context7`, `cross_validation_v4`, `exploratory_validation_v4`,
-   `file-organizer`, `filter_heuristics_v4`, `integration_templates_v4`, `modo-autonomo`,
-   `playwright-cli`, `scripts`, `tailwind-design-system`, `typescript-advanced-types`,
-   `vercel-react-best-practices`, `vite`. El CI usa eso como baseline (evita que empeore,
-   pero no lo arregla). Para un proyecto que detecta su propio drift, esto es incoherente.
+1. ~~**Drift conocido no resuelto**~~ — **RESUELTO (2026-08-03)**: las 13 skills documentadas que
+   faltaban se crearon en `.agents/skills/` con contenido real (context7, las 4 del framework
+   v4, vite, tailwind-design-system, typescript-advanced-types, vercel-react-best-practices,
+   modo-autonomo) y las 3 que solo vivían en `~/.agents/skills/` (form-filler, image-analyzer,
+   xiaomi-adb-tricks) se migraron al repo. Baseline de CI ahora `0`. El doctor reporta
+   **0 errores** (quedan warnings de entorno: NO_AI_CONTEXT_DIR, MISSING_SNAPSHOT, DEPRECATED).
 2. **CHANGELOG caótico:** múltiples bloques front-matter duplicados (`version: 1.7` y
    `version: 1.4` a mitad de archivo), entradas desordenadas, ~175 líneas pendientes de poda.
    La herramienta que genera entradas (`changelog-entry.sh`) debería también limpiarlo.
@@ -130,7 +129,7 @@ bash scripts/tests/run-tests.sh           # 70 OK esperado
 bash scripts/tests/run-tests.sh --quick   # 54 OK / 7 SKIP esperado
 
 # Doctor (drift)
-bash scripts/buffy-doctor.sh --json       # 13 errors / 7 warnings en local
+bash scripts/buffy-doctor.sh --json       # 0 errors / ~4 warnings en local (desde 2026-08-03)
 bash scripts/buffy-doctor.sh --quick
 
 # Versionado

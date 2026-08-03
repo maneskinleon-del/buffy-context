@@ -66,9 +66,10 @@ test_doctor_quick() {
   suite "doctor: --quick vs --json"
   local Q J RC
   J=$(bash "$SCRIPTS_DIR/buffy-doctor.sh" --json 2>/dev/null | python3 -c 'import json,sys; print(json.load(sys.stdin)["errors"])')
-  # El doctor imprime 'error(es)' con paréntesis literales — el patrón debe
-  # matchear 'N error' sin interpretar los paréntesis como grupo ERE.
-  Q=$(bash "$SCRIPTS_DIR/buffy-doctor.sh" --quick 2>&1 | grep -oE '[0-9]+ error' | grep -oE '[0-9]+' | head -1)
+  # Fuente estable del conteo: la línea de resumen '❌ Errores: N' está presente
+  # tanto con drift como sin él (con 0 errores el doctor imprime CONSISTENTE,
+  # sin número en la línea de estado — antes el grep solo matcheaba con drift).
+  Q=$(bash "$SCRIPTS_DIR/buffy-doctor.sh" --quick 2>&1 | grep -oE 'Errores: [0-9]+' | grep -oE '[0-9]+' | head -1)
   if [ -n "$Q" ] && [ "$Q" = "$J" ]; then
     ok "--quick reporta los mismos errores que --json ($Q)"
   else

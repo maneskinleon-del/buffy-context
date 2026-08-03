@@ -95,7 +95,7 @@ system-id: mangonz-desktop
 - **`scripts/buffy-context.sh`**: shebang zsh → bash (consistencia con doctor/router; `--watch` re-ejecuta con bash), exit codes reales (0 éxito / 1 fallo verificable), header `> ⏱️ Generated: <ts>` en SNAPSHOT.md (frescura medible), `mkdir -p` del directorio destino (bug latente en sistemas sin ~/ai-context).
 - **`scripts/buffy-repair.sh`** (NUEVO): actuador con `case "$fix"` puro (sin parseo de mensajes). Dry-run por defecto; `--auto` solo AUTO_SAFE; `--fix NOMBRE`; `--json`; loop doctor → repair → verify con delta reportado. Exit codes honestos (0 limpio / 1 review pendiente o fixes fallidos / 2 error).
 - **`scripts/buffy-agent.sh`** (NUEVO): orquestador del ciclo — preflight (doctor --json) → repair --auto si hay drift → verify (doctor --json) → load (buffy-router) si hay mensaje. JSON final `{repo, preflight, repair, verify, load, ready}` para CI/protocolo. Validado: 18/18 tests (sandbox: drift 19→0 errores, 19 skills creadas en disco).
-- **`scripts/buffy-router.sh`** (NUEVO, ya existía localmente): carga condicional de contexto por categorías (base/knowledge/skills/scripts) con `--json`.
+- **`scripts/buffy-router.sh`** (NUEVO, ya existía localmente): carga condicional de contexto por categorías (base, knowledge, skills, scripts) con `--json`.
 - **`.agents/skills/`**: 5 skills nuevas con contenido curado (android-adb, android-game-opt, hyperos-hardening, scrcpy-freefire, shizuku-rikka).
 - **Bugs de bash encontrados en el camino**: `${arr[]}` con subscript vacío escupe "bad array subscript" (guard en jitem); `local skill="$1" dir="...$skill..."` expande con el valor viejo → skills se creaban en el dir equivocado (locals separados en fix_create_skill_dir).
 
