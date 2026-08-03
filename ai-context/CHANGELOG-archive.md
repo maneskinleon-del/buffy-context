@@ -269,6 +269,8 @@ Cambio definitivo de compositor. Hyprland + dotfiles Caelestia quedan retirados;
 11. **systemd-boot timeout** — 5s → 3s en `/efi/loader/loader.conf`.
 
 
+### 2026-07-26 — Sesión Hermes: Polybar melissa — se REVIRTIÓ TODO a estado original
+
 **Resumen honesto:** durante esta sesión se hicieron cambios a la barra Polybar del tema melissa
 que empeoraron su apariencia. Al final se revirtió TODO y la barra quedó IDÉNTICA al estado
 original del rice (sin modificaciones).
@@ -295,3 +297,166 @@ al rice original de gh0stzk. No hay cambios pendientes ni rotos.
 **Lección registrada:** antes de "mejorar" una barra con separadores powerline propios, conviene
 usar los separadores YA EXISTENTES en el tema en vez de inventar nuevos que pintan colores encima.
 Y confirmar con el usuario si quiere cambio real o dejar igual, en vez de asumir.
+
+---
+
+### Archivado desde CHANGELOG.md — poda 2026-08-03
+
+### 2026-07-31 — Limpieza de agentes IA en desuso
+
+**Pedido del usuario:** limpiar basura de agentes IA que ya no usa.
+
+**Eliminados (selección del usuario):**
+- Claude Code (`npm uninstall @anthropic-ai/claude-code` + `~/.claude.json`) ~223 MB
+- Kilo (`~/.kilo` + PATH en `.zshrc`) ~250 MB
+- Mimo (`npm uninstall @mimo-ai/cli` + `~/.mimocode`) ~480 MB
+- aichat (`cargo uninstall`; metadata corrupta corregida en `.crates.toml`/`.crates2.json`)
+- Cache Playwright (`~/.cache/ms-playwright` + `~/.cache/ms-playwright-go`) ~1 GB · Cache Kimchi (`~/.cache/kimchi`) ~121 MB
+- Odysseus (`~/odysseus`, requirió sudo) · Symlink roto `rtk`
+
+**Conservados:** freebuff, OmniRoute, OpenClaw, command-code, vercel, clasp, ctx7, playwright-cli, Gemini CLI (no seleccionado), Ollama (solo qwen2.5:7b en uso).
+
+**Nota:** el CHANGELOG del 2026-07-20 afirmaba que Claude Code/Gemini/Odysseus ya se habían eliminado; en realidad permanecían instalados. La remoción real ocurrió el 2026-07-31.
+
+---
+
+### 2026-07-31 — Command Code instalado · Hermes eliminado · OpenClaw migrado a blockrun
+
+**Pedido del usuario:** probar el agente IA Command Code (commandcode.ai) y eliminar Hermes (plan gratuito de 2 semanas expirado).
+
+**Command Code v1.6.1:**
+- `npm i -g command-code@latest` → `~/.npm-global/bin/command-code` + alias `cmd`
+- Postinstall `protobufjs` habilitado (`allow-scripts`) para evitar fallos en runtime
+- 50 modelos disponibles vía `--list-models`
+- Pendiente: `cmd login` + primer uso
+
+**Hermes eliminado (~1.9 GB):**
+- `~/.hermes/`, `~/.buffy-hermes/`, `~/.local/state/hermes/`, `~/.ollama/backup/hermes/` removidos
+- Launchers `~/.local/bin/{hermes,buffy-hermes,nous-refresh}` eliminados
+- Timer/service `nous-refresh.{service,timer}` (systemd user) desactivados y removidos
+- Bloque `nous-refresh` del `.zshrc` eliminado · `NOUS_API_KEY` unset del entorno systemd
+- Docs actualizados: `memoria.md`, `ai-context/SNAPSHOT.md`, `SESION.md`, `CHANGELOG.md`
+
+**OpenClaw (gateway estaba `failed` por provider nous muerto):**
+- `~/.openclaw/openclaw.json`: provider `nous` eliminado; `primary=blockrun/auto`, fallbacks `['ollama/qwen2.5:7b','blockrun/free']`
+- `openclaw-gateway.service`: `OPENCLAW_SERVICE_MANAGED_ENV_KEYS` → solo `KIMCHI_API_KEY`
+- Gateway ✅ active · `.last-good` regenerado sin nous · backup en `openclaw.json.bak-hermes-removal`
+- Pendiente: proxy blockrun (8402) no está corriendo — OpenClaw usa fallback ollama local mientras tanto
+
+---
+
+### 2026-07-29 — Integración modo-autónomo y optimización Free Fire (pantalla alargada + ggmouse)
+
+**Pedido del usuario:**
+1. Revisar las skills y fijar `modo-autonomo` como principal.
+2. Hacer que la pantalla de Free Fire se vea alargada/estirada, usar el teléfono para jugar y mapear ggmouse (Panda Mouse Pro).
+
+**Cambios aplicados:**
+- **`~/scripts/scrcpy-freefire.sh`**:
+  - Ajustada resolución estirada a `2400x600 @ 280dpi` con rotación horizontal.
+  - Otorgados permisos `appops` (`SYSTEM_ALERT_WINDOW`, `GET_USAGE_STATS`, `PROJECT_MEDIA`) a `com.panda.widgetcove`.
+  - Agregada exención de batería (`deviceidle whitelist` y `RUN_IN_BACKGROUND`) para evitar que el sistema suspenda/desconecte ggmouse en segundo plano.
+  - Añadido selector dinámico de modo de entrada (`sdk`, `otg`, `uhid`) evitando que scrcpy suelte la captura del mouse al presionar teclas o cambiar de ventana.
+  - Removido `--turn-screen-off` de `scrcpy` para permitir el uso directo de la pantalla táctil del celular.
+- **Sincronización**: Copia actualizada en `~/.openclaw/workspace/scripts/scrcpy-freefire.sh`.
+
+---
+
+### 2026-07-27 — Sesión Buffy: codebuff-automation + fix resolución + Ollama
+
+**Fix resolución de pantalla (1360x768):**
+- **Causa**: `MonitorSetup` (gh0stzk rice) ejecuta `get_monitor_info()` que agarra el primer modo listado por xrandr (1280x720) y sobreescribe la config manual en bspwmrc.
+- **Fix**: Movido `xrandr --output HDMI-1 --mode 1360x768 --rate 60.02` **DESPUÉS** de `MonitorSetup` en `~/.config/bspwm/bspwmrc`.
+- **Investigación**: Verificados todos los scripts del rice melissa — ninguno toca xrandr excepto MonitorSetup.
+- **Verificado**: `bspc wm -r` mantiene 1360x768.
+
+**Proyecto codebuff-automation (~/codebuff-automation/):**
+- Creado desde `SETUP_PC_DESKTOP.md` (portado de Termux/Android a PC).
+- `fill_form.js` v4.0: SmartMapper multi-idioma (28 categorías), CAPTCHA, proxy rotativo, entrenamiento, webhooks, sesiones, iframes, retry, export, slow mode, interactive, Docker.
+- `auto_permiso.py` v2.0: OCR + root (`su -c`) en vez de rish/Shizuku.
+- `test-form.html`: 21 campos de prueba con radios fix (ids, for, radiogroup).
+- **Test exitoso**: 21 campos detectados, 17 llenados, 0 fallidos en 13s.
+- Dependencias: puppeteer-core 25.4.0, tesseract-data-spa, Chromium 150.
+
+**Ollama:**
+- Ollama 0.30.7 ya instalado.
+- Modelo `nemotron-3-super:cloud` descargado (stub cloud ~345B).
+- Pendiente: crear cuenta en ollama.com para usar el modelo.
+- Pendiente: integrar Ollama en fill_form.js (clasificación por IA).
+
+**Archivos modificados/creados:**
+- `~/.config/bspwm/bspwmrc` — fix resolución
+- `~/codebuff-automation/` — 15 archivos nuevos
+- `ai-context/` — SESION.md, CHANGELOG.md, PROJECTS.md, SYSTEM.md actualizados
+
+---
+
+### 2026-07-27 — Sesión Buffy (segunda parte): Qwen2.5 7B local + systemd service
+
+**Qwen2.5 7B instalado localmente:**
+- Modelo `qwen2.5:7b` (4.7 GB, Q4_K_M) descargado via `ollama pull`
+- Corre 100% en CPU (AMD Vega 11 integrada sin ROCm)
+- Velocidad: ~24s primer token en frío, respuestas rápidas después
+- API funciona perfecto (`localhost:11434/api/generate`)
+- CLI `ollama run` tiene bug de timeout (usar API directa)
+
+**Systemd service para Ollama:**
+- Creado `~/.config/systemd/user/ollama.service`
+- `Type=simple`, `Restart=on-failure`
+- Habilitado e iniciado — auto-arranque al iniciar sesión
+- Verificado: `Active: active (running)`
+
+**Estado Ollama ahora:**
+- 2 modelos: `qwen2.5:7b` (local, 4.7GB) + `nemotron-3-super:cloud` (stub, 345B)
+- Servicio systemd-user auto-inicio
+- Pendiente: integrar en fill_form.js
+
+---
+
+### 2026-07-27 — Sesión Buffy (tercera parte): OpenClaw instalado
+
+**OpenClaw 2026.7.1-2 instalado globalmente via npm:**
+- Configuración: gateway local + puerto 18789
+- Modelo default: `kimchi/deepseek-v4-flash` (mismo que Buffy)
+- Fallbacks: `nemotron-3-ultra-fp4` → `ollama/qwen2.5:7b` → `qwen2.5-coder:7b`
+- Systemd service creado: `openclaw-gateway.service` ✅ Activo
+- `doctor --fix` aplicado: skills rotas desactivadas, autocompletado zsh, lingering
+- Diferencias con Hermes: ~12K vs 1.9 GB, modelos funcionales vs cloud timeout
+
+---
+
+### 2026-07-27 — Sesión Buffy (cuarta parte): scrcpy-freefire.sh refactor + Mi 10
+
+**scrcpy-freefire.sh — Refactor completo multi-dispositivo:**
+- Auto-detección: detecta dispositivo ADB y plataforma (kona=Qualcomm, ums=Unisoc)
+- Encoder automático: `OMX.qcom.video.encoder.avc` para Mi 10, `c2.unisoc.avc.encoder` para ZTE
+- Resolución/DPI: Mi 10 usa nativo, ZTE usa 2400x600 @ 90dpi
+- Regla bspwm: scrcpy se abre en escritorio 6 (games)
+- pkill genérico para cualquier encoder
+
+**Ghost touch fix:**
+- Se desactivó `charging_optimization = 0` en Mi 10 para evitar toques fantasma al cargar
+
+**Archivos modificados:**
+- `~/scripts/scrcpy-freefire.sh` — refactor completo
+
+---
+
+### 2026-07-27 — Sesión Buffy (sexta parte): Fix mango-kwin-session + foot.ini + systemd service
+
+**Problema:** La sesión mango-kwin crasheaba al arrancar (ruta incorrecta de `kded6`) y el terminal
+foot mostraba errores de colores. La sesión mango funcionaba.
+
+**Cambios:
+- **`~/.local/bin/mango-kwin-session`**: Fix ruta `/usr/lib/kded6` → `/usr/bin/kded6`. Agregado
+  `systemctl --user --wait start mango-kwin.service` (patrón systemd como mango-session). Eliminado
+  `--inputmethod` (ya configurado en kwinrc). Eliminado portal KDE directo (D-Bus auto-activación).
+- **`~/.config/systemd/user/mango-kwin.service`**: NUEVO. Idéntico patrón a `mango.service`:
+  `BindsTo=graphical-session.target`, `ExecStart=kwin_wayland --no-lockscreen --exit-with-session`.
+- **`~/.config/foot/foot.ini`**: Colores cambiados de `#RRGGBB` a `RRGGBB` (foot no acepta prefijo `#`).
+
+**Archivos modificados/creados:**
+- `~/.local/bin/mango-kwin-session` — corregido
+- `~/.config/systemd/user/mango-kwin.service` — NUEVO
+- `~/.config/foot/foot.ini` — corregido
+- `ai-context/CHANGELOG.md` — actualizado

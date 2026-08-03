@@ -115,10 +115,10 @@ bash scripts/hooks/install.sh --check
 
 ## 7. Pendientes priorizados (lo que sí falta)
 
-1. **CHANGELOG caótico (A2)**: 661 líneas, front-matter duplicado (bloques
-   `version:` a mitad de archivo), entradas desordenadas, ~175 líneas pendientes
-   de poda. La herramienta que genera entradas (`changelog-entry.sh`) debería
-   también limpiar/normalizar.
+1. ~~**CHANGELOG caótico (A2)**~~ — **LIMPIO (2026-08-03)**: 661 → 216 líneas;
+   front-matter único (versión duplicada eliminada); entradas ≤ 2026-07-31 movidas
+   a CHANGELOG-archive.md con dedupe; quedan 13 recientes (08-01 a 08-03).
+   Pendiente opcional: que `changelog-entry.sh` archive automáticamente.
 2. **Router con manifests (siguiente recomendado)**: `buffy-router.sh` debería
    leer id/triggers/safe de los skill.yaml en vez de listas hardcodeadas
    (SKILL_FILES). El contrato ya existe (23/23) — falta consumirlo.
