@@ -1278,3 +1278,67 @@ El CSV exportado se veía "todo en una columna" / "incidencia hacia abajo en una
 ---
 
 *Fin de la sesión — Última actualización: 2026-08-02*
+
+---
+
+# 🧠 SESION — Buffy Freebuff (2026-08-03 — PC: digest leído + router con manifests + migración + B1 + C2)
+
+> Tema: retomada desde el PC (Mi 10 por USB). Se leyó el digest `BUFFY-PC-CONTEXT.md` dejado desde el teléfono, se sincronizó el repo y se saldaron **todos los pendientes del digest**: router con manifests, migración SYSTEM→INFO-core, versiones mínimas scrcpy/Ollama, README al día, fix H2, schema-lite B1 y BUFFY_HOME (C2). CI verde en cada commit.
+
+---
+
+## 🧭 Router con manifests (pendiente §7.2 — HECHO)
+
+- **`scripts/lib/yaml.sh`** (NUEVO): funciones compartidas `yaml_val`/`yaml_items`/`yaml_list` (movidas de skill-lint, cero duplicación).
+- **`scripts/buffy-router.sh`**: ya NO hardcodea rutas de skills — `add_skill` registra si el manifest existe, `discover_skills` barre los skill.yaml y carga por **triggers** (≥1 match). Una skill nueva con manifest se activa sin editar el router. `skill_safe` marca ⚡ AUTO_SAFE.
+- **Fix bonus**: mensaje vacío (ni args ni stdin) → exit 1.
+- **`test-router.sh`** (NUEVO, 15 tests). Verificado en vivo: "componente react con vite" descubre vercel-react-best-practices + vite sin estar hardcodeadas.
+- Commit `0c4d92a` · suite 75→90 quick / 91→106 full.
+
+## 🔴 Migración SYSTEM.md → deprecated/ (pendiente §7.6a — HECHA)
+
+- **`scripts/migrate-system.sh`** EJECUTADO (decisión del usuario): stubs `SYSTEM.md`/`SYSTEM_FULL.md` (contenido ya fusionado en INFO-core/full) movidos a `ai-context/deprecated/` con timestamp.
+- **Correcciones manuales post-sed**: el sed global reemplazó `SYSTEM.md`→`AGENTS.md` ciegamente — corregido a mano en AGENTS.md, README, LOAD_CONTEXT (árboles), CHANGELOG, CONTINUE; bitácoras históricas (SESION.md, SESION-archive.md) **revertidas**.
+- Doctor: los 2 warnings `DEPRECATED_FILE` desaparecieron (3→1). Commit `69e1be9`.
+
+## 📌 Versiones mínimas scrcpy/Ollama (pendiente §7.6b — HECHA, con fuente)
+
+- **scrcpy**: mínimo recomendado **≥ 3.3.1** (UHID ≥ 2.0; `--power-off-on-close` con fix en 3.3.1 #6146) — `Knowledge/Android/scrcpy.md`, verificado `4.1-1` + `adb 1.0.41`.
+- **Ollama**: mínimo **≥ 0.30** — `Knowledge/Vision.md`, verificado binario `0.30.7` (sirviendo en :11434), paquete `0.32.1-1`, upstream v0.32.5. Notas: servicio de sistema activo (el de usuario deshabilitado), bug `ollama run` timeout → API, tags `:cloud` sin RAM local.
+- Regla del digest respetada: versiones documentadas solo con fuente (release notes oficiales). Commit `49c18e1`.
+
+## 🟢 README actualizado al día con el disco (pendiente §7.3 — HECHO)
+
+- Árbol de skills: 10 → **23** agrupadas por dominio (Android 8, Web 2, Framework v4 5, Code & research 2, Frontend 4, Operación 2).
+- Knowledge: agregadas categoría `AI/` (Kimi-K3.md) y `Vision.md`; scripts: 7 → 16 entradas; tabla "What's included" y de categorías actualizadas.
+- Doctor sin drift falso (las 23 skills del README coinciden con disco). Commit `ec7b14a`.
+
+## ✅ Fix H2 (revisión externa) — android-agent/SKILL.md alineado con el repo
+
+- El análisis de otra IA tenía 7 hallazgos: **5 falsos positivos** (verificados contra disco: INFO-core/CONTINUE existen, 23/23 skill.yaml, índice Knowledge coincide, 23 skills exactas, python3/readlink presentes), **1 no-issue por diseño** (scripts sin `+x` — se ejecutan con `bash` explícito por Termux), **1 real** (H2): android-agent/SKILL.md referenciaba 3 skills del entorno (`android-native-dev`, `android-clean-architecture`, `mobile-android-design`) que NO vienen con el repo.
+- **Fix**: reemplazadas por skills del repo (`android-project-setup`, `hyperos-hardening`, `xiaomi-adb-tricks`) + descripción del front-matter alineada. Commit `1166173`.
+
+## 🟠 Schema-lite B1 (pendiente §7.4 — HECHO, modo autónomo)
+
+- **`scripts/ai-context-lint.sh`** (NUEVO): valida las secciones obligatorias que LOAD_CONTEXT.md promete SIEMPRE (INFO-core: Sistema/Hardware/Reglas personales/Estructura de proyectos; CONTINUE: Resumen/Pendientes/Stack; LOAD_CONTEXT: Protocolo/Carga condicional/Arquitectura) + front-matter semver-lite (X.Y o X.Y.Z) + `updated` ISO. Flags `--repo/--json/--quick/--help`, exit 0/1/2, stderr limpio en JSON.
+- **Hallazgo real del validador**: 3 front-matters usaban `version: X.Y` (2 segmentos) — decisión: aceptar semver-lite X.Y/X.Y.Z (convención de ai-context; skill.yaml sí exige X.Y.Z).
+- **`test-ai-context-lint.sh`** (NUEVO, 5 tests, fixtures sin sandbox → corren en --quick). Integrado en run-tests.sh + bash -n.
+- Suite: 90→105 quick / 106→121 full. Commit `463937e`.
+
+## 🟠 BUFFY_HOME / common.sh (pendiente §7.5 C2 — HECHO, opt-in)
+
+- **`scripts/lib/common.sh`** (NUEVO): `BUFFY_HOME` opt-in (default `$HOME`) + helpers `buffy_home`/`buffy_ai_context`/`buffy_snapshot`. Normaliza trailing slash.
+- **Alcance deliberado**: redirige SOLO el estado generado (ai-context/ + SNAPSHOT); el escaneo del entorno del usuario ($HOME/proyectos, $HOME/scripts, .agents/skills) sigue con $HOME real.
+- **Cableado**: buffy-context.sh (SNAPSHOT), buffy-doctor.sh (detección/frescura), buffy-repair.sh (fix_regenerate_snapshot), buffy-router.sh (base). Sin BUFFY_HOME → comportamiento idéntico (verificado con prueba real).
+- **`test-common.sh`** (NUEVO, 6 tests). Fix del reviewer: `test_doctor_catalog` ahora usa HOME aislado en fixture (era dependiente del entorno).
+- Docs: INSTALL.md (sección BUFFY_HOME), README, REVIEW-BASELINE §2.1. Suite: 105→116 quick / 121→132 full. Commit `033e6dc`.
+
+## 🔜 Pendientes
+
+- [ ] `gh auth login` → luego renombrar `enerador-de-boletas` → `generador-de-boletas` por API.
+- [ ] Baja prioridad (D1/D2 del roadmap): sandbox hardening + installer; adapters VLM/LLM (YAGNI — solo existe un backend HF).
+- [ ] Pendiente del usuario desde el teléfono: pushear `porteria_pwa` (cambiar remote a SSH), `sep=,` en exports CSV de pwa_securguard.
+
+---
+
+*Fin de la sesión — Última actualización: 2026-08-03*
