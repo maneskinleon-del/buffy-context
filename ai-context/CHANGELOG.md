@@ -67,6 +67,24 @@ system-id: mangonz-desktop
 
 ---
 
+### 2026-08-03 — README actualizado: árbol de skills/Knowledge refleja el disco
+
+**Pedido del usuario:** el árbol del README no coincidía con el disco — el origen histórico del drift del doctor.
+
+**Cambios aplicados:**
+- **Árbol de `.agents/skills/`**: ahora muestra las **23 skills** agrupadas por dominio (Android 8, Web 2, Framework v4 5, Code & research 2, Frontend 4, Operación 2) — antes solo 10; se agregaron las 10 creadas + las 3 migradas (form-filler, image-analyzer, xiaomi-adb-tricks).
+- **Árbol de `Knowledge/`**: agregadas la categoría `AI/` (Kimi-K3.md) y `Vision.md` (antes invisibles); nota de versiones mínimas en scrcpy.md.
+- **Árbol de `scripts/`**: agregados skill-lint.sh, migrate-system.sh, set-version.sh, changelog-entry.sh, ollama-kill.sh, see.sh, lib/, hooks/, tests/ (antes solo 7 entradas).
+- **"What's included"**: Knowledge 17 files/7 categorías + Vision, 23 skills con manifest, CI verde 106 checks.
+- **Nueva sección "Skills (23 en disco)"**: tabla por grupo con nota de que el router las descubre por triggers.
+- **Tabla de categorías de Knowledge**: agregadas AI (1) y Vision (1).
+- **Validación**: doctor 0 errores (las 23 skills documentadas coinciden con disco — sin drift falso), suite `--quick` 90 OK.
+
+**Archivos modificados:**
+- `README.md` — MODIFICADO (71+/20-)
+
+---
+
 ### 2026-08-03 — Versiones mínimas de scrcpy/Ollama documentadas
 
 **Decisión del usuario:** cerrar el pendiente (b) del digest — documentar las versiones mínimas verificadas desde el PC, con fuente.
