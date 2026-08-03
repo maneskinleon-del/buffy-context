@@ -55,8 +55,8 @@
 
 ### ⏳ Pendientes para próxima sesión
 
-1. **README desactualizado** (§7.3 del digest): el árbol de skills/Knowledge no refleja las 13 skills nuevas + 3 migradas. No causa drift, pero es doc deshonesta.
-2. **Schema-lite para ai-context (B1)** (§7.4): JSON Schema + test para INFO-core/CONTINUE/LOAD_CONTEXT (opcional).
+1. ~~**README desactualizado**~~ — **HECHO (2026-08-03)**: árbol de skills (23 agrupadas por dominio), Knowledge (AI/+Vision), scripts (16) y conteos al día con el disco.
+2. ~~**Schema-lite para ai-context (B1)**~~ — **HECHO (2026-08-03)**: `scripts/ai-context-lint.sh` valida secciones obligatorias de INFO-core/CONTINUE/LOAD_CONTEXT + front-matter semver-lite; 5 tests nuevos en la suite (105 OK quick / 121 OK full).
 3. **Decisiones tuyas**: (a) ~~migración SYSTEM.md → INFO-core~~ — **HECHA (2026-08-03)** vía migrate-system.sh, stubs en `ai-context/deprecated/`; (b) ~~versiones mínimas scrcpy/Ollama~~ — **HECHA (2026-08-03)**: scrcpy ≥ 3.3.1 / Ollama ≥ 0.30, en Knowledge/Android/scrcpy.md y Knowledge/Vision.md.
 4. **`gh auth login`** — sigue pendiente (los push van por SSH y funcionan).
 5. Renombrar repo `enerador-de-boletas` → `generador-de-boletas` (requiere gh auth).
@@ -83,6 +83,6 @@ Disk:  39% usado / 126G libres · ollama + backups en HDD (/media/datos)
 Stack: React + TS + Tailwind v4 + Vite → GitHub (maneskinleon-del) → Vercel
 Node:  v26.4.0 · npm 11.18.0 · gh CLI (sin auth)
 Git:   maneskinleon-del / mangonz970@gmail.com · push por SSH
-Repo:  buffy-context en 0c4d92a (al día con origin/main)
-Suite: 90 OK quick / 106 OK full · doctor 0 · linter 23/23
+Repo:  buffy-context (al día con origin/main)
+Suite: 105 OK quick / 121 OK full · doctor 0 · linter 23/23
 ```

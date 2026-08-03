@@ -14,6 +14,41 @@ system-id: mangonz-desktop
 # CHANGELOG.md — Historial de cambios del sistema
 
 
+### 2026-08-03 — Schema-lite B1: validador estructural de ai-context (ai-context-lint.sh)
+
+**Pendiente §7.4 del digest ejecutado en modo autónomo** (Buffy PC): JSON Schema + test
+para INFO-core/CONTINUE/LOAD_CONTEXT. Decisión de diseño: validador bash puro
+(consistente con el repo), no JSON Schema formal — los consumidores son LLMs que leen
+markdown, y un schema-lite cubre el 80% del valor (como sugería el digest).
+
+**Cambios aplicados:**
+- **`scripts/ai-context-lint.sh`** (NUEVO): valida las secciones obligatorias que
+  LOAD_CONTEXT.md promete — INFO-core (`## Sistema`, `## Hardware`, `## Reglas personales`,
+  `## Estructura de proyectos`), CONTINUE (`## Resumen de la sesión`, `## Pendientes para
+  próxima sesión`, `## Stack del usuario`), LOAD_CONTEXT (`## Protocolo obligatorio al
+  iniciar sesión`, `## Carga condicional`, `## Arquitectura de memoria`) — + front-matter
+  semver-lite (`X.Y` o `X.Y.Z`, convención del repo) y `updated` ISO. Flags `--repo`,
+  `--json` (stderr limpio), `--quick`, exit 0/1/2.
+- **Hallazgo real del validador**: 3 front-matters (AGENTS.md, README.md, PROJECTS.md)
+  usaban `version: X.Y` (2 segmentos). Decisión: el validador acepta semver-lite X.Y/X.Y.Z
+  para alinearse con la convención existente de ai-context (skill.yaml sí exige X.Y.Z).
+- **`scripts/tests/test-ai-context-lint.sh`** (NUEVO): 5 tests — --help, repo sano (--json
+  schema + stderr limpio), secciones obligatorias presentes, repo roto (exit 1 + JSON),
+  front-matter semver-lite (X.Y y X.Y.Z válidos, rotos → exit 1), opción desconocida
+  (exit 2). Fixtures temporales en /tmp, sin sandbox → corren también en --quick.
+- **`scripts/tests/run-tests.sh`**: source del nuevo test + `ai-context-lint.sh` añadido
+  al bash -n previo.
+- **CI**: el job `suite` ya corre `run-tests.sh --json` → los 5 tests nuevos entran solos
+  (sin editar el workflow).
+- **Validación**: suite `--quick` 105 OK / completa **121 OK** · doctor 0 errores/1
+  warning · bash -n OK.
+
+**Archivos modificados/creados:**
+- `scripts/ai-context-lint.sh`, `scripts/tests/test-ai-context-lint.sh` — NUEVOS
+- `scripts/tests/run-tests.sh` — MODIFICADO
+
+---
+
 ### 2026-08-03 — CI en GitHub Actions: suite completa + doctor con baseline de drift
 
 **Pedido del usuario:** crear un workflow que corra la suite completa y el doctor en cada push/PR. Decisión autónoma: el doctor bloquea **solo drift nuevo** (baseline medido en CI) para no dejar el CI permanentemente rojo.
