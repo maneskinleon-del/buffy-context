@@ -1,0 +1,19 @@
+# skill.yaml — manifiesto machine-readable (contrato B2). Validado por scripts/skill-lint.sh.
+id: integration_templates_v4
+name: integration_templates_v4
+version: 1.0.0
+description: "Fase 3 del framework v4: adapta código/documentación externa al proyecto con marcado explícito de incertidumbre. Nunca copia código sin adaptar."
+entry: SKILL.md
+safe: true
+requires_sudo: false
+platforms: [linux]
+triggers:
+  - integrar
+  - template
+  - adaptar
+  - v4
+capabilities:
+  - integration
+  - adaptation
+dependencies:
+  - search_criteria_v4

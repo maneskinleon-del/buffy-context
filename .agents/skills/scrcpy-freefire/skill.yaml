@@ -1,0 +1,21 @@
+# skill.yaml — manifiesto machine-readable (contrato B2). Validado por scripts/skill-lint.sh.
+id: scrcpy-freefire
+name: scrcpy-freefire
+version: 1.0.0
+description: "Mirroring y control del teléfono con scrcpy, con foco en jugar Free Fire desde el PC."
+entry: SKILL.md
+safe: true
+requires_sudo: false
+platforms: [android, linux]
+triggers:
+  - scrcpy
+  - free fire
+  - mirror
+  - streaming
+  - screen
+capabilities:
+  - mirroring
+  - streaming
+  - gaming
+dependencies:
+  - android-adb

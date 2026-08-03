@@ -23,6 +23,11 @@ jobs:
       - name: Ejecutar suite completa
         run: bash scripts/tests/run-tests.sh --json
 
+      - name: Linter de manifests (--require-all)
+        # Gate: TODAS las skills de .agents/skills/ deben tener skill.yaml válido
+        # (contrato B2). Falla si alguna skill nueva no trae manifest.
+        run: bash scripts/skill-lint.sh --require-all
+
   doctor:
     name: Doctor — drift vs baseline
     runs-on: ubuntu-latest

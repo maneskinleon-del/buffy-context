@@ -1,0 +1,17 @@
+# skill.yaml — manifiesto machine-readable (contrato B2). Validado por scripts/skill-lint.sh.
+id: modo-autonomo
+name: modo-autonomo
+version: 1.0.0
+description: "Protocolo de operación autónoma: cuando el usuario delega autonomía, el agente decide por sí mismo con verificación de hechos, validación completa y reporte final."
+entry: SKILL.md
+safe: true
+requires_sudo: false
+platforms: [linux]
+triggers:
+  - autonomo
+  - autonomia
+  - delegar
+capabilities:
+  - autonomy
+  - orchestration
+dependencies: []

@@ -1,0 +1,23 @@
+# skill.yaml — manifiesto machine-readable (contrato B2). Validado por scripts/skill-lint.sh.
+id: xiaomi-adb-tricks
+name: xiaomi-adb-tricks
+version: 1.0.0
+description: "Trucos y workarounds ADB/rish/Shizuku para Xiaomi MIUI/HyperOS."
+entry: SKILL.md
+safe: false
+requires_sudo: false
+platforms: [android, linux]
+triggers:
+  - xiaomi
+  - miui
+  - hyperos
+  - adb
+  - trucos
+  - workaround
+capabilities:
+  - device-management
+  - adb
+  - workarounds
+dependencies:
+  - shizuku-rikka
+  - android-adb

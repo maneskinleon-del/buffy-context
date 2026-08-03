@@ -1,0 +1,26 @@
+# skill.yaml — manifiesto machine-readable (contrato B2). Validado por scripts/skill-lint.sh.
+id: android-project-setup
+name: android-project-setup
+version: 1.0.0
+description: "Setup completo de proyectos Android locales: verificar ADB, compilar con Gradle, instalar el APK y conceder permisos (Shizuku, overlay, batería)."
+entry: SKILL.md
+safe: false
+requires_sudo: false
+platforms: [android, linux]
+triggers:
+  - gradle
+  - apk
+  - build
+  - install
+  - setup
+  - compilar
+  - instalar
+  - permisos
+capabilities:
+  - build
+  - install
+  - permissions
+  - shizuku
+dependencies:
+  - android-adb
+  - shizuku-rikka

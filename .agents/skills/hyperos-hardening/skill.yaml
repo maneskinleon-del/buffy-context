@@ -1,0 +1,22 @@
+# skill.yaml — manifiesto machine-readable (contrato B2). Validado por scripts/skill-lint.sh.
+id: hyperos-hardening
+name: hyperos-hardening
+version: 1.0.0
+description: "Endurecimiento de Xiaomi HyperOS/MIUI: desbloqueo, gestión de permisos, publicidad y privacidad vía ADB/rish/Shizuku."
+entry: SKILL.md
+safe: false
+requires_sudo: false
+platforms: [android, linux]
+triggers:
+  - hyperos
+  - miui
+  - xiaomi
+  - privacy
+  - hardening
+capabilities:
+  - device-hardening
+  - privacy
+  - permissions
+dependencies:
+  - xiaomi-adb-tricks
+  - shizuku-rikka

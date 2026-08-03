@@ -1,0 +1,20 @@
+# skill.yaml — manifiesto machine-readable (contrato B2). Validado por scripts/skill-lint.sh.
+id: context7
+name: context7
+version: 1.0.0
+description: "Documentación actualizada de librerías, frameworks, APIs y SDKs vía el CLI ctx7. Se activa siempre que se necesite documentación de una librería."
+entry: SKILL.md
+safe: true
+requires_sudo: false
+platforms: [linux]
+triggers:
+  - ctx7
+  - documentation
+  - docs
+  - library
+  - sdk
+  - api
+capabilities:
+  - documentation
+  - research
+dependencies: []

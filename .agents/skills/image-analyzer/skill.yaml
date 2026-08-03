@@ -1,0 +1,18 @@
+# skill.yaml — manifiesto machine-readable (contrato B2). Validado por scripts/skill-lint.sh.
+id: image-analyzer
+name: image-analyzer
+version: 1.0.0
+description: "Analisis y procesamiento de imagenes (Python + Pillow + Tesseract OCR)."
+entry: SKILL.md
+safe: true
+requires_sudo: false
+platforms: [linux]
+triggers:
+  - imagen
+  - ocr
+  - vision
+  - procesar
+capabilities:
+  - image-processing
+  - ocr
+dependencies: []
