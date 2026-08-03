@@ -20,7 +20,7 @@ This repository provides the infrastructure for an AI agent to maintain persiste
 | Component | Purpose |
 |---|---|
 | **Memory persistence** | Protocol for loading/saving session context so the AI never starts blank |
-| **Knowledge base** | 17 files of curated technical reference across 7 categories + Vision.md |
+| **Knowledge base** | 18 files of curated technical reference across 7 categories + Vision.md |
 | **23 skills** | Especializadas por dominio, cada una con `skill.yaml` machine-readable |
 | **Android Agent** | Dedicated skill that auto-detects Android projects and activates relevant tools |
 | **Detection scripts** | Shell scripts for system snapshots and Android diagnostics |

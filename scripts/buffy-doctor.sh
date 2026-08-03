@@ -223,6 +223,7 @@ declare -A KNOWLEDGE_EXPECTED=(
   [Android/GameOptimization.md]="Android"
   [Android/scrcpy.md]="Android"
   [Android/Keymappers.md]="Android"
+  [Android/NubiaLab.md]="Android"
   [Linux/System.md]="Linux"
   [Linux/Kernel.md]="Linux"
   [React/React.md]="React"

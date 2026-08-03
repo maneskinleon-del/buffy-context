@@ -2,7 +2,7 @@
 
 > Base de conocimiento estructurada para consulta rápida por agentes IA.
 > Contenido extraído y resumido de skills, proyectos y experiencia acumulada.
-> Actualizado: 2026-08-01
+> Actualizado: 2026-08-03
 
 ---
 
@@ -19,7 +19,8 @@ Knowledge/
 │   ├── HyperOS.md          → Hardening HyperOS/Xiaomi (debloat, privacidad)
 │   ├── GameOptimization.md → Optimización de juegos Android (CPU, GPU, thermal)
 │   ├── scrcpy.md           → scrcpy + Free Fire (diagnóstico, perfiles)
-│   └── Keymappers.md       → GG Mouse Pro, Mantis, Panda Mouse, Octopus
+│   ├── Keymappers.md       → GG Mouse Pro, Mantis, Panda Mouse, Octopus
+│   └── NubiaLab.md         → Laboratorio ZTE Nubia (setup, purga, qué no tocar)
 │
 ├── Linux/                  → Arch, bspwm, systemd, picom, kernel
 │   ├── System.md           → Gestión del sistema (pacman, systemd, WM, compositor)
@@ -67,6 +68,7 @@ Para **mangonz**: cuando aprendas algo nuevo y quieras guardarlo:
 | `Android/HyperOS.md` | `.agents/skills/hyperos-hardening/` |
 | `Android/GameOptimization.md` | `.agents/skills/android-game-opt/` |
 | `Android/scrcpy.md` | `.agents/skills/scrcpy-freefire/` |
+| `Android/NubiaLab.md` | `.agents/skills/android-adb/` · `.agents/skills/scrcpy-freefire/` · `.agents/skills/shizuku-rikka/` |
 | `React/Vite.md` | `.agents/skills/vite/` |
 | `React/Tailwind.md` | `.agents/skills/tailwind-design-system/` |
 | `React/PWA.md` | Proyectos `pwa_securguard`, `widgetos` |
