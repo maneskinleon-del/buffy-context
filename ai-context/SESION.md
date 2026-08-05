@@ -4,6 +4,42 @@
 
 ---
 
+## 🚗 data_car — Fixes de extracción MG 350 (commit 6b3e352, pusheado)
+
+### Bug crítico resuelto — transmission_oil "18. L" → "2 L"
+La keyword `/transmisi[oó]n\s*[:：]/` **no tenía el flag `/i`**. El manual usa "**T**ransmisión:" con mayúscula (p.75: "Transmisión: Llene Relleno seca **2 L** 2,2"), así que el regex case-sensitive nunca matcheaba → la regla caía en el patrón laxo que capturaba el "18. L" de una tabla de tornillería (p.398). Fue el único `fieldKeyword` de las 16 reglas sin `/i` (verificado por charCodes con script de debug). Fix: flag `/i` + patrón estricto `(\d+(?:[.,]\d+)?)` que rechaza números truncados tipo "18. L" sin perder "2,9 l" → **"2 L" @80% p.75**.
+
+### Otras reglas arregladas (evidencia del manual)
+- **`wheel_torque`** → "115-130 Nm" @65% p.517 (keywords `tornillos? de rueda`/`pernos? de rueda`/`wheel bolt` + lookahead anti "rueda dentada") + mapeo nuevo `→ torqueTornillos` en specsSync.
+- **`compression`** → renombrada "Relación de Compresión": el manual publica "Índice de compresión 10.5: 1" (p.79), no psi. Patrón de ratio + bonus de confianza +0.3 por formato → **"10.5: 1" @65%**.
+- **`valve_clearance`** → keyword `/v[aá·]lvulas?:/i` tolera el á corrupto (·) → "8.2 mm" @80% p.83.
+- **`tire_size`** → keyword "tamaño" agregada → "205/55 R16" @60% p.598.
+- **`normalizeText`** → mapea caracteres corruptos del text-layer (í→Ì, é→È, ú→˙, ñ→Ò) → desbloquea brake_fluid (DOT4), oil_filter (BLT200010), air_filter (FN745).
+- **Datos ausentes (no extraíbles)**: `tire_pressure` (solo TPMS sin valores; los 93-123 kPa son tapa del radiador) y `brake_pad` (sin espesor mm). No hay correa: el MG 350 usa **cadena** de distribución sin intervalo publicado.
+
+### Resultado verificado
+Cobertura **83%** · 12 componentes con datos · **7 campos sincronizados**: aceiteMotor=4,5 l · aceiteCaja=**2 L** · refrigerante=7.3 L · bujias=0,9 mm · dimensionNeumaticos=205/55 R16 · capacidadEstanque=55 L · torqueTornillos=115-130 Nm. Lint EXIT 0 + build ✅. Push `89f74cf..6b3e352 main -> main` ✅.
+
+---
+
+## 🧠 Freebuff — "temporarily busy" (429, modo limited) investigado + wrapper `fb-wait`
+
+### Causa raíz (binario `~/.config/manicode/freebuff`, v0.0.138)
+El mensaje `_qH = "Freebuff is temporarily busy. Please try again in a moment."` se dispara **solo con HTTP 429**: `QqH(H) { if (A.statusCode !== 429) return null; ... }`. Niveles de espera hardcodeados (sin config editable — no hay `settings.json` ni env `CODEBUFF_*` para esto):
+- Cliente HTTP: `MB$ = {maxRetries:3, initialDelayMs:1000, maxDelayMs:1e4}` (retryable: 408/429/500/502/503/504).
+- SDK AI: `maxRetries:2` + respeta `Retry-After` (cap 60s o backoff).
+- Polling sesión free: `G4$ = 30000` (30s) + backoff `nl()` exponencial con **cap 300000ms (5 min)**; respeta `Retry-After` del servidor.
+
+Freebuff es TUI interactiva pura (solo acepta `login` como subcomando; sin modo one-shot con prompt). El mensaje aparece cuando los 2-3 reintentos rápidos se agotan; no hay loop "esperar 5 min y reintentar solo".
+
+### Solución — `~/.local/bin/fb-wait` (NUEVO, en PATH)
+Launcher de guardia que lanza Freebuff y, al salir, revisa la **cola** (tail 8KB) del `log.jsonl` de la sesión más reciente (ordenada por **mtime real** vía `find -printf '%T@'`, no por nombre — bug inicial de `sort -r` corregido). Si detecta 429 busy → espera `FB_WAIT_MIN` (default 5 min) → relanza con `--continue` (retoma la conversación) hasta `FB_MAX_RETRIES` (default 10).
+- Ctrl+C **con** busy reciente → reintenta (caso más común, corregido tras code review); Ctrl+C/error genérico **sin** busy → sale sin reintentar.
+- Valida env vars numéricas (`FB_WAIT_MIN=abc` → error claro). Alcance documentado: no reintenta el prompt en vivo (la TUI no termina al ver busy); automatiza "salir → esperar → relanzar".
+- Probado con mocks (5 escenarios: busy→ok, ctrl-c con/sin busy, error genérico, env inválido) ✅.
+
+---
+
 ## 🚗 data_car — Sync Base Técnica → Ficha del vehículo (commit 89f74cf)
 
 ### Contexto
