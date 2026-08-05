@@ -1,3 +1,65 @@
+# 🧠 SESION — Buffy Freebuff (2026-08-05)
+
+> Contexto de todo lo implementado durante esta sesión.
+
+---
+
+## 🚗 data_car — Sync Base Técnica → Ficha del vehículo (commit 89f74cf)
+
+### Contexto
+Sesión retomada tras un reinicio (combinación de teclas bloqueó el teclado). El WIP de la sesión anterior sobrevivió en disco pero no estaba commiteado; el último commit (`2bb0bb7`) sí estaba pusheado.
+
+### Cambios commiteados y pusheados (`89f74cf`, 6 archivos, +592/-175)
+- **`src/lib/specsSync.ts`** (NUEVO): puente Base Técnica → ficha. Solo sincroniza datos con confianza ≥ 0.5. Auto-sync (`force=false`) llena solo campos vacíos; botón "Sincronizar ficha" (`force=true`) sobreescribe. Toasts con etiquetas legibles.
+- **`src/lib/technicalExtractor.ts` (v2 — cobertura honesta)**:
+  - Confianza parte en 0 y suma solo por evidencia: unidad (+0.3), cercanía keyword ≤180 chars (+0.25/0.15/0.1), sección que matchea la regla (+0.2), formato especificación (+0.15), formato parte (+0.2), formato neumático (+0.35), keyword en ventana (+0.1).
+  - Cada candidato trackea `page` + `section` del manual (procedencia).
+  - Se descartan matches sin keyword cerca y candidatos con confianza < 0.3.
+  - Componentes solo con ≥1 dato llenado; cobertura = reglas requeridas con datos reales.
+  - `buildDatabase()` cacheada; `searchComponent` usa la cache.
+- **`src/components/TechnicalDatabase.tsx`**: extracción por páginas (`pdfPages`), auto-sync al montar (bases construidas antes del sync), cobertura por sistema = llenados/reglas (`SYSTEM_RULE_COUNTS`), invalida `extractorRef` al cambiar PDF, botón "Sincronizar ficha".
+- **`src/App.tsx`**: merge `{...defaults, ...saved}` al cargar specs (campos nuevos no quedan `undefined` → inputs no controlados).
+- **`src/components/SpecForm.tsx`**: nuevos campos aceite caja, refrigerante, líquido frenos, bujías; panel "Electrónica & Luz" → "Sistemas y Líquidos".
+- **`src/types.ts`**: eliminado campo `alfombra`.
+
+### Validación
+`npm run lint` (tsc --noEmit) ✅ · `npm run build` ✅ · push por SSH `2bb0bb7..89f74cf main -> main` ✅ · HEAD == origin/main ✅
+
+---
+
+## 🧠 Freebuff — Por qué las sesiones arrancaban sin contexto (resuelto)
+
+### Causa raíz
+Freebuff es el cliente de Codebuff (binario Bun en `~/.config/manicode/freebuff` v0.0.138, repo privado `CodebuffAI/freebuff-private`). Al iniciar sesión **auto-inyecta** en el prompt del sistema los archivos llamados exactamente:
+- `AGENTS.md`, `CLAUDE.md`, `knowledge.md` / `*.knowledge.md` (en el proyecto)
+- `~/.AGENTS.md`, `~/.CLAUDE.md`, `~/.knowledge.md` (globales del usuario, solo lectura)
+
+Evidencia: binario (lista `["knowledge.md","AGENTS.md","CLAUDE.md"]` + plantilla `{CODEBUFF_KNOWLEDGE_FILES_CONTENTS}`) y docs oficiales codebuff.com/docs ("Codebuff will also read these files").
+
+El archivo del usuario se llamaba **`AGENTS-root.md`** → no matcheaba ningún nombre reconocido → **cero knowledge files cargados** → el agente arrancaba sin memoria (aunque `ai-context/` estaba intacta).
+
+### Solución
+- Creado **`~/.AGENTS.md`** = copia de `AGENTS-root.md` (825 B). Se carga en TODA sesión, sin importar el proyecto. Apunta al protocolo: leer `ai-context/INFO-core.md` → `SNAPSHOT.md` → `CONTINUE.md`.
+- `~/.AGENTS.md` es de solo lectura para el agente (fuera del proyecto) — los cambios se hacen en `AGENTS-root.md` y se re-copian.
+
+### Lecciones
+- El nombre del archivo importa: `AGENTS-root.md` ≠ `AGENTS.md` para la auto-carga.
+- Los knowledge files se inyectan completos al prompt → mantenerlos livianos (puntero, no memoria entera).
+- Complemento: `freebuff --continue` retoma la conversación anterior (historial en `~/.config/manicode/message-history.json`).
+
+---
+
+## 📁 Archivos modificados/creados (sesión 2026-08-05)
+
+| Archivo | Cambio |
+|---------|--------|
+| `~/data_car/` (6 archivos) | commit `89f74cf` — sync Base Técnica → ficha + cobertura honesta |
+| `~/.AGENTS.md` | **NUEVO** — auto-carga global de contexto en Freebuff |
+| `ai-context/CONTINUE.md` | ✅ Regenerado (handoff 2026-08-05) |
+| `ai-context/SESION.md` | ✅ Esta entrada |
+
+---
+
 # 🧠 SESION — Buffy Freebuff (2026-07-26)
 
 > Contexto de todo lo implementado durante esta sesión.
@@ -1356,3 +1418,23 @@ El CSV exportado se veía "todo en una columna" / "incidencia hacia abajo en una
 ---
 
 *Fin de la sesión — Última actualización: 2026-08-03*
+
+## 2026-08-04 — SecurGuard AI fixes + Perfil de Manu
+
+### Fixes aplicados a SecurGuard AI (pwa_securguard)
+- `handleResetDay` ahora limpia TODO (logs + personas) — como Manu pidió
+- `readArray` trata arrays vacíos como "sin datos" → carga defaults
+- Botón eliminar chofer individual (✕) en PersonasTab
+- Quitar CCTV feed de PersonasTab
+- Lista de choferes con editar (✏️) en PersonasTab
+- `handleUpdatePersona` NO toca activeInside — entrada/salida conservan datos originales
+- ControlTab muestra datos actuales del persona (merge con master list)
+- Búsqueda incluye campo `type`
+- Botón "Restaurar Personas de Ejemplo"
+- `handleFactoryReset` restaura defaults en vez de dejar vacío
+
+### Perfil guardado
+- Archivo: `buffy-context/USER-MANU.md`
+- Manu prefiere ejecución directa, no sugerencias
+- Stack: Linux/Android/React/TS/Vite/PWA
+- Proyectos: SecurGuard, buffy-context, WidgetOS, GameBoostPro, Gmail Organizer
