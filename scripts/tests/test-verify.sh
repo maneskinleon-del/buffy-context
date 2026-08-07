@@ -63,34 +63,6 @@ test_verify_quick() {
   jassert "--json: todos los hechos son verified/stale/unknown/expired (sections marcadas aparte)" "$J" 'import json,sys; d=json.load(sys.stdin); assert all(i["level"] in ("verified","stale","unknown","expired","section") for i in d["items"]); assert all(i["level"] in ("verified","stale","unknown","expired") for i in d["items"] if i["fact"] != "--")'
 }
 
-test_verify_provenance() {
-  suite "verify: provenance (--update-facts)"
-  # Sandbox ligero: genera facts.yaml en un repo temporal para no tocar el real.
-  # OJO: NO usar trap RETURN con path basado en $$ — los traps se acumulan
-  # entre tests y un rm posterior de otro test dispararía el trap anterior.
-  local BH="${TMPDIR:-/tmp}/buffy-verify-facts-$$-provenance"
-  rm -rf "$BH"; mkdir -p "$BH"
-  cp -r "$REPO_DIR" "$BH/repo"
-  rm -f "$BH/repo/ai-context/facts.yaml"
-  HOME="$BH/home" bash "$SCRIPTS_DIR/buffy-verify.sh" --update-facts --repo "$BH/repo" >/dev/null 2>&1
-  if [ -f "$BH/repo/ai-context/facts.yaml" ]; then
-    ok "--update-facts genera ai-context/facts.yaml"
-  else
-    bad "--update-facts genera ai-context/facts.yaml"; return
-  fi
-  local FY="$BH/repo/ai-context/facts.yaml"
-  if grep -q '^facts:' "$FY"; then
-    ok "YAML con raíz 'facts:'"
-  else
-    bad "YAML con raíz 'facts:'"
-  fi
-  jassert "schema de cada hecho (value/source/confidence/status/verified/scope/ttl_days)" "$(cat "$FY")" 'import yaml,sys; d=yaml.safe_load(sys.stdin); f=d["facts"]; assert len(f)>0, "sin hechos"; assert all(set(v.keys())=={"value","source","confidence","status","verified","scope","ttl_days"} for v in f.values()), [v for v in f.values() if set(v.keys())!={"value","source","confidence","status","verified","scope","ttl_days"}]'
-  jassert "scope presente y ttl_days entero positivo" "$(cat "$FY")" 'import yaml,sys; d=yaml.safe_load(sys.stdin); assert all(isinstance(v["scope"], str) and v["scope"] for v in d["facts"].values()); assert all(isinstance(v["ttl_days"], int) and v["ttl_days"] > 0 for v in d["facts"].values())'
-  jassert "confidence 1.0 para verified, <1.0 para stale/unknown" "$(cat "$FY")" 'import yaml,sys; d=yaml.safe_load(sys.stdin); assert all(v["confidence"]==1.0 if v["status"]=="verified" else v["confidence"]<1.0 for v in d["facts"].values())'
-  jassert "fecha de verificación válida (YYYY-MM-DD)" "$(cat "$FY")" 'import yaml,sys,datetime; d=yaml.safe_load(sys.stdin); assert all(datetime.date.fromisoformat(v["verified"]) for v in d["facts"].values())'
-  rm -rf "$BH"
-}
-
 test_verify_fixture_stale() {
   # Fixtures controlados (P1 auditoría 2): detección de stale DETERMINÍSTICA,
   # sin depender de la máquina del runner. Se copia el repo a un sandbox, se
@@ -136,11 +108,18 @@ test_verify_ttl_expired() {
   # Test adversarial (hallazgo en prueba E2E): el TTL de facts.yaml DEBE
   # enforzarse. Si un hecho dice verified=2025 con ttl=30, verify lo reporta
   # como EXPIRED (no verified) y el trust baja — antes daba trust 100%.
+  # Self-contained: genera facts.yaml en el sandbox (es gitignored — no existe
+  # en un checkout fresco de CI) y luego envejece sus fechas.
   suite "verify: TTL vencido (facts.yaml previo)"
   local BH="${TMPDIR:-/tmp}/buffy-verify-ttl-$$-fixture"
   rm -rf "$BH"; mkdir -p "$BH"
   cp -r "$REPO_DIR" "$BH/repo"
   rm -rf "$BH/repo/.git"
+  HOME="$BH/home" bash "$SCRIPTS_DIR/buffy-verify.sh" --update-facts --repo "$BH/repo" >/dev/null 2>&1
+  if [ ! -f "$BH/repo/ai-context/facts.yaml" ]; then
+    bad "fixture: no pude generar facts.yaml"
+    return
+  fi
   python3 -c "
 import yaml
 p = '$BH/repo/ai-context/facts.yaml'
@@ -171,7 +150,9 @@ test_source_hierarchy() {
   rm -rf "$BH"; mkdir -p "$BH"
   cp -r "$REPO_DIR" "$BH/repo"
   rm -rf "$BH/repo/.git"
-  # facts.yaml: codegraph VERIFICADO (confianza 1.0, TTL vigente)
+  # facts.yaml: gitignored → lo genero en el sandbox (no existe en CI fresco)
+  HOME="$BH/home" bash "$SCRIPTS_DIR/buffy-verify.sh" --update-facts --repo "$BH/repo" >/dev/null 2>&1
+  # codegraph VERIFICADO (confianza 1.0, TTL vigente)
   python3 -c "
 import yaml
 p = '$BH/repo/ai-context/facts.yaml'
@@ -192,6 +173,34 @@ open(p, 'w').write(yaml.dump(d, sort_keys=False, allow_unicode=True))
   local OUT2
   OUT2=$(bash "$SCRIPTS_DIR/buffy-source.sh" --resolve uv --json --repo "$BH/repo" 2>/dev/null)
   jassert "sin fuentes → inferred" "$OUT2" 'import json,sys; d=json.load(sys.stdin); assert d["source"]=="inferred" and d["value"] is None, d'
+  rm -rf "$BH"
+}
+
+test_verify_provenance() {
+  suite "verify: provenance (--update-facts)"
+  # Sandbox ligero: genera facts.yaml en un repo temporal para no tocar el real.
+  # Self-contained: genera el archivo (gitignored → no existe en CI fresco).
+  local BH="${TMPDIR:-/tmp}/buffy-verify-facts-$$-provenance"
+  rm -rf "$BH"; mkdir -p "$BH"
+  cp -r "$REPO_DIR" "$BH/repo"
+  rm -rf "$BH/repo/.git"
+  rm -f "$BH/repo/ai-context/facts.yaml"
+  HOME="$BH/home" bash "$SCRIPTS_DIR/buffy-verify.sh" --update-facts --repo "$BH/repo" >/dev/null 2>&1
+  if [ -f "$BH/repo/ai-context/facts.yaml" ]; then
+    ok "--update-facts genera ai-context/facts.yaml"
+  else
+    bad "--update-facts genera ai-context/facts.yaml"; rm -rf "$BH"; return
+  fi
+  local FY="$BH/repo/ai-context/facts.yaml"
+  if grep -q '^facts:' "$FY"; then
+    ok "YAML con raíz 'facts:'"
+  else
+    bad "YAML con raíz 'facts:'"
+  fi
+  jassert "schema de cada hecho (value/source/confidence/status/verified/scope/ttl_days)" "$(cat "$FY")" 'import yaml,sys; d=yaml.safe_load(sys.stdin); f=d["facts"]; assert len(f)>0, "sin hechos"; assert all(set(v.keys())=={"value","source","confidence","status","verified","scope","ttl_days"} for v in f.values()), [v for v in f.values() if set(v.keys())!={"value","source","confidence","status","verified","scope","ttl_days"}]'
+  jassert "scope presente y ttl_days entero positivo" "$(cat "$FY")" 'import yaml,sys; d=yaml.safe_load(sys.stdin); assert all(isinstance(v["scope"], str) and v["scope"] for v in d["facts"].values()); assert all(isinstance(v["ttl_days"], int) and v["ttl_days"] > 0 for v in d["facts"].values())'
+  jassert "confidence 1.0 para verified, <1.0 para stale/unknown" "$(cat "$FY")" 'import yaml,sys; d=yaml.safe_load(sys.stdin); assert all(v["confidence"]==1.0 if v["status"]=="verified" else v["confidence"]<1.0 for v in d["facts"].values())'
+  jassert "fecha de verificación válida (YYYY-MM-DD)" "$(cat "$FY")" 'import yaml,sys,datetime; d=yaml.safe_load(sys.stdin); assert all(datetime.date.fromisoformat(v["verified"]) for v in d["facts"].values())'
   rm -rf "$BH"
 }
 
