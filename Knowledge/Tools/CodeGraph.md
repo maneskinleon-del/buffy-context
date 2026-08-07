@@ -85,6 +85,51 @@ Servidor MCP configurado en 4 agentes (herramienta única **`codegraph_explore`*
 | `codegraph impact AppViewModel` | 47 símbolos en 2 archivos (6 call-sites en MainActivity) |
 | `explore "system critical apps Device Admin warning"` | 58 símbolos en 4 archivos: showAdminWarning (MainActivity:520), showCriticalAppWarning (:691), removeAdmin/listActiveAdmins con tests, isCriticalSystemApp sin tests |
 | `explore "cleanCache cleanAppCache"` | Cadena completa cleanCache (AppViewModel:202) → CleanCacheUseCase → cleanAppCache (AppRepositoryImpl:165) vía Shizuku; toda la cadena sin tests |
+| `agy --print` con MCP (ManUninstaller) | Flujo de desinstalación con línea 208 de `removeAdmin` — ver sección de pruebas end-to-end |
+| `agy --print` con MCP (autoscript) | Flujo de boost con facade 1 línea (:215) y 3 fallbacks de ejecución — ver sección de pruebas end-to-end |
+
+---
+
+## 🧪 Pruebas end-to-end con `agy` (Antigravity) — verificadas
+
+Comando usado (desde la raíz del proyecto indexado):
+```bash
+agy --print '<pregunta en lenguaje natural>' --dangerously-skip-permissions
+```
+`--dangerously-skip-permissions` auto-aprueba las herramientas para que el MCP ejecute sin prompt interactivo.
+
+### Flujo de desinstalación (ManUninstaller) — EXITOSA
+Pregunta: *"quien llama a removeAdmin y como llega MainActivity hasta ShizukuUserService"*
+
+```
+MainActivity (314-316 / 490 / 579-582)
+  └─→ AppViewModel.uninstallSelected() (344-383)
+        └─→ UninstallAppsUseCase.invoke() (14-19)
+              └─→ AppRepositoryImpl.uninstallApps() (189-249)
+                    ├─→ DeviceAdminUtils.removeAdmin() (38-59)   ← llamada en línea 208
+                    └─→ ShizukuUserService.exec() (24-50)
+```
+Hallazgo: `removeAdmin` se invoca en la **línea 208** de `uninstallApps` cuando la app seleccionada es Device Admin activo.
+
+### Flujo de boost (autoscript-mobile-interface) — EXITOSA
+Pregunta: *"como viaja toggleBoost desde la UI hasta el comando shell privilegiado"*
+
+```
+UI/ViewModel
+  └─→ GameBoostRepository.toggleBoost()     GameBoostRepository.kt:215  ← facade de 1 línea
+        └─→ GameSessionManager.toggleBoost()  GameSessionManager.kt:161-232
+              ├─ ensureBoostServiceRunning()   :179
+              ├─ applyBoostSettings()          :195 (o restoreSettings() :251)
+              │     ├─ executePrivilegedCommands(animCommands)  :212
+              │     └─ "settings put global zen_mode 2"          :229
+              └─→ ShizukuExecutor.runCommand()  ShizukuExecutor.kt:87-125
+                    ├─ Shizuku IPC (createShizukuProcess)  ← camino privilegiado
+                    ├─ Fallback 1 → RishExecutor.kt:68 (uid 2000 shell)
+                    └─ Fallback 2 → Runtime.exec() no privilegiado
+```
+Bonus: el grafo reveló la **triple vía de ejecución** (Shizuku → rish → Runtime) y los 11 consumers de `GameBoostRepository`.
+
+Ambas respuestas con líneas **coincidentes con el índice** (verificadas contra `codegraph query`) y **sin errores de MCP**.
 
 ---
 
