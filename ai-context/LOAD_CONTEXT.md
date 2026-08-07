@@ -61,6 +61,21 @@ dato de la doc; usa el valor real. Preferencia vs hecho confirmado:
 > herramienta): añade su entrada al YAML — no hace falta tocar `buffy-verify.sh`
 > ni el motor (`scripts/lib/facts_engine.py`).
 
+> 🏛️ **Jerarquía de autoridad de fuentes** (cuando las fuentes se contradicen,
+> gana la de MAYOR autoridad — `scripts/buffy-source.sh --resolve <fact>`):
+>```
+> 1. REAL-TIME SYSTEM  → valor observado AHORA (comandos del sistema)
+> 2. FACTS (verified)  → facts.yaml con confidence 1.0 y TTL vigente
+> 3. SNAPSHOT          → estado vivo generado (buffy-context.sh)
+> 4. CONTINUE          → handoff de la última sesión
+> 5. INFO-core         → contexto base documentado
+> 6. INFERRED          → sin dato: inferencia marcada como tal
+>```
+> Ejemplo: si USER dice "uso Hyprland" pero el sistema reporta bspwm → gana
+> el sistema (nivel 1). El resolver además reporta los CONFLICTOS (fuentes de
+> menor autoridad que discrepan), para que el agente sepa que hay contradicción.
+> `--no-live` ignora el nivel 1 (útil en CI o para resolver solo la doc).
+
 ### Paso 4 — Bitácora (OPCIONAL — con límite)
 ```markdown
 ai-context/SESION.md     → SOLO las últimas 5 entradas (cabeceras visibles)
