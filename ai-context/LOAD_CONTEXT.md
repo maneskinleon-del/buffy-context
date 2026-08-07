@@ -52,6 +52,14 @@ dato de la doc; usa el valor real. Preferencia vs hecho confirmado:
 - `source: system` + `confidence: 1.0` → hecho verificado contra el sistema
 - `source: user` + `confidence: 1.0` → preferencia explícita del usuario
 - `source: inferred` + `confidence: < 1.0` → inferencia, verificar antes de usar
+- `scope` → máquina a la que aplica el hecho (hostname por defecto;
+  `--scope NOM` para otras: Termux, servidor, CI). Si el scope no es esta
+  máquina, NO uses el valor como si fuera local.
+
+> 🔧 **Reglas declarativas**: qué hechos verificar y con qué comando viven en
+> `ai-context/facts_rules.yaml` (catálogo). Para agregar un hecho nuevo (ej. una
+> herramienta): añade su entrada al YAML — no hace falta tocar `buffy-verify.sh`
+> ni el motor (`scripts/lib/facts_engine.py`).
 
 ### Paso 4 — Bitácora (OPCIONAL — con límite)
 ```markdown
