@@ -9,6 +9,13 @@ system-id: mangonz-desktop
 
 > Este archivo cambia seguido. Actualizar cuando un proyecto avanza de fase o cambia de stack/deploy.
 
+## Escritorio — Rice "vista" (estilo Windows Vista Aero)
+- **Qué:** rice nuevo del sistema gh0stzk (`~/.config/bspwm/rices/vista/`) — el escritorio actual se ve como Windows Vista Aero
+- **Aplicado:** 2026-08-07 · `.rice` → `vista` (backup en `~/.config/bspwm/.rice.bak` = cynthia)
+- **Componentes:** wallpaper aurora Vista auténtico (wall-03.webp), barra de tareas inferior con botón Start (logo Windows U+F17A FA7 Brands) + inicio rápido + workspaces estilo botones de tarea + reloj; barra superior fina; picom blur activo (vidrio) + corner-radius 8; GTK MonochromeBlue-zk; rofi azul Aero; alacritty opacity 0.92; bordes bspwm azules
+- **Revertir:** `RiceSelector` (clic derecho en launcher) → elegir `cynthia`, o `echo cynthia > ~/.config/bspwm/.rice && ~/.config/bspwm/bin/Theme.sh` + reiniciar picom
+- **Nota:** se añadió `blur-background = true` a la regla dock de `picom-rules.conf` (compartida — las barras translúcidas de cualquier rice ahora hacen blur)
+
 ## TimeMark
 - **Objetivo:** watermark/timestamp para fotos de seguridad de campo
 - **Stack:** React + TypeScript + Tailwind v4 + Vite

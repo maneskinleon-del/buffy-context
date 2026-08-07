@@ -40,7 +40,7 @@ Qué se hizo, en qué quedó, qué pendientes hay. **Es el archivo más importan
 
 ### Paso 4 — Bitácora (OPCIONAL — con límite)
 ```markdown
-ai-context/SESION.md     → SOLO las últimas 3 entradas (cabeceras visibles)
+ai-context/SESION.md     → SOLO las últimas 5 entradas (cabeceras visibles)
                            El archivo completo puede ser grande. No lo leas entero
                            a menos que la tarea requiera buscar algo específico.
                            Histórico completo en ai-context/SESION-archive.md.
@@ -73,10 +73,12 @@ Se agrega una entrada al principio del archivo (no al final — así la info fre
 ...
 ```
 
-> ⚠️ **Poda automática**: Cuando SESION.md o CHANGELOG.md superen ~30KB
-> o ~5 entradas (lo que se alcance primero), las entradas más viejas se mueven
-> a `*-archive.md`. Así el archivo activo se mantiene liviano (~30KB =
-> ~5-10% de la ventana de DeepSeek V4 Flash).
+> ⚠️ **Poda automática (regla única)**: SESION.md y CHANGELOG.md se podan con
+> el primer límite que se alcance: **máximo 5 entradas O ~30KB**. Las entradas
+> más viejas se mueven a `*-archive.md`. Así el archivo activo se mantiene
+> liviano (~30KB ≈ 5-10% de la ventana de DeepSeek V4 Flash).
+> Las 3 políticas anteriores (3 entradas / 5 entradas / 30KB) quedaron
+> unificadas en esta regla: **5 entradas o 30KB, lo que ocurra primero**.
 
 ---
 
@@ -216,7 +218,7 @@ ai-context/
 ├── SNAPSHOT.md           ← Estado vivo del sistema (cargar SIEMPRE, regenerable)
 ├── CONTINUE.md           ← Handoff entre sesiones (cargar SIEMPRE)
 │
-├── SESION.md             ← Últimas 3-5 entradas (cargar solo si la tarea lo requiere)
+├── SESION.md             ← Últimas 5 entradas (cargar solo si la tarea lo requiere)
 ├── SESION-archive.md     ← Histórico completo (casi nunca se carga)
 │
 ├── PROJECTS.md           ← Detalle de proyectos (cargar solo si menciona un proyecto)
