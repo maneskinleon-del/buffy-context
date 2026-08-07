@@ -131,3 +131,37 @@ test_verify_fixture_stale() {
   jassert "versión de node falsa detectada como stale (VERSION_STALE)" "$OUT2" 'import json,sys; d=json.load(sys.stdin); n=[i for i in d["items"] if i["fact"]=="node"]; assert n and n[0]["level"]=="stale" and n[0].get("id")=="VERSION_STALE", n'
   rm -rf "$BH"
 }
+
+test_verify_engine_hardening() {
+  # Hardening auditoría 3: el motor NUNCA ejecuta con shell. Una regla con
+  # metacaracteres de shell (p.ej. "node --version; rm -rf /tmp/x") debe ser
+  # RECHAZADA (emitida a stderr), jamás ejecutada.
+  suite "verify: hardening del motor (sin shell)"
+  local OUT ERR
+  OUT=$(python3 -c "
+import sys; sys.path.insert(0, '$SCRIPTS_DIR/lib')
+from facts_engine import normalize_command
+ok = True
+try:
+    argv, err = normalize_command(['node', '--version'])
+    assert argv == ['node', '--version'] and not err, (argv, err)
+except AssertionError:
+    ok = False
+argv2, err2 = normalize_command('node --version; rm -rf /tmp/x')
+if argv2:
+    ok = False
+argv3, err3 = normalize_command(['git', '--version'])
+assert argv3 == ['git', '--version'] and not err3
+print('OK' if ok else 'FAIL')
+" 2>&1)
+  if echo "$OUT" | grep -q '^OK$'; then
+    ok "lista de args aceptada y string con metacaracteres rechazado"
+  else
+    bad "hardening del motor: $OUT"
+  fi
+
+  # Integración: verify con reglas YAML en forma de lista funciona igual
+  local J
+  J=$(bash "$SCRIPTS_DIR/buffy-verify.sh" --json 2>/dev/null)
+  jassert "verify con reglas lista sigue reportando git/node/npm" "$J" 'import json,sys; d=json.load(sys.stdin); f={i["fact"] for i in d["items"]}; assert {"git","node","npm"}.issubset(f), f'
+}
