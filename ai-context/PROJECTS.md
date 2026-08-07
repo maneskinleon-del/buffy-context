@@ -1,6 +1,6 @@
 ---
-version: 1.3
-updated: 2026-07-31
+version: 1.4
+updated: 2026-08-06
 schema: system-profile
 system-id: mangonz-desktop
 ---
@@ -46,6 +46,7 @@ system-id: mangonz-desktop
 - **APK:** `app/build/outputs/apk/debug/app-debug.apk`
 - **Dispositivo:** ZTE nubia Neo 2 (Z2352N) — Android 13
 - **Versión actual:** 2.0.0 (versionCode 2)
+- **Descubrimiento de código:** indexado con **CodeGraph** (31 archivos, 486 nodos, 838 aristas) — usar `codegraph explore/query/callers/impact` o la herramienta MCP `codegraph_explore` antes de grep o leer archivos.
 - **Estado:** ✅ Completado — navegación, filtros, App Detail Sheet, pestaña Herramientas, stats reales, paleta púrpura oscura. 29 tests pasan.
 
 ## lista_supermercado / lista_fresh
@@ -57,6 +58,13 @@ system-id: mangonz-desktop
 - **Objetivo:** optimizador gaming para Free Fire vía Shizuku/rish
 - **Plataforma:** AutoJS6 (Android, ZTE Neo 2 5G, Unisoc T820)
 - **Estado:** múltiples versiones — thermal zone discovery dinámico, CPU affinity topology-aware, overlay flotante draggable, módulo de velocidad ADS
+
+## GameBoost Pro (autoscript-mobile-interface — Kotlin nativo)
+- **Objetivo:** optimizador gaming para juegos móviles vía Shizuku + AccessibilityService (versión nativa Kotlin/Compose; ver también GameBoostPro AutoJS6)
+- **Stack:** Kotlin + Jetpack Compose + Material 3 + Room
+- **Ruta:** `~/proyectos/autoscript-mobile-interface/`
+- **Descubrimiento de código:** indexado con **CodeGraph** (49 archivos, 1.084 símbolos, 1.896 aristas) — usar `codegraph explore/query/callers/impact` o la herramienta MCP `codegraph_explore` ANTES de grep o leer archivos. Detalle en `AGENTS.md` del proyecto.
+- **Estado:** activo — monitoreo térmico, gestión de sesión de juego, optimizador de red, overlay flotante de métricas
 
 ## SYSMON (sysmon3.sh + sysmon_ui.js)
 - **Objetivo:** monitor de sistema Android
