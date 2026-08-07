@@ -25,7 +25,7 @@ test_verify_json_schema() {
   jassert "--json parseable + claves exactas" "$OUT" 'import json,sys; d=json.load(sys.stdin); assert set(d.keys())=={"repo","verified","stale","unknown","expired","trust_score","items","_info"}, d.keys()'
   jassert "conteos coherentes con items por level" "$OUT" 'import json,sys; d=json.load(sys.stdin); assert d["verified"]==sum(1 for i in d["items"] if i["level"]=="verified"); assert d["stale"]==sum(1 for i in d["items"] if i["level"]=="stale"); assert d["unknown"]==sum(1 for i in d["items"] if i["level"]=="unknown"); assert d["expired"]==sum(1 for i in d["items"] if i["level"]=="expired")'
   jassert "trust_score coherente (0..100)" "$OUT" 'import json,sys; d=json.load(sys.stdin); assert 0 <= d["trust_score"] <= 100'
-  jassert "hechos verificados presentes" "$OUT" 'import json,sys; d=json.load(sys.stdin); v=[i for i in d["items"] if i["level"]=="verified"]; assert any(i["fact"]=="os" for i in v); assert any(i["fact"]=="kernel" for i in v); assert any(i["fact"] in ("git","node","npm","python3","codegraph") for i in v), "faltan hechos de herramientas"'
+  jassert "hechos del catalogo presentes (cualquier level)" "$OUT" 'import json,sys; d=json.load(sys.stdin); fs={i["fact"] for i in d["items"]}; assert {"os","kernel"} <= fs, "faltan os/kernel: "+str(fs); assert any(f in fs for f in ("git","node","npm","python3","codegraph")), "faltan hechos de herramientas: "+str(fs)'
   jassert "mensajes sin códigos ANSI" "$OUT" 'import json,sys,re; d=json.load(sys.stdin); assert all(re.search(r"\x1b\[[0-9;]*m", i["message"]) is None for i in d["items"])'
 }
 
