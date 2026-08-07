@@ -158,6 +158,43 @@ open(p, 'w').write(yaml.dump(d, sort_keys=False, allow_unicode=True))
   rm -rf "$BH"
 }
 
+test_source_hierarchy() {
+  # Jerarquía de autoridad de fuentes (caso 3 adversarial): cuando las fuentes
+  # se contradicen, gana la de MAYOR autoridad y el conflicto se reporta.
+  # Para aislar la jerarquía del sistema real del runner, se usa el hecho
+  # 'codegraph' (no hay live si se fuerza, pero facts.yaml SÍ tiene valor
+  # verified): facts.yaml dice 1.5.0 y INFO-core dice otra versión → el
+  # resolver DEBE elegir facts.yaml y marcar info-core como conflicto.
+  # (kernel no sirve: el sistema real siempre gana como real-time.)
+  suite "source: jerarquía de autoridad"
+  local BH="${TMPDIR:-/tmp}/buffy-source-$$-fixture"
+  rm -rf "$BH"; mkdir -p "$BH"
+  cp -r "$REPO_DIR" "$BH/repo"
+  rm -rf "$BH/repo/.git"
+  # facts.yaml: codegraph VERIFICADO (confianza 1.0, TTL vigente)
+  python3 -c "
+import yaml
+p = '$BH/repo/ai-context/facts.yaml'
+d = yaml.safe_load(open(p))
+d['facts']['codegraph'] = {'value': '1.5.0', 'source': 'system', 'confidence': 1.0, 'status': 'verified', 'verified': '2026-08-07', 'scope': 'test', 'ttl_days': 30}
+open(p, 'w').write(yaml.dump(d, sort_keys=False, allow_unicode=True))
+"
+  # INFO-core: codegraph con versión DISTINTA (contradice a facts.yaml)
+  sed -i 's/codegraph v[0-9.]*/codegraph v0.0.1/' "$BH/repo/ai-context/INFO-core.md"
+  # --no-live: aísla la jerarquía del sistema real del runner (en CI no hay
+  # código instalado, y en local el real-time siempre ganaría).
+  local OUT
+  OUT=$(bash "$SCRIPTS_DIR/buffy-source.sh" --resolve codegraph --json --no-live --repo "$BH/repo" 2>/dev/null)
+  jassert "gana facts.yaml sobre info-core (codegraph)" "$OUT" 'import json,sys; d=json.load(sys.stdin); assert d["value"]=="1.5.0", d; assert d["source"]=="facts", d'
+  jassert "conflicto con info-core reportado" "$OUT" 'import json,sys; d=json.load(sys.stdin); assert any(c.startswith("info-core") for c in d.get("conflicts", [])), d'
+  # Sin facts.yaml → inferred (uv nunca tiene live ni doc)
+  rm -f "$BH/repo/ai-context/facts.yaml"
+  local OUT2
+  OUT2=$(bash "$SCRIPTS_DIR/buffy-source.sh" --resolve uv --json --repo "$BH/repo" 2>/dev/null)
+  jassert "sin fuentes → inferred" "$OUT2" 'import json,sys; d=json.load(sys.stdin); assert d["source"]=="inferred" and d["value"] is None, d'
+  rm -rf "$BH"
+}
+
 test_verify_engine_hardening() {
   # Hardening auditoría 3: el motor NUNCA ejecuta con shell. Una regla con
   # metacaracteres de shell (p.ej. "node --version; rm -rf /tmp/x") debe ser
