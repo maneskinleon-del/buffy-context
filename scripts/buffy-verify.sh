@@ -8,18 +8,23 @@
 # herramientas de uso frecuente y sus versiones) contra el sistema real
 # (os-release, uname, $SHELL, $XDG_CURRENT_DESKTOP, command -v, versiones).
 #
+# Desde la auditoría 2: los hechos de herramientas/versiones son DECLARATIVOS
+# (ai-context/facts_rules.yaml, consumido por scripts/lib/facts_engine.py) —
+# agregar un hecho nuevo NO requiere tocar este script.
+#
 # La distinción clave: una afirmación puede ser sintácticamente válida pero
 # factualmente obsoleta (ej. "WM: cynthia" cuando ya se cambió el rice, o
 # "npm 11.18.0" cuando ya hay 12.0.1). El doctor la daría por buena; verify no.
 #
 # Uso:
-#   buffy-verify.sh            → Verificación completa (human)
+#   buffy-verify.sh             → Verificación completa (human)
 #   buffy-verify.sh --repo RUTA → Verificar un checkout específico
-#   buffy-verify.sh --quick    → Solo resumen (sin secciones)
-#   buffy-verify.sh --json     → Salida JSON consumible por scripts (python3)
+#   buffy-verify.sh --quick     → Solo resumen (sin secciones)
+#   buffy-verify.sh --json      → Salida JSON consumible por scripts (python3)
 #   buffy-verify.sh --update-facts → Genera/actualiza ai-context/facts.yaml
-#                                    (provenance: source/confidence/verified por hecho)
-#   buffy-verify.sh --help     → Esta ayuda
+#                                    (provenance: source/confidence/scope/verified/ttl)
+#   buffy-verify.sh --scope NOM → Scope para facts.yaml (default: hostname)
+#   buffy-verify.sh --help      → Esta ayuda
 #
 # Exit codes:
 #   0 → Verificación completada (stale/unknown se reportan como warning,
@@ -46,6 +51,7 @@ source "$SCRIPT_DIR/lib/common.sh"
 QUICK_MODE=false
 JSON_MODE=false
 UPDATE_FACTS=false
+SCOPE_NAME="$(hostname 2>/dev/null || echo 'desconocido')"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -53,6 +59,7 @@ while [[ $# -gt 0 ]]; do
     --quick) QUICK_MODE=true; shift ;;
     --json) JSON_MODE=true; shift ;;
     --update-facts) UPDATE_FACTS=true; shift ;;
+    --scope) SCOPE_NAME="$2"; shift 2 ;;
     -h|--help)
       sed -n '2,17p' "$SCRIPT_SRC" | sed 's/^# \{0,1\}//'
       exit 0 ;;
@@ -130,32 +137,20 @@ running() {
   pgrep -x "$1" >/dev/null 2>&1 || pgrep -f "bin/$1" >/dev/null 2>&1
 }
 
-# versión extraída de un comando → limpia a "digitos.digitos.digitos" (tolera prefijos v/V/ver.)
-ver_of() {
-  local out
-  out="$("$@" 2>/dev/null | head -1)"
-  echo "$out" | grep -oE '[vV]?[0-9]+(\.[0-9]+){1,3}' | head -1 | sed 's/^[vV]//'
-}
-
-# version_fact <nombre> <cmd...> — compara la versión del sistema contra la que
-# afirma INFO-core.md. La versión del doc se extrae con el mismo patrón de
-# versión (tolera "git 2.55.0", "node v26.4.0", "npm 11.18.0").
-version_fact() {
-  local nombre="$1"; shift
-  if ! presente "$nombre"; then
-    fact stale "$nombre" "$nombre está documentado pero NO instalado" "TOOL_NOT_INSTALLED" "INFO-core.md"
-    return
-  fi
-  local real doc_ver
-  real="$(ver_of "$@")"
-  doc_ver="$(grep -oE "$nombre[^·|]*?[vV]?[0-9]+(\.[0-9]+){1,3}" "$INFO_CORE" 2>/dev/null | grep -oE '[0-9]+(\.[0-9]+){1,3}' | head -1)"
-  if [ -z "$real" ]; then
-    fact unknown "$nombre" "$nombre presente pero no pude extraer su versión" "" "INFO-core.md" "$real"
-  elif [ -n "$doc_ver" ] && [ "$real" != "$doc_ver" ]; then
-    fact stale "$nombre" "$nombre: doc dice $doc_ver, sistema tiene $real" "VERSION_STALE" "INFO-core.md" "$real"
-  else
-    fact verified "$nombre" "$nombre $real ✓" "" "INFO-core.md" "$real"
-  fi
+# reglas_engine <sección> — delega herramientas/versiones al motor declarativo
+# (facts_rules.yaml). Emite TSV: level|fact|msg|id|target|real → fact()
+reglas_engine() {
+  local line level nombre msg id target real
+  while IFS=$'\t' read -r line; do
+    [ -z "$line" ] && continue
+    level="$(echo "$line" | cut -f1)"
+    nombre="$(echo "$line" | cut -f2)"
+    msg="$(echo "$line" | cut -f3)"
+    id="$(echo "$line" | cut -f4)"
+    target="$(echo "$line" | cut -f5)"
+    real="$(echo "$line" | cut -f6)"
+    fact "$level" "$nombre" "$msg" "$id" "${target:-INFO-core.md}" "$real"
+  done < <(python3 "$SCRIPT_DIR/lib/facts_engine.py" "$REPO_DIR" 2>/dev/null)
 }
 
 # ── Sección: sistema ─────────────────────────────────────
@@ -196,8 +191,14 @@ else
   fact stale "os" "OS: doc no confirma '$OS_REAL'" "OS_STALE" "INFO-core.md" "$OS_REAL"
 fi
 
-check_fact "kernel" "kernel [0-9]" "$KERNEL_REAL" "KERNEL_STALE"
-# (check_fact ya pasa $real a fact para provenance)
+# Kernel: compara la versión que declara el doc contra la real (stale real, no
+# solo presencia del patrón — el fix que pidió la auditoría 2).
+KERNEL_DOC="$(grep -oE 'kernel[[:space:]]+[0-9]+(\.[0-9]+)+[-a-z0-9]*' "$INFO_CORE" | head -1 | grep -oE '[0-9]+(\.[0-9]+)+[-a-z0-9]*')"
+if [ -n "$KERNEL_REAL" ] && [ -n "$KERNEL_DOC" ] && [ "$KERNEL_REAL" != "$KERNEL_DOC" ]; then
+  fact stale "kernel" "kernel: doc dice $KERNEL_DOC, sistema tiene $KERNEL_REAL" "KERNEL_STALE" "INFO-core.md" "$KERNEL_REAL"
+else
+  check_fact "kernel" "kernel [0-9]" "$KERNEL_REAL" "KERNEL_STALE"
+fi
 check_fact "wm" "bspwm" "$WM_REAL" "WM_STALE"
 
 # Rice del WM: extrae el nombre del rice que declara el doc y lo compara con el
@@ -231,25 +232,9 @@ else
   fact unknown "compositor" "Compositor: no veo picom corriendo (¿X no iniciado?)" "" "INFO-core.md"
 fi
 
-# Herramientas documentadas en "Herramientas de uso frecuente" (presencia)
-section "🛠️  Herramientas (presencia)"
-for t in git node npm python3 cargo rustc adb fastboot gh vercel uv codegraph; do
-  if has "$INFO_CORE" "$t"; then
-    if presente "$t"; then
-      fact verified "$t" "$t instalado ✓" "" "INFO-core.md" "instalado"
-    else
-      fact stale "$t" "$t documentado en INFO-core pero NO instalado" "TOOL_NOT_INSTALLED" "INFO-core.md" "no instalado"
-    fi
-  fi
-done
-
-# Versiones exactas que el doc afirma (tolera prefijos v/V)
-section "🔢 Versiones (doc vs sistema)"
-version_fact git git --version
-version_fact node node --version
-version_fact npm npm --version
-version_fact python3 python3 --version
-version_fact codegraph codegraph --version
+# Herramientas + versiones: reglas declarativas (ai-context/facts_rules.yaml)
+section "🛠️  Herramientas y versiones (reglas declarativas)"
+reglas_engine
 
 # ── Provenance (--update-facts) ──────────────────────────
 # Genera ai-context/facts.yaml: registro machine-readable de QUÉ sabemos,
@@ -262,12 +247,13 @@ if [ "$UPDATE_FACTS" = true ]; then
   # Se serializa con python3: el TSV de FACT_VALUES/FACT_LEVELS es de confianza
   # (los valores vienen de comandos del sistema o del propio INFO-core, nunca
   # de input del usuario), así que el quoting YAML se delega al serializer.
+  # Schema: value/source/confidence/status/verified/scope/ttl_days (auditoría 2).
   TSV_FACTS=""
   for k in "${!FACT_VALUES[@]}"; do
     TSV_FACTS+="$k"$'\t'"${FACT_VALUES[$k]}"$'\t'"${FACT_LEVELS[$k]}"$'\n'
   done
   if printf '%s' "$TSV_FACTS" | python3 -c "
-import sys, yaml, datetime
+import sys, yaml
 lines = sys.stdin.read().splitlines()
 facts = {}
 for ln in lines:
@@ -275,22 +261,20 @@ for ln in lines:
     if len(parts) < 3:
         continue
     name, value, level = parts[0], parts[1], parts[2]
-    if name in ('os', 'kernel', 'wm', 'rice', 'shell', 'locale', 'terminal', 'compositor', 'git', 'node', 'npm', 'python3', 'codegraph', 'cargo', 'rustc', 'adb', 'fastboot', 'gh', 'vercel', 'uv'):
-        source = 'system'
-    else:
-        source = 'system'
     confidence = 1.0 if level == 'verified' else (0.4 if level == 'stale' else 0.2)
     facts[name] = {
         'value': value,
-        'source': source,
+        'source': 'system',
         'confidence': confidence,
         'status': level,
         'verified': sys.argv[1],
+        'scope': sys.argv[2],
+        'ttl_days': 30,
     }
 print(yaml.dump({'facts': facts}, sort_keys=False, allow_unicode=True, default_flow_style=False), end='')
-" "$VERIFIED_DATE" > "$FACTS_FILE".tmp 2>/dev/null; then
+" "$VERIFIED_DATE" "$SCOPE_NAME" > "$FACTS_FILE".tmp 2>/dev/null; then
     mv "$FACTS_FILE.tmp" "$FACTS_FILE"
-    echo -e "  ℹ️  Provenance actualizada: ${CYAN}$FACTS_FILE${NC} (${#FACT_VALUES[@]} hechos, verificados $VERIFIED_DATE)"
+    echo -e "  ℹ️  Provenance actualizada: ${CYAN}$FACTS_FILE${NC} (${#FACT_VALUES[@]} hechos · scope $SCOPE_NAME · verificados $VERIFIED_DATE)"
   else
     echo -e "  ${YELLOW}⚠️  No pude generar facts.yaml (¿falta PyYAML?) — verificación sin provenance.${NC}"
   fi

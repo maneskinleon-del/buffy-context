@@ -66,9 +66,10 @@ test_verify_quick() {
 test_verify_provenance() {
   suite "verify: provenance (--update-facts)"
   # Sandbox ligero: genera facts.yaml en un repo temporal para no tocar el real.
-  local BH="${TMPDIR:-/tmp}/buffy-verify-facts-$$"
+  # OJO: NO usar trap RETURN con path basado en $$ — los traps se acumulan
+  # entre tests y un rm posterior de otro test dispararía el trap anterior.
+  local BH="${TMPDIR:-/tmp}/buffy-verify-facts-$$-provenance"
   rm -rf "$BH"; mkdir -p "$BH"
-  trap 'rm -rf "$BH"' RETURN
   cp -r "$REPO_DIR" "$BH/repo"
   rm -f "$BH/repo/ai-context/facts.yaml"
   HOME="$BH/home" bash "$SCRIPTS_DIR/buffy-verify.sh" --update-facts --repo "$BH/repo" >/dev/null 2>&1
@@ -83,7 +84,50 @@ test_verify_provenance() {
   else
     bad "YAML con raíz 'facts:'"
   fi
-  jassert "schema de cada hecho (value/source/confidence/status/verified)" "$(cat "$FY")" 'import yaml,sys; d=yaml.safe_load(sys.stdin); f=d["facts"]; assert len(f)>0, "sin hechos"; assert all(set(v.keys())=={"value","source","confidence","status","verified"} for v in f.values()), [v for v in f.values() if set(v.keys())!={"value","source","confidence","status","verified"}]'
+  jassert "schema de cada hecho (value/source/confidence/status/verified/scope/ttl_days)" "$(cat "$FY")" 'import yaml,sys; d=yaml.safe_load(sys.stdin); f=d["facts"]; assert len(f)>0, "sin hechos"; assert all(set(v.keys())=={"value","source","confidence","status","verified","scope","ttl_days"} for v in f.values()), [v for v in f.values() if set(v.keys())!={"value","source","confidence","status","verified","scope","ttl_days"}]'
+  jassert "scope presente y ttl_days entero positivo" "$(cat "$FY")" 'import yaml,sys; d=yaml.safe_load(sys.stdin); assert all(isinstance(v["scope"], str) and v["scope"] for v in d["facts"].values()); assert all(isinstance(v["ttl_days"], int) and v["ttl_days"] > 0 for v in d["facts"].values())'
   jassert "confidence 1.0 para verified, <1.0 para stale/unknown" "$(cat "$FY")" 'import yaml,sys; d=yaml.safe_load(sys.stdin); assert all(v["confidence"]==1.0 if v["status"]=="verified" else v["confidence"]<1.0 for v in d["facts"].values())'
   jassert "fecha de verificación válida (YYYY-MM-DD)" "$(cat "$FY")" 'import yaml,sys,datetime; d=yaml.safe_load(sys.stdin); assert all(datetime.date.fromisoformat(v["verified"]) for v in d["facts"].values())'
+  rm -rf "$BH"
+}
+
+test_verify_fixture_stale() {
+  # Fixtures controlados (P1 auditoría 2): detección de stale DETERMINÍSTICA,
+  # sin depender de la máquina del runner. Se copia el repo a un sandbox, se
+  # inyecta una afirmación FALSA conocida en INFO-core.md y se verifica que
+  # verify la reporta como stale con su identidad — el hueco que los tests de
+  # contrato dejaban abierto.
+  suite "verify: fixtures controlados (stale determinístico)"
+  # Path con sufijo propio: evita colisionar con otros tests.
+  local BH="${TMPDIR:-/tmp}/buffy-verify-fix-$$-fixture"
+  rm -rf "$BH"; mkdir -p "$BH"
+  cp -r "$REPO_DIR" "$BH/repo"
+  rm -rf "$BH/repo/.git"
+
+  # Fixture 1: kernel falso (5.0.0-fake) → KERNEL_STALE
+  if ! sed -i 's/kernel [0-9][0-9.]*[-a-z0-9]*/kernel 5.0.0-fake/' "$BH/repo/ai-context/INFO-core.md" || ! grep -q 'kernel 5.0.0-fake' "$BH/repo/ai-context/INFO-core.md"; then
+    bad "fixture kernel inyectado"
+    return
+  fi
+  ok "fixture kernel inyectado (5.0.0-fake)"
+  local OUT
+  OUT=$(bash "$SCRIPTS_DIR/buffy-verify.sh" --json --repo "$BH/repo" 2>/dev/null)
+  jassert "kernel falso detectado como stale (KERNEL_STALE)" "$OUT" 'import json,sys; d=json.load(sys.stdin); k=[i for i in d["items"] if i["fact"]=="kernel"]; assert k and k[0]["level"]=="stale" and k[0].get("id")=="KERNEL_STALE", k'
+  jassert "trust_score refleja el stale" "$OUT" 'import json,sys; d=json.load(sys.stdin); assert d["trust_score"] < 100, d["trust_score"]'
+
+  # Fixture 2: node falso (0.1.0) → VERSION_STALE
+  # OJO: cp -r source dest con dest EXISTENTE anida (repo/buffy-context/...).
+  # Sin mkdir previo: cp crea dest nuevo y copia el CONTENIDO dentro.
+  rm -rf "$BH/repo"
+  cp -r "$REPO_DIR" "$BH/repo"
+  rm -rf "$BH/repo/.git"
+  if ! sed -i 's/node v[0-9.]*/node v0.1.0/' "$BH/repo/ai-context/INFO-core.md" || ! grep -q 'node v0.1.0' "$BH/repo/ai-context/INFO-core.md"; then
+    bad "fixture node inyectado"
+    return
+  fi
+  ok "fixture node inyectado (v0.1.0)"
+  local OUT2
+  OUT2=$(bash "$SCRIPTS_DIR/buffy-verify.sh" --json --repo "$BH/repo" 2>/dev/null)
+  jassert "versión de node falsa detectada como stale (VERSION_STALE)" "$OUT2" 'import json,sys; d=json.load(sys.stdin); n=[i for i in d["items"] if i["fact"]=="node"]; assert n and n[0]["level"]=="stale" and n[0].get("id")=="VERSION_STALE", n'
+  rm -rf "$BH"
 }

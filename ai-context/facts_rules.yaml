@@ -1,0 +1,42 @@
+# facts_rules.yaml — Catálogo declarativo de hechos para buffy-verify
+#
+# Separación regla/motor (auditoría 2, P1): AGREGAR un hecho nuevo = editar este
+# archivo. NO tocar buffy-verify.sh (el motor lo consume genéricamente).
+#
+# Schema:
+#   version_checks:  hechos cuyo VALOR se compara contra la versión que afirma
+#                    INFO-core.md (patrón: "<name> <version>"). Si difieren → stale.
+#   tool_checks:     hechos de PRESENCIA (¿está instalado?) — documentados en
+#                    INFO-core pero no con versión explícita.
+#
+# Reglas de extracción de la versión en INFO-core.md:
+#   - se busca "<name>" seguido de una versión tipo 1.2.3 (tolera prefijos v/V)
+#   - si el doc no declara versión, el hecho queda verified (solo presencia)
+
+version_checks:
+  - name: git
+    command: git --version
+  - name: node
+    command: node --version
+  - name: npm
+    command: npm --version
+  - name: python3
+    command: python3 --version
+  - name: codegraph
+    command: codegraph --version
+
+tool_checks:
+  - name: cargo
+    command: cargo --version
+  - name: rustc
+    command: rustc --version
+  - name: adb
+    command: adb --version
+  - name: fastboot
+    command: fastboot --version
+  - name: gh
+    command: gh --version
+  - name: vercel
+    command: vercel --version
+  - name: uv
+    command: uv --version
