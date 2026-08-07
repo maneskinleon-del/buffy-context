@@ -1,11 +1,11 @@
 # 🖥️ INFO-CORE — mangonz (cargar siempre)
 
 > Contexto mínimo para cualquier agente IA. Para detalle histórico, hardware completo, changelog o checklist de capacidades → ver `INFO-full.md`.
-> Actualizado: 2026-08-02
+> Actualizado: 2026-08-07
 
 ## Sistema
 - OS: EndeavourOS (Arch) — kernel 6.18.39-1-lts
-- WM actual: **bspwm** (X11) — con rice gh0stzk/cynthia
+- WM actual: **bspwm** (X11) — con rice gh0stzk/**vista** (estilo Windows Vista Aero; backup del anterior en `~/.config/bspwm/.rice.bak`)
 - Shell: zsh (Oh My Zsh + Starship)
 - Terminal: alacritty (Nord palette, opacidad 0.85)
 - Compositor: picom (necesario para transparencia)
@@ -24,7 +24,7 @@
 ```
 
 ## Herramientas de uso frecuente
-git 2.55.0 · node v26.4.0 · npm 11.18.0 · python3 3.14.6 · cargo/rustc · adb/fastboot · Shizuku v13.7.0 + rish (`/data/local/tmp/rish`) · gh (GitHub CLI) · vercel · uv · **codegraph v1.5.0** (grafo de código local)
+git 2.55.0 · node v26.4.0 · npm 12.0.1 · python3 3.14.6 · cargo/rustc · adb/fastboot · Shizuku v13.7.0 + rish (`/data/local/tmp/rish`) · gh (GitHub CLI) · vercel · **codegraph v1.5.0** (grafo de código local)
 
 ## IA/CLI instaladas
 freebuff · Antigravity · Claude Code (ext. VSCodium) · Gemini CLI · Cline · command-code
