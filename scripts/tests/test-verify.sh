@@ -62,3 +62,28 @@ test_verify_quick() {
   fi
   jassert "--json: todos los hechos son verified/stale/unknown (sections marcadas aparte)" "$J" 'import json,sys; d=json.load(sys.stdin); assert all(i["level"] in ("verified","stale","unknown","section") for i in d["items"]); assert all(i["level"] in ("verified","stale","unknown") for i in d["items"] if i["fact"] != "--")'
 }
+
+test_verify_provenance() {
+  suite "verify: provenance (--update-facts)"
+  # Sandbox ligero: genera facts.yaml en un repo temporal para no tocar el real.
+  local BH="${TMPDIR:-/tmp}/buffy-verify-facts-$$"
+  rm -rf "$BH"; mkdir -p "$BH"
+  trap 'rm -rf "$BH"' RETURN
+  cp -r "$REPO_DIR" "$BH/repo"
+  rm -f "$BH/repo/ai-context/facts.yaml"
+  HOME="$BH/home" bash "$SCRIPTS_DIR/buffy-verify.sh" --update-facts --repo "$BH/repo" >/dev/null 2>&1
+  if [ -f "$BH/repo/ai-context/facts.yaml" ]; then
+    ok "--update-facts genera ai-context/facts.yaml"
+  else
+    bad "--update-facts genera ai-context/facts.yaml"; return
+  fi
+  local FY="$BH/repo/ai-context/facts.yaml"
+  if grep -q '^facts:' "$FY"; then
+    ok "YAML con raíz 'facts:'"
+  else
+    bad "YAML con raíz 'facts:'"
+  fi
+  jassert "schema de cada hecho (value/source/confidence/status/verified)" "$(cat "$FY")" 'import yaml,sys; d=yaml.safe_load(sys.stdin); f=d["facts"]; assert len(f)>0, "sin hechos"; assert all(set(v.keys())=={"value","source","confidence","status","verified"} for v in f.values()), [v for v in f.values() if set(v.keys())!={"value","source","confidence","status","verified"}]'
+  jassert "confidence 1.0 para verified, <1.0 para stale/unknown" "$(cat "$FY")" 'import yaml,sys; d=yaml.safe_load(sys.stdin); assert all(v["confidence"]==1.0 if v["status"]=="verified" else v["confidence"]<1.0 for v in d["facts"].values())'
+  jassert "fecha de verificación válida (YYYY-MM-DD)" "$(cat "$FY")" 'import yaml,sys,datetime; d=yaml.safe_load(sys.stdin); assert all(datetime.date.fromisoformat(v["verified"]) for v in d["facts"].values())'
+}
