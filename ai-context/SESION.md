@@ -1,3 +1,62 @@
+# 🧠 SESION — Buffy Freebuff (2026-08-06)
+
+> Contexto de todo lo implementado durante esta sesión.
+
+---
+
+## 🔍 CodeGraph — setup completo (MCP + indexado + documentación)
+
+### Qué es
+`@colbymchenry/codegraph` v1.5.0 (open source MIT, 100% local) — grafo de conocimiento SQLite (AST vía tree-sitter) para descubrimiento y análisis de impacto de código. Comando MCP: `codegraph serve --mcp`. Telemetría **desactivada**.
+
+### Servidor MCP configurado en 4 agentes (herramienta única `codegraph_explore`, probada en vivo: initialize + tools/list + explore "boost" ✅)
+| Agente | Config | Extra |
+|---|---|---|
+| **Gemini CLI** | `~/.gemini/settings.json` | + `~/.gemini/GEMINI.md` (bloque CODEGRAPH) |
+| **Claude Code** | `~/.claude.json` + `~/.claude/settings.json` | auto-allow `mcp__codegraph__*` + hook `codegraph prompt-hook` en cada prompt |
+| **Antigravity IDE** | `~/.gemini/config/mcp_config.json` | backup del vacío previo |
+| **Cline** (VSCodium) | `globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json` | cableado a mano (no soportado oficialmente), autoApprove `codegraph_explore` |
+
+### Proyectos indexados
+| Proyecto | Índice | Cómo |
+|---|---|---|
+| **autoscript-mobile-interface** | 49 archivos · 1.084 símbolos · 1.896 aristas | `codegraph init` — .codegraph/ gitignored |
+| **ManUninstaller** | 31 archivos · 486 nodos · 838 aristas | `codegraph init` (417ms) — .codegraph/ gitignored |
+
+### Decisión: NO documentar en otros proyectos (datos)
+Conteo de archivos fuente: autoscript 42, widgetos 28, data_car 28, ManUninstaller 25, pwa_securguard 20, lista_supermercado 17, porteria_pwa 17, GameBoostPro 10, codebuff-automation 6. El bloque global de CLAUDE.md/GEMINI.md ya activa CodeGraph donde exista `.codegraph/`, y en proyectos <30 archivos leer todo es más barato que indexar. Solo se indexó ManUninstaller como caso límite.
+
+### Documentación escrita
+- **`~/.AGENTS.md`** — sección "CodeGraph (descubrimiento de código)": regla global + proyectos indexados (aplica a todos los proyectos futuros).
+- **`autoscript-mobile-interface/AGENTS.md`** — sección "CodeGraph — Descubrimiento y Análisis (obligatorio)" con comandos + ejemplos verificados.
+- **`ai-context/PROJECTS.md`** — entradas para GameBoost Pro (Kotlin nativo) y ManUninstaller con nota de descubrimiento.
+
+### Demos de `codegraph impact` (ManUninstaller)
+- `impact MainActivity` → 35 símbolos, **0 fuera del archivo** (hoja del grafo — punto de entrada Android).
+- `impact AppViewModel` → 47 símbolos en 2 archivos: **6 call-sites en MainActivity** (onCreate:117, setupTools:293, observeViewModel:400, onDismissed:479, showUninstallConfirmation:490, showUninstallSummary:587) — mapa de riesgo para refactors.
+
+### Commits
+- `ManUninstaller ad6a12d` — `Chore: gitignore .codegraph/` (repo local, sin remote).
+- `buffy-context 255f766` — `docs: indexar ManUninstaller con CodeGraph + entrada en PROJECTS.md` (no pusheado).
+- Pendiente: `~/.AGENTS.md` sin commitear (repo raíz `/home/mangonz`, ruidoso — commitear solo con `git add .AGENTS.md`).
+
+---
+
+## 📁 Archivos modificados/creados (sesión 2026-08-06)
+
+| Archivo | Cambio |
+|---------|--------|
+| `~/.gemini/settings.json` · `~/.gemini/config/mcp_config.json` · `~/.gemini/GEMINI.md` | MCP codegraph (Gemini + Antigravity) |
+| `~/.claude.json` · `~/.claude/settings.json` · `~/.claude/CLAUDE.md` | MCP codegraph + auto-allow + hook prompt-hook |
+| `VSCodium .../cline_mcp_settings.json` | MCP codegraph para Cline |
+| `proyectos/autoscript-mobile-interface/.codegraph/` · `AGENTS.md` | Índice + sección CodeGraph obligatoria |
+| `proyectos/ManUninstaller/.codegraph/` · `.gitignore` | Índice (commit ad6a12d) |
+| `~/.AGENTS.md` | Regla global de CodeGraph (sin commitear) |
+| `ai-context/PROJECTS.md` | Entradas GameBoost Pro Kotlin + ManUninstaller (commit 255f766) |
+| `ai-context/SESION.md` | ✅ Esta entrada |
+
+---
+
 # 🧠 SESION — Buffy Freebuff (2026-08-05)
 
 > Contexto de todo lo implementado durante esta sesión.
