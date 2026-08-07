@@ -176,7 +176,7 @@ fi
 
 # SESION.md — solo si pregunta por sesión/historial reciente
 if has 'sesion|sesión|que estabamos|qué estábamos|que hicimos|qué hicimos|historial reciente|ultima sesion|última sesión'; then
-  BASE_FILES+=("ai-context/SESION.md (últimas 3 entradas)")
+  BASE_FILES+=("ai-context/SESION.md (últimas 5 entradas)")
 fi
 
 # CHANGELOG.md — solo si pregunta qué cambió
@@ -190,8 +190,17 @@ if has 'notas tecnicas|notas técnicas|agente anterior|que hizo el agente|nota d
 fi
 
 # ── ANDROID ────────────────────────────────────────────────
+# detect_adb_device es señal de ENTORNO (teléfono conectado), no de intención:
+# solo dispara Android si el mensaje NO apunta claramente a otra categoría
+# (React/Node/Git/Shell/Visión). Así un dispositivo conectado no contamina
+# tareas de otra índole (falso positivo de routing).
+android_by_device=''
+if detect_adb_device \
+   && ! has 'react|jsx|tsx|vite|tailwind|pwa|componente|hook|estado|npm|npx|package\.json|dependencia|commit|push|merge|rebase|branch|stash|git|bash|zsh|awk|sed|grep|imagen|screenshot|captura|vlm|ocr'; then
+  android_by_device=1
+fi
 if has 'android|adb|scrcpy|shizuku|nubia|hyperos|xiaomi|miui|free fire|gg mouse|game boost|keymapper|mantis|apk|dispositivo|telefono|teléfono|rom|logcat|dumpsys|auto\.js|automation|permiso' \
-   || detect_android_project || detect_android_manifest || detect_adb_device; then
+   || detect_android_project || detect_android_manifest || [ -n "$android_by_device" ]; then
   CATS+=("Android")
 
   KNOWLEDGE_FILES+=("Knowledge/Android/ADB.md")
