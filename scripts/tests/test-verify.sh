@@ -22,8 +22,8 @@ test_verify_json_schema() {
   local OUT
   OUT=$(bash "$SCRIPTS_DIR/buffy-verify.sh" --json 2>/dev/null)
   if [ -n "$OUT" ]; then ok "--json produce salida"; else bad "--json produce salida"; fi
-  jassert "--json parseable + claves exactas" "$OUT" 'import json,sys; d=json.load(sys.stdin); assert set(d.keys())=={"repo","verified","stale","unknown","trust_score","items","_info"}, d.keys()'
-  jassert "conteos coherentes con items por level" "$OUT" 'import json,sys; d=json.load(sys.stdin); assert d["verified"]==sum(1 for i in d["items"] if i["level"]=="verified"); assert d["stale"]==sum(1 for i in d["items"] if i["level"]=="stale"); assert d["unknown"]==sum(1 for i in d["items"] if i["level"]=="unknown")'
+  jassert "--json parseable + claves exactas" "$OUT" 'import json,sys; d=json.load(sys.stdin); assert set(d.keys())=={"repo","verified","stale","unknown","expired","trust_score","items","_info"}, d.keys()'
+  jassert "conteos coherentes con items por level" "$OUT" 'import json,sys; d=json.load(sys.stdin); assert d["verified"]==sum(1 for i in d["items"] if i["level"]=="verified"); assert d["stale"]==sum(1 for i in d["items"] if i["level"]=="stale"); assert d["unknown"]==sum(1 for i in d["items"] if i["level"]=="unknown"); assert d["expired"]==sum(1 for i in d["items"] if i["level"]=="expired")'
   jassert "trust_score coherente (0..100)" "$OUT" 'import json,sys; d=json.load(sys.stdin); assert 0 <= d["trust_score"] <= 100'
   jassert "hechos verificados presentes" "$OUT" 'import json,sys; d=json.load(sys.stdin); v=[i for i in d["items"] if i["level"]=="verified"]; assert any(i["fact"]=="os" for i in v); assert any(i["fact"]=="kernel" for i in v); assert any(i["fact"] in ("git","node","npm","python3","codegraph") for i in v), "faltan hechos de herramientas"'
   jassert "mensajes sin códigos ANSI" "$OUT" 'import json,sys,re; d=json.load(sys.stdin); assert all(re.search(r"\x1b\[[0-9;]*m", i["message"]) is None for i in d["items"])'
@@ -60,7 +60,7 @@ test_verify_quick() {
   else
     bad "--quick imprime resumen con conteos"
   fi
-  jassert "--json: todos los hechos son verified/stale/unknown (sections marcadas aparte)" "$J" 'import json,sys; d=json.load(sys.stdin); assert all(i["level"] in ("verified","stale","unknown","section") for i in d["items"]); assert all(i["level"] in ("verified","stale","unknown") for i in d["items"] if i["fact"] != "--")'
+  jassert "--json: todos los hechos son verified/stale/unknown/expired (sections marcadas aparte)" "$J" 'import json,sys; d=json.load(sys.stdin); assert all(i["level"] in ("verified","stale","unknown","expired","section") for i in d["items"]); assert all(i["level"] in ("verified","stale","unknown","expired") for i in d["items"] if i["fact"] != "--")'
 }
 
 test_verify_provenance() {
@@ -129,6 +129,32 @@ test_verify_fixture_stale() {
   local OUT2
   OUT2=$(bash "$SCRIPTS_DIR/buffy-verify.sh" --json --repo "$BH/repo" 2>/dev/null)
   jassert "versión de node falsa detectada como stale (VERSION_STALE)" "$OUT2" 'import json,sys; d=json.load(sys.stdin); n=[i for i in d["items"] if i["fact"]=="node"]; assert n and n[0]["level"]=="stale" and n[0].get("id")=="VERSION_STALE", n'
+  rm -rf "$BH"
+}
+
+test_verify_ttl_expired() {
+  # Test adversarial (hallazgo en prueba E2E): el TTL de facts.yaml DEBE
+  # enforzarse. Si un hecho dice verified=2025 con ttl=30, verify lo reporta
+  # como EXPIRED (no verified) y el trust baja — antes daba trust 100%.
+  suite "verify: TTL vencido (facts.yaml previo)"
+  local BH="${TMPDIR:-/tmp}/buffy-verify-ttl-$$-fixture"
+  rm -rf "$BH"; mkdir -p "$BH"
+  cp -r "$REPO_DIR" "$BH/repo"
+  rm -rf "$BH/repo/.git"
+  python3 -c "
+import yaml
+p = '$BH/repo/ai-context/facts.yaml'
+d = yaml.safe_load(open(p))
+for v in d['facts'].values():
+    v['verified'] = '2025-01-01'
+    v['ttl_days'] = 30
+open(p, 'w').write(yaml.dump(d, sort_keys=False, allow_unicode=True))
+"
+  local OUT
+  OUT=$(bash "$SCRIPTS_DIR/buffy-verify.sh" --json --repo "$BH/repo" 2>/dev/null)
+  jassert "hechos vencidos reportados como expired (TTL_EXPIRED)" "$OUT" 'import json,sys; d=json.load(sys.stdin); e=[i for i in d["items"] if i["level"]=="expired"]; assert len(e) > 0, "sin expired"; assert all(i.get("id")=="TTL_EXPIRED" for i in e), e[:2]'
+  jassert "trust baja con TTL vencido" "$OUT" 'import json,sys; d=json.load(sys.stdin); assert d["trust_score"] < 100, d["trust_score"]'
+  jassert "expired NO cuenta como verified" "$OUT" 'import json,sys; d=json.load(sys.stdin); assert d["verified"] == sum(1 for i in d["items"] if i["level"]=="verified")'
   rm -rf "$BH"
 }
 
