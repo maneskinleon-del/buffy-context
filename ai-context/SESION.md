@@ -4,6 +4,50 @@
 
 ---
 
+## 🐛→✅ super+Escape eliminado + pantalla que no se apaga + monitor-alert corregido
+
+### Pedido del usuario
+Eliminar la combinación `super + Escape` (no sabía qué hacía, pero bloqueaba el teclado y a veces congelaba la PC), asegurar que la pantalla no se apague sola, y verificar que la carga de CPU de la barra inferior de polybar concuerde con el script que alerta CPU alta.
+
+### `super + Escape` — duplicado mal escrito del reload
+**Causa raíz:** en `~/.config/bspwm/config/sxhkdrc` (línea 154, rice vista) `super + Escape` ejecutaba `bspc wm -r; pkill -USR1 -x sxhkd; dunstify...`. El comentario decía "Reload config (Mango: SUPER + r)" — era un duplicado mal escrito del binding correcto que ya existía en la línea 59 (`super + r`, mismo comando). Al pulsar `super + Escape` reiniciaba el WM en caliente → teclado muerto y a veces cuelgue total. **Fix:** eliminado el binding (quedó solo el comentario NOTA); `super + ctrl + Escape` se mantiene (recarga solo sxhkd, no reinicia bspwm). Recargado con `pkill -USR1 -x sxhkd` (sin reiniciar bspwm) y verificado vivo: `pgrep -a sxhkd`.
+
+### Pantalla que se apagaba a los 10 min
+DPMS estaba habilitado (Standby/Suspend/Off = 600s) + screensaver X con `prefer blanking: yes` (timeout 600). **Fix:** `xset -dpms` + `xset s off` aplicados en vivo y agregados al `~/.config/bspwm/bspwmrc` (después de `SetSysVars`) para persistir. Verificado: `DPMS is Disabled`, screen saver timeout 0.
+
+### monitor-alert — % de CPU incorrecto (no coincidía con la barra)
+El timer systemd `monitor-alert.timer` (cada 45s) corre `~/.local/bin/monitor-alert`, que avisa con notify-send cuando CPU/RAM pasan umbrales. Su `get_cpu()` calculaba mal:
+- `u=$2+$4` (user+system) y `t=$2+$4+$5` (user+system+idle) sobre la línea `cpu ` de `/proc/stat` → el denominador ignoraba `nice`/`iowait`/`irq`/`softirq`/`steal`, así que el % no coincidía con polybar (que usa el cálculo estándar).
+- Ventana de muestreo de 0.1s → valores ruidosos (37/39/35 en mediciones seguidas).
+
+**Fix:** fórmula estándar `(total − idle − iowait)/total × 100` con los 7 campos (user nice system idle iowait irq softirq) y ventana de **1s**. Verificado con carga sintética (2× `yes > /dev/null`): script corregido = estándar = **35% exacto** (antes fluctuaba).
+
+### Umbrales recalibrados (Ryzen 5 3400G 4C/8T + 13GB sin swap)
+| Umbral | Antes | Ahora | Motivo |
+|---|---|---|---|
+| CPU_WARN | 70 | **75** | Mediciones correctas ahora; 4C/8T en uso normal no pasa de ~50%; 75 ≈ 6/8 hilos activos, evita falsos positivos |
+| CPU_CRIT | 90 | 90 | Saturación real |
+| RAM_WARN | 80 | **75** | Sin swap, avisar antes |
+| RAM_CRIT | 92 | **88** | 88% ≈ 11.5GB usados deja ~1.5GB libres para cerrar apps antes del congelamiento |
+
+### Archivos modificados/creados
+
+| Archivo | Cambio |
+|---|---|
+| `~/.config/bspwm/config/sxhkdrc` | eliminado binding `super + Escape` (era duplicado de `super + r`) |
+| `~/.config/bspwm/bspwmrc` | `xset -dpms` + `xset s off` persistente |
+| `~/.local/bin/monitor-alert` | fórmula estándar de CPU + ventana 1s + umbrales recalibrados |
+| `ai-context/CHANGELOG.md` | entrada 2026-08-07 (fixes teclado/pantalla/monitor-alert) |
+| `ai-context/SESION.md` | esta entrada |
+
+### Lecciones
+- **Siempre chequear duplicados de bindings con comentario distinto** al editar sxhkdrc de un rice — el comentario "SUPER + r" no coincidía con la tecla real (Escape).
+- **`bspc wm -r` en caliente es peligroso** para atajos: si se dispara sin querer, colgás el teclado. Preferir `pkill -USR1 -x sxhkd` para recargas frecuentes.
+- **El cálculo "estándar" de CPU** es `(total − idle − iowait)/total` con los 7 campos de la línea `cpu ` de `/proc/stat` — cualquier atajo (solo user+system) desincroniza contra polybar/top.
+- **`xset -dpms` y `xset s off`** deben ir en el autostart (bspwmrc), no solo aplicarse en vivo, o vuelven al reiniciar (Xorg default: 600s).
+
+---
+
 ## 🌊 Rice "vista" — barras polybar refinadas como vidrio limpio
 
 ### Pedido del usuario

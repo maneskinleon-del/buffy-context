@@ -1,14 +1,26 @@
 # 🔄 CONTINUE — Handoff entre sesiones
 
 > ⚡ **PRÓXIMA SESIÓN: LEE ESTO PRIMERO**
-> Generado: 2026-08-07 (buffy-context: fact registry + TTL enforcement + jerarquía de fuentes + CI verde · suite 168 checks)
+> Generado: 2026-08-07 (fecha + fixes de escritorio: super+Escape, DPMS, monitor-alert)
 
 ---
 
-## Resumen de la sesión
+## Resumen de la sesión (2026-08-07 tarde — escritorio)
+
+**Tema:** 3 fixes en el escritorio bspwm/rice vista + recalibración de monitoreo.
+
+1. **`super + Escape` eliminado** de `~/.config/bspwm/config/sxhkdrc` — era un duplicado mal escrito del reload (ejecutaba `bspc wm -r` = reinicio del WM en caliente → teclado muerto / cuelgues). El reload correcto sigue en `super + r`. `super + ctrl + Escape` (recarga sxhkd solo) se mantiene. sxhkd recargado y verificado vivo.
+2. **Pantalla ya no se apaga**: `xset -dpms` + `xset s off` aplicados y agregados a `bspwmrc` (persistente). Antes: DPMS 600s + blanking 600s apagaban la pantalla a los 10 min.
+3. **`~/.local/bin/monitor-alert` corregido**: `get_cpu()` usaba campos incompletos de `/proc/stat` (ignoraba nice/iowait/irq/softirq/steal) + ventana 0.1s ruidosa → no coincidía con la barra de polybar. Ahora: fórmula estándar `(total − idle − iowait)/total × 100`, ventana 1s. Verificado: script = estándar = 35% bajo carga.
+4. **Umbrales recalibrados**: CPU_WARN 75 / CPU_CRIT 90 · RAM_WARN 75 / RAM_CRIT 88 (13GB sin swap — 88% ≈ 11.5GB deja margen de reacción).
+
+Detalle completo en `SESION.md` (sección "🐛→✅ super+Escape eliminado…") y `CHANGELOG.md` (entrada 2026-08-07 fixes teclado/pantalla/monitor-alert).
+
+---
+
+## Resumen de la sesión anterior (buffy-context — fact registry)
 
 **Tema principal:** Ciclo completo sobre **buffy-context**: fact registry declarativo (`facts_rules.yaml` + `facts_engine.py`), hardening sin shell, **hallazgo y fix del TTL** (los tests adversariales destaparon que el TTL nunca se enforzaba), jerarquía de autoridad de fuentes (`buffy-source.sh`), y **3 fixes de CI** para que GitHub Actions pase en checkout fresco. Suite: **168 OK / 0 FAIL**. Verify real: **19 verificados / 0 stale / 0 expired · trust 100%**.
-
 ---
 
 ### ✅ Logros principales
@@ -64,9 +76,9 @@ Commits: `a5a6739` → `14dc4cb` → `cf794f6` → `b9950bc` → `dcbad8c` → `
 
 ### ⏳ Pendientes para próxima sesión
 
-1. **Pasar de construcción a validación de comportamiento** (recomendación de la 3.ª auditoría): probar Buffy con agentes reales (OpenCode, Claude Code) en tareas reales — los problemas reales solo aparecen en uso. El proyecto ya tiene 14+ capas; **no agregar más features indiscriminadamente**.
-2. **P2 opcionales del audit** (solo si llevas Buffy a más máquinas): separar `facts/` por tipo (`system.yaml` / `user.yaml` / `inferred.yaml`) y `verify --profile ci` (gate factual controlado en CI).
+1. **Pasar de construcción a validación de comportamiento** (recomendación de la 3.ª auditoría): probar Buffy con agentes reales (OpenCode, Claude Code) en tareas reales — los problemas reales solo aparecen en uso. El proyecto ya tiene 14+ capas; **no agregar más features indiscriminadamente**.2. **P2 opcionales del audit** (solo si llevas Buffy a más máquinas): separar `facts/` por tipo (`system.yaml` / `user.yaml` / `inferred.yaml`) y `verify --profile ci` (gate factual controlado en CI).
 3. **Arrastrados previos**: probar `fb-wait` en vivo (429 busy) · data_car flujo completo en navegador · SESION.md supera 30 KB → podar a SESION-archive.md · `gh auth login` · renombrar repo `enerador-de-boletas` · ManUninstaller versionName 2.1.0 · Mi 10 "Instalar vía USB".
+4. **Nuevo (escritorio)**: los otros rices de `~/.config/bspwm/rices/*/config/sxhkdrc` **no** tenían el binding `super + Escape` (se verificó solo en el activo), pero si el usuario cambia de rice revisar de nuevo — el fix fue solo en `~/.config/bspwm/config/sxhkdrc` (config global). El rice `.rice.bak` = cynthia: al volver a él, confirmar que su sxhkdrc use `super + r` y no `super + Escape`.
 
 ---
 
