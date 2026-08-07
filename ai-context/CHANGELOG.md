@@ -5,14 +5,38 @@
 
 ---
 
-version: 1.7
-updated: 2026-08-03
+version: 1.8
+updated: 2026-08-06
 schema: system-profile
 system-id: mangonz-desktop
 ---
 
 # CHANGELOG.md — Historial de cambios del sistema
 
+
+### 2026-08-06 — CodeGraph: descubrimiento y análisis de código (MCP + indexado + documentación)
+
+**Pedido del usuario:** configurar el servidor MCP de CodeGraph para consultar el grafo del código directamente durante las sesiones de código; probarlo en vivo y documentar su uso para que los agentes lo usen primero en proyectos grandes.
+
+**Cambios aplicados:**
+- **`@colbymchenry/codegraph` v1.5.0** (NUEVO, global, MIT, 100% local): grafo de conocimiento SQLite vía tree-sitter. Comando MCP: `codegraph serve --mcp`. Telemetría **desactivada**.
+- **Servidor MCP configurado en 4 agentes** (herramienta única `codegraph_explore`, probada en vivo con handshake JSON-RPC ✅): Gemini CLI (`~/.gemini/settings.json` + bloque en `GEMINI.md`), Claude Code (`~/.claude.json` + `~/.claude/settings.json` con auto-allow `mcp__codegraph__*` + hook `codegraph prompt-hook`), Antigravity (`~/.gemini/config/mcp_config.json`), Cline (VSCodium, cableado a mano — no está en la lista oficial).
+- **Proyectos indexados**: `autoscript-mobile-interface` (49 archivos · 1.084 símbolos · 1.896 aristas) y `ManUninstaller` (31 · 486 · 838). `.codegraph/` gitignored en ambos.
+- **Documentación**: sección "CodeGraph — Descubrimiento y Análisis (obligatorio)" en `AGENTS.md` de autoscript (comandos + ejemplos verificados); entradas en `PROJECTS.md` para GameBoost Pro Kotlin y ManUninstaller; regla global en `~/.AGENTS.md` (si existe `.codegraph/`, usar CodeGraph antes de grep/find).
+- **Decisión de alcance (datos)**: NO documentar en proyectos <30 archivos fuente (widgetos 28, data_car 28, pwa_securguard 20, lista_supermercado 17, porteria_pwa 17, GameBoostPro 10, codebuff-automation 6) — el bloque global de CLAUDE.md/GEMINI.md ya activa CodeGraph donde exista índice, y el ahorro de descubrimiento solo se nota a escala de autoscript.
+- **Demos de `impact` (ManUninstaller)**: `impact MainActivity` = 35 símbolos, 0 fuera del archivo (hoja del grafo — punto de entrada); `impact AppViewModel` = 47 símbolos en 2 archivos (6 call-sites en MainActivity) — mapa de riesgo para refactors.
+- **Sesión documentada** en `ai-context/SESION.md` (entrada 2026-08-06).
+
+**Archivos modificados/creados:**
+- `~/.gemini/settings.json`, `~/.gemini/config/mcp_config.json`, `~/.gemini/GEMINI.md` — MCP (Gemini + Antigravity)
+- `~/.claude.json`, `~/.claude/settings.json`, `~/.claude/CLAUDE.md` — MCP (Claude Code)
+- `VSCodium globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json` — MCP (Cline)
+- `proyectos/autoscript-mobile-interface/AGENTS.md`, `.codegraph/` — sección CodeGraph + índice
+- `proyectos/ManUninstaller/.gitignore`, `.codegraph/` — índice + gitignore (commits ad6a12d, e77db36, 0d29483)
+- `~/.AGENTS.md` — regla global (commit raíz 6c6b985)
+- `ai-context/PROJECTS.md`, `ai-context/SESION.md` — registros (pusheados 255f766, a952e44)
+
+---
 
 ### 2026-08-03 — BUFFY_HOME / common.sh (C2, opt-in): instalaciones alternativas sin romper el diseño
 
