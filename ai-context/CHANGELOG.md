@@ -14,7 +14,22 @@ system-id: mangonz-desktop
 # CHANGELOG.md — Historial de cambios del sistema
 
 
-### 2026-08-07 — Rice "vista": barras polybar como vidrio limpio (huecos px, bloques sucios, temp, fecha)
+### 2026-08-07 — Fixes de teclado/pantalla/monitor-alert (super+Escape, DPMS, cálculo de CPU)
+
+**Pedido del usuario:** eliminar la combinación `super + Escape` (bloqueaba el teclado y a veces congelaba la PC), evitar que la pantalla se apague sola, y verificar que la carga de CPU de la barra inferior de polybar concuerde con el script de alerta de CPU alta.
+
+**Cambios aplicados:**
+- **`super + Escape` eliminado del sxhkdrc** (`~/.config/bspwm/config/sxhkdrc`): ejecutaba `bspc wm -r` (reinicio del WM en caliente) — eso mataba el teclado y colgaba el sistema. Era un duplicado mal escrito del reload que ya existe en `super + r` (línea 59, mismo comando). Se dejó `super + ctrl + Escape` (recarga solo sxhkd, sin reiniciar bspwm) y un comentario NOTA en el archivo. sxhkd recargado con `pkill -USR1 -x sxhkd` (sin reiniciar bspwm), verificado vivo.
+- **Pantalla ya no se apaga**: DPMS estaba habilitado (Standby/Suspend/Off a 600s) + screensaver X con blanking a 600s → la pantalla se apagaba a los 10 min. Fix: `xset -dpms` + `xset s off` aplicados en vivo **y agregados al `~/.config/bspwm/bspwmrc`** (después de SetSysVars) para persistir en reinicios.
+- **`monitor-alert` calculaba mal el % de CPU** (`~/.local/bin/monitor-alert`, timer systemd cada 45s): la función `get_cpu()` usaba `u=$2+$4` (user+system) y `t=$2+$4+$5` (user+system+idle) sobre `/proc/stat` — campos incompletos que ignoraban `nice`/`iowait`/`irq`/`softirq`/`steal` en el denominador, más una ventana de 0.1s ruidosa. Fix: método estándar `(total − idle − iowait)/total × 100` sobre los 7 campos (user nice system idle iowait irq softirq), ventana de **1s**. Verificado con carga sintética: script corregido = estándar = 35% (antes 37/39/35 fluctuante).
+- **Umbrales recalibrados** para Ryzen 5 3400G (4C/8T) + 13GB sin swap: CPU_WARN 70→**75**, CPU_CRIT 90, RAM_WARN 80→**75**, RAM_CRIT 92→**88** (sin swap el margen entre avisar y congelarse es todo lo que queda; 88% ≈ 11.5GB usados deja ~1.5GB libres para reaccionar).
+
+**Archivos modificados:**
+- `~/.config/bspwm/config/sxhkdrc` — eliminado binding `super + Escape`
+- `~/.config/bspwm/bspwmrc` — `xset -dpms` + `xset s off` persistente
+- `~/.local/bin/monitor-alert` — fórmula estándar de CPU + umbrales recalibrados
+
+**Verificado:** `bash -n` OK en monitor-alert, script corre exit=0, timer systemd activo, valores concuerdan con polybar/top.
 
 **Pedido del usuario:** refinar las barras polybar del rice vista (paneles de vidrio flotantes, jerarquía limpia), quitar el icono de Windows de la barra inferior, corregir los relieves "sucios" de la barra superior y añadir info a la barra inferior (temperatura, disco, fecha+tiempo).
 
