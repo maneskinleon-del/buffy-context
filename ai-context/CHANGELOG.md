@@ -14,6 +14,27 @@ system-id: mangonz-desktop
 # CHANGELOG.md — Historial de cambios del sistema
 
 
+### 2026-08-07 — Rice "vista": barras polybar como vidrio limpio (huecos px, bloques sucios, temp, fecha)
+
+**Pedido del usuario:** refinar las barras polybar del rice vista (paneles de vidrio flotantes, jerarquía limpia), quitar el icono de Windows de la barra inferior, corregir los relieves "sucios" de la barra superior y añadir info a la barra inferior (temperatura, disco, fecha+tiempo).
+
+**Cambios aplicados:**
+- **Huecos de ~100px entre módulos (RESUELTO):** en polybar 3.7.2, `padding`/`spacing` sin unidad se renderizan como **N caracteres de espacio** (`builder.cpp`: `string(value, ' ')`), no píxeles (≈8px por espacio con JetBrainsMono 10). Fix: todos los espaciados con sufijo `px`.
+- **Relieve "sucio" en bloques de la top bar:** los módulos `bi`/`bd` (`label-background = ${color.bg}`) pintaban costuras oscuras entre bloques; network/pulseaudio/updates tenían `format/label-background = ${color.mb}` (dobles rectángulos translúcidos) y los escritorios ocupados `label-occupied-background = ${color.mb}`. Fix: quitados bi/bd de `modules-center`/`modules-right` y eliminados los `*background = ${color.mb}` de módulos activos → texto/iconos limpios sobre vidrio.
+- **Botón Start (logo Windows) retirado a pedido:** `[module/start]` eliminado de modules.ini y de `modules-left` de la barra inferior.
+- **Fecha ausente en el reloj:** el label usaba `%date%` pero `[module/date]` no tenía la línea `date =` (solo `date-alt`) → renderizaba vacío. Fix: `date = "%a, %d %b %Y"`, `label = "%date%  %time%"`.
+- **Temperatura leía 0 + `%units%` literal:** `hwmon-path` en 3.7.2 = ruta completa al **ARCHIVO** del sensor (`/sys/class/hwmon/hwmon2/temp1_input`), no al directorio (apuntar al dir → lee el dir como archivo → `strtol("")` = 0, confirmado con strace). `%units%` no es token (es la opción `units`); `%temperature-c%` ya agrega "°C".
+- **Centro de barra inferior:** `bspwm` (duplicado con la top) → `cpu_bar sep memory_bar sep temp sep filesystem` con iconos FA6 Solid (   , colores red/yellow/orange/purple); `battery` quitado de `modules-right` (desktop, sin batería — solo logueaba error).
+- **Barra inferior murió sola una vez:** crash transitorio de runtime (sin OOM/segfault; IPC de ArchUpdates probado en vivo = inofensivo). Reinicio desacoplado con `setsid` + log en `/tmp/opencode/bar2.log` para capturar el motivo si reaparece.
+
+**Archivos modificados/creados:**
+- `~/.config/bspwm/rices/vista/config.ini`, `~/.config/bspwm/rices/vista/modules.ini` — barras y módulos
+- `~/.config/bspwm/rices/vista/CHANGELOG.md` — NUEVO: doc completo de la sesión (bugs, causa raíz, gotchas de polybar 3.7.2, mantenimiento)
+- `ai-context/PROJECTS.md` — sección "Escritorio — Rice vista" actualizada al estado actual
+- `ai-context/SESION.md` — entrada de sesión 2026-08-07
+
+---
+
 ### 2026-08-06 — CodeGraph: descubrimiento y análisis de código (MCP + indexado + documentación)
 
 **Pedido del usuario:** configurar el servidor MCP de CodeGraph para consultar el grafo del código directamente durante las sesiones de código; probarlo en vivo y documentar su uso para que los agentes lo usen primero en proyectos grandes.
