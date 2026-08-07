@@ -1,86 +1,95 @@
 # 🔄 CONTINUE — Handoff entre sesiones
 
 > ⚡ **PRÓXIMA SESIÓN: LEE ESTO PRIMERO**
-> Generado: 2026-08-05 (data_car: fixes extractor MG 350 pusheados `6b3e352` · Freebuff "temporarily busy" investigado + wrapper `fb-wait`)
+> Generado: 2026-08-07 (buffy-context: fact registry + TTL enforcement + jerarquía de fuentes + CI verde · suite 168 checks)
 
 ---
 
 ## Resumen de la sesión
 
-**Tema principal:** Tres frentes cerrados hoy: (1) se corrigió a fondo el extractor técnico de data_car y se **pusheó el commit `6b3e352`** (transmission_oil captura "2 L" real en vez del "18. L" espurio, torque de rueda, relación de compresión, caracteres corruptos del text-layer); (2) se investigó el mensaje **"Freebuff is temporarily busy"** (HTTP 429, modo limited) y se creó el wrapper **`~/.local/bin/fb-wait`** para reintentar con espera configurable; (3) se verificó el build de producción de la PWA.
+**Tema principal:** Ciclo completo sobre **buffy-context**: fact registry declarativo (`facts_rules.yaml` + `facts_engine.py`), hardening sin shell, **hallazgo y fix del TTL** (los tests adversariales destaparon que el TTL nunca se enforzaba), jerarquía de autoridad de fuentes (`buffy-source.sh`), y **3 fixes de CI** para que GitHub Actions pase en checkout fresco. Suite: **168 OK / 0 FAIL**. Verify real: **19 verificados / 0 stale / 0 expired · trust 100%**.
 
 ---
 
 ### ✅ Logros principales
 
-#### 1. 🚗 data_car — Fixes de extracción del manual MG 350 (commit `6b3e352` pusheado)
+#### 1. 🧠 Fact registry declarativo (commit `14dc4cb`)
+Los hechos viven en `ai-context/facts_rules.yaml` (catálogo de `version_checks` + `tool_checks`) y el motor genérico `scripts/lib/facts_engine.py` los procesa — **agregar un hecho = editar el YAML, no el script**. El kernel ahora se compara por **versión exacta** (doc vs `uname -r`) → detectó el mismatch `6.18.39-1` vs real y se corrigió el doc. Provenance con **scope + ttl_days** por hecho (gitignored, regenerable con `--update-facts`).
 
-**Bug crítico resuelto — transmission_oil "18. L":** la keyword `/transmisi[oó]n\s*[:：]/` **no tenía el flag `/i`**. El manual solo usa "**T**ransmisión:" con mayúscula (p.75: "Transmisión: Llene Relleno seca **2 L**"), así que el regex case-sensitive nunca matcheaba y la regla caía en el patrón laxo que capturaba el "18. L" de una tabla de tornillería (p.398). Fue el único `fieldKeyword` de las 16 reglas sin `/i`. Fix: flag `/i` + patrón de capacidad estricto `(\d+(?:[.,]\d+)?)` que rechaza números truncados tipo "18. L" sin perder "2,9 l" → **captura "2 L" @80%**.
+#### 2. 🔒 Hardening sin shell (commit `cf794f6`)
+`command: [git, --version]` como **lista** + ejecución con `shell=False`; `normalize_command()` **rechaza metacaracteres** (`; & | $ < > ( )`). Retrocompatible con strings simples. Cierre de la única P2 que quedaba de la 3.ª auditoría.
 
-**Otras reglas arregladas con evidencia del manual:**
-- `wheel_torque`: keywords ampliadas (`tornillos? de rueda`, `pernos? de rueda`, `wheel bolt`) + lookahead que excluye "rueda **dentada**" (sprockets) → **"115-130 Nm" @65% p.517** + nuevo mapeo `→ torqueTornillos` en specsSync.
-- `compression`: el manual publica la **relación** ("Índice de compresión 10.5: 1", p.79), no psi → regla renombrada a "Relación de Compresión" con patrón de ratio + bonus de confianza por formato.
-- `valve_clearance` (`/v[aá·]lvulas?:/i`), `tire_size` (keyword "tamaño"), `normalizeText` (mapea í→Ì, é→È, ú→˙, ñ→Ò corruptos del text-layer) → desbloquean brake_fluid (DOT4), filtros (BLT200010, FN745), neumáticos (205/55 R16).
+#### 3. 🐛→✅ **HALLAZGO DEL TTL** — tests adversariales (commit `b9950bc`)
+Los 4 casos adversariales de la auditoría E2E encontraron un **bug real**:
+| Caso | Qué probó | Resultado |
+|---|---|---|
+| 1. Contexto falso | kernel `9.9.9-fake` en INFO-core | ✅ `stale` + trust 94.7 |
+| 2. Routing ambiguo | "app Android en React + ADB" | ✅ `Android React` sin sobrecarga |
+| 3. Contexto contradictorio | fuentes en conflicto | ⚠️ parcial → llevó a la jerarquía de fuentes |
+| 4. **TTL vencido** | facts "verificados" en 2025, ttl 30 | 🐛 **BUG: daba trust 100%** |
 
-**Resultado con `mg350-manual-final.pdf` (1018 págs):** cobertura **83%**, 12 componentes con datos, **7 campos sincronizados** a la ficha (aceiteMotor=4,5 l · aceiteCaja=2 L · refrigerante=7.3 L · bujias=0,9 mm · dimensionNeumaticos=205/55 R16 · capacidadEstanque=55 L · torqueTornillos=115-130 Nm). Validado: lint EXIT 0 + build ✅. 2 archivos, +50/-8.
+**El bug:** verify regeneraba `facts.yaml` pero **jamás leía el anterior** — el TTL era decorativo. Un facts.yaml con fechas de hace un año daba trust 100%. **Fix:** verify lee el facts.yaml previo y reporta cada hecho vencido como **`expired`** (nuevo nivel, id `TTL_EXPIRED`); el trust baja y no cuenta como verificado. Demostración: `trust 100% → 52%, 17 ⏱️ expired`. +3 tests blindando expired≠verified.
 
-**Datos que el manual NO publica (reglas quedan sin candidatos a propósito):** `tire_pressure` (solo TPMS sin valores; los "93-123 kPa" son de la tapa del radiador) y `brake_pad` (solo procedimientos, sin espesor mm). No hay correa — el MG 350 usa **cadena** de distribución (sin intervalo de reemplazo publicado).
+#### 4. 🏛️ Jerarquía de autoridad de fuentes (commit `dcbad8c`)
+`scripts/buffy-source.sh --resolve <fact>` — decide **qué creer cuando las fuentes se contradicen** (el caso 3):
+```
+real-time (sistema AHORA) > facts (verified+TTL) > SNAPSHOT > CONTINUE > INFO-core > inferred
+```
+Gana la de mayor autoridad y **reporta los conflictos** de las inferiores. En vivo detectó un conflicto REAL: `npm 12.0.1 [real-time] ⚠️ conflicto: continue(11.18.0)` — el CONTINUE.md tenía la versión vieja. Flag `--no-live` para entornos sin sistema (CI/tests determinísticos). +4 tests.
 
-#### 2. 🧠 Freebuff "temporarily busy" (modo limited / Chile) — investigado y mitigado
+#### 5. ✅ CI verde — 3 fixes (commits `adb1d12` y `4cfb3f0`)
+El job "Suite completa" fallaba en GitHub Actions: los tests dependían de archivos **gitignored** que no existen en checkout fresco.
+- **Fix A (`adb1d12`)**: 3 tests de verify abrían `facts.yaml`/`SNAPSHOT.md` directamente → ahora **auto-generan sus fixtures** en sandbox. (En el camino: 2 bugs de bash — `trap RETURN` acumulado entre tests y `cp -r` que anidaba con destino existente.)
+- **Fix B (`4cfb3f0`)**: el assert de schema exigía hechos `verified` — imposible en runner ajeno (kernel/os salen `stale`, `codegraph` no existe → `unknown`). Ahora valida **presencia** (cualquier level), que es el contrato real. Verificado contra kernel falso: pasa.
+- **CI real: `success`** ✅ (4cfb3f0). Logs del job vía `GET /actions/jobs/{id}/logs`.
 
-**Causa raíz (verificado en el binario `~/.config/manicode/freebuff`):** el mensaje `"Freebuff is temporarily busy. Please try again in a moment."` es la constante `_qH`, disparada **solo con HTTP 429** (`QqH`: `if (A.statusCode !== 429) return null`). Tres niveles de espera, todos **hardcodeados en el binario compilado** (sin config editable):
-- Cliente HTTP: `MB$ = {maxRetries: 3, initialDelayMs: 1000, maxDelayMs: 10000}` (408/429/500/502/503/504).
-- SDK de AI: `maxRetries: 2` + respeta header `Retry-After` (cap 60s o el backoff).
-- Polling de sesión free: `G4$ = 30000` (30 s) + backoff `nl()` exponencial con **cap 300000 ms (5 min)**.
-
-No existe `settings.json` ni env var `CODEBUFF_*` que controle estos valores. Freebuff es **TUI interactiva pura** (solo acepta `login` como subcomando; no hay modo one-shot con prompt).
-
-**Solución creada — `~/.local/bin/fb-wait`** (en PATH, ejecutable, 4.5 KB): launcher de guardia que lanza Freebuff y, al salir, revisa la **cola** (tail 8 KB) del `log.jsonl` de la sesión más reciente (ordenada por mtime real vía `find -printf %T@`, no por nombre). Si el último error fue 429 busy → espera `FB_WAIT_MIN` (default **5 min**) y relanza con `--continue` para retomar la conversación, hasta `FB_MAX_RETRIES` (default 10). Trata Ctrl+C **con** busy reciente como reintentable; Ctrl+C/error genérico sin busy → sale. Valida env vars numéricas. Probado con mocks (5 escenarios OK). Alcance: no reintenta el prompt en vivo (la TUI no termina al ver el busy); automatiza "salir → esperar → relanzar".
-
-#### 3. 📦 data_car — Build de producción verificado
-`npm run lint` (tsc) EXIT 0 + `npm run build` ✅ (3.70s, 1684 módulos). Artefactos: `dist/` con index 0.42 kB, CSS 49.67 kB (gzip 8.32), JS 761.03 kB (gzip 225.46). Peso esperado (pdfjs-dist; `chunkSizeWarningLimit` 1000KB).
+---
 
 ### 📁 Archivos modificados/creados
 
 | Archivo | Cambio |
 |---|---|
-| `~/data_car/src/lib/technicalExtractor.ts` | fixes de extracción (commit `6b3e352` pusheado) |
-| `~/data_car/src/lib/specsSync.ts` | mapeo wheel_torque → torqueTornillos (mismo commit) |
-| `~/.local/bin/fb-wait` | **NUEVO** — wrapper de reintentos ante 429 busy |
+| `ai-context/facts_rules.yaml` | catálogo declarativo de hechos (listas, sin shell) |
+| `scripts/lib/facts_engine.py` | motor genérico + `normalize_command()` (rechaza inyección) |
+| `scripts/buffy-verify.sh` | TTL enforcement (`expired`/`TTL_EXPIRED`), kernel por versión exacta |
+| `scripts/buffy-source.sh` | **NUEVO** — resolvedor de jerarquía de fuentes (`--resolve`, `--no-live`, `--json`) |
+| `scripts/tests/test-verify.sh` | fixtures auto-generados, tests TTL + jerarquía, asserts de contrato |
+| `ai-context/LOAD_CONTEXT.md` | Paso 2.5: provenance + jerarquía de fuentes |
+| `README.md` / `REVIEW-BASELINE.md` | suite 168 checks, docs actualizadas |
 | `ai-context/CONTINUE.md` | regenerado (esta sesión) |
-| `ai-context/SESION.md` | entrada 2026-08-05 actualizada |
+
+Commits: `a5a6739` → `14dc4cb` → `cf794f6` → `b9950bc` → `dcbad8c` → `adb1d12` → `4cfb3f0` (todos pusheados a main).
 
 ---
 
 ### ⏳ Pendientes para próxima sesión
 
-1. **Probar `fb-wait` en vivo**: `fb-wait` (espera 5 min entre reintentos; `FB_WAIT_MIN=10` para más). Verificar que el log de la sesión registra el 429 y que relanza con `--continue`.
-2. **data_car**: probar en navegador el flujo completo (PDF → construir base → "Sincronizar ficha"); el agente browser_use falló en este entorno al subir archivos — usar el test Node del pipeline (`tmp_*.ts` + esbuild) o probar manualmente con el preview (`npm run preview -- --port 4173`). Revisar deps del useEffect de auto-sync en TechnicalDatabase.tsx. SESION.md supera 30KB → podar a SESION-archive.md.
-3. **(Opcional)** Crear `AGENTS.md` por proyecto activo (data_car, widgetos, pwa_securguard…). Sincronizar `~/.AGENTS.md` con `AGENTS-root.md` (symlink o re-copia si editas el original).
-4. **Arrastrados**: `gh auth login` · renombrar repo `enerador-de-boletas` → `generador-de-boletas` · ManUninstaller `versionName` 2.0.0 → 2.1.0 · Mi 10 toggle "Instalar vía USB" · revisar apps restantes del Nubia.
+1. **Pasar de construcción a validación de comportamiento** (recomendación de la 3.ª auditoría): probar Buffy con agentes reales (OpenCode, Claude Code) en tareas reales — los problemas reales solo aparecen en uso. El proyecto ya tiene 14+ capas; **no agregar más features indiscriminadamente**.
+2. **P2 opcionales del audit** (solo si llevas Buffy a más máquinas): separar `facts/` por tipo (`system.yaml` / `user.yaml` / `inferred.yaml`) y `verify --profile ci` (gate factual controlado en CI).
+3. **Arrastrados previos**: probar `fb-wait` en vivo (429 busy) · data_car flujo completo en navegador · SESION.md supera 30 KB → podar a SESION-archive.md · `gh auth login` · renombrar repo `enerador-de-boletas` · ManUninstaller versionName 2.1.0 · Mi 10 "Instalar vía USB".
 
 ---
 
 ### ⚠️ Problemas conocidos
 
-- **gh sin autenticar** — todo push por SSH (funciona con `~/.ssh/id_ed25519`).
-- **`~/.AGENTS.md` es solo lectura para el agente** — editar `AGENTS-root.md` y re-copiar (o symlink) para cambios. Los knowledge files se inyectan completos → mantenerlos livianos.
-- **Freebuff busy (429)**: el cliente no tiene reintento largo configurable; el header `Retry-After` del servidor es la única palanca que respeta (hasta 5 min). Usar `fb-wait`.
-- **Calidad de extracción depende del PDF**: `mg350-parte1*.pdf` dan poca cobertura (capas de texto malas); `mg350-manual-final.pdf` es el bueno (83%).
+- **Los tests corren contra el sistema real del runner** — validan el CONTRATO (schema, presencia, ids), no valores concretos. Los fixtures controlados (kernel/node falsos, TTL vencido) cubren la detección determinística. No romper ese equilibrio al agregar asserts nuevos.
+- **`facts.yaml` es gitignored y regenerable** — no versionarlo; los tests deben auto-generar lo que necesiten en sandbox.
+- **`~/.AGENTS.md` es solo lectura para el agente** — editar `AGENTS-root.md` y re-copiar para cambios.
+- **gh sin autenticar** — push por SSH (`~/.ssh/id_ed25519`) o con token vía URL.
 
 ---
 
-## Stack del usuario (referencia rápida)
+## Stack del usuario (referencia rápida — verificado por buffy-verify)
 
 ```
 OS:    EndeavourOS (Arch) · kernel 6.18.39-1-lts
-WM:    bspwm (X11) · rice gh0stzk/cynthia · picom
+WM:    bspwm (X11) · rice gh0stzk/vista (Windows Vista Aero; backup en ~/.config/bspwm/.rice.bak) · picom
 Shell: zsh (Oh My Zsh + Starship) · alacritty · editor VSCodium
 CPU:   Ryzen 5 3400G (4C/8T) + Vega 11 · 13GB RAM · 1360x768
 Phone: ZTE Nubia Z2352N = laboratorio (Shizuku + ManUninstaller activos) · Mi 10 (tethering)
 Disk:  39% usado / 126G libres · ollama + backups en HDD (/media/datos)
 Stack: React + TS + Tailwind v4 + Vite → GitHub (maneskinleon-del) → Vercel
-Node:  v26.4.0 · npm 11.18.0 · gh CLI (sin auth)
+Node:  v26.4.0 · npm 12.0.1 · gh CLI (sin auth)
 Git:   maneskinleon-del / mangonz970@gmail.com · push por SSH
-AI CLI: freebuff v0.0.138 (auto-carga ~/.AGENTS.md) · fb-wait para 429 · Antigravity
+AI CLI: freebuff v0.0.138 (auto-carga ~/.AGENTS.md) · fb-wait para 429 · Antigravity · OpenCode (nemotron)
 ```
