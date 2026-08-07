@@ -12,7 +12,8 @@ system-id: mangonz-desktop
 ## Escritorio — Rice "vista" (estilo Windows Vista Aero)
 - **Qué:** rice nuevo del sistema gh0stzk (`~/.config/bspwm/rices/vista/`) — el escritorio actual se ve como Windows Vista Aero
 - **Aplicado:** 2026-08-07 · `.rice` → `vista` (backup en `~/.config/bspwm/.rice.bak` = cynthia)
-- **Componentes:** wallpaper aurora Vista auténtico (wall-03.webp), barra de tareas inferior con botón Start (logo Windows U+F17A FA7 Brands) + inicio rápido + workspaces estilo botones de tarea + reloj; barra superior fina; picom blur activo (vidrio) + corner-radius 8; GTK MonochromeBlue-zk; rofi azul Aero; alacritty opacity 0.92; bordes bspwm azules
+- **Componentes:** wallpaper aurora Vista auténtico (wall-03.webp), barras polybar como paneles de vidrio flotantes (radius 8, border 1, padding en px) — barra inferior = inicio rápido (browser·filem·terminal·editor) | CPU·RAM·temp·disco | tray + fecha/hora; barra superior = launcher+título | escritorios | red·volumen·updates·power; picom blur activo (vidrio) + corner-radius 8; GTK MonochromeBlue-zk; rofi azul Aero; alacritty opacity 0.92; bordes bspwm azules
+- **Notas barras (2026-08-07):** botón Start (logo Windows) retirado a pedido; workspaces solo en la barra superior; módulos del centro inferior limpios (sin fondos translúcidos mb); sensor temp = k10temp (`hwmon2/temp1_input`); detalle de bugs resueltos y gotchas de polybar 3.7.2 en `rices/vista/CHANGELOG.md`
 - **Revertir:** `RiceSelector` (clic derecho en launcher) → elegir `cynthia`, o `echo cynthia > ~/.config/bspwm/.rice && ~/.config/bspwm/bin/Theme.sh` + reiniciar picom
 - **Nota:** se añadió `blur-background = true` a la regla dock de `picom-rules.conf` (compartida — las barras translúcidas de cualquier rice ahora hacen blur)
 

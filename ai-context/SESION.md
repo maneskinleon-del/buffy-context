@@ -1,3 +1,51 @@
+# 🧠 SESION — Buffy Freebuff (2026-08-07)
+
+> Contexto de todo lo implementado durante esta sesión.
+
+---
+
+## 🌊 Rice "vista" — barras polybar refinadas como vidrio limpio
+
+### Pedido del usuario
+Refinar las barras polybar del rice vista (paneles flotantes de vidrio, jerarquía limpia), quitar el icono de Windows de la barra inferior, corregir los relieves "sucios" de la barra superior, y añadir info a la barra inferior (temp, disco, fecha+tiempo).
+
+### El misterio de los huecos de ~100px — RESUELTO
+Entre módulos había ~95-115px de espacio y ~85-150px antes del primer módulo. **Causa raíz:** en polybar 3.7.2 los valores de `padding`/`spacing` **sin unidad se renderizan como N caracteres de espacio** (`builder.cpp`: `string(value, ' ')`), no píxeles — con JetBrainsMono 10 cada espacio ≈ 8px. `padding-left = 12` ≈ 96px de hueco; `label-padding = 2` ≈ +32px por label. Se confirmó con tests aislados (label box 8px con padding 0 → 40px con padding 2). **Fix:** todos los espaciados con sufijo `px` (`12px`, `14px`, `2px`, `3px`…). Verificado: start pill x40 (antes x124), gaps ~19px, 0 agujeros.
+
+### Bloques "sucios"/relieve de la top bar — causa doble
+1. Módulos `bi`/`bd` (`custom/text` con `label = "%{T4}%{T-}"` y `label-background = ${color.bg}`) pintaban rectángulos del color del bar pegados a los bloques → costuras oscuras entre bloques claros (efecto chip con sombra). 2. network/pulseaudio/updates tenían `format-*-background` + `label-*-background = ${color.mb}` (dobles rectángulos translúcidos) y los escritorios ocupados `label-occupied-background = ${color.mb}`. **Fix:** quitados bi/bd de modules-center/right y eliminados todos los `*background = ${color.mb}` de módulos activos. Se mantuvo la píldora azul enfocada (sólida).
+
+### El reloj sin fecha
+El label usaba `%date%` pero `[module/date]` no tenía la línea `date =` (solo `date-alt`) → `%date%` renderizaba vacío. Fix: `date = "%a, %d %b %Y"`, `label = "%date%  %time%"`, `date-alt = "%d/%m/%Y"`.
+
+### Temperatura leyendo 0 + `%units%` literal
+`hwmon-path` en polybar 3.7.2 es la ruta completa al **ARCHIVO** del sensor, no al directorio. Con `hwmon-path = /sys/class/hwmon/hwmon2` (dir) el módulo leía el directorio como archivo → `strtol("")` = 0 (confirmado con strace: abría el dir y nunca `temp1_input`). `%units%` no es un token (es la opción booleana `units`); `%temperature-c%` ya agrega "°C`. Fix: `hwmon-path = /sys/class/hwmon/hwmon2/temp1_input`, `label = "%temperature-c%"`. Sensor k10temp = CPU AMD (42-51°C); acpitz = ambiente; thermal_zone* → acpitz, no CPU.
+
+### La barra inferior murió sola (una vez)
+`cyn-bar2` desapareció como proceso sin config rota (arranca y se mantiene viva). Sin OOM, sin segfault, sin apps de tray, sin reinicio global (PID de la top intacto). Correlación temporal: timer systemd `ArchUpdates` (cada 15 min) que manda `polybar-msg action updates hook 0` en broadcast; **probado en vivo que NO la mata** (solo loguea "No module named 'updates'", inofensivo). Conclusión: crash transitorio X11/pseudo-transparency. Mitigación: reinicio desacoplado con `setsid` + redirección de fds + log en `/tmp/opencode/bar2.log`.
+
+### Trampa de `pkill -f` (self-kill)
+`pkill -f 'polybar cyn-bar2'` mataba la propia shell del agente (el patrón aparece en su línea de comandos). Usar anclado: `pkill -f '^polybar cyn-bar2'`.
+
+### Estado final verificado
+| Barra | Izquierda | Centro | Derecha |
+|---|---|---|---|
+| Superior (`cyn-bar`) | launcher + título | escritorios (bspwm) | red · volumen · updates · power |
+| Inferior (`cyn-bar2`) | browser · filem · terminal · editor | ` CPU   RAM   42°C   23%` | tray · `vie, 07 ago 2026 02:53 pm` |
+
+### Archivos modificados/creados (sesión 2026-08-07)
+
+| Archivo | Cambio |
+|---|---|
+| `~/.config/bspwm/rices/vista/config.ini` | módulos por barra, paddings/márgenes en px, `[settings]` compositing, sin `start`/`battery` |
+| `~/.config/bspwm/rices/vista/modules.ini` | `[module/start]` eliminado; bi/bd sin uso; network/pulseaudio/updates sin fondos mb; date con `date =`; cpu_bar/memory_bar/filesystem limpios con iconos; `[module/temp]` nuevo (k10temp) |
+| `~/.config/bspwm/rices/vista/CHANGELOG.md` | **NUEVO** — doc completo: 8 bugs con causa raíz, tabla de gotchas polybar 3.7.2, comandos de mantenimiento |
+| `ai-context/PROJECTS.md` | sección "Escritorio — Rice vista" actualizada |
+| `ai-context/CHANGELOG.md` | entrada 2026-08-07 |
+| `ai-context/SESION.md` | esta entrada |
+
+---
+
 # 🧠 SESION — Buffy Freebuff (2026-08-06)
 
 > Contexto de todo lo implementado durante esta sesión.
