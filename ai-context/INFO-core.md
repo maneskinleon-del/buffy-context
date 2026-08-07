@@ -24,10 +24,16 @@
 ```
 
 ## Herramientas de uso frecuente
-git 2.55.0 · node v26.4.0 · npm 11.18.0 · python3 3.14.6 · cargo/rustc · adb/fastboot · Shizuku v13.7.0 + rish (`/data/local/tmp/rish`) · gh (GitHub CLI) · vercel · uv
+git 2.55.0 · node v26.4.0 · npm 11.18.0 · python3 3.14.6 · cargo/rustc · adb/fastboot · Shizuku v13.7.0 + rish (`/data/local/tmp/rish`) · gh (GitHub CLI) · vercel · uv · **codegraph v1.5.0** (grafo de código local)
 
 ## IA/CLI instaladas
-freebuff · Antigravity
+freebuff · Antigravity · Claude Code (ext. VSCodium) · Gemini CLI · Cline · command-code
+
+## CodeGraph (descubrimiento y análisis de código)
+- Grafo de conocimiento SQLite (tree-sitter), 100% local — servidor MCP `codegraph serve --mcp` configurado en **Claude Code, Gemini CLI, Antigravity y Cline** (herramienta `codegraph_explore`).
+- **Regla**: si un proyecto tiene `.codegraph/` en su raíz, usar CodeGraph ANTES de grep/find para descubrimiento, call paths y análisis de impacto.
+- **Indexados**: `~/proyectos/autoscript-mobile-interface/` (49 archivos · 1.084 símbolos) y `~/proyectos/ManUninstaller/` (31 · 486).
+- CLI: `codegraph explore/query/callers/callees/impact/node/files`. Detalle en `~/.AGENTS.md` y `LOAD_CONTEXT.md` (sección Code Search).
 
 ## Skills instaladas (`~/.agents/skills/`)
 | Skill | Uso |

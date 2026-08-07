@@ -116,6 +116,13 @@ probada en vivo con el ZTE Nubia).
 | Error que requiere encontrar definiciones de funciones/clases | En el mensaje del usuario |
 | Necesita entender un flujo antes de modificarlo | En la tarea actual |
 
+> ⚡ **CodeGraph PRIMERO**: si el proyecto tiene `.codegraph/` en su raíz
+> (está indexado), usar CodeGraph **antes que ripgrep/grep** —
+> `codegraph explore "<símbolos o pregunta>"` o la herramienta MCP
+> `codegraph_explore` devuelven el código verbatim + call paths + blast radius
+> en una llamada. Otros: `codegraph query/callers/callees/impact`.
+> Indexados actualmente: `autoscript-mobile-interface` y `ManUninstaller`.
+
 **Si se activa** → cargar `.agents/skills/code-search/SKILL.md`:
 - Define 3 modos de búsqueda: agente nativo → CLI (ripgrep/grep) → exploración manual
 - Es portable entre Freebuff, Claude Code, Codex
@@ -224,6 +231,7 @@ ai-context/
 
 ## 💡 Tips para agentes
 
+- **Si un proyecto tiene `.codegraph/`, usa CodeGraph antes que grep** — `codegraph explore/query/impact` da descubrimiento, call paths y blast radius en una llamada (MCP `codegraph_explore` ya configurado).
 - **SNAPSHOT.md puede estar desactualizado**. Si necesitas datos frescos, ejecuta `buffy-context.sh` o lee `/proc/` directamente.
 - **CONTINUE.md es el archivo más importante**. Si solo puedes leer uno, lee ese.
 - **Knowledge/ no se carga completo nunca**. Usa la carga condicional de la sección de arriba.

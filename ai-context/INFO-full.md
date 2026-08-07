@@ -57,6 +57,7 @@
 - Bluetooth: Blueman · Firewall: firewalld · Impresión: CUPS
 - Docker, Flatpak
 - Android: ADB, fastboot, Shizuku, rish
+- **CodeGraph v1.5.0** — grafo de conocimiento de código (SQLite/tree-sitter, 100% local). MCP `codegraph_explore` configurado en Claude Code, Gemini CLI, Antigravity y Cline. Proyectos indexados: `~/proyectos/autoscript-mobile-interface/` (49 archivos · 1.084 símbolos) y `~/proyectos/ManUninstaller/` (31 · 486). Regla: si existe `.codegraph/` en la raíz del proyecto, usar CodeGraph antes de grep/find.
 
 ---
 
@@ -172,7 +173,9 @@ Cambio definitivo de compositor. Hyprland + dotfiles Caelestia quedan retirados;
 
 **Redes:** ssh · rsync · curl · wget
 
-**IA/CLI:** freebuff · Antigravity · uv · gh · vercel
+**IA/CLI:** freebuff · Antigravity · Claude Code · Gemini CLI · Cline · command-code · uv · gh · vercel
+
+**Código:** codegraph v1.5.0 (grafo local + MCP `codegraph_explore`) · ripgrep · jq
 
 **Paquetes:** pacman · paru · yay · npm · cargo · pip · flatpak
 
