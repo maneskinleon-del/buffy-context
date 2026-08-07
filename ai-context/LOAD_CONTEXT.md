@@ -38,6 +38,21 @@ Qué se hizo, en qué quedó, qué pendientes hay. **Es el archivo más importan
 > - Crea `CONTINUE.md` inicial con: "Primera sesión — sin historial previo"
 > - Continúa normalmente
 
+### Paso 2.5 — Provenance de hechos (OPCIONAL — para dudar con criterio)
+```markdown
+ai-context/facts.yaml     → SOLO si necesitas saber si un dato de INFO-core es
+                            confiable. Registra por hecho: valor real, source
+                            (system/user/inferred), confidence (0-1) y fecha de
+                            última verificación. Lo genera:
+                            bash scripts/buffy-verify.sh --update-facts
+```
+Ejemplo: si INFO-core dice "npm 11.18.0" pero `facts.yaml` marca ese hecho con
+`confidence: 0.4` y `status: stale` (el sistema tiene 12.0.1) → NO confíes en el
+dato de la doc; usa el valor real. Preferencia vs hecho confirmado:
+- `source: system` + `confidence: 1.0` → hecho verificado contra el sistema
+- `source: user` + `confidence: 1.0` → preferencia explícita del usuario
+- `source: inferred` + `confidence: < 1.0` → inferencia, verificar antes de usar
+
 ### Paso 4 — Bitácora (OPCIONAL — con límite)
 ```markdown
 ai-context/SESION.md     → SOLO las últimas 5 entradas (cabeceras visibles)
@@ -216,6 +231,7 @@ ai-context/
 ├── INFO-full.md          ← Contexto detallado (rara vez)
 │
 ├── SNAPSHOT.md           ← Estado vivo del sistema (cargar SIEMPRE, regenerable)
+├── facts.yaml            ← Provenance de hechos (regenerable, ver Paso 2.5)
 ├── CONTINUE.md           ← Handoff entre sesiones (cargar SIEMPRE)
 │
 ├── SESION.md             ← Últimas 5 entradas (cargar solo si la tarea lo requiere)
@@ -235,6 +251,7 @@ ai-context/
 
 - **Si un proyecto tiene `.codegraph/`, usa CodeGraph antes que grep** — `codegraph explore/query/impact` da descubrimiento, call paths y blast radius en una llamada (MCP `codegraph_explore` ya configurado).
 - **SNAPSHOT.md puede estar desactualizado**. Si necesitas datos frescos, ejecuta `buffy-context.sh` o lee `/proc/` directamente.
+- **`facts.yaml` dice QUÉ tan confiable es cada dato de INFO-core.md** (source/confidence/fecha). Si un hecho está `stale`, usa el valor real de `facts.yaml` en vez del de la doc. Regenera con `buffy-verify.sh --update-facts`.
 - **CONTINUE.md es el archivo más importante**. Si solo puedes leer uno, lee ese.
 - **Knowledge/ no se carga completo nunca**. Usa la carga condicional de la sección de arriba.
 - **NO dupliques información que ya está en INFO-core.md**. Referéncialo en vez de copiarlo.

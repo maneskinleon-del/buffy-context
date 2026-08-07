@@ -1,6 +1,9 @@
 # Regenerado cada sesión — no hacer commit
 ai-context/SNAPSHOT.md
 
+# Provenance de hechos — regenerado por buffy-verify.sh --update-facts (machine-specific)
+ai-context/facts.yaml
+
 # Archivos generados
 *.log
 *.swp

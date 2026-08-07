@@ -17,6 +17,8 @@
 #   buffy-verify.sh --repo RUTA → Verificar un checkout específico
 #   buffy-verify.sh --quick    → Solo resumen (sin secciones)
 #   buffy-verify.sh --json     → Salida JSON consumible por scripts (python3)
+#   buffy-verify.sh --update-facts → Genera/actualiza ai-context/facts.yaml
+#                                    (provenance: source/confidence/verified por hecho)
 #   buffy-verify.sh --help     → Esta ayuda
 #
 # Exit codes:
@@ -43,12 +45,14 @@ REPO_DIR="${SCRIPT_DIR%/scripts}"
 source "$SCRIPT_DIR/lib/common.sh"
 QUICK_MODE=false
 JSON_MODE=false
+UPDATE_FACTS=false
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --repo) REPO_DIR="$2"; shift 2 ;;
     --quick) QUICK_MODE=true; shift ;;
     --json) JSON_MODE=true; shift ;;
+    --update-facts) UPDATE_FACTS=true; shift ;;
     -h|--help)
       sed -n '2,17p' "$SCRIPT_SRC" | sed 's/^# \{0,1\}//'
       exit 0 ;;
@@ -87,14 +91,16 @@ TOTAL_OK=0
 TOTAL_STALE=0
 TOTAL_UNKNOWN=0
 JSON_ITEMS=""
+declare -A FACT_VALUES=()   # nombre → valor real del sistema (provenance)
+declare -A FACT_LEVELS=()   # nombre → verified|stale|unknown (provenance)
 
-# fact <tipo> <fact> <mensaje> <id> <target>
+# fact <tipo> <fact> <mensaje> <id> <target> [real]
 #   tipo: verified | stale | unknown
-#   fact: nombre corto del hecho (ej. kernel, node_version)
+#   fact: nombre corto del hecho (ej. kernel, npm_version)
 #   target: ruta/archivo donde vive la afirmación (para reparación manual)
-#   source: origen del dato (doc | system | env)
+#   real: valor real del sistema (opcional, para provenance)
 fact() {
-  local tipo="$1" nombre="$2" msg="$3" id="${4:-}" target="${5:-INFO-core.md}"
+  local tipo="$1" nombre="$2" msg="$3" id="${4:-}" target="${5:-INFO-core.md}" real="${6:-}"
   case "$tipo" in
     verified) TOTAL_OK=$((TOTAL_OK+1)) ;;
     stale)    TOTAL_STALE=$((TOTAL_STALE+1)) ;;
@@ -102,6 +108,10 @@ fact() {
   esac
   if [ "$JSON_MODE" = true ]; then
     JSON_ITEMS+="$tipo"$'\t'"$nombre"$'\t'"$msg"$'\t'"$id"$'\t'"$target"$'\n'
+  fi
+  if [ "$UPDATE_FACTS" = true ] && [ -n "$real" ]; then
+    FACT_VALUES["$nombre"]="$real"
+    FACT_LEVELS["$nombre"]="$tipo"
   fi
 }
 
@@ -140,11 +150,11 @@ version_fact() {
   real="$(ver_of "$@")"
   doc_ver="$(grep -oE "$nombre[^·|]*?[vV]?[0-9]+(\.[0-9]+){1,3}" "$INFO_CORE" 2>/dev/null | grep -oE '[0-9]+(\.[0-9]+){1,3}' | head -1)"
   if [ -z "$real" ]; then
-    fact unknown "$nombre" "$nombre presente pero no pude extraer su versión" "" "INFO-core.md"
+    fact unknown "$nombre" "$nombre presente pero no pude extraer su versión" "" "INFO-core.md" "$real"
   elif [ -n "$doc_ver" ] && [ "$real" != "$doc_ver" ]; then
-    fact stale "$nombre" "$nombre: doc dice $doc_ver, sistema tiene $real" "VERSION_STALE" "INFO-core.md"
+    fact stale "$nombre" "$nombre: doc dice $doc_ver, sistema tiene $real" "VERSION_STALE" "INFO-core.md" "$real"
   else
-    fact verified "$nombre" "$nombre $real ✓" "" "INFO-core.md"
+    fact verified "$nombre" "$nombre $real ✓" "" "INFO-core.md" "$real"
   fi
 }
 
@@ -164,11 +174,11 @@ section() {
 check_fact() {
   local nombre="$1" patron="$2" real="$3" id="$4" target="${5:-INFO-core.md}" msg_ok="${6:-}"
   if [ -z "$real" ] || [ "$real" = "?" ]; then
-    fact unknown "$nombre" "$nombre: no pude obtener el valor real del sistema" "$id" "$target"
+    fact unknown "$nombre" "$nombre: no pude obtener el valor real del sistema" "$id" "$target" "$real"
   elif has "$INFO_CORE" "$patron"; then
-    fact verified "$nombre" "${msg_ok:-$nombre: $real ✓}" "" "$target"
+    fact verified "$nombre" "${msg_ok:-$nombre: $real ✓}" "" "$target" "$real"
   else
-    fact stale "$nombre" "$nombre: doc no menciona '$real' (revisar INFO-core.md)" "$id" "$target"
+    fact stale "$nombre" "$nombre: doc no menciona '$real' (revisar INFO-core.md)" "$id" "$target" "$real"
   fi
 }
 
@@ -181,12 +191,13 @@ TERM_PROC="alacritty"
 LOCALE_REAL="${LANG:-?}"
 
 if [ -n "$OS_REAL" ] && has "$INFO_CORE" 'EndeavourOS|endeavouros'; then
-  fact verified "os" "OS: $OS_REAL ✓" "" "INFO-core.md"
+  fact verified "os" "OS: $OS_REAL ✓" "" "INFO-core.md" "$OS_REAL"
 else
-  fact stale "os" "OS: doc no confirma '$OS_REAL'" "OS_STALE" "INFO-core.md"
+  fact stale "os" "OS: doc no confirma '$OS_REAL'" "OS_STALE" "INFO-core.md" "$OS_REAL"
 fi
 
 check_fact "kernel" "kernel [0-9]" "$KERNEL_REAL" "KERNEL_STALE"
+# (check_fact ya pasa $real a fact para provenance)
 check_fact "wm" "bspwm" "$WM_REAL" "WM_STALE"
 
 # Rice del WM: extrae el nombre del rice que declara el doc y lo compara con el
@@ -199,12 +210,12 @@ RICE_FILE="$HOME/.config/bspwm/.rice"
 if [ -n "$RICE_DOC" ] && [ -f "$RICE_FILE" ]; then
   RICE_REAL="$(head -1 "$RICE_FILE" 2>/dev/null | tr -d '[:space:]')"
   if [ -n "$RICE_REAL" ] && [ "$RICE_REAL" != "$RICE_DOC" ]; then
-    fact stale "rice" "rice: doc dice $RICE_DOC, sistema tiene $RICE_REAL (actualizar INFO-core.md)" "RICE_STALE" "INFO-core.md"
+    fact stale "rice" "rice: doc dice $RICE_DOC, sistema tiene $RICE_REAL (actualizar INFO-core.md)" "RICE_STALE" "INFO-core.md" "$RICE_REAL"
   else
-    fact verified "rice" "rice: $RICE_REAL ✓" "" "INFO-core.md"
+    fact verified "rice" "rice: $RICE_REAL ✓" "" "INFO-core.md" "$RICE_REAL"
   fi
 elif [ -n "$RICE_DOC" ]; then
-  fact unknown "rice" "rice: doc declara $RICE_DOC pero no hay ~/.config/bspwm/.rice en este entorno" "" "INFO-core.md"
+  fact unknown "rice" "rice: doc declara $RICE_DOC pero no hay ~/.config/bspwm/.rice en este entorno" "" "INFO-core.md" ""
 fi
 check_fact "shell" "zsh" "$SHELL_REAL" "SHELL_STALE"
 check_fact "locale" "es_CL" "$LOCALE_REAL" "LOCALE_STALE"
@@ -225,9 +236,9 @@ section "🛠️  Herramientas (presencia)"
 for t in git node npm python3 cargo rustc adb fastboot gh vercel uv codegraph; do
   if has "$INFO_CORE" "$t"; then
     if presente "$t"; then
-      fact verified "$t" "$t instalado ✓" "" "INFO-core.md"
+      fact verified "$t" "$t instalado ✓" "" "INFO-core.md" "instalado"
     else
-      fact stale "$t" "$t documentado en INFO-core pero NO instalado" "TOOL_NOT_INSTALLED" "INFO-core.md"
+      fact stale "$t" "$t documentado en INFO-core pero NO instalado" "TOOL_NOT_INSTALLED" "INFO-core.md" "no instalado"
     fi
   fi
 done
@@ -239,6 +250,51 @@ version_fact node node --version
 version_fact npm npm --version
 version_fact python3 python3 --version
 version_fact codegraph codegraph --version
+
+# ── Provenance (--update-facts) ──────────────────────────
+# Genera ai-context/facts.yaml: registro machine-readable de QUÉ sabemos,
+# DE DÓNDE salió (source), QUÉ CONFIANZA tiene (confidence) y CUÁNDO se
+# verificó (verified). Diferencia: HECHO CONFIRMADO (system) vs PREFERENCIA
+# (user/inferred) — los datos del sistema se marcan con confidence 1.0.
+if [ "$UPDATE_FACTS" = true ]; then
+  FACTS_FILE="$REPO_DIR/ai-context/facts.yaml"
+  VERIFIED_DATE="$(date +%F)"
+  # Se serializa con python3: el TSV de FACT_VALUES/FACT_LEVELS es de confianza
+  # (los valores vienen de comandos del sistema o del propio INFO-core, nunca
+  # de input del usuario), así que el quoting YAML se delega al serializer.
+  TSV_FACTS=""
+  for k in "${!FACT_VALUES[@]}"; do
+    TSV_FACTS+="$k"$'\t'"${FACT_VALUES[$k]}"$'\t'"${FACT_LEVELS[$k]}"$'\n'
+  done
+  if printf '%s' "$TSV_FACTS" | python3 -c "
+import sys, yaml, datetime
+lines = sys.stdin.read().splitlines()
+facts = {}
+for ln in lines:
+    parts = ln.split('\t', 2)
+    if len(parts) < 3:
+        continue
+    name, value, level = parts[0], parts[1], parts[2]
+    if name in ('os', 'kernel', 'wm', 'rice', 'shell', 'locale', 'terminal', 'compositor', 'git', 'node', 'npm', 'python3', 'codegraph', 'cargo', 'rustc', 'adb', 'fastboot', 'gh', 'vercel', 'uv'):
+        source = 'system'
+    else:
+        source = 'system'
+    confidence = 1.0 if level == 'verified' else (0.4 if level == 'stale' else 0.2)
+    facts[name] = {
+        'value': value,
+        'source': source,
+        'confidence': confidence,
+        'status': level,
+        'verified': sys.argv[1],
+    }
+print(yaml.dump({'facts': facts}, sort_keys=False, allow_unicode=True, default_flow_style=False), end='')
+" "$VERIFIED_DATE" > "$FACTS_FILE".tmp 2>/dev/null; then
+    mv "$FACTS_FILE.tmp" "$FACTS_FILE"
+    echo -e "  ℹ️  Provenance actualizada: ${CYAN}$FACTS_FILE${NC} (${#FACT_VALUES[@]} hechos, verificados $VERIFIED_DATE)"
+  else
+    echo -e "  ${YELLOW}⚠️  No pude generar facts.yaml (¿falta PyYAML?) — verificación sin provenance.${NC}"
+  fi
+fi
 
 # ── Resumen ──────────────────────────────────────────────
 if [ "$JSON_MODE" = true ]; then
