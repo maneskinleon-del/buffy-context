@@ -61,3 +61,27 @@ jobs:
               sys.exit(1)
           sys.stderr.write("::notice::Doctor: errores=%d (baseline %d) — dentro del baseline\n" % (d["errors"], baseline))
           ' "$BASELINE_ERRORS"
+
+  verify:
+    name: Verify — hechos factuales vs sistema
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verificación factual (buffy-verify)
+        # Informativo (no gate): stale/unknown se reportan, no fallan — indican
+        # que INFO-core.md quedó desactualizado, no drift estructural.
+        run: |
+          set -euo pipefail
+          OUT="$(bash scripts/buffy-verify.sh --json 2>/dev/null || true)"
+          printf '%s' "$OUT" | python3 -c '
+          import json, sys
+          d = json.load(sys.stdin)
+          print("verified=%d stale=%d unknown=%d trust_score=%s" % (d["verified"], d["stale"], d["unknown"], d["trust_score"]))
+          for i in d["items"]:
+              if i["level"] == "stale":
+                  print("  STALE: %s → %s" % (i.get("fact", "?"), i["message"]))
+          if d["stale"] > 0:
+              sys.stderr.write("::warning::INFO-core.md tiene %d afirmaciones obsoletas — actualizar (buffy-verify)\n" % d["stale"])
+          '

@@ -27,7 +27,7 @@ This repository provides the infrastructure for an AI agent to maintain persiste
 | **Self-diagnostics** | doctor --json detecta drift, repair corrige lo seguro, agent orquesta el ciclo |
 | **Conditional loading** | Token-aware protocol: carga solo lo necesario según el tema |
 | **Auto-pruning** | SESION.md mantiene máximo 5 entradas, el resto se archiva |
-| **CI verde** | Suite 132 checks (116 `--quick`) + doctor baseline 0 en cada push/PR |
+| **CI verde** | Suite 148 checks (132 `--quick`) + doctor baseline 0 + verify factual en cada push/PR |
 
 ---
 
@@ -124,7 +124,7 @@ buffy-context/
 │   ├── kimi_vision.js                 # Detección de permisos con visión IA (Kimi K3)
 │   ├── lib/                           # yaml.sh (parsing compartido) + logger/utils.js
 │   ├── hooks/                         # install.sh + pre-commit.sh (suite --quick)
-│   └── tests/                         # run-tests.sh + 8 test_*.sh (suite 132 checks, 116 --quick)
+│   └── tests/                         # run-tests.sh + 10 test_*.sh (suite 148 checks, 132 --quick)
 │
 ├── INSTALL.md                         # Setup instructions
 ├── LICENSE                            # MIT license

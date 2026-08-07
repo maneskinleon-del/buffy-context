@@ -24,9 +24,9 @@ Componentes reales y funcionales:
 | Memoria/protocolo | `ai-context/LOAD_CONTEXT.md`, `INFO-core.md`, `CONTINUE.md`, `SESION.md` | ✅ Funcional |
 | Knowledge base | `Knowledge/` (Android, Linux, React, Git, Node, Shell, AI) | ✅ 16 archivos |
 | Skills | `.agents/skills/` — **23 skills en disco** (10 originales + 10 creadas 2026-08-03 + 3 migradas de ~/.agents/skills/) | ✅ Funcionales, **23/23 con skill.yaml** (B2 completo) + linter con gate |
-| Orquestación | `scripts/buffy-doctor.sh`, `buffy-repair.sh`, `buffy-agent.sh`, `buffy-router.sh` | ✅ Ciclo doctor→repair→agent funcional |
+| Orquestación | `scripts/buffy-doctor.sh`, `buffy-repair.sh`, `buffy-agent.sh`, `buffy-router.sh`, `buffy-verify.sh` | ✅ Ciclo doctor→repair→agent funcional + verificación factual |
 | Visión | `scripts/kimi_vision.js` + `Knowledge/AI/Kimi-K3.md` | ✅ Funcional (solo backend HF) |
-| Suite de tests | `scripts/tests/run-tests.sh` | ✅ 132 checks full / 116 quick |
+| Suite de tests | `scripts/tests/run-tests.sh` | ✅ 148 checks full / 132 quick |
 | CI | `.github/workflows/ci.yml` | ✅ En cada push/PR |
 | Hooks | `scripts/hooks/install.sh` + `pre-commit.sh` | ✅ Portable (Termux-safe) |
 | Versionado | `scripts/set-version.sh` + `scripts/changelog-entry.sh` | ✅ Semver + CHANGELOG auto |
@@ -94,10 +94,11 @@ Este trabajo se completó y pusheó en esta sesión (todos verdes):
   mkdir/chmod para symlinks, nota Termux + `/usr/bin/env`, dependencias opcionales, sandbox,
   smoke test post-instalación, `cp -rn`/rsync, `command -v >/dev/null`, ejemplo fish.
 - ✅ **README unificado**: ruta de SNAPSHOT corregida a `~/ai-context/`.
-- ✅ **Suite determinística**: 132 checks full / 116 `--quick` (7 SKIP: 4 sandbox + 3 changelog).
+- ✅ **Suite determinística**: 148 checks full / 132 `--quick` (7 SKIP: 4 sandbox + 3 changelog).
 - ✅ **Skill manifests (B2) completo**: las **23/23 skills** tienen `skill.yaml` (derivados del front-matter/contenido real de cada SKILL.md) + linter `scripts/skill-lint.sh` (valida id/version/entry/safe/triggers, cross-check con el front-matter, cobertura). **Gate activo**: test en la suite (`--require-all` → exit 0) + paso explícito en el job `suite` de CI — cualquier skill nueva sin manifest rompe CI (2026-08-03).
 - ✅ **Schema-lite ai-context (B1) completo**: `scripts/ai-context-lint.sh` valida las secciones obligatorias de INFO-core/CONTINUE/LOAD_CONTEXT (las que LOAD_CONTEXT.md promete SIEMPRE) + front-matter semver-lite X.Y/X.Y.Z + updated ISO. 5 tests en la suite (--json schema, stderr limpio, fixtures sin sandbox → corren en --quick). Detectó 3 front-matters con version X.Y (aceptado como convención del repo). Suite: 105 quick / 121 full (2026-08-03).
 - ✅ **BUFFY_HOME / common.sh (C2, opt-in) completo**: `scripts/lib/common.sh` exporta BUFFY_HOME (default `$HOME`) + helpers buffy_home/buffy_ai_context/buffy_snapshot; cableado en buffy-context/doctor/repair/router — redirige solo el estado generado, sin BUFFY_HOME el comportamiento es idéntico. 6 tests nuevos. Suite: 116 quick / 132 full (2026-08-03).
+- ✅ **`buffy-verify.sh` (2026-08-07)**: verificación FACTUAL de `ai-context/INFO-core.md` vs sistema real (OS/kernel/WM/shell vía os-release+uname+env; herramientas con `command -v`; versiones con parseo de salida). Complementa al doctor (estructural) con integridad factual — `stale`/`unknown` se reportan como warning, nunca fallan CI (informativo, job `verify` en CI). 16 tests nuevos (schema JSON, identidad stale, errores, --quick). Suite: 132 quick / 148 full (2026-08-07).
 
 ---
 
@@ -144,8 +145,8 @@ Estos son los problemas actuales del proyecto, en orden de prioridad:
 
 ```bash
 # Suite completa (gate de CI)
-bash scripts/tests/run-tests.sh           # 132 OK esperado
-bash scripts/tests/run-tests.sh --quick   # 116 OK esperado
+bash scripts/tests/run-tests.sh           # 148 OK esperado
+bash scripts/tests/run-tests.sh --quick   # 132 OK esperado
 
 # Doctor (drift)
 bash scripts/buffy-doctor.sh --json       # 0 errors / 1 warning en local (desde 2026-08-03)
