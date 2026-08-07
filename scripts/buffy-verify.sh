@@ -192,7 +192,9 @@ check_fact "wm" "bspwm" "$WM_REAL" "WM_STALE"
 # Rice del WM: extrae el nombre del rice que declara el doc y lo compara con el
 # activo del sistema. El cambio de rice (ej. cynthia → vista) NO cambia "bspwm",
 # así que verificar solo el WM dejaría pasar el caso más común de actualización.
-RICE_DOC="$(grep -oE 'rice [a-z0-9._/-]+' "$INFO_CORE" | head -1 | awk '{print $2}')"
+# Extrae el nombre del rice que declara el doc (tolera markdown **nom** y el
+# formato "gh0stzk/nombre"): toma la palabra tras "rice " y limpia asteriscos.
+RICE_DOC="$(grep -oE 'rice [^()]+' "$INFO_CORE" | head -1 | sed -E 's/rice //' | sed 's/\*//g' | awk '{print $1}' | sed 's|.*/||')"
 RICE_FILE="$HOME/.config/bspwm/.rice"
 if [ -n "$RICE_DOC" ] && [ -f "$RICE_FILE" ]; then
   RICE_REAL="$(head -1 "$RICE_FILE" 2>/dev/null | tr -d '[:space:]')"
