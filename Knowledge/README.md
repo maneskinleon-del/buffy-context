@@ -2,7 +2,7 @@
 
 > Base de conocimiento estructurada para consulta rápida por agentes IA.
 > Contenido extraído y resumido de skills, proyectos y experiencia acumulada.
-> Actualizado: 2026-08-03
+> Actualizado: 2026-08-06
 
 ---
 
@@ -36,6 +36,9 @@ Knowledge/
 │
 ├── Node/                   → Node.js, npm
 │   └── Node.md             → Node.js, npm global, package management
+│
+├── Tools/                  → Herramientas de desarrollo
+│   └── CodeGraph.md        → CodeGraph: grafo de código, comandos, MCP, troubleshooting
 │
 └── Shell/                  → Bash/Zsh scripting
     └── Shell.md            → Shell scripting (bash, zsh, awk, sed)

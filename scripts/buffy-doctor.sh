@@ -233,6 +233,7 @@ declare -A KNOWLEDGE_EXPECTED=(
   [Git/Commands.md]="Git"
   [Node/Node.md]="Node"
   [Shell/Shell.md]="Shell"
+  [Tools/CodeGraph.md]="Tools"
   [Vision.md]="Visión"
 )
 
