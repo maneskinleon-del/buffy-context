@@ -20,7 +20,7 @@ This repository provides the infrastructure for an AI agent to maintain persiste
 | Component | Purpose |
 |---|---|
 | **Memory persistence** | Protocol for loading/saving session context so the AI never starts blank |
-| **Knowledge base** | 18 files of curated technical reference across 7 categories + Vision.md |
+| **Knowledge base** | 19 files of curated technical reference across 8 categories + Vision.md |
 | **23 skills** | Especializadas por dominio, cada una con `skill.yaml` machine-readable |
 | **Android Agent** | Dedicated skill that auto-detects Android projects and activates relevant tools |
 | **Detection scripts** | Shell scripts for system snapshots and Android diagnostics |
@@ -70,6 +70,8 @@ buffy-context/
 │   │   └── Node.md                    # npm, package.json
 │   ├── Shell/
 │   │   └── Shell.md                   # Variables, awk, sed, trap
+│   ├── Tools/
+│   │   └── CodeGraph.md               # CodeGraph: grafo de código, MCP, troubleshooting
 │   ├── Vision.md                      # VLM local (Ollama): modelos, RAM, versiones
 │   └── README.md                      # Knowledge index
 │
@@ -351,6 +353,7 @@ Exit codes: `0` consistente · `1` queda drift que requiere decisión humana · 
 | **Git** | 1 | Daily commands, GitHub CLI |
 | **Node** | 1 | npm, package.json |
 | **Shell** | 1 | Bash scripting, awk, sed |
+| **Tools** | 1 | CodeGraph — grafo de código, comandos, MCP, troubleshooting |
 | **Vision** | 1 | VLM local (Ollama) — modelos, RAM, versiones |
 
 ## Skills (23 en disco)

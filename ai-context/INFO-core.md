@@ -87,5 +87,6 @@ Existe una base de conocimiento estructurada en `~/Knowledge/` con referencias r
 | Git | Commands + gh CLI |
 | Node | Node.js + npm |
 | Shell | Bash/Zsh scripting |
+| Tools | CodeGraph (grafo de código, MCP, troubleshooting) |
 
 Cargar el archivo relevante cuando la tarea involucre ese tema.
