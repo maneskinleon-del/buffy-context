@@ -97,9 +97,10 @@ fi
 TOTAL_OK=0
 TOTAL_STALE=0
 TOTAL_UNKNOWN=0
+TOTAL_EXPIRED=0
 JSON_ITEMS=""
 declare -A FACT_VALUES=()   # nombre → valor real del sistema (provenance)
-declare -A FACT_LEVELS=()   # nombre → verified|stale|unknown (provenance)
+declare -A FACT_LEVELS=()   # nombre → verified|stale|unknown|expired (provenance)
 
 # fact <tipo> <fact> <mensaje> <id> <target> [real]
 #   tipo: verified | stale | unknown
@@ -112,6 +113,7 @@ fact() {
     verified) TOTAL_OK=$((TOTAL_OK+1)) ;;
     stale)    TOTAL_STALE=$((TOTAL_STALE+1)) ;;
     unknown)  TOTAL_UNKNOWN=$((TOTAL_UNKNOWN+1)) ;;
+    expired)  TOTAL_EXPIRED=$((TOTAL_EXPIRED+1)) ;;
   esac
   if [ "$JSON_MODE" = true ]; then
     JSON_ITEMS+="$tipo"$'\t'"$nombre"$'\t'"$msg"$'\t'"$id"$'\t'"$target"$'\n'
@@ -135,6 +137,34 @@ presente() {
 # running <proc> — ¿hay un proceso con ese nombre corriendo?
 running() {
   pgrep -x "$1" >/dev/null 2>&1 || pgrep -f "bin/$1" >/dev/null 2>&1
+}
+
+# ttl_check — ENFORCE el TTL de facts.yaml previo (hallazgo adversarial 4):
+# si un hecho fue verificado hace más de ttl_days días, ya no es confiable
+# (expired → requiere reverificación). Sin esto, un facts.yaml viejo daba
+# trust 100% aunque sus fechas tuvieran años.
+ttl_check() {
+  [ -f "$REPO_DIR/ai-context/facts.yaml" ] || return 0
+  local line nombre msg
+  while IFS=$'\t' read -r line; do
+    [ -z "$line" ] && continue
+    nombre="$(echo "$line" | cut -f1)"
+    msg="$(echo "$line" | cut -f2)"
+    fact "expired" "$nombre" "$msg" "TTL_EXPIRED" "facts.yaml" ""
+  done < <(python3 -c "
+import sys, datetime, yaml
+prev = open('$REPO_DIR/ai-context/facts.yaml').read()
+d = yaml.safe_load(prev) or {}
+hoy = datetime.date.today()
+for name, f in (d.get('facts') or {}).items():
+    try:
+        v = datetime.date.fromisoformat(str(f.get('verified', '')))
+        ttl = int(f.get('ttl_days', 0))
+    except Exception:
+        continue
+    if ttl > 0 and (hoy - v).days > ttl:
+        print(name + '\t' + f'facts.yaml: verificado {v} hace {(hoy - v).days} dias (ttl {ttl}) — requiere reverificacion')
+" 2>/dev/null)
 }
 
 # reglas_engine <sección> — delega herramientas/versiones al motor declarativo
@@ -236,6 +266,12 @@ fi
 section "🛠️  Herramientas y versiones (reglas declarativas)"
 reglas_engine
 
+# TTL de la provenance previa: hechos vencidos → expired (requieren reverificación)
+if [ -f "$REPO_DIR/ai-context/facts.yaml" ]; then
+  section "⏱️  TTL de provenance previa (facts.yaml)"
+  ttl_check
+fi
+
 # ── Provenance (--update-facts) ──────────────────────────
 # Genera ai-context/facts.yaml: registro machine-readable de QUÉ sabemos,
 # DE DÓNDE salió (source), QUÉ CONFIANZA tiene (confidence) y CUÁNDO se
@@ -302,12 +338,14 @@ for ln in lines:
 verified = sum(1 for i in items if i['level'] == 'verified')
 stale = sum(1 for i in items if i['level'] == 'stale')
 unknown = sum(1 for i in items if i['level'] == 'unknown')
-trust = round(100 * verified / max(1, verified + stale), 1)
+expired = sum(1 for i in items if i['level'] == 'expired')
+trust = round(100 * verified / max(1, verified + stale + expired), 1)
 data = {
   'repo': sys.argv[1],
   'verified': verified,
   'stale': stale,
   'unknown': unknown,
+  'expired': expired,
   'trust_score': trust,
   'items': items,
   '_info': 'verificación factual de ai-context/INFO-core.md vs sistema real',
@@ -316,18 +354,18 @@ print(json.dumps(data, ensure_ascii=False, indent=2))
 " "$REPO_DIR" 2>/dev/null); then
     printf '%s\n' "$JSON_OUT"
   else
-    printf '{"repo":"%s","verified":%s,"stale":%s,"unknown":%s,"trust_score":%s,"items":[],"_info":"verificación factual de ai-context/INFO-core.md vs sistema real"}\n' \
-      "$REPO_DIR" "$TOTAL_OK" "$TOTAL_STALE" "$TOTAL_UNKNOWN"
+    printf '{"repo":"%s","verified":%s,"stale":%s,"unknown":%s,"expired":%s,"trust_score":%s,"items":[],"_info":"verificación factual de ai-context/INFO-core.md vs sistema real"}\n' \
+      "$REPO_DIR" "$TOTAL_OK" "$TOTAL_STALE" "$TOTAL_UNKNOWN" "$TOTAL_EXPIRED"
   fi
 else
-  echo -e "  ${GREEN}✅ Verificados: $TOTAL_OK${NC}   ${YELLOW}⚠️  Obsoletos: $TOTAL_STALE${NC}   ℹ️  No verificables: $TOTAL_UNKNOWN${NC}"
+  echo -e "  ${GREEN}✅ Verificados: $TOTAL_OK${NC}   ${YELLOW}⚠️  Obsoletos: $TOTAL_STALE${NC}   ${RED}⏱️  Vencidos: $TOTAL_EXPIRED${NC}   ℹ️  No verificables: $TOTAL_UNKNOWN${NC}"
   echo
-  if [ "$TOTAL_STALE" -eq 0 ]; then
+  if [ "$TOTAL_STALE" -eq 0 ] && [ "$TOTAL_EXPIRED" -eq 0 ]; then
     echo -e "${GREEN}✅ INFO-core.md es FACTUALMENTE confiable (trust 100%).${NC}"
   else
-    SCORE=$(( 100 * TOTAL_OK / (TOTAL_OK + TOTAL_STALE) ))
-    echo -e "${YELLOW}⚠️  Hay $TOTAL_STALE afirmación(es) obsoleta(s) — actualizar INFO-core.md.${NC}"
-    echo -e "${YELLOW}   Trust: $SCORE% (verificados $TOTAL_OK / obsoletos $TOTAL_STALE)${NC}"
+    SCORE=$(( 100 * TOTAL_OK / (TOTAL_OK + TOTAL_STALE + TOTAL_EXPIRED) ))
+    echo -e "${YELLOW}⚠️  Hay $TOTAL_STALE afirmación(es) obsoleta(s) y $TOTAL_EXPIRED con TTL vencido — actualizar INFO-core.md y/o reverificar (buffy-verify.sh --update-facts).${NC}"
+    echo -e "${YELLOW}   Trust: $SCORE% (verificados $TOTAL_OK / obsoletos $TOTAL_STALE / vencidos $TOTAL_EXPIRED)${NC}"
   fi
   if [ "$TOTAL_UNKNOWN" -gt 0 ]; then
     echo -e "  ℹ️  $TOTAL_UNKNOWN hecho(s) no verificables en este entorno (procesos X, versiones no parseables)."
