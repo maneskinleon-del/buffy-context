@@ -8,6 +8,9 @@
 #                    INFO-core.md (patrón: "<name> <version>"). Si difieren → stale.
 #   tool_checks:     hechos de PRESENCIA (¿está instalado?) — documentados en
 #                    INFO-core pero no con versión explícita.
+#   command:         LISTA de argumentos (hardening auditoría 3): el motor los
+#                    ejecuta SIN shell (sin shell=True), así una regla con
+#                    "node --version; rm -rf" jamás ejecuta el segundo comando.
 #
 # Reglas de extracción de la versión en INFO-core.md:
 #   - se busca "<name>" seguido de una versión tipo 1.2.3 (tolera prefijos v/V)
@@ -15,28 +18,28 @@
 
 version_checks:
   - name: git
-    command: git --version
+    command: [git, --version]
   - name: node
-    command: node --version
+    command: [node, --version]
   - name: npm
-    command: npm --version
+    command: [npm, --version]
   - name: python3
-    command: python3 --version
+    command: [python3, --version]
   - name: codegraph
-    command: codegraph --version
+    command: [codegraph, --version]
 
 tool_checks:
   - name: cargo
-    command: cargo --version
+    command: [cargo, --version]
   - name: rustc
-    command: rustc --version
+    command: [rustc, --version]
   - name: adb
-    command: adb --version
+    command: [adb, --version]
   - name: fastboot
-    command: fastboot --version
+    command: [fastboot, --version]
   - name: gh
-    command: gh --version
+    command: [gh, --version]
   - name: vercel
-    command: vercel --version
+    command: [vercel, --version]
   - name: uv
-    command: uv --version
+    command: [uv, --version]
