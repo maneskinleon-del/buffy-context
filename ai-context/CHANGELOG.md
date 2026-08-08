@@ -6,12 +6,29 @@
 ---
 
 version: 1.8
-updated: 2026-08-06
+updated: 2026-08-07
 schema: system-profile
 system-id: mangonz-desktop
 ---
 
 # CHANGELOG.md — Historial de cambios del sistema
+
+
+### 2026-08-07 — scrcpy-freefire: sin auto-open de Free Fire + purga de 16 apps en el ZTE
+
+**Pedido del usuario:** que el script de Free Fire no abra el juego automáticamente (solo GG Mouse, y el usuario abre Free Fire manual) + ver y desinstalar apps del ZTE.
+
+**Cambios aplicados:**
+- **`~/scripts/scrcpy-freefire.sh`**: eliminado `am start` de `com.dts.freefireth` (corría 0.8s después de GG Mouse). El script ahora solo lanza GG Mouse con sus permisos; Free Fire se abre manualmente desde el teléfono (comando manual comentado en el script).
+- **Watchdog `FF_SEEN`**: antes mataba scrcpy cuando Free Fire "dejaba de correr"; como el juego ya no se abre desde el script, al arrancar no está corriendo → el watchdog viejo lo habría matado en 3s. Ahora espera a que Free Fire aparezca y recién ahí vigila su cierre desde el teléfono.
+- **Purga de apps en ZTE Nubia (69 → 53)** con `pm uninstall --user 0` (todas Success): Film+, Drivify, KDE Connect, KLWP, KWGT, Firefox, Canta, Telegram+, Coddy, GitHub Store, AR Core, Excel, xm.csee, ES File Explorer, Downloader, tema oscuro de ES (huérfano).
+
+**Archivos modificados:**
+- `~/scripts/scrcpy-freefire.sh` — sin auto-open de Free Fire + watchdog FF_SEEN
+- `buffy-context/ai-context/CONTINUE.md` — resumen de sesión agregado
+- `buffy-context/ai-context/SESION.md` — bitácora de sesión agregada
+
+**Verificado:** `bash -n` OK en el script; GG Mouse corriendo (PID 10067); 15 apps + 1 huérfana desinstaladas con Success; sin restos en `pm list packages`.
 
 
 ### 2026-08-07 — Fixes de teclado/pantalla/monitor-alert (super+Escape, DPMS, cálculo de CPU)

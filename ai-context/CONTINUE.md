@@ -1,7 +1,20 @@
 # 🔄 CONTINUE — Handoff entre sesiones
 
 > ⚡ **PRÓXIMA SESIÓN: LEE ESTO PRIMERO**
-> Generado: 2026-08-07 (fecha + fixes de escritorio: super+Escape, DPMS, monitor-alert)
+> Generado: 2026-08-07 (tarde — scrcpy-freefire: sin auto-open de Free Fire + purga de 16 apps en el ZTE)
+
+---
+
+## Resumen de la sesión (2026-08-07 noche — scrcpy-freefire + limpieza de apps ZTE)
+
+**Tema:** que el script **no abra Free Fire automáticamente** (solo GG Mouse) + ver las apps instaladas + purga de 16 apps de terceros en el ZTE Nubia.
+
+1. **`~/scripts/scrcpy-freefire.sh` — ya NO abre Free Fire**: eliminado el `am start` de `com.dts.freefireth` que corría 0.8s después de GG Mouse. Ahora el script solo lanza GG Mouse (con sus permisos overlay/batería) y el usuario abre Free Fire manualmente desde el teléfono (comando manual comentado en el script). `bash -n` ✅.
+2. **Watchdog ajustado**: antes mataba scrcpy cuando Free Fire "dejaba de correr" — pero al ya no abrirse automáticamente, Free Fire no está corriendo al arrancar (lo abre el usuario después) y el watchdog lo habría matado en 3s. Nuevo: `FF_SEEN` — espera a que Free Fire **aparezca** y recién ahí vigila su cierre (si se cierra desde el teléfono → mata scrcpy → cleanup). 
+3. **Diagnóstico GG Mouse**: el usuario creía que "no lanzaba ggmouse" — en realidad **SÍ corría** (PID 10067); Free Fire se abría encima 0.8s después y tapaba el overlay. Con el cambio, al correr el script se ve GG Mouse directo.
+4. **Purga de 16 apps de terceros en el ZTE** (69 → 53): Film+, Drivify, KDE Connect, KLWP, KWGT, Firefox, Canta, Telegram+, Coddy, GitHub Store, AR Core, Excel, xm.csee, ES File Explorer, Downloader (esaba), tema oscuro ES (huérfano). Todos `Success` con `pm uninstall --user 0`. **⚠️ KDE Connect y Kustom eran de setups existentes — reinstalables en segundos si hacen falta.**
+
+Detalle completo en `SESION.md` y pendiente en `CHANGELOG.md`.
 
 ---
 
