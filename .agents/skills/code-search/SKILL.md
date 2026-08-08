@@ -30,6 +30,7 @@ Usa el agente de búsqueda del asistente actual si está disponible:
 |---|---|---|
 | **Freebuff** | `code-searcher` | Agente integrado. Invocar directamente. |
 | **Freebuff** | `file-picker` | Agente integrado. Invocar directamente. |
+| **opencode** | `grep` / `glob` | Herramientas nativas (igual que Claude Code). |
 | **Claude Code** | `GrepTool` / `glob` | Herramientas nativas del protocolo MCP. |
 | **Codex CLI** | `search` | Herramienta integrada. |
 

@@ -165,7 +165,7 @@ probada en vivo con el ZTE Nubia).
 
 **Si se activa** → cargar `.agents/skills/code-search/SKILL.md`:
 - Define 3 modos de búsqueda: agente nativo → CLI (ripgrep/grep) → exploración manual
-- Es portable entre Freebuff, Claude Code, Codex
+- Es portable entre Freebuff, opencode, Claude Code, Codex
 - Estructura resultados en tabla: archivo, línea, contenido
 
 **Skills relacionadas**: `search_criteria_v4` (para consultas complejas que requieren
