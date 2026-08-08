@@ -4,6 +4,27 @@
 
 ---
 
+## 🎮 scrcpy-freefire.sh — sin auto-open de Free Fire + purga de 16 apps (ZTE)
+
+### Pedido del usuario
+Que el script de Free Fire **no abra el juego automáticamente** — solo debe abrir GG Mouse, y el usuario abre Free Fire desde el teléfono después. Además: ver las apps instaladas y desinstalar una lista.
+
+### Cambio al script (`~/scripts/scrcpy-freefire.sh`)
+- **Eliminado** el `am start -n com.dts.freefireth/com.dts.freefireth.FFMainActivity` que corría 0.8s después de GG Mouse. Ahora el flujo es: permisos GG Mouse → `am start` de GG Mouse → resolución alargada → scrcpy. Free Fire queda para apertura manual (comando comentado en el script).
+- **Watchdog corregido** (`FF_SEEN`): antes mataba scrcpy en cuanto Free Fire "dejaba de correr". Como el juego ya no se abre desde el script, al arrancar Free Fire NO está corriendo → el watchdog viejo lo habría matado en 3s. Ahora: espera a que Free Fire **aparezca** (`FF_SEEN=1`) y recién ahí vigila que no se cierre desde el teléfono. Si el usuario nunca lo abre, la sesión termina normal con Alt+Q.
+- Verificado: `bash -n` OK; GG Mouse corriendo (PID 10067) — **el problema percibido era que Free Fire tapaba el overlay de GG Mouse**, no que GG Mouse no se lanzara.
+
+### Purga de apps de terceros (69 → 53)
+Desinstaladas con `pm uninstall --user 0` (todas `Success`):
+Film+, Drivify, KDE Connect (`org.kde.kdeconnect_tp`), KLWP (`org.kustom.weather`), KWGT (`org.kustom.widget`), Firefox, Canta (`org.samo_lego.canta`), Telegram+, Coddy, GitHub Store (`zed.rainxch.githubstore`), AR Core, Excel, `com.xm.csee`, ES File Explorer (`com.estrongs.android.pop`), Downloader (`com.esaba.downloader`), y el tema huérfano `com.estrongs.android.pop.dark`.
+
+**Nota:** KDE Connect y Kustom (KLWP/KWGT) eran dependencias de setups existentes (control remoto PC / widgets Kustom) — si hacen falta, reinstalar en segundos.
+
+### Apps restantes (53) — highlights
+ReVanced (YT/Music/GMS), MacroDroid (+helper), AutoJs6, Termux (+api/widget), Shizuku, aShell, AppOps, Free Fire, GG Mouse, Nova Launcher, hype launcher, bitpit launcher, `com.mangonz.widgetos`, Stremio, CloudStream, GitHub, WhatsApp, Truecaller, Waze, Authenticator, Wallet, Family Link, sndcpy, Mission Control, Sony songpal MDR, Sony 360, Magisk, APKTool, Droidify, AppSend, SendFilesToTV, ManUninstaller, ShifterCalendar, Steps, guardian.tivo.xuper, spocky.projengmenu, graphite, ivuu, autotools, spoofdetect.
+
+---
+
 ## 🐛→✅ super+Escape eliminado + pantalla que no se apaga + monitor-alert corregido
 
 ### Pedido del usuario
