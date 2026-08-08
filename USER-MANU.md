@@ -8,7 +8,7 @@
 - **Linux**: EndeavourOS, Hyprland, Niri, Waybar, Polybar, ML4W
 - **Android**: ADB, Fastboot, Shizuku, Rish, AutoJS6, DPI, perfiles de rendimiento
 - **Desarrollo**: React, TypeScript, Vite, Tailwind, PWA, Python, Node.js, Google Apps Script
-- **IA/Agentes**: Freebuff, Claude Code, Codex CLI, Gemini CLI, DeepSeek, Kimi, Qwen, Ollama, Mimo CLI
+- **IA/Agentes**: Freebuff, **opencode (Buffy — modelos free: DeepSeek, etc.)**, Claude Code, Codex CLI, Gemini CLI, DeepSeek, Kimi, Qwen, Ollama, Mimo CLI
 - **PC**: Ryzen 5 3400G, 14GB RAM, SSD
 
 ## Proyectos activos

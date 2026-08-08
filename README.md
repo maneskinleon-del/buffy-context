@@ -263,9 +263,9 @@ bash scripts/changelog-entry.sh --dry-run v1.1.0
 
 ## Usage with AI agents
 
-### For Buffy (Freebuff)
+### For Buffy (Freebuff & opencode)
 
-Buffy reads these files automatically at session start following the protocol in `ai-context/LOAD_CONTEXT.md`:
+Buffy runs on multiple CLI agents — **Freebuff** (default) and **opencode** (this assistant, with free models like DeepSeek). Both read these files automatically at session start following the protocol in `ai-context/LOAD_CONTEXT.md`:
 
 1. `ai-context/CONTINUE.md` — what was being worked on
 2. `ai-context/INFO-core.md` — user profile and stack

@@ -9,7 +9,7 @@ version: 1.0.0
 
 # vision-adapter — Análisis de Imágenes con VLM Local
 
-> **Problema:** Buffy (Freebuff) no puede ver imágenes directamente. Para analizar
+> **Problema:** Buffy (Freebuff / opencode) no puede ver imágenes directamente. Para analizar
 > capturas de pantalla, screenshots de Android, diagramas, o UI mockups, necesita
 > un VLM (Vision Language Model) que convierta imágenes en texto.
 >
