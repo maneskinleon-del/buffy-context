@@ -80,6 +80,13 @@ adb shell /data/local/tmp/rish -c "id"   # → uid=2000(shell)
 
 ## Uso de rish desde Termux
 
+> **Ruta canónica (usar por defecto):** kit `rish` exportado desde la app Shizuku
+> + `~/bin`. **Fallback:** addon `termux-shizuku` (F-Droid).
+> ⚠️ El kit exportado usa el patrón **`rish -c "comando"`** — el script `rish`
+> espera `-c` como primer argumento; sin `-c`, el servidor ejecuta `sh <arg>`
+> (trata el comando como path de script) y muere con `exit 127` en logcat
+> (mensaje `RISH: exited with 127`) — ver troubleshooting.
+
 ### Exportar rish desde la app Shizuku
 1. Shizuku → **"Usar Shizuku en apps de terminal"** → **"Exportar archivos"**
 2. Produce `rish` (script) y `rish_shizuku.dex`
@@ -92,26 +99,32 @@ chmod 755 ~/bin/rish
 chmod 444 ~/bin/rish_shizuku.dex   # ⚠️ Android 14+: DEBE ser read-only (444)
 ```
 > En Android 14+, si el `.dex` no es read-only, `app_process` no lo carga y rish falla.
+> ⚠️ `.dex` con 444 no se sobreescribe con `cp` — mover con `mv` desde un tmp.
 
-### Ejecutar comandos privilegiados
+### Ejecutar comandos privilegiados (canónica — con `-c`)
 ```bash
 export RISH_APPLICATION_ID=com.termux
 export MANAGER_APPLICATION_ID=moe.shizuku.privileged.api
 
-~/bin/rish pm list packages
-~/bin/rish pm grant <package> <permission>
-~/bin/rish appops set <package> <OP> allow
-~/bin/rish settings put secure <key> <value>
-~/bin/rish   # shell interactivo privilegiado
+~/bin/rish -c "id"                      # → uid=2000(shell)
+~/bin/rish -c "pm list packages"
+~/bin/rish -c "pm grant <package> <permission>"
+~/bin/rish -c "appops set <package> <OP> allow"
+~/bin/rish -c "settings put secure <key> <value>"
+~/bin/rish                            # shell interactivo privilegiado
 ```
 
-### Alternativa: addon `termux-shizuku` (F-Droid)
+### Fallback: addon `termux-shizuku` (F-Droid)
+Usar solo si el exportado no es usable. Requiere el paquete del addon
+(`termux-shizuku`) instalado desde F-Droid — NO es suficiente `termux-api`:
 ```bash
 shizuku pm list packages
 shizuku pm grant com.zjx.ztezscreenshot android.permission.SYSTEM_ALERT_WINDOW
 shizuku appops set com.zjx.ztezscreenshot SYSTEM_ALERT_WINDOW allow
 shizuku settings put secure enabled_accessibility_services <package>/<service>
 ```
+> El addon usa la API nativa (sin wrapper app_process); puede estar algo desactualizado
+> en F-Droid vs el `rish` exportado — usar como fallback.
 
 ---
 
@@ -120,34 +133,37 @@ shizuku settings put secure enabled_accessibility_services <package>/<service>
 ### Permisos peligrosos (pm grant)
 ```bash
 # Draw Over Other Apps
-rish pm grant <package> android.permission.SYSTEM_ALERT_WINDOW
+rish -c "pm grant <package> android.permission.SYSTEM_ALERT_WINDOW"
 
 # Modify System Settings
-rish pm grant <package> android.permission.WRITE_SETTINGS
+rish -c "pm grant <package> android.permission.WRITE_SETTINGS"
 
 # Install Unknown Apps
-rish pm grant <package> android.permission.REQUEST_INSTALL_PACKAGES
+rish -c "pm grant <package> android.permission.REQUEST_INSTALL_PACKAGES"
 
 # All Files Access
-rish pm grant <package> android.permission.MANAGE_EXTERNAL_STORAGE
+rish -c "pm grant <package> android.permission.MANAGE_EXTERNAL_STORAGE"
 ```
 
 ### AppOps
 ```bash
-rish appops set <package> 24 allow        # 24 = SYSTEM_ALERT_WINDOW
-rish appops get <package>
+rish -c "appops set <package> 24 allow"        # 24 = SYSTEM_ALERT_WINDOW
+rish -c "appops get <package>"
+# Índices OP_*: AOSP 8.0+ (API 26+, estables desde Android 8);
 # 24 = SYSTEM_ALERT_WINDOW · 65 = MANAGE_EXTERNAL_STORAGE
 # 68 = REQUEST_INSTALL_PACKAGES · 88 = ACCESS_MEDIA_LOCATION
+# ⚠️ Verificables con `rish -c "appops get <pkg>"` — en HyperOS/MIUI algún
+#    índice puede diferir; siempre validar con el dump real antes de asumir.
 ```
 
 ### Settings del sistema
 ```bash
 # Accesibilidad
-rish settings put secure enabled_accessibility_services <package>/<accessibility_service>
-rish settings put secure accessibility_enabled 1
+rish -c "settings put secure enabled_accessibility_services <package>/<accessibility_service>"
+rish -c "settings put secure accessibility_enabled 1"
 
 # Global
-rish settings put global <key> <value>
+rish -c "settings put global <key> <value>"
 ```
 
 ---
@@ -181,21 +197,21 @@ ADB-Shizuku).
 | `pm grant: SecurityException` | Usar `rish` (identidad shell/root), no ADB directo |
 | `appops: requires MANAGE_APP_OPS_MODES` | Usar `rish appops set` |
 | No persiste tras reinicio | Reiniciar vía Wireless Debugging o ADB |
-| `Waiting for Shizuku authorization...` y tras «Allow» el servidor rechaza: `Caller (uid X) is not an attached client` | Fork **Shizuku+** (af.shizuku.*, daemon nativo `shizuku_plus_server`): bug del attach de sesión shell. Probado en Mi 10 / HyperOS con Shizuku+ 13.6.0.r2220: la app sí acepta apps autorizadas (check=true en Gestión de aplicaciones), el diálogo ShellConsent aparece y Allow se procesa, pero el proceso hijo lanzado por el daemon es rechazado con `IllegalStateException: Not an attached client` (dentro de `af.shizuku.manager.shell.Shell.main`). Ver ficha `SHIZUKU-RISH-BUG`. **Vuelve al fork clásico** (RikkaApps/Shizuku) que exprime mejor los recursos y no tiene esta limitante; o corre el módulo RishShizukuManager.js desde AutoJS (org.autojs.autojs6 declara el permiso API_V23 y puede attachar vía intent del provider). |
+| `Waiting for Shizuku authorization...` y tras «Allow» el servidor rechaza: `Caller (uid X) is not an attached client` | Es el fork **Shizuku+** (`af.shizuku.*`, daemon `shizuku_plus_server`): bug del attach de sesión shell en HyperOS/MIUI / Termux. **Veredicto: usar la app clásica de RikkaApps/Shizuku** (conecta sin limitante). Ficha de debugging: `SHIZUKU-RISH-BUG.md` en `ai-context/`. |
+| `rish <cmd>` muere silencioso; logcat `RISH: exited with 127` | El script del kit espera `-c`: ejecutar como `rish -c "cmd"` (sin `-c`, trata el cmd como path y falla). |
+| `.dex` no se puede re-reemplazar (`Permission denied` al `cp`) | `mv` desde un tmp (el dex es 444 por diseño en Android 14+) |
 
-### Fork Shizuku+ vs clásico — decisión de versión (2026-08-08)
+### Fork Shizuku+ vs clásico (veredicto)
 
-- **Shizuku+ (fork af.shizuku.*, `shizuku_plus_server`)**: visual más bonito, watchdog,
-  reconexión automática al reiniciar. BUT: en HyperOS/MIUI el attach de sesión shell
-  desde Termux falla siempre con «not an attached client» (no se pudo resolver;
-  probado con kit re-exportado del propio fork, md5 del APK == loader).
-- **Verdict (referencia experiencia)**: cambio de resto a la versión oficial clásica
-  de RikkaApps/Shizuku que con el Mi 10/HyperOS daba servicio: apps autorizadas +
-  rish desde Termux conectaban.
-- En el fork, una app AUTORIZADA (p.ej. org.autojs.autojs6 que declara
-  `org.autojs.autojs6/rikka.shizuku.ShizukuProvider` y usa permiso
-  `moe.shizuku.manager.permission.API_V23`) puede conectar; el módulo
-  RishShizukuManager.js de las skills/../scripts lo usa como `RISH_APPLICATION_ID`.
+- **Usar la app clásica** (RikkaApps/Shizuku del Play/F-Droid): con el Mi 10 /
+  HyperOS el servidor `shizuku_server` conecta sin problema y `rish -c "cmd"`
+  desde Termux responde `uid=2000(shell)`.
+- **Fork Shizuku+** (`af.shizuku.*`, daemon `shizuku_plus_server`): watchdog y
+  reconexión, pero el attach de sesión shell desde Termux rechaza con
+  `not an attached client` en el Mi 10 / HyperOS (ver ficha `SHIZUKU-RISH-BUG.md`).
+- Workaround noo-fork: módulo AutoJJ6 vía provider (declara `API_V23`),
+  o AutoJS6 + `RishShizukuManager.js` — detenga en la ficha (el archivo
+  instalado en /sdcard/Download como `módulo_rish.js.txt`).
 
 ---
 
@@ -206,15 +222,15 @@ ADB-Shizuku).
 cmd -l | grep shizuku
 
 # Overlay
-rish pm grant com.zjx.ztezscreenshot android.permission.SYSTEM_ALERT_WINDOW
-rish appops set com.zjx.ztezscreenshot SYSTEM_ALERT_WINDOW allow
+rish -c "pm grant com.zjx.ztezscreenshot android.permission.SYSTEM_ALERT_WINDOW"
+rish -c "appops set com.zjx.ztezscreenshot SYSTEM_ALERT_WINDOW allow"
 
 # Accesibilidad
-rish settings put secure enabled_accessibility_services com.zjx.ztezscreenshot/.GGService
-rish settings put secure accessibility_enabled 1
+rish -c "settings put secure enabled_accessibility_services com.zjx.ztezscreenshot/.GGService"
+rish -c "settings put secure accessibility_enabled 1"
 
 # Listar paquetes / shell interactivo
-rish pm list packages
+rish -c "pm list packages"
 rish
 ```
 
@@ -225,6 +241,10 @@ rish
 - **`android-adb`** — comandos ADB base (conexión, diagnóstico)
 - **`hyperos-hardening`** — blindaje completo contra MIUI/HyperOS vía rish
 - **`android-agent`** — agente orquestador Android (verificación de Shizuku)
-- **Script `scripts/kimi_vision.js`** — auto-concesión de permisos detectados por visión (usa rish)
+- **Script `scripts/kimi_vision.js`** — auto-concesión de permisos detectados
+  por visión (usa rish)
+- **`xiaomi-adb-tricks`** — trucos adb/rish específicos de MIUI/HyperOS
 
 Referencia Knowledge/: `Knowledge/Android/Shizuku.md`.
+Fichas de debugging: `ai-context/SHIZUKU-RISH-BUG.md` (bitácora resolvida del
+attach de sesión Shell en el fork Shizuku+ y el fix clásico `-c`).

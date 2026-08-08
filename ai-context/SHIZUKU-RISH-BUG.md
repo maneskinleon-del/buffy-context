@@ -1,8 +1,44 @@
 # BUG — rish (Shizuku+) no conecta desde Termux · Mi 10 / HyperOS
 
-> Fecha: 2026-08-08 · Estado: **CERRADO SIN FIX EN EL FORK — limitante de
-> Shizuku+ en Termux/HyperOS; decisión: volver a la versión clásica**
-> · Siguiente paso: ver «Conclusión final — Actualización 3».
+> Fecha: 2026-08-08 · Estado: **RESUELTO — revert a Shizuku clásico (RikkaApps).
+> El fork Shizuku+ no exprime el attach de sesión shell desde Termux en este
+> dispositivo; la versión clásica conecta sin más.**
+> · Siguiente paso: ver «Actualización 4 — RESOLUCIÓN».
+
+## Actualización 4 — 2026-08-08 (noche) — RESOLUCIÓN: revert a clásico FUNCIONA
+
+- Se instaló **Shizuku clásico v13.6.0.r1086.2650830c** (RikkaApps,
+  release oficial del repo RikkaApps/Shizuku) sobre el fork Shizuku+
+  (desinstalar primero el paquete `moe.shizuku.privileged.api`).
+- Arrancado sin root: `adb shell am start -n moe.shizuku.privileged.api/
+  moe.shizuku.manager.MainActivity` → diálogo ADB clásico → el servidor
+  `shizuku_server` (app_process, NO `shizuku_plus_server`) sube solo
+  (pid 3020, renace automáticamente).
+- La app lo expresa: `cmd -l | grep shizuku` SÍ lista el servicio clásico
+  (el daemon nativo `shizuku_plus_server` del fork no se listaba).
+- **Kit clásico re-exportado por la app** a /sdcard/Rish/ (`rish` 882 B,
+  `rish_shizuku.dex` 59672 B, md5 `2a5fb0c2705b3fe87aa567ffe6d471b7`,
+  antes era la `42b30284...` del fork → los `~/bin/rish*` se actualizaron).
+- **Clave: el script clásico exige `-c`** para el comando:
+  ```
+  export RISH_APPLICATION_ID=com.termux
+  export MANAGER_APPLICATION_ID=moe.shizuku.privileged.api
+  timeout 15 ~/bin/rish -c id   # → uid=2010(shell) OK
+  ./rish -c "pm grant <pkg> android.permission.SYSTEM_ALERT_WINDOW"   # OK
+  ./rish -c "settings get global adb_enabled"   # → 1 OK
+  ./rish -c "appops get com.termux"   # → OK
+  ```
+  Sin `-c`, el servidor recibe `sh id` (trata "id" como path de script)
+  y muere con `RISH: exited with 127` (logcat): NO es bug de permisos.
+- **Conclusión definitiva**: el bug era exclusivo del fork Shizuku+ en este
+  dispositivo (attach de sesión shell rechazado). El clásico funciona con el
+  mismo kit, UID 2000 (shell). Reportado al proyecto como duplicado de
+  issue #387 `(maneskinleon-del` comentario en theiaustin/ShizukuPlus/issues/387).
+- Nota: MIUI deja `adb wireless` y los dos `adb devices` (127.0.0.1:5555 +
+  emulator-5554) intactos; `adb -s` sigue necesario.
+- Acción pendiente del usuario: (a) re-autorizar/verificar las apps
+  autorizadas dentro de la app clásica (la lista reinicia tras reinstalar);
+  (b) opcional: reinstalar el fork si se quiere el watchdog de nuevo.
 
 ## Actualización 3 — 2026-08-08 (noche) — CONCLUSIÓN: bug del fork, volver a clásico
 
@@ -211,17 +247,15 @@ pendiente de acción manual del usuario.
   ejecución directa falla "Permission denied" (FUSE no ejecutable) → invocar con `sh`)
 - rish_ok.txt análogo del 7-ago incluye el mensaje de timeout completo.
 
-## Cómo reanudar (cuando el usuario vuelva)
+## Cómo reanudar (RESUELTO — modo de uso actual)
 
-1. **Aprobar la sesión en el teléfono**: con `rish id` corriendo (o recién fallido),
-   revisar las notificaciones de Shizuku y tocar «Permitir/Allow» si el diálogo
-   está pendiente. Luego: `export RISH_APPLICATION_ID=com.termux; timeout 25 ~/bin/rish id`.
-2. Si el diálogo NO aparece en las notificaciones: captura OCR de la pantalla
-   principal de Shizuku mientras el proceso está colgado (método background 100s
-   ya probado) para ver si hay un prompt oculto.
-3. Si sigue «Waiting…»: reiniciar el servidor de Shizuku (Stop→Start desde la app)
-   y reintentar — re-aplica la lista de apps autorizadas en memoria.
-4. Si sigue: probar exportación de rish **clásico** desde la app (hipótesis 3),
-   sobrescribiendo `~/bin/rish*` y/o `/sdcard/Rish/rish*`.
+1. Verificar servidor: `adb -s 127.0.0.1:5555 shell cmd -l | grep -i shizuku` →
+   debe listar el servicio clásico (o `ps -A | grep shizuku_server`).
+2. Usar SIEMPRE `-c` con el kit clásico:
+   `export RISH_APPLICATION_ID=com.termux; export MANAGER_APPLICATION_ID=moe.shizuku.privileged.api; ~/bin/rish -c "id"`
+3. Si cuelga en «Waiting…»: aprobar sesión en el teléfono (notificación
+   Shell access request) o `Stop→Start` del servidor en la app.
+4. Sin `-c` sale `exited with 127` en logcat (patrón `sh id` sin `-c`) —
+   no reintentar sin `-c`.
 5. Recordar `adb -s 127.0.0.1:5555` para todo ADB (hay un `emulator-5554`
    duplicado registrado que rompe los comandos sin `-s`).
