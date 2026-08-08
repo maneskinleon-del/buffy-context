@@ -2,6 +2,24 @@
 
 > Servicio de escalación de privilegios para Android sin root.
 > Skill relacionada: `.agents/skills/shizuku-rikka/`.
+> Bug conocido del fork Shizuku+: `ai-context/SHIZUKU-RISH-BUG.md`.
+
+## ⚠️ Fork Shizuku+ vs clásico — experiencia 2026-08-08 (Mi 10 / HyperOS)
+
+- **Shizuku+ 13.6.0.r2220** (`af.shizuku.*`, daemon nativo `shizuku_plus_server`):
+  bonito, watchdog, reconexión automática. PERO **no funciona rish desde Termux**:
+  el diálogo de autorización se muestra y «Allow» procesa, pero el daemon rechaza
+  la sesión: `Caller (uid <termux>) is not an attached client` →
+  `IllegalStateException: Not an attached client` dentro de
+  `af.shizuku.manager.shell.Shell.main`. Verificado con kit re-exportado (md5 del
+  APK == loader), Termux autorizado en la app, batería/AppOps cubiertos.
+- **Verdict**: volver a la versión clásica de RikkaApps/Shizuku para Termux.
+- Workaround temporal: el módulo `scripts/RishShizukuManager.js` (de AutoJS6,
+  `org.autojs.autojs6`) funciona porque esa app **declara el permiso
+  `moe.shizuku.manager.permission.API_V23` y el provider Shizuku** en su manifest;
+  rish desde AutoJS usa `RISH_APPLICATION_ID=<package de la app>` y diverse
+  el attach. Termux no declara ese permiso (`pm grant` → «has not requested»),
+  por eso el server lo trata como sesión shell genérica y lo rechaza en el fork.
 
 ## Setup
 

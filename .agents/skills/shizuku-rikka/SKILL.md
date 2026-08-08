@@ -181,6 +181,21 @@ ADB-Shizuku).
 | `pm grant: SecurityException` | Usar `rish` (identidad shell/root), no ADB directo |
 | `appops: requires MANAGE_APP_OPS_MODES` | Usar `rish appops set` |
 | No persiste tras reinicio | Reiniciar vía Wireless Debugging o ADB |
+| `Waiting for Shizuku authorization...` y tras «Allow» el servidor rechaza: `Caller (uid X) is not an attached client` | Fork **Shizuku+** (af.shizuku.*, daemon nativo `shizuku_plus_server`): bug del attach de sesión shell. Probado en Mi 10 / HyperOS con Shizuku+ 13.6.0.r2220: la app sí acepta apps autorizadas (check=true en Gestión de aplicaciones), el diálogo ShellConsent aparece y Allow se procesa, pero el proceso hijo lanzado por el daemon es rechazado con `IllegalStateException: Not an attached client` (dentro de `af.shizuku.manager.shell.Shell.main`). Ver ficha `SHIZUKU-RISH-BUG`. **Vuelve al fork clásico** (RikkaApps/Shizuku) que exprime mejor los recursos y no tiene esta limitante; o corre el módulo RishShizukuManager.js desde AutoJS (org.autojs.autojs6 declara el permiso API_V23 y puede attachar vía intent del provider). |
+
+### Fork Shizuku+ vs clásico — decisión de versión (2026-08-08)
+
+- **Shizuku+ (fork af.shizuku.*, `shizuku_plus_server`)**: visual más bonito, watchdog,
+  reconexión automática al reiniciar. BUT: en HyperOS/MIUI el attach de sesión shell
+  desde Termux falla siempre con «not an attached client» (no se pudo resolver;
+  probado con kit re-exportado del propio fork, md5 del APK == loader).
+- **Verdict (referencia experiencia)**: cambio de resto a la versión oficial clásica
+  de RikkaApps/Shizuku que con el Mi 10/HyperOS daba servicio: apps autorizadas +
+  rish desde Termux conectaban.
+- En el fork, una app AUTORIZADA (p.ej. org.autojs.autojs6 que declara
+  `org.autojs.autojs6/rikka.shizuku.ShizukuProvider` y usa permiso
+  `moe.shizuku.manager.permission.API_V23`) puede conectar; el módulo
+  RishShizukuManager.js de las skills/../scripts lo usa como `RISH_APPLICATION_ID`.
 
 ---
 
