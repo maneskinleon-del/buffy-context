@@ -103,7 +103,7 @@ Los 4 casos adversariales de la auditoría E2E encontraron un **bug real**:
 ```
 real-time (sistema AHORA) > facts (verified+TTL) > SNAPSHOT > CONTINUE > INFO-core > inferred
 ```
-Gana la de mayor autoridad y **reporta los conflictos** de las inferiores. En vivo detectó un conflicto REAL: `npm 12.0.1 [real-time] ⚠️ conflicto: continue(11.18.0)` — el CONTINUE.md tenía la versión vieja. Flag `--no-live` para entornos sin sistema (CI/tests determinísticos). +4 tests.
+Gana la de mayor autoridad y **reporta los conflictos** de las inferiores. En vivo detectó un conflicto REAL cuando CONTINUE.md tenía la versión vieja de npm (real-time vs continue — hoy resuelto a 12.0.2). Flag `--no-live` para entornos sin sistema (CI/tests determinísticos). +4 tests.
 
 #### 5. ✅ CI verde — 3 fixes (commits `adb1d12` y `4cfb3f0`)
 El job "Suite completa" fallaba en GitHub Actions: los tests dependían de archivos **gitignored** que no existen en checkout fresco.
@@ -150,14 +150,14 @@ Commits: `a5a6739` → `14dc4cb` → `cf794f6` → `b9950bc` → `dcbad8c` → `
 ## Stack del usuario (referencia rápida — verificado por buffy-verify)
 
 ```
-OS:    EndeavourOS (Arch) · kernel 6.18.39-1-lts
+OS:    EndeavourOS (Arch) · kernel 6.18.42-1-lts
 WM:    bspwm (X11) · rice gh0stzk/vista (Windows Vista Aero; backup en ~/.config/bspwm/.rice.bak) · picom
 Shell: zsh (Oh My Zsh + Starship) · alacritty · editor VSCodium
 CPU:   Ryzen 5 3400G (4C/8T) + Vega 11 · 13GB RAM · 1360x768
 Phone: ZTE Nubia Z2352N = laboratorio (Shizuku + ManUninstaller activos) · Mi 10 (tethering)
 Disk:  39% usado / 126G libres · ollama + backups en HDD (/media/datos)
 Stack: React + TS + Tailwind v4 + Vite → GitHub (maneskinleon-del) → Vercel
-Node:  v26.4.0 · npm 12.0.1 · gh CLI (sin auth)
+Node:  v26.7.0 · npm 12.0.2 · gh CLI (sin auth)
 Git:   maneskinleon-del / mangonz970@gmail.com · push por SSH
 AI CLI: freebuff v0.0.138 (auto-carga ~/.AGENTS.md) · fb-wait para 429 · **opencode (Buffy — modelos free: DeepSeek, etc.)** · Antigravity · OpenCode (nemotron)
 ```
