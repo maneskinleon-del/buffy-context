@@ -14,6 +14,18 @@ system-id: mangonz-desktop
 # CHANGELOG.md — Historial de cambios del sistema
 
 
+### 2026-08-09 — Adquisición de capacidades nuevas + fixes de integración (opencode)
+
+**Pedido del usuario:** "hicimos cambios importantes en el repo de buffy-context, ¿puedes adquirir esas nuevas habilidades?" → pull con 2 features nuevas.
+
+- **Adquiridas**: `buffy-memory.sh` (memoria curada estilo Hermes, `memory_engine.py`) y `buffy-search.sh` (índice FTS5). Suite **196 OK / 0 FAIL**.
+- **Symlinks**: creados `buffy-memory.sh`, `buffy-search.sh`, `buffy-source.sh`, `buffy-verify.sh` en `~/.local/bin/`.
+- **Fix de symlinks (commit `849ac96`)**: `buffy-memory.sh`, `buffy-context.sh`, `buffy-router.sh` no resolvían `readlink -f` → al invocarse por symlink, `SCRIPT_DIR` apuntaba a `~/.local/bin/` y el `source lib/...` fallaba. Aplicado patrón existente en `buffy-source.sh`.
+- **Versiones sincronizadas (commit `5431ecf`)**: `buffy-source.sh --resolve` detectó stale real (kernel 6.18.39→6.18.42, node 26.4.0→26.7.0, npm 12.0.1→12.0.2) → INFO-core + CONTINUE corregidos → trust **100%**.
+- **Memoria real inicializada** en `~/.buffy/memories/` (MEMORY 18% · USER 26%).
+- **SESION.md podado** a 5 entradas / 26KB (2 viejas → `SESION-archive.md`). Doctor CONSISTENTE.
+
+
 ### 2026-08-09 — 🧠 Memoria curada estilo Hermes (brecha 2) — buffy-memory.sh
 
 **Pedido del usuario:** "seguimos con la implementación para tener lo que tiene Hermes" — cerrar la brecha 2: memoria curada persistente (`MEMORY.md` + `USER.md`).

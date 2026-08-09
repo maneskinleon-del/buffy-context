@@ -1,7 +1,25 @@
 # 🔄 CONTINUE — Handoff entre sesiones
 
 > ⚡ **PRÓXIMA SESIÓN: LEE ESTO PRIMERO**
-> Generado: 2026-08-09 (opencode — memoria curada Hermes implementada)
+> Generado: 2026-08-09 (opencode — adquisición de memoria curada + fixes de integración)
+
+---
+
+## Resumen de la sesión (2026-08-09 cierre — opencode)
+
+**Tema:** pull de cambios remotos → adquiridas las capacidades nuevas (memoria curada + búsqueda FTS5) + fixes de integración detectados al activarlas.
+
+1. **Adquiridas las 2 capacidades nuevas del repo**: `buffy-memory.sh` (memoria curada estilo Hermes, `memory_engine.py`) y `buffy-search.sh` (índice FTS5). Suite **196 OK / 0 FAIL**.
+2. **Symlinks creados en `~/.local/bin/`**: `buffy-memory.sh`, `buffy-search.sh`, `buffy-source.sh`, `buffy-verify.sh` (los últimos 2 faltaban).
+3. **Fix de symlinks (commit `849ac96`)**: `buffy-memory.sh`, `buffy-context.sh` y `buffy-router.sh` calculaban `SCRIPT_DIR` desde el symlink → sourceaban `lib/` desde `~/.local/bin/` y fallaban. Aplicado patrón `readlink -f` (igual que `buffy-source.sh`).
+4. **Versiones sincronizadas (commit `5431ecf`)**: resolver detectó stale real → kernel 6.18.42, node 26.7.0, npm 12.0.2 en INFO-core + CONTINUE. `buffy-verify`: **trust 100%**.
+5. **Memoria real inicializada** en `~/.buffy/memories/` (MEMORY 3 entradas 18% · USER 3 entradas 26%) — con datos validados: WM bspwm, kernel/node/npm, stack, preferencias de mangonz.
+6. **SNAPSHOT regenerado** (`buffy-context.sh`). Doctor: **CONSISTENTE** (64 OK, 1 warning preexistente: form-filler sin doc).
+
+### ⏳ Pendientes para otra sesión
+- **Pushear 2 commits locales** (`849ac96`, `5431ecf`) si la sesión nueva hará pull (rama local adelantada a origin/main).
+- Opcional: `Knowledge/Tools/Buffy-Memory.md` (ficha de uso del CLI) — pendiente de la sesión que implementó la brecha 2.
+- Verificar en la próxima sesión que la memoria curada aparece como snapshot congelado al inicio.
 
 ---
 
