@@ -4,7 +4,23 @@
 
 ---
 
-## 🧠 Auditoría: drift documental → anti-drift + benchmark de escala (P0)
+## 🧠 Auditoría v2: paradoja del contador resuelta + benchmark adversarial
+
+### Pedido del usuario
+Revisión externa encontró 3 fallos nuevos en lo implementado la sesión anterior: (1) **paradoja del contador** — `doc_truth_check "$PASS"` recibía 198 y luego la fase sumaba 4 → 202, con README/CONTINUE diciendo números distintos; (2) **bug RC en test-scale.sh** — `OUT=$(...) || true` enmascaraba el exit code del benchmark; (3) **benchmark léxico fácil** — los irrelevantes no compartían vocabulario con la query.
+
+### Lo hecho
+1. **Contador canónico functional vs meta (Opción A)**: `run-tests.sh` captura `PASS_FUNCTIONAL` antes de la fase documental; `doc_truth_check` valida el functional contra el README (números estables) y el TOTAL contra `PASS+1` al final (se cuenta a sí mismo → detecta cualquier crecimiento de la fase meta). Resumen: `Functional: 200 OK · Meta: 5 OK · Total: 205 OK`.
+2. **Fix RC en test-scale.sh**: quitado el `|| true` que mataba el exit code (RC siempre 0); ahora un benchmark fallido (exit 1) se detecta por RC y falla la suite. Verificado con simulación.
+3. **Benchmark adversarial** (`--adversarial` en bench-scale.sh + test_scale_adversarial): los irrelevantes COMPARTEN `scrcpy`/`ZTE` en contextos distintos. **Hallazgo medido**: con query de 2 términos, BM25 puro ahoga la aguja con menor vocabulario exclusivo (recall 1/2, healthy=false). Es medición honesta del límite de FTS5 puro — la capa que lo resuelve es el router (context selection), que este benchmark no ejercita. Por eso es medición (exit 0 si corrió), no gate.
+4. **Suite**: **205 OK / 0 FAIL** (full, 200 functional + 5 meta) · **189 OK / 0 FAIL** (--quick, 184 + 5).
+
+### Lecciones
+- La paradoja del contador es el tipo de bug que solo aparece cuando un sistema se mide a sí mismo — y la solución (functional/meta/total) lo hace más legible además de correcto.
+- El adversarial demostró el límite REAL de FTS5 puro: con vocabulario compartido, BM25 no distingue la aguja con menos términos exclusivos. Siguiente benchmark natural: **bench-context-selection** que incluya el router.
+
+---
+
 
 ### Pedido del usuario
 Revisión del sistema detectó 2 inconsistencias documentales (README decía "3 sesiones" y "168 checks" cuando la regla real es 5 entradas/30KB y la suite 196→198) y propuso convertirlas en mecanismo anti-drift + benchmark adversarial de memoria.
