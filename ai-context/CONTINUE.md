@@ -1,25 +1,24 @@
 # 🔄 CONTINUE — Handoff entre sesiones
 
 > ⚡ **PRÓXIMA SESIÓN: LEE ESTO PRIMERO**
-> Generado: 2026-08-09 (opencode — anti-drift documental + benchmark de escala)
+> Generado: 2026-08-09 (opencode — paradoja del contador resuelta + benchmark adversarial)
 
 ---
 
-## Resumen de la sesión (2026-08-09 cierre — opencode)
+## Resumen de la sesión (2026-08-09 cierre v2 — opencode)
 
-**Tema:** la auditoría encontró drift de la PROPIA documentación (README decía "3 sesiones" y "168 checks") → convertido en mecanismo anti-drift + benchmark adversarial de memoria (P0). Suite: **202 OK / 0 FAIL** (full) · **186 OK / 0 FAIL** (--quick).
+**Tema:** la revisión externa encontró 3 fallos nuevos en el anti-drift (paradoja del contador, RC muerto, benchmark fácil) → corregidos. Suite: **205 OK / 0 FAIL** (full, 200 functional + 5 meta) · **189 OK / 0 FAIL** (--quick, 184 + 5).
 
-1. **`scripts/tests/test-documentation.sh` (NUEVO)** — fase final `doc_truth_check` en `run-tests.sh`: el número canónico de checks se **deriva del PASS real del runner**, no se hardcodea; el README debe declararlo. Si la suite crece (198→203) y nadie actualiza la doc → **CI rompe**. Verificado adversarialmente: README mintiendo → FAIL + exit 1. También valida la regla unificada "5 entradas o ~30KB" y anti-regresión de "3 sesiones".
-2. **`scripts/tests/bench-scale.sh` (NUEVO)** — benchmark P0 de selección a escala: siembra 500 hechos en índice FTS5 real (2 relevantes a "scrcpy ZTE", 498 irrelevantes), mide **recall, contaminación (leaked), chars/tokens de contexto, utilización de ventana**. Resultado: recall 2/2, leaked 0, healthy. Flags: `--count N`, `--json`, `--quick`.
-3. **`scripts/tests/test-scale.sh` (NUEVO)** — integra el benchmark a la suite en `--quick` (50 hechos).
-4. **README corregido** (4 líneas): "Últimas 5 sesiones" (era 3), "198 checks (182 --quick)" (era 168/152), "13 test_*.sh" (era 11), + sección anti-drift y benchmark.
-5. **Lección**: el sistema detectaba drift de hechos pero no de su propia documentación → nueva categoría **DRIFT documental** cubierta por el runner. Detalle técnico FTS5: `snippet()` envuelve términos de la query en `«»` — los detectores del benchmark usan substrings que NO están en la query.
+1. **Paradoja del contador resuelta (Opción A)** — `doc_truth_check` ahora valida el conteo **functional** (estable) contra el README y el **total** contra `PASS+1` al final (se cuenta a sí mismo → detecta su propio crecimiento). Resumen del runner: `Functional: 200 OK · Meta: 5 OK · Total: 205 OK`. README declara functional y total por separado.
+2. **Fix RC en test-scale.sh** — eliminado `|| true` que enmascaraba el exit code del benchmark (RC siempre 0). Verificado: benchmark fallido → RC=1 → FAIL.
+3. **Benchmark adversarial** (`bench-scale.sh --adversarial` + `test_scale_adversarial`) — irrelevantes comparten `scrcpy`/`ZTE` en contextos distintos (Free Fire, Linux, audio, resolución). **Hallazgo: BM25 puro ahoga la aguja con menos vocabulario exclusivo (recall 1/2, healthy=false)** — medición honesta del límite de FTS5; lo resuelve el router, no ejercitado aquí. Adversarial = medición (exit 0 si corrió), no gate.
 
 ### ⏳ Pendientes para otra sesión
-- **Pushear commits locales** (rama local adelantada a origin/main) — incluye esta sesión.
-- P1: retorno del aprendizaje (recuperación de SESION-archive meses después → ¿se vuelve conocimiento activo?).
-- P1: contención de memoria a nivel router (tarea data_car → ¿aparece Free Fire/rice?).
-- P2: concurrencia con 3+ escritores sobre MEMORY.md.
+- **Pushear commits locales** (rama local adelantada a origin/main).
+- **P0 next**: `bench-context-selection.sh` — pipeline completo USER REQUEST → ROUTER → categoría → SEARCH → ranking (el adversarial demostró que FTS5 puro no basta con vocabulario compartido).
+- P1: retorno del aprendizaje (SESION-archive meses después → ¿conocimiento activo?).
+- P1: contención de memoria a nivel router (data_car → ¿Free Fire/rice?).
+- P2: concurrencia 3+ escritores sobre MEMORY.md.
 - Opcional: `Knowledge/Tools/Buffy-Memory.md` (ficha de uso del CLI).
 
 ---
