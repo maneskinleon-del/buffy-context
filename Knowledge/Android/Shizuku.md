@@ -24,6 +24,19 @@
   requested»), por eso el server lo trata como sesión shell genérica y lo
   rechaza en el fork.
 
+## Watchdog / auto-reinicio (sin root, Termux)
+
+El clásico no trae watchdog (el fork Shizuku+ sí, pero rompe el attach). Se
+envuelve con ADB loopback `127.0.0.1:5555` — funciona sin Wi-Fi real porque
+es el adb wireless local del teléfono. Script: `~/bin/shizuku-watchdog.sh`
+(intervalo default 30s): si `pidof shizuku_server` falla, lanza la
+MainActivity → la app detecta el adb 5555 y re-arranca el server sola.
+Validado 2026-08-08: kill del server → relanzamiento → pid nuevo OK.
+
+```bash
+nohup ~/bin/shizuku-watchdog.sh 30 > /dev/null 2>&1 &
+```
+
 ## Setup
 
 1. Instalar: `moe.shizuku.privileged.api`

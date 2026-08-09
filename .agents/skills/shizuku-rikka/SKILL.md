@@ -114,6 +114,20 @@ export MANAGER_APPLICATION_ID=moe.shizuku.privileged.api
 ~/bin/rish                            # shell interactivo privilegiado
 ```
 
+### Watchdog (auto-reinicio sin root)
+El clásico NO tiene watchdog propio (el fork sí). En Termux se envuelve con ADB
+loopback (5555) que nunca se cae por red — no requiere Wi-Fi real:
+```bash
+# ~/bin/shizuku-watchdog.sh: vigila shizuku_server cada N s (default 30)
+# Si muere: lanza la app (MainActivity) → la app detecta el adb wireless 5555
+# y re-arranca el server SOLA (validado: kill   pidof → relanzamiento OK)
+nohup ~/bin/shizuku-watchdog.sh 30 > /dev/null 2>&1 &
+```
+Detalle: si la app ya está arriba, `am start` no para el proceso caído; el
+watchdog usa la detección de adb en 5555 para que la misma app rebote el
+server. Matar el server a propósito solo desde `rish -c "kill -9 <pid>"`
+(adb shell falla: uid distinto).
+
 ### Fallback: addon `termux-shizuku` (F-Droid)
 Usar solo si el exportado no es usable. Requiere el paquete del addon
 (`termux-shizuku`) instalado desde F-Droid — NO es suficiente `termux-api`:
