@@ -5,6 +5,16 @@
 
 ---
 
+## ⛔ DECISIÓN DE CONGELAMIENTO (2026-08-09) — LEER ANTES DE TOCAR CÓDIGO
+
+**buffy-context queda CONGELADO en este estado.** No se agrega ninguna funcionalidad nueva, no se modifica el motor de memoria ni el sistema de tests, hasta que el próximo cambio esté **justificado por el benchmark pendiente**:
+
+> `bench-context-selection.sh` — 500 hechos distribuidos por dominio (Android/Linux/FreeFire/React/misc), tarea real ("el teléfono no aparece en scrcpy"), midiendo router → search con `domain_precision` + `context_chars`/`tokens`/`leaked`.
+
+Disciplina acordada: **el benchmark primero, la feature después.** Si un cambio no responde a una necesidad demostrada por el benchmark, no se hace. El único tipo de commit permitido en el congelamiento es documental (docs/sesion) o fix de bugs reales.
+
+---
+
 ## Resumen de la sesión (2026-08-09 cierre v2 — opencode)
 
 **Tema:** la revisión externa encontró 3 fallos nuevos en el anti-drift (paradoja del contador, RC muerto, benchmark fácil) → corregidos. Suite: **205 OK / 0 FAIL** (full, 200 functional + 5 meta) · **189 OK / 0 FAIL** (--quick, 184 + 5).
