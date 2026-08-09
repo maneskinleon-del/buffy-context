@@ -25,20 +25,22 @@ adb shell am start -n com.zjx.ztezscreenshot/com.zjx.jyandroid.MainApp.MainActiv
 
 ## Mantis Gamepad Pro (alternativa recomendada)
 
+> ⚠️ **Actualizado 2026** — sigue activo (v3.4.8+, 54K reviews), pero v3.x tiene suscripción Pro (~$9.99) y reportes de inestabilidad (crashes, input lag). **No confundir con Octopus**: el baneable por clonación es Octopus; Mantis usa NMC sin clonar (riesgo de ban bajo, comparable a GG Mouse Pro 2).
+
 | Aspecto | Detalle |
 |---|---|
-| Paquete | `com.mantis.gamepadpro` |
-| Activación | Shizuku o MantisBuddy |
+| Paquete | `app.mantispro.gamepad` |
+| Activación | Android 11+: on-device (Wireless Debugging) · Android 10-: MantisBuddy (PC/segundo Android) |
 | Free Fire | ✅ Alta compatibilidad |
 | Drift | Mínimo |
 
 ```bash
-adb shell appops set com.mantis.gamepadpro SYSTEM_ALERT_WINDOW allow
-adb shell appops set com.mantis.gamepadpro GET_USAGE_STATS allow
-adb shell dumpsys deviceidle whitelist +com.mantis.gamepadpro
+adb shell appops set app.mantispro.gamepad SYSTEM_ALERT_WINDOW allow
+adb shell appops set app.mantispro.gamepad GET_USAGE_STATS allow
+adb shell dumpsys deviceidle whitelist +app.mantispro.gamepad
 ```
 
-Ventaja: usa motor NMC (no-cloning) — más seguro contra anti-cheats.
+Ventaja: usa motor NMC (no-cloning) — más seguro contra anti-cheats. En Android 11+ activa in-app con Wireless Debugging (sin PC).
 
 ## Panda Mouse Pro (ligero)
 
@@ -51,7 +53,7 @@ Ventaja: usa motor NMC (no-cloning) — más seguro contra anti-cheats.
 
 ## Octopus (NO recomendado para Free Fire)
 
-> ⚠️ **Riesgo alto de ban.** Usa clonación de apps (sandbox) que Garena detecta fácilmente.
+> ⚠️ **Riesgo alto de ban.** Usa clonación de apps (sandbox) que Garena detecta fácilmente. **Es el mapper que la gente confunde con Mantis**: la diferencia es la clonación — Mantis (NMC) no clona, Octopus sí.
 > No usar para Free Fire — prefiere GG Mouse Pro o Mantis.
 
 ## Comparativa
@@ -59,6 +61,6 @@ Ventaja: usa motor NMC (no-cloning) — más seguro contra anti-cheats.
 | Keymapper | Activación | Free Fire | Drift | Riesgo ban |
 |---|---|---|---|---|
 | GG Mouse Pro 2 | Shizuku | ✅ Excelente | Bajo | Muy bajo |
-| Mantis Gamepad Pro | Shizuku/ADB | ✅ Excelente | Mínimo | Muy bajo |
+| Mantis Gamepad Pro | Wireless Debugging / Shizuku | ✅ Excelente | Mínimo | Muy bajo |
 | Panda Mouse Pro | Shizuku/ADB | ⚠️ Moderada | Medio | Bajo |
 | Octopus | ADB | ❌ Alto riesgo | Variable | 🚫 MUY ALTO |
