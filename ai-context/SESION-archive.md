@@ -1546,3 +1546,317 @@ Estilo bspwm, configurados via `kwriteconfig6`:
 
 
 
+
+---
+
+# 🧠 SESION — Buffy Freebuff (2026-08-05)
+
+> Contexto de todo lo implementado durante esta sesión.
+
+---
+
+## 🚗 data_car — Fixes de extracción MG 350 (commit 6b3e352, pusheado)
+
+### Bug crítico resuelto — transmission_oil "18. L" → "2 L"
+La keyword `/transmisi[oó]n\s*[:：]/` **no tenía el flag `/i`**. El manual usa "**T**ransmisión:" con mayúscula (p.75: "Transmisión: Llene Relleno seca **2 L** 2,2"), así que el regex case-sensitive nunca matcheaba → la regla caía en el patrón laxo que capturaba el "18. L" de una tabla de tornillería (p.398). Fue el único `fieldKeyword` de las 16 reglas sin `/i` (verificado por charCodes con script de debug). Fix: flag `/i` + patrón estricto `(\d+(?:[.,]\d+)?)` que rechaza números truncados tipo "18. L" sin perder "2,9 l" → **"2 L" @80% p.75**.
+
+### Otras reglas arregladas (evidencia del manual)
+- **`wheel_torque`** → "115-130 Nm" @65% p.517 (keywords `tornillos? de rueda`/`pernos? de rueda`/`wheel bolt` + lookahead anti "rueda dentada") + mapeo nuevo `→ torqueTornillos` en specsSync.
+- **`compression`** → renombrada "Relación de Compresión": el manual publica "Índice de compresión 10.5: 1" (p.79), no psi. Patrón de ratio + bonus de confianza +0.3 por formato → **"10.5: 1" @65%**.
+- **`valve_clearance`** → keyword `/v[aá·]lvulas?:/i` tolera el á corrupto (·) → "8.2 mm" @80% p.83.
+- **`tire_size`** → keyword "tamaño" agregada → "205/55 R16" @60% p.598.
+- **`normalizeText`** → mapea caracteres corruptos del text-layer (í→Ì, é→È, ú→˙, ñ→Ò) → desbloquea brake_fluid (DOT4), oil_filter (BLT200010), air_filter (FN745).
+- **Datos ausentes (no extraíbles)**: `tire_pressure` (solo TPMS sin valores; los 93-123 kPa son tapa del radiador) y `brake_pad` (sin espesor mm). No hay correa: el MG 350 usa **cadena** de distribución sin intervalo publicado.
+
+### Resultado verificado
+Cobertura **83%** · 12 componentes con datos · **7 campos sincronizados**: aceiteMotor=4,5 l · aceiteCaja=**2 L** · refrigerante=7.3 L · bujias=0,9 mm · dimensionNeumaticos=205/55 R16 · capacidadEstanque=55 L · torqueTornillos=115-130 Nm. Lint EXIT 0 + build ✅. Push `89f74cf..6b3e352 main -> main` ✅.
+
+---
+
+## 🧠 Freebuff — "temporarily busy" (429, modo limited) investigado + wrapper `fb-wait`
+
+### Causa raíz (binario `~/.config/manicode/freebuff`, v0.0.138)
+El mensaje `_qH = "Freebuff is temporarily busy. Please try again in a moment."` se dispara **solo con HTTP 429**: `QqH(H) { if (A.statusCode !== 429) return null; ... }`. Niveles de espera hardcodeados (sin config editable — no hay `settings.json` ni env `CODEBUFF_*` para esto):
+- Cliente HTTP: `MB$ = {maxRetries:3, initialDelayMs:1000, maxDelayMs:1e4}` (retryable: 408/429/500/502/503/504).
+- SDK AI: `maxRetries:2` + respeta `Retry-After` (cap 60s o backoff).
+- Polling sesión free: `G4$ = 30000` (30s) + backoff `nl()` exponencial con **cap 300000ms (5 min)**; respeta `Retry-After` del servidor.
+
+Freebuff es TUI interactiva pura (solo acepta `login` como subcomando; sin modo one-shot con prompt). El mensaje aparece cuando los 2-3 reintentos rápidos se agotan; no hay loop "esperar 5 min y reintentar solo".
+
+### Solución — `~/.local/bin/fb-wait` (NUEVO, en PATH)
+Launcher de guardia que lanza Freebuff y, al salir, revisa la **cola** (tail 8KB) del `log.jsonl` de la sesión más reciente (ordenada por **mtime real** vía `find -printf '%T@'`, no por nombre — bug inicial de `sort -r` corregido). Si detecta 429 busy → espera `FB_WAIT_MIN` (default 5 min) → relanza con `--continue` (retoma la conversación) hasta `FB_MAX_RETRIES` (default 10).
+- Ctrl+C **con** busy reciente → reintenta (caso más común, corregido tras code review); Ctrl+C/error genérico **sin** busy → sale sin reintentar.
+- Valida env vars numéricas (`FB_WAIT_MIN=abc` → error claro). Alcance documentado: no reintenta el prompt en vivo (la TUI no termina al ver busy); automatiza "salir → esperar → relanzar".
+- Probado con mocks (5 escenarios: busy→ok, ctrl-c con/sin busy, error genérico, env inválido) ✅.
+
+---
+
+## 🚗 data_car — Sync Base Técnica → Ficha del vehículo (commit 89f74cf)
+
+### Contexto
+Sesión retomada tras un reinicio (combinación de teclas bloqueó el teclado). El WIP de la sesión anterior sobrevivió en disco pero no estaba commiteado; el último commit (`2bb0bb7`) sí estaba pusheado.
+
+### Cambios commiteados y pusheados (`89f74cf`, 6 archivos, +592/-175)
+- **`src/lib/specsSync.ts`** (NUEVO): puente Base Técnica → ficha. Solo sincroniza datos con confianza ≥ 0.5. Auto-sync (`force=false`) llena solo campos vacíos; botón "Sincronizar ficha" (`force=true`) sobreescribe. Toasts con etiquetas legibles.
+- **`src/lib/technicalExtractor.ts` (v2 — cobertura honesta)**:
+  - Confianza parte en 0 y suma solo por evidencia: unidad (+0.3), cercanía keyword ≤180 chars (+0.25/0.15/0.1), sección que matchea la regla (+0.2), formato especificación (+0.15), formato parte (+0.2), formato neumático (+0.35), keyword en ventana (+0.1).
+  - Cada candidato trackea `page` + `section` del manual (procedencia).
+  - Se descartan matches sin keyword cerca y candidatos con confianza < 0.3.
+  - Componentes solo con ≥1 dato llenado; cobertura = reglas requeridas con datos reales.
+  - `buildDatabase()` cacheada; `searchComponent` usa la cache.
+- **`src/components/TechnicalDatabase.tsx`**: extracción por páginas (`pdfPages`), auto-sync al montar (bases construidas antes del sync), cobertura por sistema = llenados/reglas (`SYSTEM_RULE_COUNTS`), invalida `extractorRef` al cambiar PDF, botón "Sincronizar ficha".
+- **`src/App.tsx`**: merge `{...defaults, ...saved}` al cargar specs (campos nuevos no quedan `undefined` → inputs no controlados).
+- **`src/components/SpecForm.tsx`**: nuevos campos aceite caja, refrigerante, líquido frenos, bujías; panel "Electrónica & Luz" → "Sistemas y Líquidos".
+- **`src/types.ts`**: eliminado campo `alfombra`.
+
+### Validación
+`npm run lint` (tsc --noEmit) ✅ · `npm run build` ✅ · push por SSH `2bb0bb7..89f74cf main -> main` ✅ · HEAD == origin/main ✅
+
+---
+
+## 🧠 Freebuff — Por qué las sesiones arrancaban sin contexto (resuelto)
+
+### Causa raíz
+Freebuff es el cliente de Codebuff (binario Bun en `~/.config/manicode/freebuff` v0.0.138, repo privado `CodebuffAI/freebuff-private`). Al iniciar sesión **auto-inyecta** en el prompt del sistema los archivos llamados exactamente:
+- `AGENTS.md`, `CLAUDE.md`, `knowledge.md` / `*.knowledge.md` (en el proyecto)
+- `~/.AGENTS.md`, `~/.CLAUDE.md`, `~/.knowledge.md` (globales del usuario, solo lectura)
+
+Evidencia: binario (lista `["knowledge.md","AGENTS.md","CLAUDE.md"]` + plantilla `{CODEBUFF_KNOWLEDGE_FILES_CONTENTS}`) y docs oficiales codebuff.com/docs ("Codebuff will also read these files").
+
+El archivo del usuario se llamaba **`AGENTS-root.md`** → no matcheaba ningún nombre reconocido → **cero knowledge files cargados** → el agente arrancaba sin memoria (aunque `ai-context/` estaba intacta).
+
+### Solución
+- Creado **`~/.AGENTS.md`** = copia de `AGENTS-root.md` (825 B). Se carga en TODA sesión, sin importar el proyecto. Apunta al protocolo: leer `ai-context/INFO-core.md` → `SNAPSHOT.md` → `CONTINUE.md`.
+- `~/.AGENTS.md` es de solo lectura para el agente (fuera del proyecto) — los cambios se hacen en `AGENTS-root.md` y se re-copian.
+
+### Lecciones
+- El nombre del archivo importa: `AGENTS-root.md` ≠ `AGENTS.md` para la auto-carga.
+- Los knowledge files se inyectan completos al prompt → mantenerlos livianos (puntero, no memoria entera).
+- Complemento: `freebuff --continue` retoma la conversación anterior (historial en `~/.config/manicode/message-history.json`).
+
+---
+
+## 📁 Archivos modificados/creados (sesión 2026-08-05)
+
+| Archivo | Cambio |
+|---------|--------|
+| `~/data_car/` (6 archivos) | commit `89f74cf` — sync Base Técnica → ficha + cobertura honesta |
+| `~/.AGENTS.md` | **NUEVO** — auto-carga global de contexto en Freebuff |
+| `ai-context/CONTINUE.md` | ✅ Regenerado (handoff 2026-08-05) |
+| `ai-context/SESION.md` | ✅ Esta entrada |
+
+---
+
+
+
+# 🧠 SESION — Buffy Freebuff (2026-07-26)
+
+> Contexto de todo lo implementado durante esta sesión.
+
+---
+
+## 🎨 Thunar — Iconografía Mac (WhiteSur) + Transparencia
+
+### Problema
+Thunar usaba iconos TokyoNight-SE (no Mac-style) y no tenía transparencia. El CSS existente estaba en `~/.config/gtk-4.0/` pero Thunar usa GTK3, no GTK4.
+
+### Solución
+- **`~/.config/gtk-3.0/settings.ini`**: Cambiado `gtk-icon-theme-name` de `TokyoNight-SE` a `WhiteSur` (global GTK3)
+- **`~/.config/gtk-3.0/gtk.css`**: Creado con:
+  - Fondos translúcidos `rgba()` con alpha
+  - Glass effect en sidebar, statusbar, frame principal
+  - Bordes redondeados (14px)
+  - Acento verde #24BD5C
+  - Animaciones suaves en hover/selected
+- **`~/.config/bspwm/config/picom/picom-rules.conf`**: Agregada regla para `class_g='Thunar'`:
+  - `blur-background = true`
+  - `corner-radius = 10`
+  - `fade = true`, `shadow = true`
+
+### Lecciones
+- `GTK_ICON_THEME` **no funciona** como env var en GTK3 (probado con Python GTK binding)
+- La única forma de cambiar icon theme es vía `settings.ini` global o wrapper con `XDG_CONFIG_HOME`
+- El `.desktop` file con `env` no afecta cuando Thunar se lanza desde sxhkd
+- Se modificó `OpenApps` y luego se revirtió — la solución global `settings.ini` fue la definitiva
+
+---
+
+## 🔤 Alacritty — Tamaño de fuente reducido
+
+- **`~/.config/alacritty/fonts.toml`**: `size = 14` → `size = 11`
+
+---
+
+## 🦊 Firefox — Fuente UI + Pestañas verticales
+
+### Problema 1: Fuente monospace en UI
+Firefox usaba `UbuntuMono Nerd Font 11` (monospace) para toda su interfaz GTK3: menús, URL bar, pestañas, etc.
+
+### Solución
+- **`~/.config/gtk-3.0/settings.ini`**: `gtk-font-name` cambiado de `UbuntuMono Nerd Font 11` a `Fira Sans Semi-Bold 11`
+
+### Problema 2: Pestañas horizontales comprimidas
+Muchas pestañas abiertas (IAs, proyectos) haciendo la tab strip ilegible.
+
+### Solución
+- **`~/.config/mozilla/firefox/pw5luhdq.default-release/user.js`**: Creado con:
+  - `user_pref("sidebar.revamp", true);`
+  - `user_pref("sidebar.verticalTabs", true);`
+  - `user_pref("sidebar.visibility", "always-show");`
+- El `user.js` es persistente — Firefox nunca lo sobrescribe (a diferencia de `prefs.js`)
+- Nota: `sidebar.main.tools` en prefs.js está seteado a una extensión de terceros, podría interferir
+
+### Notas técnicas
+- Perfil Firefox encontrado en `~/.config/mozilla/firefox/` (ruta XDG), NO en `~/.mozilla/firefox/`
+- Intentos fallidos previos: editar `prefs.js` directamente (Firefox lo sobrescribe al cerrar)
+- Firefox 152.0.6-1
+
+---
+
+## 🎭 Playwright — Skill instalada
+
+- **Skill**: `microsoft/playwright-cli@playwright-cli` instalada vía `npx skills add` (carpeta playwright-cli en `~/.agents/skills/`)
+- **CLI**: `@playwright/cli` instalado globalmente via npm
+- **Browser**: Firefox 152.0.4 descargado para Playwright (~106MB) en `~/.cache/ms-playwright/firefox-1534`
+- **Comandos básicos**: `playwright-cli open`, `goto`, `screenshot`, `close`, `click`, `fill`, `snapshot`
+
+---
+
+## 🔄 Alacritty → Foot → Revertido
+
+### Intento
+Se intentó reemplazar Alacritty por Foot como terminal principal del sistema.
+
+### Cambios realizados (luego revertidos)
+- `~/.config/bspwm/config/.term`: `alacritty` → `foot`
+- `~/.config/bspwm/bin/Term`: Agregado case `foot` con `--app-id` para todos los modos
+- `~/.config/bspwm/bin/Bspwm-ScratchPad`: Agregado case `foot` con `--app-id`
+- `~/.config/geany/geany.conf`: `terminal_cmd` actualizado a `foot -e /bin/zsh %c`
+- `~/.config/bspwm/config/modules/05-foot.sh`: **Creado** (módulo rice para foot)
+
+### Causa del fallo
+Foot es un emulador de terminal **nativo de Wayland**. No puede ejecutarse bajo X11:
+```
+err: wayland.c:1788: failed to connect to wayland; no compositor running?
+```
+El usuario corre bspwm (X11), por lo que foot no funciona.
+
+### Resolución
+Todos los cambios revertidos. Alacritty sigue siendo el terminal por defecto.
+
+### Lecciones
+- Foot solo funciona con compositores Wayland (Mango WM, Hyprland, etc.)
+- `--app-id` es el equivalente Wayland de `--class` en X11
+- El módulo `05-foot.sh` se dejó en disco por si en futuro se usa Wayland (actualmente inactivo)
+
+---
+
+## 📁 Archivos modificados/creados (sesión completa)
+
+| Archivo | Cambio |
+|---------|--------|
+| `~/.config/gtk-3.0/settings.ini` | Icon theme: TokyoNight-SE → WhiteSur. Font: UbuntuMono → Fira Sans. Habilite animaciones |
+| `~/.config/gtk-3.0/gtk.css` | **NUEVO**: Thunar GTK3 CSS con transparencia, glass effect, rounded corners |
+| `~/.config/bspwm/config/picom/picom-rules.conf` | Regla Thunar con blur-background + corner-radius |
+| `~/.config/alacritty/fonts.toml` | Font size 14 → 11 |
+| `~/.local/share/applications/thunar.desktop` | **NUEVO** (creado, luego mantenido como backup) |
+| `~/.config/mozilla/firefox/pw5luhdq.default-release/user.js` | **NUEVO**: Pestañas verticales Firefox |
+| `~/.agents/skills/` (carpeta playwright-cli) | **NUEVO**: Skill playwright-cli instalada |
+| `~/.config/bspwm/config/modules/05-foot.sh` | **NUEVO**: Módulo rice para Foot (inactivo — Wayland-only) |
+| `ai-context/CHANGELOG.md` | Actualizado con cambios de esta sesión |
+| `ai-context/SESION.md` | Actualizado con el intento Foot + revert |
+
+---
+
+## 🪟 Alacritty — Transparencia (opacidad 0.85) + Fix picom
+
+### Problema
+Alacritty no mostraba transparencia. El valor `opacity = 0.85` se reiniciaba al abrir una nueva terminal.
+
+### Causa raíz
+1. **Picom no estaba corriendo** — sin compositor, Alacritty no puede mostrar transparencia bajo X11
+2. **El módulo `05-alacritty.sh` sobreescribe la opacidad** en cada inicio de sesión de bspwm:
+   - `sed -i "s|^opacity = .*|opacity = ${P_TERM_OPACITY}|" "$HOME/.config/alacritty/alacritty.toml"`
+   - El valor `P_TERM_OPACITY` venía de `theme-config.bash`
+3. **`P_TERM_OPACITY="0.98"`** en `rices/melissa/theme-config.bash` — casi opaco
+
+### Solución
+- **`rices/melissa/theme-config.bash`**: `P_TERM_OPACITY="0.98"` → `"0.85"`
+- **`alacritty/alacritty.toml`**: `opacity = 0.98` → `0.85` (cambio directo)
+- **Picom iniciado**: `picom -b` (no estaba corriendo)
+
+### Lecciones
+- Para cambios permanentes de transparencia, modificar `P_TERM_OPACITY` en `theme-config.bash`, NO directamente en `alacritty.toml`
+- Siempre verificar `ps aux | grep picom` si la transparencia no se muestra
+- El `05-alacritty.sh` se ejecuta vía Theme.sh → bspwmrc
+
+---
+
+## 🎨 Polybar — Esquema de colores completo (tema melissa)
+
+### Cambios visuales
+
+**Fondo de barras:**
+- Antes: `#003b4252` (transparente — 00 alpha)
+- Ahora: `#1e222a` (sólido oscuro, contrasta con el terminal transparente)
+
+**Secciones coloreadas con acentos Nord:**
+
+| Sección | Color | Hex |
+|---------|-------|-----|
+| CPU | Verde | `#a3be8c` |
+| RAM | Cyan | `#88c0d0` |
+| DISK | Amarillo | `#ebcb8b` |
+| NET | Púrpura | `#b48ead` |
+| KB/Teclado | Azul | `#81a1c1` |
+| Workspace focused | Verde | `#a3be8c` |
+| Workspace occupied | Cyan | `#88c0d0` |
+| Volumen | Cyan | `#88c0d0` |
+| Brillo | Ámbar | `#FBC02D` |
+| Bluetooth | Azul | `#81a1c1` |
+| Batería cargando | Verde | `#a3be8c` |
+| Batería descargando | Amarillo | `#ebcb8b` |
+| Icono música | Púrpura | `#b48ead` |
+| Icono usuario | Amarillo | `#ebcb8b` |
+| Icono power | Rojo | `#bf616a` |
+
+### Archivos modificados
+| Archivo | Cambio |
+|---------|--------|
+| `rices/melissa/config.ini` | Colores globales: bg=#1e222a, bg-alt=#2e3440 |
+| `rices/melissa/modules.ini` | Acentos Nord en cada módulo, iconos descomentados |
+| `rices/melissa/theme-config.bash` | P_TERM_OPACITY=0.85 |
+| `bspwm/eww/colors.scss` | Sincronizado con nueva paleta |
+
+### Recarga de polybar
+```bash
+polybar-msg cmd quit
+RICE=$(cat ~/.config/bspwm/.rice)
+MONITOR=HDMI-1 polybar mel-bar -c ~/.config/bspwm/rices/$RICE/config.ini &
+MONITOR=HDMI-1 polybar mel2-bar -c ~/.config/bspwm/rices/$RICE/config.ini &
+```
+
+---
+
+## 📁 Archivos modificados/creados (sesión completa)
+
+| Archivo | Cambio |
+|---------|--------|
+| `~/.config/bspwm/rices/melissa/theme-config.bash` | P_TERM_OPACITY: 0.98 → 0.85 |
+| `~/.config/alacritty/alacritty.toml` | opacity: 0.98 → 0.85 |
+| `~/.config/bspwm/rices/melissa/config.ini` | Colores globales polybar rediseñados |
+| `~/.config/bspwm/rices/melissa/modules.ini` | Acentos Nord en cada módulo |
+| `~/.config/bspwm/eww/colors.scss` | Sincronizado con nueva paleta |
+| `ai-context/CHANGELOG.md` | ✅ Actualizado |
+| `ai-context/SESION.md` | ✅ Actualizado |
+| `ai-context/AGENTS.md` | ✅ Añadidas notas técnicas (picom, polybar) |
+| `ai-context/SYSTEM.md` | ✅ Actualizado (rice melissa, picom) |
+| `ai-context/SYSTEM_FULL.md` | ✅ Actualizado (referencias, terminales) |
+| `ai-context/INFO-core.md` | ✅ Actualizado (sistema, proyectos) |
+| `ai-context/INFO-full.md` | ✅ Actualizado (terminales, changelog) |
+
+*Fin de la sesión — Última actualización: 2026-07-26*
+
+---
+
+
