@@ -50,6 +50,10 @@ source "$SCRIPT_DIR/test-router.sh"
 source "$SCRIPT_DIR/test-verify.sh"
 # shellcheck source=test-memory.sh
 source "$SCRIPT_DIR/test-memory.sh"
+# shellcheck source=test-documentation.sh
+source "$SCRIPT_DIR/test-documentation.sh"
+# shellcheck source=test-scale.sh
+source "$SCRIPT_DIR/test-scale.sh"
 
 trap teardown_sandbox EXIT
 
@@ -93,7 +97,15 @@ for t in $TESTS; do
   "$t"
 done
 
-# ── 2. Resumen ─────────────────────────────────────────────
+# ── 2. Verdad documental (anti-drift de documentación) ──────
+# Fase final, NO un test_* alfabético: necesita el conteo TOTAL ya acumulado.
+# El número canónico se deriva del PASS real — el README debe declararlo.
+# Con FILTER el conteo es parcial → no tiene sentido comparar (se salta).
+if [ -z "$FILTER" ]; then
+  doc_truth_check "$PASS" "$QUICK_MODE"
+fi
+
+# ── 3. Resumen ─────────────────────────────────────────────
 echo
 echo "═══════════════════════════════════"
 if [ "$FAIL" -eq 0 ]; then
