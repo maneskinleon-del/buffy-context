@@ -99,11 +99,13 @@ done
 
 # ── 2. Verdad documental (anti-drift de documentación) ──────
 # Fase final, NO un test_* alfabético: necesita el conteo TOTAL ya acumulado.
-# El número canónico se deriva del PASS real — el README debe declararlo.
-# Con FILTER el conteo es parcial → no tiene sentido comparar (se salta).
+# Capturamos el conteo FUNCTIONAL antes de la fase (los tests que prueban
+# Buffy) — los checks documentales son META-checks que se cuentan aparte.
+PASS_FUNCTIONAL=$PASS
 if [ -z "$FILTER" ]; then
-  doc_truth_check "$PASS" "$QUICK_MODE"
+  doc_truth_check "$PASS_FUNCTIONAL" "$QUICK_MODE"
 fi
+PASS_META=$((PASS - PASS_FUNCTIONAL))
 
 # ── 3. Resumen ─────────────────────────────────────────────
 echo
@@ -114,6 +116,7 @@ if [ "$FAIL" -eq 0 ]; then
   else
     echo "RESULTADO: $PASS OK / 0 FAIL — ✅ SUITE COMPLETA"
   fi
+  echo "  └─ Functional: $PASS_FUNCTIONAL OK · Meta (documental): $PASS_META OK · Total: $PASS OK"
   echo "═══════════════════════════════════"
   if [ "$JSON_SUMMARY" = true ]; then
     printf '{"suite":"buffy-context","passed":%s,"failed":0,"quick":%s,"healthy":true}\n' "$PASS" "$QUICK_MODE"
