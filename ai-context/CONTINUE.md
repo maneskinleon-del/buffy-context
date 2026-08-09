@@ -1,11 +1,25 @@
 # 🔄 CONTINUE — Handoff entre sesiones
 
 > ⚡ **PRÓXIMA SESIÓN: LEE ESTO PRIMERO**
-> Generado: 2026-08-09 (opencode — buffy-search.sh FTS5 + pendientes)
+> Generado: 2026-08-09 (opencode — memoria curada Hermes implementada)
 
 ---
 
-## Resumen de la sesión (2026-08-09 — opencode)
+## Resumen de la sesión (2026-08-09 tarde — opencode)
+
+**Tema:** cerrar las brechas de buffy-context vs Hermes Agent → **implementada la brecha 2: memoria curada** (`buffy-memory.sh` + `memory_engine.py`).
+
+1. **`scripts/lib/memory_engine.py` (NUEVO)** — réplica fiel de `memory_tool.py` de Hermes sin dependencias: stores `MEMORY.md` (2.200 chars) + `USER.md` (1.375) en `~/.buffy/memories` (o `BUFFY_MEM_DIR`), entradas `§` multiline, dedupe, replace/remove por substring único, límites duros con rechazo, lock fcntl + escritura atómica, **guard de drift** con `.bak` (nunca sobrescribe lo que no hace round-trip), guard de archivo ilegible, **batch** all-or-nothing, escaneo de inyección.
+2. **`scripts/buffy-memory.sh` (NUEVO)** — CLI: `list` · `render` (snapshot para el prompt) · `stats` · `add` · `replace` · `remove` · `batch` + `--json`. Memoria real inicializada en este dispositivo.
+3. **Integrado**: `buffy-doctor.sh` (sección 🧠 Memoria curada, healthy), `LOAD_CONTEXT.md` (Paso 1.5), `~/AGENTS.md` del dispositivo, `README.md`. **Suite: 196 OK / 0 FAIL** (+28 tests nuevos `test-memory.sh`).
+
+### ⏳ Pendientes para otra sesión
+- Sin pendientes de la brecha 2. Futuras brechas Hermes EVALUADAS y desestimadas por ahora: skills (`~/.agents/skills` ya equivalente), self-improvement loop (requiere agente vivo), memory providers externos (Honcho/Mem0: para modelado semántico, no encaja en buffy-context).
+- Si hace falta: documentar `Knowledge/Tools/Buffy-Memory.md` (ficha de uso del CLI).
+
+---
+
+## Resumen de la sesión (2026-08-09 temprano — opencode)
 
 **Tema:** Fortnite (descartado en Linux/este teléfono — el usuario lo retomará en su PC Windows/AMD 3400G con dual boot) + brechas de buffy-context vs Hermes Agent → **implementada la brecha 1: búsqueda FTS5 de sesiones**.
 
