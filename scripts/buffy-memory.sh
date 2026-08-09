@@ -22,7 +22,11 @@
 # y se ven en la próxima sesión.
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_SRC="${BASH_SOURCE[0]}"
+if command -v readlink >/dev/null 2>&1; then
+  SCRIPT_SRC="$(readlink -f "$SCRIPT_SRC" 2>/dev/null || echo "$SCRIPT_SRC")"
+fi
+SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_SRC")" && pwd)"
 ENGINE="$SCRIPT_DIR/lib/memory_engine.py"
 
 USAGE="uso: buffy-memory.sh [--json] list|render|stats|add|replace|remove|batch [args...]"
