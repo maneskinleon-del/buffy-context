@@ -14,6 +14,20 @@ system-id: mangonz-desktop
 # CHANGELOG.md — Historial de cambios del sistema
 
 
+### 2026-08-09 — Lección: retroalimentación activa antes de instalar herramientas + evaluación Lyxel/Mantis (opencode)
+
+**Pedido del usuario:** "Quiero usar Mantis para scrcpy" → tras instalarlo y activarlo, resultó ser mapper de **gamepad**, no de teclado — no sirve para jugar con teclado+mouse desde PC. Lección de proceso: **preguntar el caso de uso exacto y verificar que la herramienta lo cubre ANTES de instalar/probar** (¿teclado/mouse o gamepad? ¿Linux? ¿login Google?).
+
+**Hallazgos consolidados:**
+- **Lyxel Linux** (GUI scrcpy v1.0.3): no incluye el Mapeador (solo Windows, WPF propietario). La GUI duplica funcionalidad del `scrcpy-freefire.sh` (perfiles, optimizaciones ADB) sin el mapeador ni el cleanup — no aporta. Cerrado.
+- **Mantis Gamepad Pro** (oficial v3.4.8 Play Store): mapper de **gamepad físico**, no escucha teclado. Activado vía script interno `buddyNew.sh` (ADB shell — método más confiable que el flujo on-device Wireless Debugging, que está en loop porque el diálogo del sistema es modal).
+- **APK parchado de Appteka** (`YOUAREFINISHED`): Google Sign-In falla siempre (SHA-1 no coincide con Firebase → `ApiException: 10` → loop). Inutilizable para apps con login de Google.
+- **GG Mouse Pro 2 sigue siendo el keymapper de teclado correcto** para este setup.
+
+**Cambios aplicados:**
+- `~/.agents/skills/scrcpy-freefire/SKILL.md`: nueva sección "Regla de oro: retroalimentación activa ANTES de instalar/probar herramientas" con la lección completa.
+- `Knowledge/Android/Keymappers.md`: aclarado que Mantis es de gamepad (no teclado).
+
 ### 2026-08-09 — Corrección: Mantis vs Octopus (keymappers) (opencode)
 
 **Pedido del usuario:** confirmar conjetura "Mantis ya nadie lo usa, es baneable" → **a medias**: Mantis sigue activo (v3.4.8+, 54K reviews) pero v3.x introdujo suscripción Pro (~$9.99) e inestabilidad reportada; el **baneable por clonación es Octopus** (sandbox), no Mantis (NMC sin clonar, riesgo bajo comparable a GG Mouse Pro 2). El usuario confundió Octopus con Mantis.
