@@ -23,9 +23,11 @@ adb shell pm grant com.zjx.ztezscreenshot moe.shizuku.manager.permission.API_V23
 adb shell am start -n com.zjx.ztezscreenshot/com.zjx.jyandroid.MainApp.MainActivity
 ```
 
-## Mantis Gamepad Pro (alternativa recomendada)
+## Mantis Gamepad Pro (alternativa SOLO para control físico)
 
 > ⚠️ **Actualizado 2026** — sigue activo (v3.4.8+, 54K reviews), pero v3.x tiene suscripción Pro (~$9.99) y reportes de inestabilidad (crashes, input lag). **No confundir con Octopus**: el baneable por clonación es Octopus; Mantis usa NMC sin clonar (riesgo de ban bajo, comparable a GG Mouse Pro 2).
+>
+> ❗ **IMPORTANTE — Mantis es mapper de GAMEPAD (control físico), NO de teclado/mouse.** No sirve para jugar con teclado+mouse desde PC (caso scrcpy). Solo relevante si jugás con control Xbox/PS/bluetooth en el teléfono.
 
 | Aspecto | Detalle |
 |---|---|
