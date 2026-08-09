@@ -6,9 +6,13 @@
 #
 # Modelo de contador (Opción A — functional vs meta):
 #
-#   Functional checks   — los que prueban Buffy directamente (198 full / 182 quick)
-#   Meta checks         — los que validan la representación documental (5 full / 5 quick)
-#   Total               — functional + meta (203 full / 187 quick)
+#   Functional checks   — los que prueban Buffy directamente (derivados dinámicamente)
+#   Meta checks         — los que validan la representación documental (derivados dinámicamente)
+#   Total               — functional + meta (derivados dinámicamente)
+#
+# NOTA: estos números NO se escriben a mano — el runner los deriva de $PASS en
+# cada corrida y el README debe declararlos. No poner cifras en estos comentarios:
+# cada vez que la suite crece, quedarían desactualizados (drift documental).
 #
 # Cómo se resuelve la paradoja del contador:
 #   doc_truth_check recibe el PASS *functional* (antes de esta fase) y valida
