@@ -1,3 +1,30 @@
+# 🧠 SESION — Buffy opencode (2026-08-09 · cierre noche)
+
+> Contexto de lo implementado durante esta sesión. Corrida en **opencode**.
+
+---
+
+## 🎮 Evaluación Lyxel + Mantis — falsos caminos descartados con evidencia + lección de retroalimentación activa
+
+### Pedido del usuario
+Evaluar Lyxel (GUI scrcpy de GitHub) y Mantis Gamepad Pro como keymapper alternativo. **Lección de proceso que dejó el usuario al cerrar**: "quiero usar Mantis para scrcpy y tú me dices algo así: *¿tenés gamepad? porque esta app está diseñada para eso*" → **retroalimentación activa ANTES de instalar/probar herramientas**: verificar que la herramienta cubre el caso de uso exacto.
+
+### Lo hecho
+1. **Lyxel Linux v1.0.3 evaluado** (`/tmp/opencode/lyxel-unpack/lyxel-v1.0.3-linux-x64/`): app Avalonia/.NET 8 self-contained, trae scrcpy 4.1 + adb 37.0.0. **No incluye el Mapeador** (solo Windows: WPF propietario, código cerrado, no portable). Arrancó en el sistema (ventana 1344x666, PID 357612) — la GUI duplica funcionalidad del `scrcpy-freefire.sh` (perfiles, optimizaciones ADB) sin el mapeador ni el cleanup. **No aporta. Cerrado** (kill -9 de LyXel + adb track-devices hijo).
+2. **Mantis Gamepad Pro** — es **mapper de GAMEPAD físico (control Xbox/PS/bluetooth), NO de teclado/mouse**. No sirve para jugar con teclado+mouse desde PC. Se instaló y activó de todos modos (oficial Play Store v3.4.8, versionCode=142):
+   - APK parchado de Appteka (`app.mantispro.gamepad_3.4.1_138.apk`, firma `YOUAREFINISHED.RSA` = CN youarefinished / O Google falso / RSA-1024 SHA1) → **descartado**: Google Sign-In falla siempre (`ApiException: 10` — SHA-1 no coincide con Firebase) → loop infinito. Desinstalado.
+   - Oficial Play Store v3.4.8: permisos (`SYSTEM_ALERT_WINDOW` allow, `GET_USAGE_STATS` allow, deviceidle whitelist), login con cuenta Maneskin Leon, **activación vía script interno `buddyNew.sh` por ADB** (`sh /sdcard/Android/data/app.mantispro.gamepad/files/buddyNew.sh` → "Mantis Buddy Conectado") — el flujo on-device Wireless Debugging falla (diálogo modal expira los códigos). Servicio `app.mantispro.gamepad:i` activo.
+3. **Mantis ≠ Octopus corregido** en Knowledge: el baneable por clonación es **Octopus** (Garena baneó 829K cuentas feb-2026); Mantis usa NMC sin clonar (riesgo bajo). Mantis v3.x tiene suscripción Pro (~$9.99) e inestabilidad reportada.
+4. **Conclusión**: **GG Mouse Pro 2 + scrcpy-freefire.sh es el setup correcto** — keymapper de teclado para PC, confiable, no-clonación. Lyxel y Mantis fueron dos falsos caminos eliminados con evidencia.
+
+### Lecciones (registradas en la skill)
+- **Regla de oro en `~/.agents/skills/scrcpy-freefire/SKILL.md`**: retroalimentación activa ANTES de instalar — ¿la herramienta mapea **teclado/mouse** (GG Mouse Pro 2, Panda, XtMapper) o **gamepad** (Mantis)? ¿Corre en Linux? ¿Requiere login de Google (APK parchado → imposible)? Mantis NO reemplaza a GG Mouse Pro 2.
+- **APK cracked/parchado + login de Google = inutilizable por diseño** (SHA-1 del firmante no coincide con Firebase). Señal: firma `YOUAREFINISHED.RSA`, O=Google spoofeado, RSA-1024.
+- **El flujo Wireless Debugging on-device es frágil en ZTE** (diálogo modal del sistema expira los códigos) — el script `buddyNew.sh` de la propia app vía ADB shell es el método confiable.
+- Commits de hoy: `4b1ad07` (Keymappers.md), `a113b9d` (lección retroalimentación activa en skill + Keymappers + CHANGELOG). Todo pusheado.
+
+---
+
 # 🧠 SESION — Buffy opencode (2026-08-09)
 
 > Contexto de lo implementado durante esta sesión.
@@ -240,77 +267,6 @@ El label usaba `%date%` pero `[module/date]` no tenía la línea `date =` (solo 
 | `ai-context/PROJECTS.md` | sección "Escritorio — Rice vista" actualizada |
 | `ai-context/CHANGELOG.md` | entrada 2026-08-07 |
 | `ai-context/SESION.md` | esta entrada |
-
----
-
-
-
-# 🧠 SESION — Buffy Freebuff (2026-08-06)
-
-> Contexto de todo lo implementado durante esta sesión.
-
----
-
-## 🔍 CodeGraph — setup completo (MCP + indexado + documentación)
-
-### Qué es
-`@colbymchenry/codegraph` v1.5.0 (open source MIT, 100% local) — grafo de conocimiento SQLite (AST vía tree-sitter) para descubrimiento y análisis de impacto de código. Comando MCP: `codegraph serve --mcp`. Telemetría **desactivada**.
-
-### Servidor MCP configurado en 4 agentes (herramienta única `codegraph_explore`, probada en vivo: initialize + tools/list + explore "boost" ✅)
-| Agente | Config | Extra |
-|---|---|---|
-| **Gemini CLI** | `~/.gemini/settings.json` | + `~/.gemini/GEMINI.md` (bloque CODEGRAPH) |
-| **Claude Code** | `~/.claude.json` + `~/.claude/settings.json` | auto-allow `mcp__codegraph__*` + hook `codegraph prompt-hook` en cada prompt |
-| **Antigravity IDE** | `~/.gemini/config/mcp_config.json` | backup del vacío previo |
-| **Cline** (VSCodium) | `globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json` | cableado a mano (no soportado oficialmente), autoApprove `codegraph_explore` |
-
-### Proyectos indexados
-| Proyecto | Índice | Cómo |
-|---|---|---|
-| **autoscript-mobile-interface** | 49 archivos · 1.084 símbolos · 1.896 aristas | `codegraph init` — .codegraph/ gitignored |
-| **ManUninstaller** | 31 archivos · 486 nodos · 838 aristas | `codegraph init` (417ms) — .codegraph/ gitignored |
-
-### Decisión: NO documentar en otros proyectos (datos)
-Conteo de archivos fuente: autoscript 42, widgetos 28, data_car 28, ManUninstaller 25, pwa_securguard 20, lista_supermercado 17, porteria_pwa 17, GameBoostPro 10, codebuff-automation 6. El bloque global de CLAUDE.md/GEMINI.md ya activa CodeGraph donde exista `.codegraph/`, y en proyectos <30 archivos leer todo es más barato que indexar. Solo se indexó ManUninstaller como caso límite.
-
-### Documentación escrita
-- **`~/.AGENTS.md`** — sección "CodeGraph (descubrimiento de código)": regla global + proyectos indexados (aplica a todos los proyectos futuros).
-- **`autoscript-mobile-interface/AGENTS.md`** — sección "CodeGraph — Descubrimiento y Análisis (obligatorio)" con comandos + ejemplos verificados.
-- **`ai-context/PROJECTS.md`** — entradas para GameBoost Pro (Kotlin nativo) y ManUninstaller con nota de descubrimiento.
-
-### Demos de `codegraph impact` (ManUninstaller)
-- `impact MainActivity` → 35 símbolos, **0 fuera del archivo** (hoja del grafo — punto de entrada Android).
-- `impact AppViewModel` → 47 símbolos en 2 archivos: **6 call-sites en MainActivity** (onCreate:117, setupTools:293, observeViewModel:400, onDismissed:479, showUninstallConfirmation:490, showUninstallSummary:587) — mapa de riesgo para refactors.
-
-### Pruebas end-to-end con Antigravity (`agy --print`) — EXITOSAS
-- **ManUninstaller** — consulta natural "uninstall flow": call path completo `MainActivity → AppViewModel.uninstallSelected → UninstallAppsUseCase → AppRepositoryImpl.uninstallApps → DeviceAdminUtils.removeAdmin (línea 208) → ShizukuUserService.exec`. Líneas verificadas contra el grafo (removeAdmin:38, uninstallApps:189, exec:24 ✅).
-- **autoscript-mobile-interface** — consulta natural "boost flow": `GameBoostRepository.toggleBoost` (facade 1 línea, :215) → `GameSessionManager.toggleBoost` (:161-232) → `applyBoostSettings` (:195, :212, :229) → `ShizukuExecutor.runCommand` (:87-125) con **3 fallbacks** (Shizuku IPC → RishExecutor:68 → Runtime.exec). Confirmados los 11 consumers de `GameBoostRepository`.
-- Sin errores de MCP en ninguna prueba. Comando usado: `agy --print '<pregunta>' --dangerously-skip-permissions` desde la raíz del proyecto indexado.
-
-### CodeGraph visible para cualquier IA (3 capas completas)
-- **Global**: `~/.AGENTS.md` + `AGENTS-root.md` (sincronizados — drift corregido, commit raíz 5862065), `~/.claude/CLAUDE.md`, `~/.gemini/GEMINI.md`.
-- **Protocolo ai-context**: `INFO-core.md` (sección CodeGraph en carga obligatoria), `LOAD_CONTEXT.md` ("⚡ CodeGraph PRIMERO" en Code Search), `INFO-full.md`, `PROJECTS.md` — commit `41c07f8`.
-- **Referencia completa**: `Knowledge/Tools/CodeGraph.md` (NUEVA categoría Tools — comandos, MCP, ejemplos verificados, troubleshooting) + índices README + `buffy-doctor.sh` con `KNOWLEDGE_EXPECTED[Tools/CodeGraph.md]` — commit `341c2e5`. Doctor **60 OK / 0 errores**.
-
-### Commits
-- `ManUninstaller ad6a12d` — `Chore: gitignore .codegraph/` + `e77db36` (bump 2.1.0) + `0d29483` (CHANGELOG completo) — repo local sin remote.
-- `buffy-context` — `255f766` (PROJECTS.md) + `a952e44` (SESION.md) + `8b87029` (CHANGELOG.md) + `41c07f8` (INFO-core/LOAD_CONTEXT/INFO-full) + `341c2e5` (Knowledge/Tools/CodeGraph.md) — **todos pusheados**.
-- `repo raíz` — `6c6b985` (`~/.AGENTS.md`) + `5862065` (`AGENTS-root.md` sincronizado) — locales, sin remote.
-
----
-
-## 📁 Archivos modificados/creados (sesión 2026-08-06)
-
-| Archivo | Cambio |
-|---------|--------|
-| `~/.gemini/settings.json` · `~/.gemini/config/mcp_config.json` · `~/.gemini/GEMINI.md` | MCP codegraph (Gemini + Antigravity) |
-| `~/.claude.json` · `~/.claude/settings.json` · `~/.claude/CLAUDE.md` | MCP codegraph + auto-allow + hook prompt-hook |
-| `VSCodium .../cline_mcp_settings.json` | MCP codegraph para Cline |
-| `proyectos/autoscript-mobile-interface/.codegraph/` · `AGENTS.md` | Índice + sección CodeGraph obligatoria |
-| `proyectos/ManUninstaller/.codegraph/` · `.gitignore` · `build.gradle.kts` · `CHANGELOG.md` | Índice + commits ad6a12d/e77db36/0d29483 (2.1.0) |
-| `~/.AGENTS.md` · `AGENTS-root.md` | Regla global de CodeGraph (commits 6c6b985/5862065) |
-| `ai-context/PROJECTS.md` · `SESION.md` · `CHANGELOG.md` · `INFO-core.md` · `LOAD_CONTEXT.md` · `INFO-full.md` | Registros + protocolo con CodeGraph (pusheados) |
-| `buffy-context/Knowledge/Tools/CodeGraph.md` · `Knowledge/README.md` · `README.md` · `scripts/buffy-doctor.sh` | Referencia completa + índices + doctor (commit 341c2e5) |
 
 ---
 

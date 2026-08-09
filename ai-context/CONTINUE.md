@@ -1,7 +1,25 @@
 # 🔄 CONTINUE — Handoff entre sesiones
 
 > ⚡ **PRÓXIMA SESIÓN: LEE ESTO PRIMERO**
-> Generado: 2026-08-09 (opencode — paradoja del contador resuelta + benchmark adversarial)
+> Generado: 2026-08-09 noche (opencode — Lyxel/Mantis evaluados, falsos caminos descartados)
+
+---
+
+## Resumen de la sesión (2026-08-09 noche — opencode)
+
+**Tema:** el usuario pidió evaluar Lyxel (GUI scrcpy) y Mantis Gamepad Pro como keymappers alternativos. Ambos descartados con evidencia. **Lección de proceso que el usuario dejó explícita:** retroalimentación activa ANTES de instalar/probar herramientas — "si digo quiero usar Mantis para scrcpy, decime *¿tenés gamepad? porque esta app está diseñada para eso*".
+
+1. **Lyxel Linux v1.0.3** — no trae el Mapeador (solo Windows, WPF propietario sin código abierto). GUI duplica al `scrcpy-freefire.sh` sin aportar. **Cerrado.**
+2. **Mantis Gamepad Pro** — mapper de **gamepad físico**, NO de teclado/mouse. Instalado oficial v3.4.8 + activado (login cuenta Maneskin Leon, Buddy vía `buddyNew.sh` por ADB) pero **no aplica al setup teclado+mouse desde PC**.
+3. **APK parchado de Appteka descartado** — firma `YOUAREFINISHED.RSA` (RSA-1024, O=Google spoofeado) → Google Sign-In falla siempre (`ApiException: 10`).
+4. **Conclusión: GG Mouse Pro 2 + scrcpy-freefire.sh sigue siendo el setup correcto.**
+5. **Regla de oro registrada en la skill `scrcpy-freefire`** + `Knowledge/Android/Keymappers.md` corregido (Mantis = gamepad, no teclado). Commits: `4b1ad07`, `a113b9d` — pusheados.
+
+### ⏳ Pendientes para otra sesión
+- **P0 next sigue siendo `bench-context-selection.sh`** (congelamiento vigente — el benchmark justifica el próximo cambio).
+- P1: data_car — asignar precios de la respuesta de la IA a la lista y calcular total CLP (campo en el panel Mi compra + `parseAIResponse` + `formatCLP`).
+- P1: retorno del aprendizaje (SESION-archive meses después → ¿conocimiento activo?).
+- P2: concurrencia 3+ escritores sobre MEMORY.md.
 
 ---
 
