@@ -1,3 +1,765 @@
+# 🧠 SESION — Buffy Freebuff (2026-08-03 — PC: digest leído + router con manifests + migración + B1 + C2)
+
+> Tema: retomada desde el PC (Mi 10 por USB). Se leyó el digest `BUFFY-PC-CONTEXT.md` dejado desde el teléfono, se sincronizó el repo y se saldaron **todos los pendientes del digest**: router con manifests, migración SYSTEM→INFO-core, versiones mínimas scrcpy/Ollama, README al día, fix H2, schema-lite B1 y BUFFY_HOME (C2). CI verde en cada commit. Por la tarde, con el ZTE Nubia como laboratorio: ManUninstaller revisado con skills, instalado y funcionando (Shizuku ACTIVE · 329 apps), purga de 22 apps de usuario + 25 bloat de fábrica deshabilitados.
+
+---
+
+## 🧭 Router con manifests (pendiente §7.2 — HECHO)
+
+- **`scripts/lib/yaml.sh`** (NUEVO): funciones compartidas `yaml_val`/`yaml_items`/`yaml_list` (movidas de skill-lint, cero duplicación).
+- **`scripts/buffy-router.sh`**: ya NO hardcodea rutas de skills — `add_skill` registra si el manifest existe, `discover_skills` barre los skill.yaml y carga por **triggers** (≥1 match). Una skill nueva con manifest se activa sin editar el router. `skill_safe` marca ⚡ AUTO_SAFE.
+- **Fix bonus**: mensaje vacío (ni args ni stdin) → exit 1.
+- **`test-router.sh`** (NUEVO, 15 tests). Verificado en vivo: "componente react con vite" descubre vercel-react-best-practices + vite sin estar hardcodeadas.
+- Commit `0c4d92a` · suite 75→90 quick / 91→106 full.
+
+## 🔴 Migración SYSTEM.md → deprecated/ (pendiente §7.6a — HECHA)
+
+- **`scripts/migrate-system.sh`** EJECUTADO (decisión del usuario): stubs `SYSTEM.md`/`SYSTEM_FULL.md` (contenido ya fusionado en INFO-core/full) movidos a `ai-context/deprecated/` con timestamp.
+- **Correcciones manuales post-sed**: el sed global reemplazó `SYSTEM.md`→`AGENTS.md` ciegamente — corregido a mano en AGENTS.md, README, LOAD_CONTEXT (árboles), CHANGELOG, CONTINUE; bitácoras históricas (SESION.md, SESION-archive.md) **revertidas**.
+- Doctor: los 2 warnings `DEPRECATED_FILE` desaparecieron (3→1). Commit `69e1be9`.
+
+## 📌 Versiones mínimas scrcpy/Ollama (pendiente §7.6b — HECHA, con fuente)
+
+- **scrcpy**: mínimo recomendado **≥ 3.3.1** (UHID ≥ 2.0; `--power-off-on-close` con fix en 3.3.1 #6146) — `Knowledge/Android/scrcpy.md`, verificado `4.1-1` + `adb 1.0.41`.
+- **Ollama**: mínimo **≥ 0.30** — `Knowledge/Vision.md`, verificado binario `0.30.7` (sirviendo en :11434), paquete `0.32.1-1`, upstream v0.32.5. Notas: servicio de sistema activo (el de usuario deshabilitado), bug `ollama run` timeout → API, tags `:cloud` sin RAM local.
+- Regla del digest respetada: versiones documentadas solo con fuente (release notes oficiales). Commit `49c18e1`.
+
+## 🟢 README actualizado al día con el disco (pendiente §7.3 — HECHO)
+
+- Árbol de skills: 10 → **23** agrupadas por dominio (Android 8, Web 2, Framework v4 5, Code & research 2, Frontend 4, Operación 2).
+- Knowledge: agregadas categoría `AI/` (Kimi-K3.md) y `Vision.md`; scripts: 7 → 16 entradas; tabla "What's included" y de categorías actualizadas.
+- Doctor sin drift falso (las 23 skills del README coinciden con disco). Commit `ec7b14a`.
+
+## ✅ Fix H2 (revisión externa) — android-agent/SKILL.md alineado con el repo
+
+- El análisis de otra IA tenía 7 hallazgos: **5 falsos positivos** (verificados contra disco: INFO-core/CONTINUE existen, 23/23 skill.yaml, índice Knowledge coincide, 23 skills exactas, python3/readlink presentes), **1 no-issue por diseño** (scripts sin `+x` — se ejecutan con `bash` explícito por Termux), **1 real** (H2): android-agent/SKILL.md referenciaba 3 skills del entorno (`android-native-dev`, `android-clean-architecture`, `mobile-android-design`) que NO vienen con el repo.
+- **Fix**: reemplazadas por skills del repo (`android-project-setup`, `hyperos-hardening`, `xiaomi-adb-tricks`) + descripción del front-matter alineada. Commit `1166173`.
+
+## 🟠 Schema-lite B1 (pendiente §7.4 — HECHO, modo autónomo)
+
+- **`scripts/ai-context-lint.sh`** (NUEVO): valida las secciones obligatorias que LOAD_CONTEXT.md promete SIEMPRE (INFO-core: Sistema/Hardware/Reglas personales/Estructura de proyectos; CONTINUE: Resumen/Pendientes/Stack; LOAD_CONTEXT: Protocolo/Carga condicional/Arquitectura) + front-matter semver-lite (X.Y o X.Y.Z) + `updated` ISO. Flags `--repo/--json/--quick/--help`, exit 0/1/2, stderr limpio en JSON.
+- **Hallazgo real del validador**: 3 front-matters usaban `version: X.Y` (2 segmentos) — decisión: aceptar semver-lite X.Y/X.Y.Z (convención de ai-context; skill.yaml sí exige X.Y.Z).
+- **`test-ai-context-lint.sh`** (NUEVO, 5 tests, fixtures sin sandbox → corren en --quick). Integrado en run-tests.sh + bash -n.
+- Suite: 90→105 quick / 106→121 full. Commit `463937e`.
+
+## 🟠 BUFFY_HOME / common.sh (pendiente §7.5 C2 — HECHO, opt-in)
+
+- **`scripts/lib/common.sh`** (NUEVO): `BUFFY_HOME` opt-in (default `$HOME`) + helpers `buffy_home`/`buffy_ai_context`/`buffy_snapshot`. Normaliza trailing slash.
+- **Alcance deliberado**: redirige SOLO el estado generado (ai-context/ + SNAPSHOT); el escaneo del entorno del usuario ($HOME/proyectos, $HOME/scripts, .agents/skills) sigue con $HOME real.
+- **Cableado**: buffy-context.sh (SNAPSHOT), buffy-doctor.sh (detección/frescura), buffy-repair.sh (fix_regenerate_snapshot), buffy-router.sh (base). Sin BUFFY_HOME → comportamiento idéntico (verificado con prueba real).
+- **`test-common.sh`** (NUEVO, 6 tests). Fix del reviewer: `test_doctor_catalog` ahora usa HOME aislado en fixture (era dependiente del entorno).
+- Docs: INSTALL.md (sección BUFFY_HOME), README, REVIEW-BASELINE §2.1. Suite: 105→116 quick / 121→132 full. Commit `033e6dc`.
+
+## 🎮 Laboratorio ZTE Nubia — ManUninstaller revisado, instalado y purga de apps (tarde)
+
+- **Revisión de ManUninstaller v2.1.0 con las skills android-native-dev + clean-architecture + adb** (contra código real, no solo docs): Clean Architecture (domain Kotlin puro → data → presentation → service AIDL). Seguridad verificada: `parseCommandSafe` (ProcessBuilder con args separados, rechaza metacaracteres `[;|&$(){}<>![]~#]`, sin `sh -c` en el path de uninstall), `DeviceAdminUtils.removeAdmin` (valida `ComponentName` antes de `dpm remove-active-admin`), `ShizukuProvider` sin `grantUriPermissions`, regex estricta de paquete en `du`, `deleteRecursively` seguro contra symlinks, `isCriticalApp` protege apps del sistema + diálogo de advertencia, concurrencia `limitedParallelism(8)`.
+- **Hallazgos menores (no bloquean)**: `versionName = "2.0.0"` en build.gradle.kts vs CHANGELOG v2.1.0; README menciona `AppViewModelTest` inexistente; `trim-caches` 4GB fijo.
+- **Instalación**: en el Mi 10 (`d2c6cbda`) bloqueada por el toggle "Instalar vía USB" de HyperOS — no modificable por ADB (intentado: `adb_install_need_confirm=0`, `pm clear-user-restriction`, `cmd user remove-user-restriction` no existe en la ROM, diálogo MiuiResolverActivity que se cancela solo). **En el ZTE Nubia Z2352N (`320344802623`) `pm install` → Success** (Android 13 stock sin el bloqueo).
+- **En vivo verificado**: `SHIZUKU: ACTIVE · 329 apps · 1 admin · 38 grandes`, sin crashes (logcat limpio).
+- **Purga de apps de usuario (90 → 68, 22 borradas, 0 fallaron)**: `com.example`, 4 PWAs webapk huérfanas, 9 apps de IA (ChatGPT, Claude, Grok, DeepSeek, Kimi, Gemini Pro, Qwen, Perplexity, Bard) y 8 financieras (MercadoPago, MercadoLibre, PayPal, Tenpo, Onepay, Tapp, WOM, Binance).
+- **Bloat de fábrica ZTE deshabilitado (25, reversible con `pm enable`)**: filer, recorder, storagecleanup, privacyzone, onekeycp, alarmclock, livewallpaper, easymode, linkspeedup, womreceiver, inspiredwallpaper, beautify(+adapter), appsimcardfilter, externdevice, ztescreenshot, gamehighlights, gamenotes, flagreset, heartyservice, zbackup, aiengine, burntest.camera, gamehelperline, gamehelpmodule.
+- **Preservado (verificado 1 a 1)**: Free Fire, Termux, Shizuku (corriendo), AutoJS6, MacroDroid (único Device Admin), ManUninstaller, launcher Hype/GG Mouse, ReVanced, sndcpy, Canta, Apktool, AppOps + las del gaming `cn.nubia.gamelauncher`/`keymapcenter`/`gamepad` + `com.zte.emode` (engineering mode) + críticas (launcher MiFavor, keyguard, setupwizard, faceverify, fingerprints).
+- **Espacio**: las 22 desinstaladas ≈ 1.8–2.2 GB (APK + datos); `pm disable-user` no libera disco (solo RAM/batería). Disco 230G → 163G libres (70%), sin residuos en `/data/data` ni `/data/user/0`.
+
+## 🔜 Pendientes
+
+- [ ] **ManUninstaller**: fix `versionName` 2.0.0 → 2.1.0 en `proyectos/ManUninstaller/app/build.gradle.kts` (1 línea) + rebuild e instalación en el Nubia.
+- [ ] **Mi 10**: toggle "Instalar vía USB" (Ajustes → Ajustes adicionales → Privacidad) requiere toque manual en el teléfono — no se puede activar por ADB.
+- [ ] **Nubia (opcional)**: revisar restantes de usuario (Truecaller, Waze, WhatsApp, Telegram+, Excel, Sony headphones) y documentar el setup del lab en `Knowledge/Android/`.
+- [ ] `gh auth login` → luego renombrar `enerador-de-boletas` → `generador-de-boletas` por API.
+- [ ] Baja prioridad (D1/D2 del roadmap): sandbox hardening + installer; adapters VLM/LLM (YAGNI — solo existe un backend HF).
+- [ ] Pendiente del usuario desde el teléfono: pushear `porteria_pwa` (cambiar remote a SSH), `sep=,` en exports CSV de pwa_securguard.
+
+---
+
+*Fin de la sesión — Última actualización: 2026-08-03*
+
+## 2026-08-04 — SecurGuard AI fixes + Perfil de Manu
+
+### Fixes aplicados a SecurGuard AI (pwa_securguard)
+- `handleResetDay` ahora limpia TODO (logs + personas) — como Manu pidió
+- `readArray` trata arrays vacíos como "sin datos" → carga defaults
+- Botón eliminar chofer individual (✕) en PersonasTab
+- Quitar CCTV feed de PersonasTab
+- Lista de choferes con editar (✏️) en PersonasTab
+- `handleUpdatePersona` NO toca activeInside — entrada/salida conservan datos originales
+- ControlTab muestra datos actuales del persona (merge con master list)
+- Búsqueda incluye campo `type`
+- Botón "Restaurar Personas de Ejemplo"
+- `handleFactoryReset` restaura defaults en vez de dejar vacío
+
+### Perfil guardado
+- Archivo: `buffy-context/USER-MANU.md`
+- Manu prefiere ejecución directa, no sugerencias
+- Stack: Linux/Android/React/TS/Vite/PWA
+- Proyectos: SecurGuard, buffy-context, WidgetOS, GameBoostPro, Gmail Organizer
+
+
+
+# 🧠 SESION — Buffy Freebuff (2026-08-02 — segunda parte: skills propias + triaje de repos + fixes)
+
+> Tema: instalar skills de ComposioHQ (skill-creator, changelog-generator), crear la skill propia `android-project-setup`, auditar los 6 repos públicos de maneskinleon-del y arreglar los que tenían bugs (porteria_pwa, pwa_securguard, data_car).
+
+---
+
+## 🧩 Skills de ComposioHQ instaladas
+
+- **`skill-creator`** y **`changelog-generator`** instaladas desde `ComposioHQ/awesome-claude-skills` con `npx skills add` (quedan en `~/.agents/skills/`, ya son 41 skills).
+- **`changelog-generator` probada**: generó `buffy-context/CHANGELOG.md` a partir de los 43 commits del repo (29-jul → 2-ago), categorizado ✨/🔧/🐛 y en lenguaje user-friendly (filtra el ruido de commits docs).
+
+## 🛠️ Skill propia `android-project-setup` (creada con skill-creator)
+
+- **Estructura**: `~/.agents/skills/android-project-setup/` = SKILL.md + `scripts/{check_device,build_install,grant_permissions}.sh` + `references/{devices,permissions}.md`.
+- **Workflow**: build gradle → install APK → permisos Shizuku/overlay/batería → launch, contra el ZTE Nubia (serial `320344802623`).
+- **Probada en vivo**: `check_device.sh` detectó la plataforma real **`ums9620`** (corregida en references — decía ums9230); `grant_permissions.sh` concedió los 6 permisos (incluye POST_NOTIFICATION) con verificación solo-lectura.
+- **Code review aplicado**: fix al build que instalaba APK viejo si fallaba (ahora aborta sin `BUILD SUCCESSFUL`), parseo de applicationId robusto (comillas simples/dobles), simplificación de multi-dispositivo.
+- **Versionada en el repo** (commit `7df99bd`): `.agents/skills/android-project-setup/` + entrada en CHANGELOG.md + árbol del README. **Registrada en el stack** (commit `14dcf56`): sección Skills en `INFO-core.md` + carga condicional Android en `LOAD_CONTEXT.md`.
+
+## 🔍 Triaje de repos `maneskinleon-del` (6 repos)
+
+Typecheck real (`tsc --noEmit`) + build + escaneo de secrets/TODOs en los 6 repos (4 clonados frescos en /tmp + data_car/pwa_securguard locales):
+
+| Repo | Estado | Hallazgo |
+|---|---|---|
+| `porteria_pwa` | ❌ 5 errores TS | Tabs con ids MAYÚSCULAS (`'INGRESO'`) vs store en minúsculas (`'registro'`) → contenido de tabs nunca renderizaba al cargar; Toast leía `toast.message` (no existe, el store tiene `toastMessage`) → nunca se mostraba |
+| `pwa_securguard` | ⚠️ 1 bug funcional | Reporte CSV de incidencias se veía roto en Excel es-CL (ver sección abajo) |
+| `data_car` | ⚠️ código muerto | `server.ts` (Express+Gemini, deps NO en package.json, `app` antes de declarar) y `Tachometer.tsx` (import `TelemetryStats` inexistente, sin uso) |
+| `timemark` | ✅ sano | 3 console.log |
+| `lista_supermercado` | ✅ sano | 10 console.log |
+| `enerador-de-boletas` | ✅ sano | **typo en el nombre del repo** (→ `generador-de-boletas`), package.json ya dice el nombre correcto |
+
+- Sin secrets filtrados: todos los `.env` son `.env.example` correctamente gitignored.
+- `core-termux-brain` está vacío (0 KB) — candidato a borrar en GitHub.
+
+## 🐛 Fix `porteria_pwa` (bugs de UI)
+
+- `src/App.tsx`: ids de tabs unificados a los del store (`registro`/`frecuentes`/`exportar`/`importar`) + `as const` + eliminado el `as any`; Toast ahora lee `toastMessage`.
+- Verificado: `tsc --noEmit` EXIT 0 (antes 5 errores) + `vite build` OK.
+- Commit `d97ed4c` en `~/proyectos/porteria_pwa` — **pendiente de push** (remote HTTPS sin credenciales; falta `gh auth` o cambiar a SSH).
+
+## 🐛 Fix `pwa_securguard` — reporte CSV de incidencias
+
+El CSV exportado se veía "todo en una columna" / "incidencia hacia abajo en una sola celda" al abrirlo en **Excel móvil con configuración regional es-CL** (usa `;` como separador). Fix en `src/utils/report.ts`:
+
+1. **`sep=,`** como primera línea — fuerza el delimitador coma en Excel sin importar la regional.
+2. **`flatText()`** — normaliza saltos de línea de la descripción (textarea) a un espacio: cada incidente queda en UNA fila.
+3. **`csvRow()` en metadatos** — la coma de `Fecha de Exportación: 02-08-2026, 5:22 p. m.` estaba sin escapar (3 columnas).
+4. **Línea en blanco** antes de `--- INFORME DE INCIDENCIAS ---` (las otras secciones sí la tenían).
+
+### Campo `date` en IncidentReport (fecha real, no de exportación)
+
+- `types.ts`: `date: string` (fecha REAL del incidente). `useAppState.handleSaveIncident` la setea con `getLocalDateISO()`.
+- **`sanitizeIncidents`** nuevo (sigue el patrón `sanitizeLogs`/`sanitizePersonas`): al rehidratar backfillea `date` a hoy para incidencias viejas y valida categoría → el tipo queda honesto y sin fallbacks duplicados.
+- `SettingsTab` muestra `FECHA: {inc.date}` en la tarjeta.
+- Verificado: typecheck EXIT 0, build OK, test funcional muestra `2026-07-25` (fecha real) en vez de la de exportación.
+- **Commit `a375c88` pusheado** — el remote estaba en HTTPS sin credenciales, se cambió a **SSH** (`git@github.com:`) con la clave ed25519 existente.
+
+## 🐛 Fix `data_car` — código muerto eliminado
+
+- `git rm server.ts` (-194 líneas) y `src/components/Tachometer.tsx` (-209 líneas). Verificado antes con grep que nadie los referencia (ni .ts/.tsx/.json/.sh/.md; el `server:` de vite.config.ts es el dev server de Vite).
+- Typecheck pasó de 5 errores a **EXIT 0**; build OK. Commit `642f72a` pusheado.
+
+## 📝 Revisión del script git del usuario (descartado)
+
+- Script de configuración git (identidad + HTTPS/PAT o SSH) con 2 bugs críticos **confirmados por ejecución**: el `sed` de limpieza de URL devuelve `https://` a secas con URLs normales (come el path), y `ssh-keygen -t ed25519 -c` (minúscula) da "Too many arguments" — debe ser `-C`. Además inyecta el token en el remote (mala práctica).
+- **Decisión**: no arreglarlo — el setup real ya usa SSH y funciona.
+
+## 🔜 Pendientes
+
+- [ ] `gh auth login` (lo iba a correr el usuario) → luego renombrar `enerador-de-boletas` → `generador-de-boletas` por API y **pushear `porteria_pwa`** (cambiar remote a SSH).
+- [ ] Aplicar `sep=,` a los exports CSV simples de pwa_securguard (`csvDownload` en LogsTab/PersonasTab).
+- [ ] Limpiar `/tmp/repo_triage/` (clones temporales del triaje).
+
+---
+
+*Fin de la sesión — Última actualización: 2026-08-02*
+
+---
+
+
+
+# 🧠 SESION — Buffy Freebuff (2026-08-02 — organización del home + Ollama al HDD + unificación ai-context)
+
+> Contexto de todo lo implementado durante esta sesión.
+
+---
+
+## 🎮 Free Fire — verificación de cleanup con Alt+Q
+
+- Confirmado que el cleanup real ya existía en `scripts/scrcpy-freefire.sh` (implementado el 2026-08-01): `alt+q` (sxhkdrc:162 → `bspc node -{c,k}`) cierra la ventana de scrcpy → el trap EXIT corre `close_game_apps()` (force-stop de apps + apagado de pantalla con 5s de gracia).
+- Config: `CLOSE_APPS_ON_EXIT=1`, `SCREEN_OFF_DELAY=5`, `KILL_PERSISTENT=0`.
+- Se verificó en vivo que la sesión corría estable (53-60 fps) y que el log no mostraba cleanup porque la sesión seguía activa en ese momento.
+
+## 🔍 Repo ComposioHQ/awesome-claude-skills — análisis
+
+- Catálogo de 1000+ Claude Skills; 864 instalables en el repo (rama master, Apache 2.0).
+- El skill "WhatsApp Automation" del README **NO existe como carpeta** en el repo (2048 paths, 0 con whatsapp) — es un wrapper del SaaS de Composio (sección `composio-skills/` = embudo de marketing, lock-in + API key de su nube).
+- Instalada **file-organizer** (`npx skills add`) en `~/.agents/skills/` (carpeta file-organizer).
+- Veredicto: pocas joyas reales para el stack (file-organizer, skill-creator, changelog-generator); el resto es específico de Claude Code o vendor-locked.
+
+## 🗂️ Organización del home (disco del sistema: 67% → 39%)
+
+| Acción | Detalle |
+|---|---|
+| `~/Backups` (28G) | → `/media/datos/Backups` con symlink (verificado byte a byte: 29.897.717.636 bytes / 166 archivos; los videos eran de root, copia vieja borrada con sudo) |
+| Proyectos sueltos | `data_car`, `codebuff-automation`, `odysseus` → `~/proyectos/` con symlinks (odysseus era root, sudo) |
+| Notas | `memoria.md`, `widgetos_contexto.md`, `polybar_melissa_fix_prompt.md`, `missing_apps.txt`, `pwa_securguard_review_deepseek.txt` → `~/notas/` |
+| Logs | `cf_tunnel.log`, `server.log` → `~/logs/` |
+| Basura | Eliminados `ervice --no-pager -n 50`, `udo systemctl start bluetooth.service`, `.zcompdump` viejos |
+| Caches | npm (-4G), gradle caches (-4G), `~/.cache` 8.5G→360M (yay, Google, mozilla, uv, go-build) |
+| Resultado | 69G → 126G libres en el disco del sistema |
+
+## 🦙 Ollama al HDD (14G liberados)
+
+- `~/.ollama` (14G) → `/media/datos/ollama` con symlink, verificado byte a byte (14.225.477.048 bytes / 32 archivos).
+- **Descubrimiento**: había DOS servicios ollama — el de **sistema** (`/usr/local/bin/ollama`, el que sirve de verdad en el puerto 11434) y uno de **usuario** (`/usr/bin/ollama`) en crash-loop por conflicto de puerto. Se detuvo y **deshabilitó el de usuario**; queda solo el de sistema.
+- Verificado: `ollama list` y `ollama show qwen2.5:7b` leen desde el HDD; escritura OK para pulls futuros.
+- Nota: `id_ed25519` quedó con permisos 644 en NTFS (el mount `fmask=133` no respeta chmod) — aceptable en máquina de un solo usuario; alternativa documentada: `OLLAMA_MODELS` apuntando solo a `models/`.
+
+## 🔗 Unificación ai-context (esta tarea)
+
+- `buffy-context/` (repo git, fuente de verdad, pusheado a GitHub) y `~/ai-context/` (copia de trabajo de los agentes) habían **divergido en ambas direcciones**: el repo tenía las sesiones 07-30 (RAM+watchdog, push GitHub) y 08-01 (systemd-boot); la raíz tenía 07-31 (Hermes/Command Code, limpieza de agentes) y 08-01 (cleanup real + limpieza del teléfono).
+- **Fusión bidireccional en el repo**: `SESION.md` (1109 líneas, contenido de ambas copias) + `CHANGELOG.md` (495 líneas, + entrada systemd-boot).
+- `~/ai-context` ahora es **symlink → `~/buffy-context/ai-context`** (una sola fuente de verdad; `SNAPSHOT.md` sigue gitignored por regenerarse cada sesión).
+- `AGENTS-root.md` actualizado: apunta a `INFO-core.md` en vez de `SYSTEM.md` (deprecado).
+- Commit en buffy-context con la unificación.
+
+*Fin de la sesión — Última actualización: 2026-08-02*
+
+---
+
+
+
+# 🧠 SESION — Buffy Freebuff (2026-07-29 — día completo: memoria + Knowledge + agentes + repo GitHub)
+
+> Contexto de todo lo implementado durante la sesión completa del 2026-07-29.
+
+---
+
+## 📦 Repo GitHub `buffy-context`
+
+### Creación del repositorio
+- **`~/buffy-context/`** creado con estructura: `ai-context/`, `Knowledge/`, `.agents/skills/`, `scripts/`
+- Git init + push a `github.com/maneskinleon-del/buffy-context` (público)
+- **MIT License** agregada
+- **README.md** profesional con badges, estructura, quick start, uso con agentes IA
+- **INSTALL.md** con instrucciones de setup
+- **6 commits** en `main`
+
+### Correcciones post-feedback del usuario
+Basado en análisis crítico de 5 puntos:
+
+1. **Carga condicional para 6 categorías** (antes solo Android):
+   - LOAD_CONTEXT.md reescrito con señales de activación para React, Linux, Git, Node y Shell
+   - Cada categoría con detección explícita (package.json, mención de tema, etc.)
+
+2. **Presupuesto de tokens + poda automática**:
+   - SESION.md: 720 → 81 líneas (archivado a SESION-archive.md)
+   - CHANGELOG.md: 429 → 132 líneas (archivado a CHANGELOG-archive.md)
+   - Headers de poda agregados a ambos archivos
+
+3. **Redundancia eliminada**:
+   - Sección "Jerarquía de contexto" (duplicada) eliminada de LOAD_CONTEXT.md
+
+4. **SYSTEM.md/SYSTEM_FULL.md deprecados**:
+   - Marcados DEPRECATED con redirect a INFO-core.md/INFO-full.md
+
+5. **Primera sesión**:
+   - LOAD_CONTEXT.md ahora dice qué hacer si CONTINUE.md no existe
+
+## 📚 Base de conocimiento `Knowledge/`
+
+16 archivos · 1,305 líneas · 6 categorías creadas:
+
+| Categoría | Archivos | Contenido |
+|-----------|----------|-----------|
+| Android | 6 | ADB, Shizuku, HyperOS, GameOptimization, scrcpy, Keymappers |
+| Linux | 2 | System (Arch/bspwm/systemd), Kernel |
+| React | 4 | React+TS, Vite, Tailwind v4, PWA |
+| Git | 1 | Commands + gh CLI |
+| Node | 1 | npm, package.json |
+| Shell | 1 | Bash/Zsh scripting |
+
+## 🤖 Android Agent
+
+- **Skill**: `.agents/skills/android-agent/SKILL.md` — detecta proyectos Android automáticamente
+- **Script**: `.local/bin/android-detect.sh` — diagnóstico con `--quick` y `--watch`
+- **Shizuku activado**: rish extraído del APK (Shizuku v13.7.0 corriendo en ZTE Nubia)
+- **DPI cambiado**: vía Shizuku, 480 físico → 280 override
+- **Free Fire diagnosticado**: CPU 0.8% (background), 13% jank sistema, temp 30.1°C
+
+## 🔍 Code Search adapter
+
+- **Skill portable**: `.agents/skills/code-search/SKILL.md` — funciona en Freebuff, Claude Code, Codex
+- 3 modos de búsqueda: agente nativo → CLI (ripgrep) → exploración manual
+- **search_criteria_v4**: skill de búsqueda estructurada copiada al repo
+
+## 🎮 Skill scrcpy-freefire expandida
+
+### Secciones agregadas a `.agents/skills/scrcpy-freefire/SKILL.md`
+
+#### 🧪 Diagnóstico de lag
+- Tabla para identificar tipo de lag (input vs video vs thermal vs game)
+- Interpretación de `--print-fps`
+- Comandos `adb shell dumpsys gfxinfo` y `dumpsys SurfaceFlinger`
+- Tabla de trade-offs completa
+- Procedimiento diagnóstico de 5 pasos (con verificación USB incluida)
+
+#### 🔧 Alternativas de keymappers
+- **Mantis Gamepad Pro**: Setup completo con Shizuku, recomendada
+- **Panda Mouse Pro**: Alternativa ligera
+- **Octopus**: Advertencia de ban para Free Fire
+- Tabla comparativa (GG Mouse vs Mantis vs Panda vs Octopus)
+
+#### 🔍 Troubleshooting detallado (expandido)
+- UHID: cursor invisible/atrapado, teclado no funciona, teclas stuck
+- Input desync después de alt+tab
+- Wayland vs X11 — problemas y soluciones
+- GG Mouse Pro 2 se desactiva solo (5 causas + soluciones)
+- Lag al girar cámara en Free Fire
+- Free Fire borroso
+- Problemas de permisos Shizuku
+
+### Detalles pulidos post-review
+- Advertencia de input lag en `--render-expired-frames`
+- Chequeo USB agregado al diagnóstico de 5 pasos
+- Orden del reset drástico movido a último recurso
+
+---
+
+## 🧠 Sistema de memoria persistente
+
+### Contexto inicial
+El usuario ya tenía una carpeta `ai-context/` con archivos manualmente mantenidos:
+- `INFO-core.md`, `INFO-full.md` — contexto de sistema
+- `SNAPSHOT.md` — generado por `buffy-context.sh`
+- `SESION.md` — bitácora manual de sesiones anteriores
+- `PROJECTS.md`, `CHANGELOG.md`, `AGENTS.md`, etc.
+
+### Problemas identificados
+1. **Sin protocolo formal** — cada agente empezaba desde cero, no había un "cargar esto primero"
+2. **No había handoff** — `CONTINUE.md` no existía
+3. **`buffy-context.sh` hardcodeaba "Mango WM (Wayland)"** — el usuario corre bspwm X11
+4. **`scripts/ai-context.sh`** generaba zips inútiles en vez de contexto estructurado
+5. **SNAPSHOT.md** decía "WM: Mango WM (Wayland)" — información incorrecta
+
+### Solución implementada
+
+| Archivo | Cambio |
+|---------|--------|
+| `ai-context/LOAD_CONTEXT.md` | **NUEVO**: Protocolo para agentes — qué leer al inicio y qué escribir al cierre |
+| `ai-context/CONTINUE.md` | **NUEVO**: Handoff entre sesiones — resumen, archivos tocados, pendientes, stack |
+| `ai-context/SNAPSHOT.md` | ✅ Actualizado: WM corregido a bspwm, estado fresco del sistema |
+| `ai-context/SESION.md` | ✅ Actualizado: esta entrada |
+| `~/.local/bin/buffy-context.sh` | ✅ Fix: detección dinámica de WM vía `loginctl` |
+
+### Cómo funciona
+
+**Al inicio de cada sesión** (para cualquier agente):
+1. Leer `INFO-core.md` — contexto base del sistema
+2. Leer `SNAPSHOT.md` — estado vivo (procesos, RAM, proyectos)
+3. Leer `CONTINUE.md` — de qué halar, qué pendientes hay
+
+**Al cierre de cada sesión** (para cualquier agente):
+1. Escribir `CONTINUE.md` — resumen de lo hecho
+2. Actualizar `SNAPSHOT.md` si cambió el sistema
+3. Actualizar `SESION.md` con bitácora detallada
+
+---
+
+*Fin de la sesión — Última actualización: 2026-07-29*
+
+---
+
+
+
+# 🧠 SESION — Buffy Freebuff (2026-07-30 — push repo GitHub + auditoría repo git del home)
+
+> Tema: diagnosticar por qué "no se veían" los cambios en GitHub, subir los 12 commits pendientes, y auditar el repo git accidental del home.
+
+---
+
+## 📦 Repo GitHub `buffy-context` — push completado
+
+### Diagnóstico
+- Los cambios SÍ existían localmente (12 commits en `main`, incluyendo `aa556d9 Fix: token budget, conditional loading, pruning, deprecations`)
+- El remoto usaba **HTTPS sin credenciales** → el push fallaba en silencio
+- GitHub solo tenía el commit inicial `0c02f1a` (por eso "no se veía nada")
+
+### Solución
+- Cambiado el remote de HTTPS → **SSH** (`git@github.com:maneskinleon-del/buffy-context.git`), usando la llave `~/.ssh/id_ed25519` que ya estaba registrada en GitHub como `maneskinleon-del`
+- **Push exitoso**: GitHub ahora muestra los 13 commits + README completo
+- Verificado desde 3 fuentes: `git ls-remote`, GitHub API, navegador (13 commits, README "Buffy Context")
+
+### Nota: fechas "yesterday"
+- GitHub muestra la fecha de **autoría** (29/07), no la del push (30/07). Es comportamiento normal de git — los commits se escribieron ayer.
+
+## 🗂️ Auditoría: repo git del home (`/home/mangonz`)
+
+### Hallazgos
+- `/home/mangonz` es un repo git en rama `master`, **sin remote** (3 commits: codebuff-automation + GameBoost Pro)
+- Trackea **104 archivos**: `codebuff-automation/` completo + `proyectos/autoscript-mobile-interface/` (GameBoost Pro)
+- **Esos proyectos NO tienen su propio `.git`** → el repo del home es su ÚNICA historia git
+- **Decisión del usuario: dejarlo como está** (riesgo bajo sin remote). Opción de `.gitignore` agresivo queda disponible.
+
+---
+
+
+
+# 🧠 SESION — Buffy Freebuff (2026-07-30 noche — RAM + watchdog MCP + force-stop en scrcpy-freefire)
+
+> Tema: diagnóstico de RAM, cleanup automático de chrome-devtools-mcp huérfanos, y matanza de apps de terceros antes de Free Fire.
+
+---
+
+## 🧹 Diagnóstico de RAM (13GB)
+
+- Top consumidores: **Chrome (~1.1GB)**, **python3/open-webui uvicorn (~1GB)**, **freebuff (~515MB)**, **alacritty (~594MB)**
+- Se identificaron **procesos huérfanos del agente**: `chrome-devtools-mcp` (npm exec + MCP + watchdog) quedaban vivos tras tareas de navegador (~1GB)
+
+## 🛡️ Watchdog `cleanup-mcp.sh` + systemd timer
+
+- `chrome-devtools-mcp` **NO tiene flag nativo de auto-exit** (revisado todo su `--help`)
+- Se creó `~/.local/bin/cleanup-mcp.sh` (watchdog): mata MCP huérfanos con **edad > 10min** y **CPU del árbol < 1% en 2 muestras** (4s+6s+4s)
+- Unidades systemd user: `mcp-cleanup.service` (oneshot) + `mcp-cleanup.timer` (cada 5 min, Persistent=true)
+- Mató el MCP huérfano de la verificación GitHub → **~1.1GB liberados** (3.2GB usados)
+- Log en `~/.local/state/mcp-cleanup.log`
+- **3 pasadas de code review** aprobadas (fixes: guard race /proc/stat, árbol capturado una vez para KILL, doble muestra CPU, rotación log 500 líneas, clamp CPU negativa)
+
+## 🎮 Force-stop de apps de terceros en `~/scripts/scrcpy-freefire.sh`
+
+- Añadida función `kill_background_apps()` que ejecuta `pm list packages -3` + `am force-stop` en cada app de terceros
+- **EXCLUSIONES**: `com.zjx.ztezscreenshot` (GG Mouse) y `com.dts.freefireth` (Free Fire) — se mantienen vivas
+- Configurable: `KILL_BG_APPS="1"` (toggle) y `KEEP_ALIVE_APPS="com.zjx.ztezscreenshot com.dts.freefireth"`
+- **Prueba real en ZTE**: 91 apps de terceros matadas, GG Mouse + Free Fire intactos ✅
+- Se ejecuta ANTES de lanzar GG Mouse y Free Fire (sección previa a PERMISOS GG MOUSE)
+- 2 pasadas de code review aprobadas (quoting de doble comilla + escapes verificado)
+
+---
+
+
+
+# 🧠 SESION — Buffy Freebuff (2026-08-01 — Kimi K3 vía Hugging Face + MCP)
+
+> Tema: investigación de cómo usar Kimi K3 (Moonshot AI) desde Hugging Face, aclaración de MCP vs modelo, y documentación en Knowledge/.
+
+---
+
+## 🤖 Kimi K3 — hallazgo documentado
+
+- **Qué es:** modelo multimodal 2.8T (MoE) de Moonshot AI, 1M tokens de contexto, tool calling ✅
+- **Acceso:** HuggingChat web (gratis) | API OpenAI-compatible `https://router.huggingface.co/v1` + token HF (pago por uso) | API Moonshot `platform.kimi.ai`
+- **Model ID:** `moonshotai/Kimi-K3`
+
+## ⚠️ Aclaración clave: MCP vs modelo
+
+- **MCP conecta herramientas**, no es la forma de "usar el modelo"
+- HuggingChat es **cliente** MCP; el servidor MCP oficial de HF (`@huggingface/mcp-server`) expone el Hub, no chat con modelos
+- Para usar Kimi K3 como cerebro: API OpenAI-compatible o HuggingChat web
+
+## 📂 Acciones
+
+- ✅ Creado `Knowledge/AI/Kimi-K3.md` — referencia completa (acceso, ejemplos curl, casos de uso)
+- ✅ Actualizado `Knowledge/README.md` — nueva categoría AI + fecha
+- ✅ Sesión registrada en `SESION.md`
+
+## 💻 kimi_vision.js creado + repo clonado vía SSH
+
+- **`kimi_vision.js`** (raíz, Node 26, CommonJS): visión IA con Kimi K3 (`moonshotai/Kimi-K3`) vía API HF OpenAI-compatible (`router.huggingface.co/v1`). Envía el screenshot en base64; el modelo devuelve JSON (tipo de permiso, app, botones, confianza) → mapeado a `pm grant`/`appops set` vía rish (ruta resuelta automáticamente: env RISH > ~/bin/rish > PATH). Modos: `--img`, `--monitor`, `--watch`, `--screenshot`, `--grant`, `--pkg`, `--json`. Requiere `HF_TOKEN` + aceptar licencia gated del modelo. Probado con API simulada ✅, con HF_TOKEN real ✅ y con diálogo real + `--grant` ✅ (notificaciones VInstall, 98%).
+- **Repo `buffy-context` clonado en este dispositivo**: `~/buffy-context` (44 archivos, working tree limpio). Remote `origin` en **SSH** (`git@github.com:maneskinleon-del/buffy-context.git`). Clave ed25519 registrada en GitHub ✅ y push exitoso (`7bcb639`).
+- **`kimi_vision.js` integrado al repo** (scripts/): copiado a `scripts/kimi_vision.js` (diff 0, `node --check` ✅), documentado en `Knowledge/AI/Kimi-K3.md` (sección "Script implementado") y en el árbol de `README.md`.
+
+## 🔜 Pendientes
+
+- [x] `kimi_vision.js` creado — script de visión IA (upgrade de `auto_permiso.py`) ✅
+- [x] Clave SSH registrada en github.com/settings/keys y push por SSH funcionando ✅
+- [x] `kimi_vision.js` agregado al repo en `scripts/` y documentado ✅
+- [ ] Token HF con scope de inferencia + método de pago configurado (el scope de inferencia ya se validó con la prueba real ✅; falta método de pago)
+- [x] Probar `kimi_vision.js` con HF_TOKEN real ✅ (Kimi K3 respondió en 10.2s; identificó correctamente que el screenshot NO era un diálogo de permiso)
+- [x] Probar `kimi_vision.js` contra un screenshot de un diálogo de permiso real (con `--grant`) ✅ — diálogo de notificaciones de VInstall (`com.vinstall.alwiz`) detectado al 98% y concedido: `pm grant POST_NOTIFICATIONS` + `appops POST_NOTIFICATION=allow`, verificado `granted=true`
+- [ ] Decidir si revocar el token GitHub expuesto en el chat
+
+---
+
+
+
+# 🧠 SESION — Buffy Freebuff (2026-08-01 — systemd-boot fix + ask-model.js "segundo cerebro" + kimi_vision.js adoptado)
+
+> Tema: arreglar el menú de arranque que esperaba Enter (no era GRUB), montar un complemento para consultar otros modelos (local/nube), adoptar la mejora kimi_vision.js del repo, y aclarar el mito de MCP.
+
+---
+
+## 🔧 systemd-boot — fix del "menú que espera Enter" (no era GRUB)
+
+- **Diagnóstico**: el sistema usa **systemd-boot** (NO GRUB) — `efibootmgr` apunta a `\EFI\SYSTEMD\SYSTEMD-BOOTX64.EFI`, ESP montado en `/efi`.
+- **Causa raíz**: variable EFI `LoaderConfigTimeout` (GUID 4a67b082-...) con el valor especial **`menu-force`** (UTF-16, verificado con xxd) → pisa el `timeout 3` de `/efi/loader/loader.conf` y obliga a esperar Enter indefinidamente.
+- **Fix**: `sudo bootctl set-timeout 3` → luego el usuario pidió arranque instantáneo: `sudo bootctl set-timeout 0` + `sed -i 's/^timeout .*/timeout 0/' /efi/loader/loader.conf`. Verificado: var EFI = `0` y `loader.conf` = `timeout 0` (ambos consistentes).
+- **Escape hatches con timeout 0**: boot counting + fallback automático si el kernel default falla (independiente del menú, confirmado en `man systemd-boot`); menú puntual con `systemctl reboot --boot-loader-menu=force`.
+
+## 🧪 ask-model.js — "segundo cerebro" de terminal (local + nube)
+
+- **Nuevo**: `codebuff-automation/ask-model.js` — consulta cualquier modelo vía API OpenAI-compatible: **Ollama local** (qwen2.5:7b, moondream, minicpm-v) o **HF Router nube** (DeepSeek V4 Flash/Pro/R1, Kimi K3). Sin MCP, sin deps nuevas (usa `lib/logger.js` + `lib/utils.js` vendored).
+- Modos: one-shot, `--chat` (memoria, últimos 4 turnos), `--list`, `--json`, separador `--` para prompts con guiones.
+- **Token**: `~/.huggingface/token` (chmod 600). `resolveHfToken()` extraída a `lib/utils.js` (compartida con kimi_vision.js: env HF_TOKEN > archivo > vacío, fallback Termux-aware).
+- **Pruebas reales**: qwen2.5:7b local (~2.8–17s), DeepSeek V4 Flash (~0.7–3.5s), Kimi K3 (~3.5s). Todo ✅.
+- **Flujo de segunda opinión demostrado**: consulté a DeepSeek sobre la decisión `timeout 0`; DeepSeek se equivocó en 1 punto (dijo que el boot counting no se activa con timeout 0 — la doc oficial confirma que SÍ es independiente del menú). Contraverificación contra `man systemd-boot`.
+
+## 📥 kimi_vision.js adoptado (desde repo buffy-context remoto)
+
+- Descargados `scripts/kimi_vision.js` + `scripts/lib/{logger,utils}.js` + `Knowledge/AI/Kimi-K3.md` de `maneskinleon-del/buffy-context` → `codebuff-automation/` (diff 0 con el repo).
+- Skills actualizadas: `codebuff-automation/skills/image-analyzer.md` y `.agents/skills/image-analyzer/SKILL.md` (kimi_vision.js recomendado, auto_permiso.py como fallback OCR).
+- Provenance documentada en `codebuff-automation/codebuff-memoria.md`.
+
+## 🧠 MCP aclarado (dos respuestas de otro modelo evaluadas)
+
+- El texto propuesto decía "el modelo local es el servidor MCP" — **incorrecto**: el LLM/host es el CLIENTE MCP; los servidores exponen herramientas (filesystem, DB, APIs). Confirmado con la doc oficial del SDK (`FastMCP`, stdio/SSE, handshake `initialize`).
+- Conclusión: para "consultar otro modelo" no hace falta MCP — es una llamada HTTP OpenAI-compatible (como ask-model.js).
+
+## 🔜 Pendientes
+
+- [ ] Sincronizar clon local `~/buffy-context` con `origin/main` (25 commits atrás; 3 archivos sin commitear: INFO-core.md, INFO-full.md, PROJECTS.md)
+- [ ] Decidir si rotar el HF_TOKEN (quedó expuesto en el chat)
+- [ ] Alias `ask`/`askc`/`askl` en el shell
+
+---
+
+
+
+# 🧠 SESION — Buffy Freebuff (2026-07-31 — limpieza de agentes IA)
+
+> Contexto de la limpieza de agentes IA en desuso.
+
+---
+
+## 🧹 Limpieza de agentes IA en desuso
+
+### Pedido del usuario
+"Tengo bastante basura de IAs que ya no uso" — limpiar agentes IA obsoletos.
+
+### Seleccionado por el usuario (eliminado)
+| Item | Detalle | Espacio |
+|---|---|---|
+| **Claude Code** | `npm uninstall -g @anthropic-ai/claude-code` + `rm ~/.claude.json` | ~223 MB |
+| **Kilo** | `rm -rf ~/.kilo` + línea PATH removida de `.zshrc` | ~250 MB |
+| **Mimo** | `npm uninstall -g @mimo-ai/cli` + `rm -rf ~/.mimocode` | ~480 MB |
+| **aichat** | `cargo uninstall aichat` (metadata corrupta corregida en `.crates.toml`/`.crates2.json`) | pequeño |
+| **Cache Playwright** | `rm -rf ~/.cache/ms-playwright` (redescargable) | ~943 MB |
+| **Cache Kimchi** | `rm -rf ~/.cache/kimchi` (binario kimchi ya no existía) | ~121 MB |
+| **Odysseus** | `rm -rf ~/odysseus` (confirmado por usuario; requirió sudo por permisos root) | ~772 KB |
+| **Symlink `rtk`** | `rm -f ~/.local/bin/rtk` (apuntaba a kimchi, inexistente) | — |
+
+### No eliminados (activos o recientes)
+- **freebuff** (este agente), **OmniRoute** (gateway activo), **OpenClaw** (gateway activo)
+- **command-code** (recién instalado para probar), **vercel**, **clasp**, **ctx7**, **playwright-cli**
+- **Gemini CLI** (el usuario no lo seleccionó), **Ollama** (conservado; modelos moondream/minicpm-v/qwen permanecen, solo qwen2.5:7b se usa como fallback de OpenClaw)
+
+### Archivos modificados
+| Archivo | Cambio |
+|---|---|
+| `~/.zshrc` | Removida línea `export PATH=.../.kilo/bin` |
+| `memoria.md` | Removidas filas Claude Code, kimchi, Odysseus, kilo/mimocode del PATH, filas kimchi/claude/rtk de ~/.local/bin |
+| `ai-context/SNAPSHOT.md` | Regenerado |
+| `ai-context/CHANGELOG.md` | Entrada 2026-07-31 agregada |
+
+---
+
+*Fin de la sesión — Última actualización: 2026-07-31*
+
+---
+
+## 🎮 scrcpy-freefire.sh — Cleanup real al salir (cierra apps + apaga pantalla) — 2026-08-01
+
+### Problema
+Al cerrar el script quedaban apps corriendo en el teléfono (gastaban batería). El cleanup viejo solo hacía `am force-stop` a 2 apps (Free Fire + screenshot), y **8 apps se reiniciaban solas** porque son Device Admins activos / auto-reinicio: Android prohíbe su force-stop (anti-malware).
+
+**Misterio resuelto:** la sesión que parecía "no funcionar" corría el código viejo — su log decía `com.dts.freefireth / com.zjx.ztezscreenshot detenidas` (solo 2 apps). Al reabrir (launcher), el juego volvía a arrancar y todo parecía igual.
+
+### Solución
+| Pieza | Qué hace |
+|---|---|
+| `KILL_PERSISTENT="0"` | **Default seguro (OFF)**: el force-stop normal ya cierra el juego y apps normales. En `1` hace barrido agresivo con `pm disable-user` |
+| `pm disable-user` al cerrar | Mata de verdad a los Device Admins (verificado: mueren y quedan muertos) |
+| `pm enable` + `dpm set-active-admin` al iniciar | Restaura las apps completas, **incluido su estado de Device Admin** |
+| `SESSION_STARTED` gate | Solo limpia si el juego realmente arrancó (si scrcpy falla 3 veces, no toca nada) |
+| `PERSISTENT_ADMIN_RECEIVERS` | Receivers de admin a re-grantear con `dpm` (descubrimiento: `pm enable` NO restaura el estado de admin — probado en vivo) |
+| **`scrcpy-freefire-restore.sh`** (nuevo) | Restauración manual independiente si saliste y no volvés a abrir el script. Lee las listas del main vía `sed` (una sola fuente de verdad) |
+
+### Cierre con Alt+Q
+- El usuario cierra con **Alt+Q** (binding `sxhkdrc:162` — bspwm cierra la ventana de scrcpy → el script detecta el cierre y corre el cleanup)
+- Hint del notify actualizado: `scrcpy corriendo — Alt+Q para salir (limpia y apaga pantalla)`
+- Flujo verificado en vivo: `Restaurando... → Cerrando apps → Apagando pantalla en 5s → Pantalla apagada`
+
+### Incidente transparencia
+Los ciclos disable→enable de prueba desactivaron el Device Admin de MacroDroid/Tasker/Automate. **Restaurados** con `dpm set-active-admin` (los 3 con Success + policies visibles).
+
+### Archivos
+| Archivo | Cambio |
+|---|---|
+| `~/scripts/scrcpy-freefire.sh` | Cleanup real: close_game_apps + screen off 5s + KILL_PERSISTENT + gates + re-enable con dpm + hint Alt+Q |
+| `~/scripts/scrcpy-freefire-restore.sh` | Nuevo: restaura apps + admins leyendo listas del main |
+| `.openclaw/workspace/scripts/scrcpy-freefire.sh` | Sincronizado |
+
+---
+
+## 🗑️ Limpieza del teléfono — laboratorio de pruebas — 2026-08-01
+
+### Desinstaladas (verificado: `pm path` vacío)
+| App | Paquete | Resultado |
+|---|---|---|
+| **Tasker** | `net.dinglisch.android.taskerm` | ✅ `Success` |
+| **Automate** | `com.llamalab.automate` | ✅ `Success` |
+| **Facebook** | `com.facebook.katana` | ✅ `Success` |
+
+### El detalle técnico
+Tasker y Automate eran **Device Admins activos** → Android bloquea su desinstalación (`DELETE_FAILED_DEVICE_POLICY_MANAGER`), y `dpm remove-active-admin` solo funciona para test-only admins (estos eran `testOnlyAdmin=false`). **Solución:** `pm disable-user` primero (desactiva el admin al deshabilitar el paquete) → `pm uninstall` después. Funcionó perfecto. Quedó demostrado que el único admin activo restante es **MacroDroid**.
+
+### Scripts actualizados
+- `PERSISTENT_APPS`: removidos `taskerm` y `llamalab.automate` (quedan macrodroid, autojs6, kustom.widget, steps, launcher.hype)
+- `PERSISTENT_ADMIN_RECEIVERS`: quedó solo el receiver de MacroDroid
+- El restore script se actualiza solo (lee listas del main vía `sed`)
+
+### Pendiente para mañana (laboratorio)
+- Quedan candidatos a borrar: MacroDroid, AutoJS, Kustom Widget, Steps, `com.launcher.hype`
+- Considerar `KILL_PERSISTENT=1` si se quiere el lab sin nada corriendo al salir
+
+---
+
+*Fin de la sesión — Última actualización: 2026-08-01*
+
+
+
+# 🧠 SESION — Buffy Freebuff (2026-07-31)
+
+> Contexto de todo lo implementado durante esta sesión.
+
+---
+
+## 🤖 Command Code instalado + Hermes eliminado + OpenClaw migrado a blockrun
+
+### Pedido del usuario
+1. Probar el nuevo agente de IA **Command Code** (`https://commandcode.ai/`)
+2. **Eliminar Hermes** (agente de Nous Research) — su plan gratuito duró solo 2 semanas
+
+### Command Code (v1.6.1) — instalado
+- `npm i -g command-code@latest` → `~/.npm-global/bin/command-code` (+ alias `cmd`)
+- Postinstall de `protobufjs` estaba bloqueado por npm; habilitado con `--allow-scripts=protobufjs` y persistido en config (`npm config set allow-scripts=protobufjs --location=user`)
+- Verificado: `command-code --version` → 1.6.1 · `--list-models` → 50 modelos (deepseek, kimi, glm, claude, gpt, gemini, grok, etc.)
+- **Pendiente del usuario**: `cmd login` (OAuth por navegador) y primer uso en un proyecto
+
+### Hermes — eliminado por completo (~1.9 GB liberados)
+| Componente | Acción |
+|---|---|
+| `~/.hermes/` | `rm -rf` (agent, venv, state.db, skills, kanban, sessions) |
+| `~/.buffy-hermes/` | `rm -rf` (workspace inbox/outbox/context) |
+| `~/.local/state/hermes/` | `rm -rf` |
+| `~/.ollama/backup/hermes/` | `rm -rf` |
+| `~/.local/bin/{hermes,buffy-hermes,nous-refresh}` | eliminados |
+| `nous-refresh.{service,timer}` (systemd user) | stop + disable + rm + daemon-reload |
+| `~/.zshrc` (bloque "Nous Portal API key" + `eval nous-refresh`) | líneas 571-574 eliminadas |
+| `NOUS_API_KEY` en systemd user env | `systemctl --user unset-environment` |
+| `memoria.md`, `ai-context/SNAPSHOT.md` | referencias hermes removidas |
+
+### OpenClaw — migrado de provider `nous` → `blockrun`
+- El provider `nous` (plan gratuito expirado) dejó el gateway en `failed` por `NOUS_API_KEY` inexistente
+- `~/.openclaw/openclaw.json`: eliminado provider `nous`; `primary=blockrun/auto`, fallbacks `['ollama/qwen2.5:7b','blockrun/free']`; aliases `nous/*` removidos
+- `openclaw-gateway.service`: `OPENCLAW_SERVICE_MANAGED_ENV_KEYS` → solo `KIMCHI_API_KEY`
+- Gateway ✅ **active** · `.last-good` regenerado sin refs a nous
+- Backup del config en `openclaw.json.bak-hermes-removal`
+- **Pendiente del usuario**: el proxy blockrun (127.0.0.1:8402) no está corriendo — sin binario ni servicio systemd; hasta levantarlo, OpenClaw usará fallback ollama local
+
+---
+
+*Fin de la sesión — Última actualización: 2026-07-31*
+
+---
+
+
+
+# 🧠 SESION — Buffy Freebuff (2026-07-29 — segunda parte: memoria persistente + skill expandida)
+
+> Contexto de todo lo implementado durante esta sesión.
+
+---
+
+## 🎮 Skill scrcpy-freefire expandida
+
+### Secciones agregadas a `.agents/skills/scrcpy-freefire/SKILL.md`
+
+#### 🧪 Diagnóstico de lag
+- Tabla para identificar tipo de lag (input vs video vs thermal vs game)
+- Interpretación de `--print-fps`
+- Comandos `adb shell dumpsys gfxinfo` y `dumpsys SurfaceFlinger`
+- Tabla de trade-offs completa
+- Procedimiento diagnóstico de 5 pasos (con verificación USB incluida)
+
+#### 🔧 Alternativas de keymappers
+- **Mantis Gamepad Pro**: Setup completo con Shizuku, recomendada
+- **Panda Mouse Pro**: Alternativa ligera
+- **Octopus**: Advertencia de ban para Free Fire
+- Tabla comparativa (GG Mouse vs Mantis vs Panda vs Octopus)
+
+#### 🔍 Troubleshooting detallado (expandido)
+- UHID: cursor invisible/atrapado, teclado no funciona, teclas stuck
+- Input desync después de alt+tab
+- Wayland vs X11 — problemas y soluciones
+- GG Mouse Pro 2 se desactiva solo (5 causas + soluciones)
+- Lag al girar cámara en Free Fire
+- Free Fire borroso
+- Problemas de permisos Shizuku
+
+### Detalles pulidos post-review
+- Advertencia de input lag en `--render-expired-frames`
+- Chequeo USB agregado al diagnóstico de 5 pasos
+- Orden del reset drástico movido a último recurso
+
+---
+
+## 🧠 Sistema de memoria persistente
+
+### Contexto inicial
+El usuario ya tenía una carpeta `ai-context/` con archivos manualmente mantenidos:
+- `INFO-core.md`, `INFO-full.md` — contexto de sistema
+- `SNAPSHOT.md` — generado por `buffy-context.sh`
+- `SESION.md` — bitácora manual de sesiones anteriores
+- `PROJECTS.md`, `CHANGELOG.md`, `AGENTS.md`, etc.
+
+### Problemas identificados
+1. **Sin protocolo formal** — cada agente empezaba desde cero, no había un "cargar esto primero"
+2. **No había handoff** — `CONTINUE.md` no existía
+3. **`buffy-context.sh` hardcodeaba "Mango WM (Wayland)"** — el usuario corre bspwm X11
+4. **`scripts/ai-context.sh`** generaba zips inútiles en vez de contexto estructurado
+5. **SNAPSHOT.md** decía "WM: Mango WM (Wayland)" — información incorrecta
+
+### Solución implementada
+
+| Archivo | Cambio |
+|---------|--------|
+| `ai-context/LOAD_CONTEXT.md` | **NUEVO**: Protocolo para agentes — qué leer al inicio y qué escribir al cierre |
+| `ai-context/CONTINUE.md` | **NUEVO**: Handoff entre sesiones — resumen, archivos tocados, pendientes, stack |
+| `ai-context/SNAPSHOT.md` | ✅ Actualizado: WM corregido a bspwm, estado fresco del sistema |
+| `ai-context/SESION.md` | ✅ Actualizado: esta entrada |
+| `~/.local/bin/buffy-context.sh` | ✅ Fix: detección dinámica de WM vía `loginctl` |
+
+### Cómo funciona
+
+**Al inicio de cada sesión** (para cualquier agente):
+1. Leer `INFO-core.md` — contexto base del sistema
+2. Leer `SNAPSHOT.md` — estado vivo (procesos, RAM, proyectos)
+3. Leer `CONTINUE.md` — de qué halar, qué pendientes hay
+
+**Al cierre de cada sesión** (para cualquier agente):
+1. Escribir `CONTINUE.md` — resumen de lo hecho
+2. Actualizar `SNAPSHOT.md` si cambió el sistema
+3. Actualizar `SESION.md` con bitácora detallada
+
+---
+
+*Fin de la sesión — Última actualización: 2026-07-29*
+
+---
+
+
+
 # 🧠 SESION — Buffy Freebuff (2026-07-29)
 
 > Contexto de todo lo implementado durante esta sesión.
@@ -138,6 +900,8 @@ El usuario ya tenía una carpeta `ai-context/` con archivos manualmente mantenid
 *Fin de la sesión — Última actualización: 2026-07-29*
 
 ---
+
+
 
 # 🧠 SESION — Buffy Freebuff (2026-07-26)
 
@@ -348,6 +1112,8 @@ MONITOR=HDMI-1 polybar mel2-bar -c ~/.config/bspwm/rices/$RICE/config.ini &
 *Fin de la sesión — Última actualización: 2026-07-26*
 
 ---
+
+
 
 # 🧠 SESION — Buffy Freebuff (2026-07-27)
 
@@ -777,4 +1543,6 @@ Estilo bspwm, configurados via `kwriteconfig6`:
 
 
 ---
+
+
 

@@ -6,12 +6,30 @@
 ---
 
 version: 1.8
-updated: 2026-08-07
+updated: 2026-08-08
 schema: system-profile
 system-id: mangonz-desktop
 ---
 
 # CHANGELOG.md — Historial de cambios del sistema
+
+
+### 2026-08-08 — data_car: lista de compra persistente + buffy-context apunta a opencode
+
+**Pedido del usuario:** el botón "Agregar pack a compra" en data_car no mostraba nada (solo un toast de 2,5s, sin persistencia) — quería que los packs agregados quedaran visibles y conectados con el botón "Compartir con IA" para precios CLP. Además: buffy-context solo referenciaba Freebuff y quería que apunte también a opencode.
+
+**Cambios aplicados (data_car — commit `c345d16`):**
+- **Lista de compra persistente** en `localStorage` (`mg350_shopping_list`): "Agregar pack a compra" acumula el pack con items + referencias ya resueltas.
+- **Botón "Mi compra"** en el header del panel de packs, con badge contador de packs (entero). Panel desplegable: cada pack con items/referencias, botón ✕ por pack y "Vaciar".
+- **"Compartir compra con IA (precios CLP)"**: arma prompt con TODA la lista vía `buildAISharePrompt` y lo copia al portapapeles.
+- Botón del pack cambia a "✓ En tu compra" cuando ya está agregado.
+- Bug corregido: sumar cantidades daba "11.5 items" (aceite ×4.5 litros) → el badge cuenta packs, no unidades.
+
+**Cambios aplicados (buffy-context — commit `12433bf`):** README, USER-MANU, INFO-core, LOAD_CONTEXT, code-search y vision-adapter actualizados para reflejar que Buffy corre en Freebuff **y** opencode (modelos free: DeepSeek).
+
+**Verificado:** typecheck + build OK; flujo validado con playwright en local y producción (`scuderia-data.vercel.app`) — agregar pack → badge → panel → sobrevive recarga.
+
+**Pendiente:** asignar precios de la respuesta de la IA a la lista + total CLP (reusa `parseAIResponse`).
 
 
 ### 2026-08-07 — scrcpy-freefire: sin auto-open de Free Fire + purga de 16 apps en el ZTE
