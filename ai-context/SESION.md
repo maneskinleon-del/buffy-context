@@ -4,7 +4,24 @@
 
 ---
 
-## 🧠 Adquisición de capacidades nuevas + fixes de integración
+## 🧠 Auditoría: drift documental → anti-drift + benchmark de escala (P0)
+
+### Pedido del usuario
+Revisión del sistema detectó 2 inconsistencias documentales (README decía "3 sesiones" y "168 checks" cuando la regla real es 5 entradas/30KB y la suite 196→198) y propuso convertirlas en mecanismo anti-drift + benchmark adversarial de memoria.
+
+### Lo hecho
+1. **`test-documentation.sh`** (nuevo): fase final `doc_truth_check` en `run-tests.sh` — el número canónico se **deriva del PASS real del runner**, no se hardcodea. README debe declarar el mismo número; si la suite crece y nadie actualiza la doc, el CI rompe (verificado: README mintiendo → FAIL + exit 1).
+2. **`bench-scale.sh`** (nuevo): benchmark P0 — siembra 500 hechos en índice FTS5 real (2 relevantes a la tarea "scrcpy ZTE", 498 irrelevantes) y mide recall, contaminación (leaked), bytes/tokens de contexto y utilización de ventana. **Resultado: recall 2/2, leaked 0, healthy**.
+3. **`test-scale.sh`** (nuevo): integra el benchmark a la suite con `--quick`.
+4. **README corregido**: "Últimas 5 sesiones", "198 checks (182 --quick)", "13 test_*.sh" + sección anti-drift y benchmark.
+5. **Suite completa**: **202 OK / 0 FAIL** (full) · **186 OK / 0 FAIL** (--quick).
+
+### Lecciones
+- El sistema detectaba drift de hechos pero no de su PROPIA documentación → nueva categoría DRIFT documental cubierta por el runner.
+- El benchmark demostró el problema real de FTS5: `snippet()` envuelve los términos de la query en `«»`, rompiendo greps sobre los resultados — los detectores deben usar substrings que NO estén en la query.
+
+---
+
 
 ### Pedido del usuario
 "Hicimos cambios importantes en el repo de buffy-context, ¿puedes adquirir esas nuevas habilidades?" → pull → 2 features nuevas (memoria curada + búsqueda FTS5). Y al final: "voy a matar esta sesión y lanzaré otra para ver los cambios — ¿es seguro?"

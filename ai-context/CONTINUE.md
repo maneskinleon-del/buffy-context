@@ -1,11 +1,29 @@
 # 🔄 CONTINUE — Handoff entre sesiones
 
 > ⚡ **PRÓXIMA SESIÓN: LEE ESTO PRIMERO**
-> Generado: 2026-08-09 (opencode — adquisición de memoria curada + fixes de integración)
+> Generado: 2026-08-09 (opencode — anti-drift documental + benchmark de escala)
 
 ---
 
 ## Resumen de la sesión (2026-08-09 cierre — opencode)
+
+**Tema:** la auditoría encontró drift de la PROPIA documentación (README decía "3 sesiones" y "168 checks") → convertido en mecanismo anti-drift + benchmark adversarial de memoria (P0). Suite: **202 OK / 0 FAIL** (full) · **186 OK / 0 FAIL** (--quick).
+
+1. **`scripts/tests/test-documentation.sh` (NUEVO)** — fase final `doc_truth_check` en `run-tests.sh`: el número canónico de checks se **deriva del PASS real del runner**, no se hardcodea; el README debe declararlo. Si la suite crece (198→203) y nadie actualiza la doc → **CI rompe**. Verificado adversarialmente: README mintiendo → FAIL + exit 1. También valida la regla unificada "5 entradas o ~30KB" y anti-regresión de "3 sesiones".
+2. **`scripts/tests/bench-scale.sh` (NUEVO)** — benchmark P0 de selección a escala: siembra 500 hechos en índice FTS5 real (2 relevantes a "scrcpy ZTE", 498 irrelevantes), mide **recall, contaminación (leaked), chars/tokens de contexto, utilización de ventana**. Resultado: recall 2/2, leaked 0, healthy. Flags: `--count N`, `--json`, `--quick`.
+3. **`scripts/tests/test-scale.sh` (NUEVO)** — integra el benchmark a la suite en `--quick` (50 hechos).
+4. **README corregido** (4 líneas): "Últimas 5 sesiones" (era 3), "198 checks (182 --quick)" (era 168/152), "13 test_*.sh" (era 11), + sección anti-drift y benchmark.
+5. **Lección**: el sistema detectaba drift de hechos pero no de su propia documentación → nueva categoría **DRIFT documental** cubierta por el runner. Detalle técnico FTS5: `snippet()` envuelve términos de la query en `«»` — los detectores del benchmark usan substrings que NO están en la query.
+
+### ⏳ Pendientes para otra sesión
+- **Pushear commits locales** (rama local adelantada a origin/main) — incluye esta sesión.
+- P1: retorno del aprendizaje (recuperación de SESION-archive meses después → ¿se vuelve conocimiento activo?).
+- P1: contención de memoria a nivel router (tarea data_car → ¿aparece Free Fire/rice?).
+- P2: concurrencia con 3+ escritores sobre MEMORY.md.
+- Opcional: `Knowledge/Tools/Buffy-Memory.md` (ficha de uso del CLI).
+
+---
+
 
 **Tema:** pull de cambios remotos → adquiridas las capacidades nuevas (memoria curada + búsqueda FTS5) + fixes de integración detectados al activarlas.
 
