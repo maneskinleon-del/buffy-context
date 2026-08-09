@@ -324,7 +324,7 @@ done
 section "🛠️  Scripts (scripts/)"
 # ══════════════════════════════════════════════════════════
 
-for s in buffy-context.sh android-detect.sh kimi_vision.js see.sh ollama-kill.sh; do
+for s in buffy-context.sh android-detect.sh kimi_vision.js see.sh ollama-kill.sh buffy-memory.sh; do
   if [ -f "$REPO_DIR/scripts/$s" ]; then
     if [ -x "$REPO_DIR/scripts/$s" ] || [[ "$s" == *.js ]]; then
       ok "$s"
@@ -333,6 +333,34 @@ for s in buffy-context.sh android-detect.sh kimi_vision.js see.sh ollama-kill.sh
     fi
   else
     err "$s (referenciado en README/LOAD_CONTEXT)" "MISSING_SCRIPT" "recreate_script" "$s"
+  fi
+done
+
+# ══════════════════════════════════════════════════════════
+section "🧠 Memoria curada (buffy-memory.sh)"
+# ══════════════════════════════════════════════════════════
+
+MEM_DIR="${BUFFY_MEM_DIR:-$HOME/.buffy/memories}"
+if [ -d "$MEM_DIR" ]; then
+  ok "directorio de memoria: $MEM_DIR"
+else
+  warn "memoria no inicializada ($MEM_DIR) — primera vez: bash scripts/buffy-memory.sh add memory \"...\"" "MEMORY_NOT_INIT" "" "$MEM_DIR"
+fi
+for mf in "MEMORY.md:2200" "USER.md:1375"; do
+  f="${mf%%:*}"; LIM="${mf##*:}"
+  if [ -f "$MEM_DIR/$f" ]; then
+    if [ -s "$MEM_DIR/$f" ]; then
+      C=$(wc -m < "$MEM_DIR/$f" 2>/dev/null | tr -d ' ')
+      if [ -n "$C" ] && [ "$C" -gt "$LIM" ]; then
+        err "$f excede el límite del store: $C > $LIM chars — consolidar con: bash scripts/buffy-memory.sh" "MEMORY_OVERFLOW" "" "$f"
+      else
+        ok "$f presente ($C/$LIM chars)"
+      fi
+    else
+      info "$f existe (vacío, sin entradas)"
+    fi
+  else
+    warn "$f ausente — se crea al primer uso de buffy-memory.sh" "MEMORY_FILE_MISSING" "" "$f"
   fi
 done
 

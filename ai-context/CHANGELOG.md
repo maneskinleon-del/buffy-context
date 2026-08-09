@@ -14,6 +14,33 @@ system-id: mangonz-desktop
 # CHANGELOG.md — Historial de cambios del sistema
 
 
+### 2026-08-09 — 🧠 Memoria curada estilo Hermes (brecha 2) — buffy-memory.sh
+
+**Pedido del usuario:** "seguimos con la implementación para tener lo que tiene Hermes" — cerrar la brecha 2: memoria curada persistente (`MEMORY.md` + `USER.md`).
+
+**Cambios aplicados:**
+- **`scripts/buffy-memory.sh` (NUEVO)** — CLI de memoria curada: `list`, `render` (snapshot congelado para el prompt), `stats`, `add`, `replace`, `remove`, `batch` + flag `--json`. Respeta `BUFFY_MEM_DIR` (default `~/.buffy/memories`).
+- **`scripts/lib/memory_engine.py` (NUEVO)** — réplica fiel de `memory_tool.py` de Hermes (Nous Research) sin dependencias:
+  - Stores: `MEMORY.md` (2.200 chars) · `USER.md` (1.375 chars), entradas separadas por `\n§\n`, multiline.
+  - Dedupe (preserva orden), replace/remove por **substring único** (`old_text`); ambigüedad → error con previews.
+  - **Límites duros**: el add/replace que exceda el char limit se rechaza con instrucciones de consolidación.
+  - **File lock** exclusivo (fcntl, `<archivo>.lock`) + escritura **atómica** (tmp + rename 0600).
+  - **Guard de drift**: contenido en disco que no hace round-trip (edición manual, append, otra sesión) ABORTA la mutación y guarda `.bak.<ts>` — nunca sobrescribe lo que no entiende (issue #26045 de Hermes).
+  - **Guard de lectura fallida**: archivo ilegible (UTF-8 corrupto, permiso) ≠ store vacío → se rechaza la escritura.
+  - **Batch atómico** all-or-nothing contra el presupuesto FINAL (consolidar en un solo turno).
+  - **Escaneo de inyección** mínimo antes de escribir (la memoria se congela en el system prompt).
+- **`buffy-doctor.sh`**: nueva sección "🧠 Memoria curada" (directorio, presencia de MEMORY.md/USER.md, límites por store) — clean cuando la memoria está inicializada.
+- **Protocolo**: `LOAD_CONTEXT.md` (Paso 1.5 — snapshot congelado + semántica de escritura proactiva), `~/AGENTS.md` del dispositivo (misma sección), `README.md` (feature + scripts).
+- **Tests**: `scripts/tests/test-memory.sh` (8 suites: add/replace/remove, substring único, límites, drift+backup, batch atómico, inyección, render vacío/lleno, help) + `buffy-memory.sh` en el gate de sintaxis.
+- Memoria REAL inicializada en este dispositivo (`~/.buffy/memories`: MEMORY 3 entradas 12% · USER 2 entradas 15%).
+
+**Suite:** 196 OK / 0 FAIL (antes 168). Doctor: 63 OK / 2 warns / 0 err — healthy.
+
+**Lecciones:** el matching por substring único (no IDs) obliga a entradas cortas y distintas; el `.bak` ante drift es la única protección real contra perdida de memoria editada a mano (Hermes documentó la misma lección en su issue #26045).
+
+**Pendientes:** nada pendiente de la brecha 2. Futuras brechas Hermes ya revisadas: skills / self-improvement loop / external memory providers (no aplican o duplican lo existente).
+
+
 ### 2026-08-09 — buffy-search.sh: búsqueda FTS5 de sesiones (brecha vs Hermes)
 
 **Pedido del usuario:** cerrar brechas de buffy-context frente a Hermes Agent (Nous Research) — arrancó por la búsqueda de sesiones (FTS5/SQLite, ~20ms, sin gastar tokens).

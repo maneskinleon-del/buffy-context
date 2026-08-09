@@ -19,6 +19,37 @@ ai-context/INFO-core.md
 ```
 Esto te da: OS, WM, shell, herramientas, reglas personales, stack de proyectos.
 
+### Paso 1.5 — Memoria curada (SIEMPRE — snapshot Congelado)
+```markdown
+~/.buffy/memories/MEMORY.md  (2.200 chars máx — notas del agente)
+~/.buffy/memories/USER.md    (1.375 chars máx — perfil de mangonz)
+```
+Se leen UNA vez al iniciar la sesión y **NO se re-leen en el medio** (snapshot
+congelado, patrón Hermes — caché de prefijo). Para ver el bloque de prompt:
+```bash
+bash scripts/buffy-memory.sh render memory   # o: user
+```
+Escribir/editar memoria DURANTE la sesión solo con el script (nunca a mano):
+```bash
+bash scripts/buffy-memory.sh add     memory "hecho/lección..."
+bash scripts/buffy-memory.sh add     user   "preferencia..."
+bash scripts/buffy-memory.sh replace memory "substring único" "nuevo texto"
+bash scripts/buffy-memory.sh remove  user   "substring único"
+bash scripts/buffy-memory.sh batch   memory '[{"action":"add",...}]'   # atómico
+```
+Semántica (igual que la tool `memory` de Hermes):
+- GUARDAR proactivo: corrección del usuario, preferencia, hecho de entorno,
+  convención, lección aprendida. Prioridad: preferencias del usuario y
+  correcciones > datos de entorno > conocimiento de procedimiento.
+- NO guardar: progreso de tareas, logs de trabajo terminado o TODOs
+  temporales — eso vive en SESION.md/CONTINUE.md y en buffy-search.sh.
+- Límites duros: si el add/replace excede el char limit, el script lo
+  rechaza → consolidar (merge con replace, borrar con remove) y reintentar.
+- Si un archivo fue editado a mano (drift), el script lo detecta, guarda
+  `.bak` y rechaza la escritura — nunca sobrescribe lo que no entiende.
+- Las mutaciones persisten a disco al instante; aparecen recién en la
+  PRÓXIMA sesión (el snapshot de esta no cambia).
+
 ### Paso 2 — Estado vivo del sistema (SIEMPRE, ~5KB)
 ```markdown
 ai-context/SNAPSHOT.md
@@ -266,6 +297,10 @@ ai-context/
 │
 ├── deprecated/           ← Archivos obsoletos (SYSTEM.md, SYSTEM_FULL.md — NO usar)
 └── README.md             ← Meta-información del directorio
+
+~/.buffy/memories/        ← MEMORIA CURADA (fuera del repo, perfil-local):
+│                            MEMORY.md (2.200 chars) + USER.md (1.375 chars)
+│                            gestionada solo con scripts/buffy-memory.sh
 ```
 
 ---

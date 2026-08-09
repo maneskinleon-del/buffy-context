@@ -1,3 +1,31 @@
+# 🧠 SESION — Buffy opencode (2026-08-09)
+
+> Contexto de lo implementado durante esta sesión.
+
+---
+
+## 🧠 Memoria curada estilo Hermes — brecha 2 cerrada (`buffy-memory.sh`)
+
+### Pedido del usuario
+"Tengo batería nuevamente, seguimos con la implementación para tener lo que tiene Hermes" — la sesión previa implementó la brecha 1 (búsqueda FTS5 de sesiones, `buffy-search.sh`); quedaba la **brecha 2: memoria curada** (MEMORY.md + USER.md con límites duros, snapshot congelado, tool add/replace/remove).
+
+### Implementado (réplica fiel del `memory_tool.py` de Hermes, sin dependencias)
+- **`scripts/lib/memory_engine.py`** — motor: stores `MEMORY.md` (2.200 chars) + `USER.md` (1.375 chars), entradas separadas por `\n§\n` (multiline), dedupe con primer-ocurrencia, replace/remove por **substring único** (`old_text`, ambigüedad → error con previews), **límites duros** con rechazo + sugerencia de consolidación, **lock fcntl** exclusivo, **escritura atómica** (tmp+rename 0600), **guard de drift** con `.bak.<ts>` (nunca sobrescribir lo que no hace round-trip — issue #26045 de Hermes), **guard de lectura fallida** (ilegible ≠ vacío → aborta), **batch atómico** all-or-nothing contra el presupuesto final, y **escaneo de inyección** mínimo (la memoria se congela en el system prompt).
+- **`scripts/buffy-memory.sh`** — CLI: `list`, `render` (snapshot de prompt), `stats`, `add`, `replace`, `remove`, `batch`; flag `--json`; `BUFFY_MEM_DIR` para stores alternos (tests/PC). Fui el primero en usarla de verdad: la memoria del dispositivo quedó inicializada (MEMORY 3 entradas 12% · USER 2 entradas 15%).
+- **`buffy-doctor.sh`** — sección "🧠 Memoria curada": directorio, presencia, límites por store (63 OK / 0 err, healthy).
+- **Protocolo**: `LOAD_CONTEXT.md` (Paso 1.5 — snapshot congelado + semántica de guardado), `~/AGENTS.md` del dispositivo (sección "Memoria curada"), `README.md` (feature + script).
+- **Tests**: `test-memory.sh` (8 suites) + gate de sintaxis de `buffy-memory.sh`. **Suite: 196 OK / 0 FAIL** (antes 168).
+
+### Verificación en vivo (lo que se probó antes de versionar)
+add/replace/remove básicos, duplicado, replace ambiguo ('Mi 10' en 2 entradas → "be more specific"), no-match, render con header+uso+contenido, stats, límite excedido (2.500 chars reject), **drift real** (entrada manual de 2.400 chars → DRIFT + `.bak` + rechazo; `add` post-drift sigue funcionando), batch correcto y batch con op rota (nada se aplica).
+
+### Lecciones
+- El **round-trip check** (raw ↔ re-serialize) es la señal #1 del drift; la #2 es "una entrada > límite del store entero" (el parser la atrapa cuando un escritor externo appendó texto libre). No confundir "contenido manual que cabe como entrada válida" (NO es drift — Hermes hace exactamente lo mismo) con "contenido que rompe el formato".
+- El patrón de **`skip_drift` solo para `add`** (append nunca clobber) + drift obligatorio para replace/remove es la semántica que impide perder memoria escrita a mano.
+- En los tests, `$TMPDIR` con `BUFFY_MEM_DIR` aislado basta (sin sandbox de repo): el motor es independiente del repo.
+
+---
+
 # 🧠 SESION — Buffy opencode (2026-08-08)
 
 > Contexto de lo implementado durante esta sesión. Corrida en **opencode** (no Freebuff) — ver la sesión anterior para el historial de Freebuff.

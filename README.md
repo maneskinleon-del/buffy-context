@@ -31,6 +31,7 @@ This repository provides the infrastructure for an AI agent to maintain persiste
 | **Provenance de hechos** | `facts.yaml` con source/confidence/scope/fecha/ttl por hecho (genera `buffy-verify.sh --update-facts`); TTL enforzado (`expired` si vence) |
 | **Jerarquía de fuentes** | `buffy-source.sh --resolve <fact>`: real-time → facts → SNAPSHOT → CONTINUE → INFO-core → inferred, con reporte de conflictos |
 | **Reglas declarativas** | `ai-context/facts_rules.yaml` + `scripts/lib/facts_engine.py` — agregar un hecho NO requiere tocar el motor; comandos en lista, ejecución sin shell (hardening) |
+| **Memoria curada (Hermes)** | `buffy-memory.sh` + `scripts/lib/memory_engine.py`: MEMORY.md (2.200 chars) + USER.md (1.375 chars), entradas `§`, limites duros, snapshot congelado al inicio de sesión, add/replace/remove/batch con substring matching, lock + guard de drift (`.bak`) + escaneo de inyección |
 
 ---
 
@@ -122,12 +123,13 @@ buffy-context/
 │   ├── set-version.sh                 # Versionado semver + tag
 │   ├── changelog-entry.sh             # Entrada de release automática en CHANGELOG
 │   ├── android-detect.sh              # Android project & device diagnosis
+│   ├── buffy-memory.sh                # Memoria curada (Hermes): add/replace/remove/batch
 │   ├── ollama-kill.sh                 # Libera RAM de modelos VLM (mantiene serve)
 │   ├── see.sh                         # Analiza imágenes con VLM local
 │   ├── kimi_vision.js                 # Detección de permisos con visión IA (Kimi K3)
 │   ├── lib/                           # yaml.sh (parsing compartido) + logger/utils.js
 │   ├── hooks/                         # install.sh + pre-commit.sh (suite --quick)
-│   └── tests/                         # run-tests.sh + 10 test_*.sh (suite 168 checks, 152 --quick)
+│   └── tests/                         # run-tests.sh + 11 test_*.sh (suite 168 checks, 152 --quick)
 │
 ├── INSTALL.md                         # Setup instructions
 ├── LICENSE                            # MIT license
