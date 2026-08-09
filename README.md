@@ -27,7 +27,7 @@ This repository provides the infrastructure for an AI agent to maintain persiste
 | **Self-diagnostics** | doctor --json detecta drift, repair corrige lo seguro, agent orquesta el ciclo |
 | **Conditional loading** | Token-aware protocol: carga solo lo necesario según el tema |
 | **Auto-pruning** | SESION.md mantiene máximo 5 entradas, el resto se archiva |
-| **CI verde** | Suite 168 checks (152 `--quick`) + doctor baseline 0 + verify factual en cada push/PR |
+| **CI verde** | Suite 198 checks (182 `--quick`) + doctor baseline 0 + verify factual en cada push/PR. La suite incluye un check **documental-truth** que rompe el CI si el README declara un número distinto al real (anti-drift de documentación) |
 | **Provenance de hechos** | `facts.yaml` con source/confidence/scope/fecha/ttl por hecho (genera `buffy-verify.sh --update-facts`); TTL enforzado (`expired` si vence) |
 | **Jerarquía de fuentes** | `buffy-source.sh --resolve <fact>`: real-time → facts → SNAPSHOT → CONTINUE → INFO-core → inferred, con reporte de conflictos |
 | **Reglas declarativas** | `ai-context/facts_rules.yaml` + `scripts/lib/facts_engine.py` — agregar un hecho NO requiere tocar el motor; comandos en lista, ejecución sin shell (hardening) |
@@ -44,7 +44,7 @@ buffy-context/
 │   ├── CONTINUE.md                    # Session handoff (what was last done)
 │   ├── INFO-core.md                   # User profile, stack, preferences (SIEMPRE)
 │   ├── INFO-full.md                   # Detailed user profile (bajo demanda)
-│   ├── SESION.md                      # Últimas 3 sesiones (archivado automático)
+│   ├── SESION.md                      # Últimas 5 sesiones (archivado automático)
 │   ├── SESION-archive.md              # Histórico completo de sesiones
 │   ├── PROJECTS.md                    # Active projects
 │   ├── deprecated/                    # Stubs SYSTEM.md/SYSTEM_FULL.md (migrados 2026-08-03)
@@ -129,7 +129,7 @@ buffy-context/
 │   ├── kimi_vision.js                 # Detección de permisos con visión IA (Kimi K3)
 │   ├── lib/                           # yaml.sh (parsing compartido) + logger/utils.js
 │   ├── hooks/                         # install.sh + pre-commit.sh (suite --quick)
-│   └── tests/                         # run-tests.sh + 11 test_*.sh (suite 168 checks, 152 --quick)
+│   └── tests/                         # run-tests.sh + 13 test_*.sh + bench-scale.sh (suite 198 checks, 182 --quick)
 │
 ├── INSTALL.md                         # Setup instructions
 ├── LICENSE                            # MIT license
@@ -213,6 +213,20 @@ bash scripts/tests/run-tests.sh --quick
 Used by the pre-commit hook and `scripts/migrate-system.sh`; the read-only checks on the real repo still run.
 
 La suite es **determinística y segura**: todo lo que escribe (repair `--auto`, ciclo del agent) corre en un sandbox con HOME aislado; el repo real solo se lee (doctor, dry-run, `--no-repair`).
+
+### Anti-drift documental (fase final de la suite)
+
+La suite termina con `doc_truth_check`: el README debe declarar el **mismo número de checks** que la suite real acaba de computar (198 full / 182 `--quick`). Si la suite crece y nadie actualiza el README, el CI rompe — el número no se mantiene a mano, se deriva del runner. También verifica que la regla de poda de `SESION.md` siga unificada ("5 entradas o ~30KB") y que no reaparezcan residuos viejos.
+
+### Benchmark de escala y contaminación (P0)
+
+```bash
+bash scripts/tests/bench-scale.sh            # 500 hechos sembrados, 2 relevantes
+bash scripts/tests/bench-scale.sh --json     # salida máquina: recall/precision/leaked/tokens
+bash scripts/tests/bench-scale.sh --quick    # corrida chica (50 hechos) — integrada a la suite
+```
+
+Mide si la búsqueda FTS5 recupera los 2 hechos relevantes a una tarea **sin colar ninguno** de los 498 irrelevantes, y cuantifica el contexto que terminaría cargando el agente (chars, tokens estimados, utilización de ventana).
 
 ### Pre-commit hook
 
