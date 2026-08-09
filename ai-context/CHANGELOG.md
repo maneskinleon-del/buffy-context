@@ -14,7 +14,20 @@ system-id: mangonz-desktop
 # CHANGELOG.md — Historial de cambios del sistema
 
 
-### 2026-08-08 — data_car: lista de compra persistente + buffy-context apunta a opencode
+### 2026-08-09 — buffy-search.sh: búsqueda FTS5 de sesiones (brecha vs Hermes)
+
+**Pedido del usuario:** cerrar brechas de buffy-context frente a Hermes Agent (Nous Research) — arrancó por la búsqueda de sesiones (FTS5/SQLite, ~20ms, sin gastar tokens).
+
+**Cambios aplicados:**
+- **`scripts/buffy-search.sh` (NUEVO)**: índice FTS5 de `buffy-context` (raíz + `ai-context/` + `Knowledge/`, *.md y *.yaml) en `~/.cache/buffy-search/search.db` — una fila por línea, resultados `archivo:línea` con resaltado «término» (`snippet()`) y orden por relevancia (`bm25`).
+- Tokenizer `unicode61 remove_diacritics 2` (búsqueda sin acentos). Indexado incremental por mtime+size (auto antes de cada búsqueda). Flags: `-l N`, `--update`, `--reindex`, `--stats`; `BUFFY_REPO` para otros sistemas.
+- Índice 41 archivos / 7.347 líneas (~1.1MB). Búsqueda ~1s en el Mi 10.
+- `sqlite` (3.53.4) instalado vía `pkg` en Termux.
+
+**Lecciones registradas:** FTS5 no tiene `offsets()`/`matchinfo()` (son de FTS3/4); las aux functions (`snippet`/`bm25`) no funcionan con parámetros enlazados — query literal con tokens citados.
+
+**Pendiente (brecha 2):** memoria curada estilo Hermes — `MEMORY.md` (~2.200 chars) + `USER.md` (~1.375) con límites duros, snapshot congelado al inicio de sesión y reglas de escritura en AGENTS.md.
+
 
 **Pedido del usuario:** el botón "Agregar pack a compra" en data_car no mostraba nada (solo un toast de 2,5s, sin persistencia) — quería que los packs agregados quedaran visibles y conectados con el botón "Compartir con IA" para precios CLP. Además: buffy-context solo referenciaba Freebuff y quería que apunte también a opencode.
 

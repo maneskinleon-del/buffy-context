@@ -1,7 +1,22 @@
 # 🔄 CONTINUE — Handoff entre sesiones
 
 > ⚡ **PRÓXIMA SESIÓN: LEE ESTO PRIMERO**
-> Generado: 2026-08-08 (opencode — data_car lista de compra + buffy-context apunta a opencode)
+> Generado: 2026-08-09 (opencode — buffy-search.sh FTS5 + pendientes)
+
+---
+
+## Resumen de la sesión (2026-08-09 — opencode)
+
+**Tema:** Fortnite (descartado en Linux/este teléfono — el usuario lo retomará en su PC Windows/AMD 3400G con dual boot) + brechas de buffy-context vs Hermes Agent → **implementada la brecha 1: búsqueda FTS5 de sesiones**.
+
+1. **`scripts/buffy-search.sh` (NUEVO)**: índice SQLite **FTS5** de buffy-context (raíz + ai-context + Knowledge, *.md y *.yaml, 41 archivos / 7.347 líneas en `~/.cache/buffy-search/search.db`). Inspirado en `session_search` de Hermes (Nous Research).
+   - **Una fila por línea** (`path`/`lineno` UNINDEXED + `line`): los resultados salen `archivo:línea` estilo grep, con resaltado «término» vía `snippet()` y orden por `bm25`.
+   - ⚠️ Lección: **FTS5 NO tiene `offsets()` ni `matchinfo()`** (son de FTS3/4 — "unable to use function offsets in the requested context"). Tampoco `snippet()/bm25()` con parámetros enlazados (`.param`) — query literal con tokens entre comillas.
+   - Tokenizer `unicode61 remove_diacritics 2` → "sesion" encuentra "sesión".
+   - Indexado incremental por mtime+size (auto antes de buscar). Flags: `-l N`, `--update`, `--reindex`, `--stats`. `BUFFY_REPO=` para el PC.
+   - Uso en Termux: `bash ~/buffy-context/scripts/buffy-search.sh "consulta"` (shebang `#!/usr/bin/env bash` no corre en Termux — falta `/usr/bin/env`).
+2. **Entorno**: instalado `pkg install sqlite` (3.53.4) en Termux.
+3. **Pendientes para otra sesión**: (a) **brecha 2 — memoria curada estilo Hermes** (`MEMORY.md` ~2.200 chars + `USER.md` ~1.375 chars, límites duros, snapshot congelado al inicio de sesión, tool add/replace/remove — CodeGraph NO aplica, es para código); (b) guía del mapa Fortnite 4v4 Clash Squad si el usuario lo retoma.
 
 ---
 
