@@ -14,6 +14,15 @@ system-id: mangonz-desktop
 # CHANGELOG.md — Historial de cambios del sistema
 
 
+### 2026-08-09 — Corrección: Mantis vs Octopus (keymappers) (opencode)
+
+**Pedido del usuario:** confirmar conjetura "Mantis ya nadie lo usa, es baneable" → **a medias**: Mantis sigue activo (v3.4.8+, 54K reviews) pero v3.x introdujo suscripción Pro (~$9.99) e inestabilidad reportada; el **baneable por clonación es Octopus** (sandbox), no Mantis (NMC sin clonar, riesgo bajo comparable a GG Mouse Pro 2). El usuario confundió Octopus con Mantis.
+
+**Cambios aplicados:**
+- **`~/.agents/skills/scrcpy-freefire/SKILL.md`**: paquete corregido a `app.mantispro.gamepad`; activación actualizada (Android 11+: on-device Wireless Debugging); nota 2026 sobre suscripción v3.x + inestabilidad; aclarado el matiz Octopus (clonación) vs Mantis (NMC).
+- **`Knowledge/Android/Keymappers.md`**: mismas correcciones (paquete, activación, nota de confusión Octopus/Mantis).
+- **Implicación práctica**: GG Mouse Pro 2 (setup actual) tiene el mismo riesgo de ban que Mantis — cambiar no reduce riesgo; la única vía 100% segura según Garena son los simuladores de DPI (permitidos), no los mappers de overlay.
+
 ### 2026-08-09 — Adquisición de capacidades nuevas + fixes de integración (opencode)
 
 **Pedido del usuario:** "hicimos cambios importantes en el repo de buffy-context, ¿puedes adquirir esas nuevas habilidades?" → pull con 2 features nuevas.
