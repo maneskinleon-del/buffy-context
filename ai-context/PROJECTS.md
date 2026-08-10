@@ -21,10 +21,11 @@ system-id: mangonz-desktop
 - **Objetivo:** clasificar automáticamente la bandeja de entrada de Gmail en etiquetas (Compras, Telecom, Bancos, Gobierno, Trabajo, Facturas, Envíos, etc.) con etiquetas específicas por empresa (BancoEstado, Tenpo, Fonasa, Mercado Libre, AliExpress, WOM...)
 - **Plataforma:** Google Apps Script (V8 runtime, timeZone America/Santiago)
 - **Script ID:** `1yqqZXC4kysIlMMbY57Bi6Ft5Jf5mtO3fUX9EnT41BJtCOnMXmQ01I_sK`
-- **Ruta local:** `~/proyectos/gmail-scripts/` (git local, commit `a207071`, sincronizado vía `clasp pull` el 2026-08-10)
+- **Ruta local:** `~/proyectos/gmail-scripts/` (git local, commit `a207071`, sincronizado vía `clasp pull` el 2026-08-10) · en el teléfono: `~/gscript-audit/organiza_gmail_V3/` (con mejoras locales de rate limiting no pusheadas a la web)
 - **Componentes:** `main.js` (entrada con rate limiting + triggers), `gmail.js` (procesamiento por lotes con reanudación), `scoring.js` (scoring de importancia), `classifiers.js`/`companies.js` (reglas de clasificación), `labels.js`, `reports.js` (reporte diario), `config.js`, `constants.js`, `cleanup_tmp.js` (limpieza one-shot de etiquetas), `test.js`
 - **Detalles clave:** fix de paginación con snapshot único `search()` en vez de `getInboxThreads(pos)`; reanudación tras pausa/cuota (`scheduleResume`); restaura cadencia de triggers al completar
 - **Estado:** sincronizado con la web (`script.google.com`) — la versión de la web tenía mejoras que se bajaron al repo
+- **⏳ Pendiente (2026-08-10, usuario):** evaluar si el script puede **borrar etiquetas** que crea (v2 obsoleta dejó etiquetas huérfanas; desde móvil no se borran en script.google.com). Auditoría vía Google Studio API iniciada.
 
 ## Drive Organizer Pro (ordenar_drive_pro)
 - **Objetivo:** organizar Google Drive por reglas de clasificación (MIME + nombre + prioridad), modo MAESTRO (todo el Drive BFS) o ESPECÍFICO (carpeta por ID), con modo PRUEBA (simula) / REAL (mueve)

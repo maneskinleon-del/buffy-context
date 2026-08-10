@@ -1,6 +1,24 @@
-# 🧠 SESION — Buffy opencode (2026-08-10 · P1 data_car: precios IA + total CLP)
+# 🧠 SESION — Buffy opencode (2026-08-10 · auditoría Apps Scripts vía Google Studio API + estado gscript-audit)
 
-> Contexto de lo implementado durante esta sesión. Corrida en **opencode**.
+> Contexto de lo implementado durante esta sesión. Corrida en **opencode** (teléfono). Sesión cortada al cierre — este registro se completó en la sesión siguiente.
+
+---
+
+## 🔍 Auditoría de Apps Scripts con Google Studio API — estado y pendientes
+
+### Lo que se hizo
+1. **Auditoría vía API de Google Studio** (API key de Google AI Studio SK-ws-...) de los proyectos de Apps Script: `organiza_gmail_V3`, `copy_organiza_gmail`, `ordenar_drive_pro`, `sin_titulo_1` — clones con `clasp` en **`~/gscript-audit/`** (teléfono; el PC los tiene en `~/proyectos/gmail-scripts` y `~/proyectos/gmail-scripts-otro`).
+2. **`organiza_gmail_V3` (Gmail Organizer)**: versión local con mejoras de rate limiting/reanudación — `main.js` (entrada con rate limiting, `scheduleResume`, `scheduleDelayedRetry`, `setupTriggersIfMissing`, `resetDailyQuota`, triggers 10 min + reset diario 00:05 + resumen 22:00), `gmail.js` (snapshot único `search()`, reintentos con `withRetry`, control de cuota/runtime). Diferente de `copy_organiza_gmail` (= versión original bajada de la web).
+3. **Discusión de etiquetas:** el usuario preguntó si el script, **así como crea etiquetas automáticamente, puede borrarlas** (v2 quedó obsoleta; fue reemplazada por v3 y dejó etiquetas huérfanas; desde el móvil no se pueden borrar en `script.google.com`). **Quedó como pregunta abierta** — no se implementó borrado automático de etiquetas (ni en Gmail Organizer ni en Drive Organizer).
+4. El usuario haría la revisión visual desde el PC.
+
+### ⚠️ Sesión cortada (18:51-19:02)
+- **"de esto no esta enterada la version de pc, lo dejamos al dia..."** → pendiente: registrar esta sesión en buffy-context + push para que el PC quede al día (ejecutado en la sesión siguiente: commit + push).
+- **"igual hice cambios en el pc, ve si dejo algo en nuestro repo"** → verificado: **origin/main = local = `4850e91`**, el PC NO dejó nada nuevo pusheado.
+
+### ⏳ Pendientes
+- Decidir si implementar **borrado de etiquetas huérfanas** en `organiza_gmail_V3` (función one-shot tipo `cleanup_tmp.js` o `deleteEmptyLabels`).
+- Revisar `sin_titulo_1` (proyecto sin nombre, quedó identificado como tal).
 
 ---
 
