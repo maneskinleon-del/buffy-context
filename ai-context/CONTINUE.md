@@ -1,9 +1,24 @@
 # 🔄 CONTINUE — Handoff entre sesiones
 
 > ⚡ **PRÓXIMA SESIÓN: LEE ESTO PRIMERO**
-> Generado: 2026-08-10 (opencode — P0 benchmark + P1 data_car completados, commit + push hechos, sesión cerrada con "cerrar día")
+> Generado: 2026-08-10 (opencode — sesión cortada: auditoría Apps Scripts con Google Studio API; registro completado y pusheado en sesión siguiente)
 >
 > 🗝️ **Palabra de cierre acordada:** cuando el usuario diga **"cerrar día"**, ejecutar el protocolo de fin de sesión: actualizar CONTINUE.md/SESION.md/CHANGELOG.md (máx 5 entradas en SESION.md, archivar el resto), regenerar SNAPSHOT, validar con `buffy-doctor.sh --quick`, commit + push de buffy-context (y de los repos tocados en la sesión).
+
+---
+
+## Resumen de la sesión cortada (2026-08-10 noche — teléfono, Apps Scripts)
+
+**Tema:** auditoría de los proyectos de Google Apps Script vía API de Google Studio (los clones en `~/gscript-audit/` del teléfono) y discusión sobre **borrar etiquetas** que los scripts crean (v2 obsoleta dejó etiquetas huérfanas; desde el móvil no se pueden borrar).
+
+1. **Estado**: `organiza_gmail_V3` tiene mejoras locales (rate limiting, reanudación, triggers) **no pusheadas a la web** (los PCs de Google son la source of truth). `copy_organiza_gmail` = versión original sin mejoras.
+2. **Pregunta del usuario sin resolver:** ¿el script puede borrar las etiquetas que crea (limpieza one-shot o `deleteEmptyLabels`)? Quedó PENDIENTE decidir/implementar.
+3. **Sesión cortada** antes de registrar. Verificado: el PC **no dejó nada nuevo** en el repo (local = origin/main = `4850e91`). Este registro se completó y pusheó en la sesión siguiente.
+
+### ⏳ Pendientes para otra sesión
+- Decidir si implementar borrado de etiquetas huérfanas en `organiza_gmail_V3` (v2 → v3, etiquetas que ya no se ocupan).
+- Revisar `~/gscript-audit/sin_titulo_1/` (proyecto con script `Código.js`, sin nombre).
+- Push de las mejoras locales de `organiza_gmail_V3` a la web vía `clasp push` (solo con pedido explícito del usuario).
 
 ---
 
