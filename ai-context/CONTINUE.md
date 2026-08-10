@@ -1,23 +1,28 @@
 # 🔄 CONTINUE — Handoff entre sesiones
 
 > ⚡ **PRÓXIMA SESIÓN: LEE ESTO PRIMERO**
-> Generado: 2026-08-10 (opencode — P0 benchmark completado, congelamiento levantado)
+> Generado: 2026-08-10 (opencode — P0 benchmark + P1 data_car completados, congelamiento levantado)
 
 ---
 
-## Resumen de la sesión (2026-08-10 — opencode, pendientes P0)
+## Resumen de la sesión (2026-08-10 — opencode, pendientes P0 y P1)
 
-**Tema:** atacar los pendientes con modo autónomo → **P0 completado: `bench-context-selection.sh`** (el benchmark que desbloqueaba el congelamiento).
+**Tema:** atacar los pendientes con modo autónomo → **P0 completado: `bench-context-selection.sh`** (el benchmark que desbloqueaba el congelamiento) y **P1 completado: data_car precios IA + total CLP**.
 
+**Parte 1 — P0 (buffy-context):**
 1. **`scripts/tests/bench-context-selection.sh` (NUEVO)** — benchmark del pipeline completo `USER REQUEST → router → categoría → search → ranking`. Sandbox con repo simulado (Knowledge por dominio: Android/Linux/FreeFire/React + manifests de skills), tarea real "el teléfono no aparece en scrcpy". Mide: `domain_precision`, `domain_recall`, `spurious_categories`, `search_recall`, `search_leaked`, `context_chars/tokens`, `window_utilization`, `pipeline_healthy`.
-2. **Hallazgo (tesis confirmada):** en modo adversarial FTS5 puro se contamina (recall 0/2, leaked 10/10) pero el **router resuelve** — carga el archivo del dominio correcto → `pipeline_healthy=true`. El benchmark demuestra que la selección por dominio del router es la capa que FTS5 aislado no tiene (esto es lo que el CONTINUE anterior decía "lo resuelve el router, no ejercitado aquí" — ahora ejercitado y medido).
+2. **Hallazgo (tesis confirmada):** en modo adversarial FTS5 puro se contamina (recall 0/2, leaked 10/10) pero el **router resuelve** — carga el archivo del dominio correcto → `pipeline_healthy=true`. El benchmark demuestra que la selección por dominio del router es la capa que FTS5 aislado no tiene.
 3. **Bug propio encontrado y corregido:** el contador de `search_leaked` usaba `^` anclado al inicio pero los hits del search empiezan con el path (`Knowledge/...:N: Nota Linux...`) → el leaked medía 0 cuando FTS5 estaba 100% contaminado. Corregido a grep sin anclar.
 4. **`scripts/tests/test-context-selection.sh` (NUEVO)** — integra el benchmark a la suite (easy = gate, adversarial = medición). `run-tests.sh` actualizado.
 5. **README** — sección del benchmark actualizada + conteos: **209 full (204 functional + 5 meta) / 193 --quick (188 functional)**.
-6. **Congelamiento LEVANTADO** — el benchmark que lo justificaba existe y produjo la evidencia esperada. Próximo cambio puede justificarse contra este baseline.
+6. **Congelamiento LEVANTADO** — el benchmark que lo justificaba existe y produjo la evidencia esperada.
+
+**Parte 2 — P1 (data_car, `~/data_car` → commit pendiente):**
+7. **`src/components/MaintenancePacks.tsx` (+118 líneas)** — sección "💸 Precios desde la IA" en el panel Mi compra: textarea para pegar la respuesta JSON de la IA + botón "Asignar precios" → `parseAIResponse` → `findPrice()` (match tolerante por nombre normalizado: minúsculas, sin acentos, sin refs entre paréntesis, `includes` bidireccional) → `price` unitario por item → **total CLP con `formatCLP`** (suma precio × cantidad). Precios persistidos en la shopping list (`mg350_shopping_list` → sobreviven recarga). Contador `N/M con precio`, toast de error si el JSON no parsea, toast de total.
+8. **Verificación completa con Playwright** en `vite preview`: agregar pack → pegar JSON realista (`Aceite de Motor` 18.490 × 4,5 + `Filtro de Aceite` 6.990 = **$90.195**) → case límite con nombre parcial ("Aceite de Motor 5W/40 semisintético" → $75.000) → JSON inválido no rompe → recarga mantiene total. Typecheck + build OK (hash `index-D4lIbUUa.js`).
 
 ### ⏳ Pendientes para otra sesión
-- **P1 (siguiente): data_car** — asignar precios de la respuesta de la IA a la lista y calcular total CLP (campo en el panel Mi compra + `parseAIResponse` + `formatCLP`).
+- **Commit + push de data_car** (cambios sin commitear: `src/components/MaintenancePacks.tsx`).
 - P1: retorno del aprendizaje (SESION-archive meses después → ¿conocimiento activo?).
 - P2: concurrencia 3+ escritores sobre MEMORY.md.
 - Opcional: `Knowledge/Tools/Buffy-Memory.md` (ficha de uso del CLI).

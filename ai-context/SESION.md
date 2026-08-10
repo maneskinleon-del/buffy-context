@@ -1,3 +1,40 @@
+# 🧠 SESION — Buffy opencode (2026-08-10 · P1 data_car: precios IA + total CLP)
+
+> Contexto de lo implementado durante esta sesión. Corrida en **opencode**.
+
+---
+
+## 🛒 data_car — P1 completado: precios de la IA asignados a la lista + total CLP
+
+### Pedido del usuario
+Pendiente P1 del CONTINUE (heredado de la sesión 2026-08-08): "elegir pack → agregar a compra → compartir con IA → pegar respuesta → precios asignados + total". `parseAIResponse` y `formatCLP` ya existían en `src/lib/aiShare.ts`; faltaba la UI y la lógica en el panel de compra.
+
+### Lo implementado (`src/components/MaintenancePacks.tsx`, +118 líneas)
+1. **Sección "💸 Precios desde la IA"** en el panel Mi compra: textarea para pegar la respuesta JSON de la IA + botón "Asignar precios" + contador `N/M con precio` + fila Total (CLP).
+2. **`handleAssignPrices`**: `parseAIResponse(text)` → si no hay `repuestos` → toast de error; si parsea → por cada item de la shopping list busca su precio con `findPrice()` y lo guarda como `price` (unitario) en el item → toast con total o con faltantes.
+3. **`findPrice` + `normalizeName`**: match tolerante — minúsculas, sin acentos (NFD), sin contenido entre paréntesis (refs tipo "UJ-1797"), solo alfanumérico, `includes` bidireccional ("Bujías NGK" ↔ "Bujías"). La IA puede variar el nombre (agregar "5W/40", "semisintético") y el match sigue funcionando.
+4. **`computeTotal`**: suma `precio × cantidad` de cada item con precio → muestra con `formatCLP`. Los precios viven en el item (`price?: number`) → se persisten en `mg350_shopping_list` → sobreviven recarga.
+5. Precio unitario visible por item en la lista (`— $18.490` en verde).
+
+### Verificación (Playwright sobre `vite preview`, hash build `index-D4lIbUUa.js`)
+| Caso | Resultado |
+|---|---|
+| JSON realista (Aceite 18.490 ×4,5 + Filtro 6.990) | Toast "total **$90.195**" ✓ (83.205 + 6.990) |
+| Items con precio en lista + "2/2 con precio" + fila Total | ✓ |
+| Caso límite: nombres parciales ("Aceite de Motor 5W/40 semisintético", "Filtro de aceite UJ-1797") | Match ✓ → total **$75.000** |
+| JSON inválido ("esto no es json", `{"repuestos":[]}`) | Toast de error, 0 errores en consola, no rompe |
+| Recarga (reload) | Total y precios persisten (localStorage) |
+
+Typecheck (`npx tsc --noEmit`) y build (`npm run build`) OK.
+
+### Lección
+- La transformación **Python incremental** vuelve a ser el método que funciona sobre `MaintenancePacks.tsx` (confirmado por tercera vez; las ediciones con `edit` sobre este archivo no persisten). Ver sesión 2026-08-08.
+
+### ⏳ Pendiente
+- **Commit + push del cambio en data_car** (aún sin commitear).
+
+---
+
 # 🧠 SESION — Buffy opencode (2026-08-10 · P0 benchmark context-selection + congelamiento levantado)
 
 > Contexto de lo implementado durante esta sesión. Corrida en **opencode**.
