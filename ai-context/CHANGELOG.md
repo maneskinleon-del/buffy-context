@@ -14,6 +14,20 @@ system-id: mangonz-desktop
 # CHANGELOG.md — Historial de cambios del sistema
 
 
+### 2026-08-10 — Scripts Google Apps Script (Gmail Organizer V3 + Drive Organizer Pro) documentados + opencode 1.18.16 (opencode)
+
+**Pedido del usuario:** "estábamos viendo los scripts de gmail y drive, creo que no guardaste esos últimos datos" → la sesión anterior (desde el teléfono) no había quedado registrada en buffy-context. Reconstruida desde `~/.local/state/opencode/prompt-history.jsonl` y disco.
+
+**Hallazgos:**
+- **Gmail Organizer V3** (`~/proyectos/gmail-scripts/`, scriptId `1yqqZXC4k...`): clasifica bandeja en etiquetas por categoría + empresa (BancoEstado, Tenpo, Fonasa, Mercado Libre, AliExpress, WOM...), rate limiting + reintentos + reanudación, fix de paginación (snapshot único con `search()` en vez de `getInboxThreads(pos)`), `cleanup_tmp.js` one-shot (borra etiquetas de usuario una sola vez vía `cleanupEtiquetasDone` en ScriptProperties).
+- **Drive Organizer Pro v5.0** (`~/proyectos/gmail-scripts-otro/`, scriptId `1TW8pIdyQ...`): modos MAESTRO/ESPECÍFICO × PRUEBA/REAL, motor de reglas con prioridad (MIME > nombre), carpetas administradas (Scripts, Documentación, Android, Configuraciones, Multimedia, Backups, Web, Recursos, Sin clasificar, Comprimidos, Chats) y excluidas (Google Fotos, Trash), rate limiting + triggers 10 min + reanudación por cola.
+- Ambos sincronizados con la web vía `clasp pull` (source of truth = nube de Google; repos locales sin remote = backup). Commits `a207071` y `610a040`.
+- **opencode actualizado a 1.18.16** (la actualización que "no se realizó" ayer se completó hoy 15:19; verificado contra última de npm).
+
+**Lección de proceso:** una sesión que toca proyectos nuevos debe registrarse en SESION.md/PROJECTS.md aunque no haya "cierre programado" — el historial de prompts de opencode permite reconstruir, pero es frágil.
+
+---
+
 ### 2026-08-09 — Lección: retroalimentación activa antes de instalar herramientas + evaluación Lyxel/Mantis (opencode)
 
 **Pedido del usuario:** "Quiero usar Mantis para scrcpy" → tras instalarlo y activarlo, resultó ser mapper de **gamepad**, no de teclado — no sirve para jugar con teclado+mouse desde PC. Lección de proceso: **preguntar el caso de uso exacto y verificar que la herramienta lo cubre ANTES de instalar/probar** (¿teclado/mouse o gamepad? ¿Linux? ¿login Google?).
