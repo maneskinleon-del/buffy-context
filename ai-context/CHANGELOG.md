@@ -14,6 +14,21 @@ system-id: mangonz-desktop
 # CHANGELOG.md — Historial de cambios del sistema
 
 
+### 2026-08-10 — data_car P1: precios de la IA en la lista de compra + total CLP (opencode)
+
+**Pedido del usuario:** pendiente P1 heredado — "elegir pack → agregar a compra → compartir con IA → pegar respuesta → precios asignados + total". `parseAIResponse` + `formatCLP` ya existían en `src/lib/aiShare.ts`.
+
+**Lo hecho (`src/components/MaintenancePacks.tsx`, +118 líneas):**
+- Sección "💸 Precios desde la IA" en el panel Mi compra: textarea para pegar el JSON de la respuesta + botón "Asignar precios" + contador `N/M con precio` + fila Total (CLP).
+- `handleAssignPrices` (parsea con `parseAIResponse`, asigna `price` unitario por item), `findPrice` + `normalizeName` (match tolerante: minúsculas/sin acentos/sin refs en paréntesis/includes bidireccional), `computeTotal` (suma `precio × cantidad` → `formatCLP`).
+- Precios persistidos en `mg350_shopping_list` → sobreviven recarga. Precio unitario visible por item.
+
+**Verificado:** typecheck + build OK (hash `index-D4lIbUUa.js`); flujo Playwright completo — JSON realista → total $90.195 ✓, caso límite de nombres parciales → $75.000 ✓, JSON inválido → no rompe (0 errores consola), recarga → total persiste ✓.
+
+**Pendiente:** commit + push de data_car.
+
+---
+
 ### 2026-08-10 — Scripts Google Apps Script (Gmail Organizer V3 + Drive Organizer Pro) documentados + opencode 1.18.16 (opencode)
 
 **Pedido del usuario:** "estábamos viendo los scripts de gmail y drive, creo que no guardaste esos últimos datos" → la sesión anterior (desde el teléfono) no había quedado registrada en buffy-context. Reconstruida desde `~/.local/state/opencode/prompt-history.jsonl` y disco.
