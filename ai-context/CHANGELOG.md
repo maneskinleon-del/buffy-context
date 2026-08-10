@@ -14,6 +14,17 @@ system-id: mangonz-desktop
 # CHANGELOG.md — Historial de cambios del sistema
 
 
+### 2026-08-10 — Cierre de sesión: commits + push al día + acuerdo "cerrar día" (opencode)
+
+**Cierre del día (protocolo fin de sesión):**
+- **data_car commit `aea4e15` + push** — precios de la IA en Mi compra (P1 completado).
+- **buffy-context commit `74fa060` + push** — registro de sesión P1 data_car.
+- **SESION.md podada a 3 entradas** (las de 2026-08-09 y anteriores → `SESION-archive.md`).
+- **SNAPSHOT regenerado** + `buffy-doctor.sh --quick`: **CONSISTENTE** (64 OK, 1 warning preexistente form-filler).
+- **Acuerdo registrado en CONTINUE.md**: la palabra **"cerrar día"** dispara el protocolo de cierre de sesión (actualizar contexto, podar, SNAPSHOT, doctor, commit + push).
+
+---
+
 ### 2026-08-10 — data_car P1: precios de la IA en la lista de compra + total CLP (opencode)
 
 **Pedido del usuario:** pendiente P1 heredado — "elegir pack → agregar a compra → compartir con IA → pegar respuesta → precios asignados + total". `parseAIResponse` + `formatCLP` ya existían en `src/lib/aiShare.ts`.
