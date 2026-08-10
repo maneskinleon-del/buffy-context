@@ -1,13 +1,15 @@
 # 🔄 CONTINUE — Handoff entre sesiones
 
 > ⚡ **PRÓXIMA SESIÓN: LEE ESTO PRIMERO**
-> Generado: 2026-08-10 (opencode — P0 benchmark + P1 data_car completados, congelamiento levantado)
+> Generado: 2026-08-10 (opencode — P0 benchmark + P1 data_car completados, commit + push hechos, sesión cerrada con "cerrar día")
+>
+> 🗝️ **Palabra de cierre acordada:** cuando el usuario diga **"cerrar día"**, ejecutar el protocolo de fin de sesión: actualizar CONTINUE.md/SESION.md/CHANGELOG.md (máx 5 entradas en SESION.md, archivar el resto), regenerar SNAPSHOT, validar con `buffy-doctor.sh --quick`, commit + push de buffy-context (y de los repos tocados en la sesión).
 
 ---
 
 ## Resumen de la sesión (2026-08-10 — opencode, pendientes P0 y P1)
 
-**Tema:** atacar los pendientes con modo autónomo → **P0 completado: `bench-context-selection.sh`** (el benchmark que desbloqueaba el congelamiento) y **P1 completado: data_car precios IA + total CLP**.
+**Tema:** atacar los pendientes con modo autónomo → **P0 completado: `bench-context-selection.sh`** (el benchmark que desbloqueaba el congelamiento) y **P1 completado: data_car precios IA + total CLP**. Ambos cambios commiteados y pusheados al cierre de la sesión.
 
 **Parte 1 — P0 (buffy-context):**
 1. **`scripts/tests/bench-context-selection.sh` (NUEVO)** — benchmark del pipeline completo `USER REQUEST → router → categoría → search → ranking`. Sandbox con repo simulado (Knowledge por dominio: Android/Linux/FreeFire/React + manifests de skills), tarea real "el teléfono no aparece en scrcpy". Mide: `domain_precision`, `domain_recall`, `spurious_categories`, `search_recall`, `search_leaked`, `context_chars/tokens`, `window_utilization`, `pipeline_healthy`.
@@ -17,12 +19,12 @@
 5. **README** — sección del benchmark actualizada + conteos: **209 full (204 functional + 5 meta) / 193 --quick (188 functional)**.
 6. **Congelamiento LEVANTADO** — el benchmark que lo justificaba existe y produjo la evidencia esperada.
 
-**Parte 2 — P1 (data_car, `~/data_car` → commit pendiente):**
+**Parte 2 — P1 (data_car, `~/data_car`):**
 7. **`src/components/MaintenancePacks.tsx` (+118 líneas)** — sección "💸 Precios desde la IA" en el panel Mi compra: textarea para pegar la respuesta JSON de la IA + botón "Asignar precios" → `parseAIResponse` → `findPrice()` (match tolerante por nombre normalizado: minúsculas, sin acentos, sin refs entre paréntesis, `includes` bidireccional) → `price` unitario por item → **total CLP con `formatCLP`** (suma precio × cantidad). Precios persistidos en la shopping list (`mg350_shopping_list` → sobreviven recarga). Contador `N/M con precio`, toast de error si el JSON no parsea, toast de total.
 8. **Verificación completa con Playwright** en `vite preview`: agregar pack → pegar JSON realista (`Aceite de Motor` 18.490 × 4,5 + `Filtro de Aceite` 6.990 = **$90.195**) → case límite con nombre parcial ("Aceite de Motor 5W/40 semisintético" → $75.000) → JSON inválido no rompe → recarga mantiene total. Typecheck + build OK (hash `index-D4lIbUUa.js`).
+9. **Commit `aea4e15` + push a main** (data_car).
 
 ### ⏳ Pendientes para otra sesión
-- **Commit + push de data_car** (cambios sin commitear: `src/components/MaintenancePacks.tsx`).
 - P1: retorno del aprendizaje (SESION-archive meses después → ¿conocimiento activo?).
 - P2: concurrencia 3+ escritores sobre MEMORY.md.
 - Opcional: `Knowledge/Tools/Buffy-Memory.md` (ficha de uso del CLI).
