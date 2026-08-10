@@ -1,6 +1,31 @@
-# 🧠 SESION — Buffy opencode (2026-08-10 · auditoría Apps Scripts vía Google Studio API + estado gscript-audit)
+# 🧠 SESION — Buffy opencode (2026-08-10 · borrado de etiquetas implementado en organiza_gmail_V3)
 
-> Contexto de lo implementado durante esta sesión. Corrida en **opencode** (teléfono). Sesión cortada al cierre — este registro se completó en la sesión siguiente.
+> Contexto de lo implementado durante esta sesión. Corrida en **opencode** (teléfono).
+
+---
+
+## 🗑️ Borrado de etiquetas — implementado en Gmail Organizer V3
+
+### Pedido del usuario
+Retomando la sesión cortada: "borra las etiquetas" → la pregunta abierta era si el script podía **borrar las etiquetas que crea** (v2 quedó obsoleta → etiquetas huérfanas; desde el móvil no se borraban en script.google.com).
+
+### Lo implementado (`~/gscript-audit/organiza_gmail_V3/`, pusheado a la web con clasp)
+1. **`cleanupLabels(options)` en `labels.js`** — limpieza one-shot:
+   - Borra etiquetas **gestionadas** (`CONFIG.LABELS`) cuando están vacías.
+   - Borra etiquetas **huérfanas vacías** (restos de v2/limpiezas previas).
+   - **NUNCA** borra etiquetas del sistema (INBOX, SPAM, TRASH, DRAFT, SENT, IMPORTANT, STARRED, UNREAD, CHAT, Scheduled) ni **manuales con hilos**.
+   - `dryRun: true` solo informa · `force: true` extiende a gestionadas con hilos (los correos NO se borran, solo la etiqueta).
+   - Protección de cuota: `Utilities.sleep(500)` entre borrados.
+2. **`applyCleanupOnce()` en `labels.js`** — guard one-shot integrado a `main()`: corre **una sola vez** (flag `cleanupLabelsDone` en ScriptProperties) al inicio de la primera corrida, antes de `processInbox()`. Así la limpieza la ejecuta el **trigger de 10 min existente** sin intervención del usuario.
+3. **`main.js`** — llamada a `applyCleanupOnce()` envuelta en try/catch (si falla la limpieza, el procesamiento continúa).
+
+### Ejecución
+- La ejecución remota vía Apps Script API **no fue posible**: el token OAuth de clasp no tiene el scope de ejecución (`script.external_request`) → `404 NOT_FOUND` (síntoma típico). Se intentó con deployment creado (`@4`) y sin él.
+- La limpieza quedó **auto-programada**: corre en la próxima corrida del trigger `main` (10 min) o `manualRun()`. Alternativa manual: abrir el proyecto en `script.google.com` → función `cleanupLabels` → Run (o `{dryRun:true}` primero).
+
+### Lecciones
+- **El token de clasp NO sirve para ejecutar funciones** — solo para push/pull de código. Para invocar `scripts.run` se necesitaría OAuth re-hecho con scope `script.external_request` + los scopes de Gmail, lo cual requiere navegador.
+- Solución sin fricción: acoplar la acción al ciclo de vida del script (arquitectura trigger + guard one-shot) en lugar de pelear con OAuth desde Termux.
 
 ---
 
