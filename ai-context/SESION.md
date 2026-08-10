@@ -1,3 +1,28 @@
+# 🧠 SESION — Buffy opencode (2026-08-10 · scripts Gmail/Drive + update opencode)
+
+> Contexto de lo implementado durante esta sesión. Corrida en **opencode**.
+
+---
+
+## 📧🗂️ Scripts de Google Apps Script: Gmail Organizer V3 + Drive Organizer Pro
+
+### Pedido del usuario
+"Estaba viendo unos scripts de Google, para ordenar Gmail y Drive que tengo, pero no sé si la sesión del teléfono te dejó la info en el repo" → la sesión anterior (desde el teléfono) NO había quedado registrada en buffy-context; se reconstruyó desde el historial de prompts de opencode (`~/.local/state/opencode/prompt-history.jsonl`).
+
+### Lo hecho
+1. **`~/proyectos/gmail-scripts/`** = Gmail Organizer v3 (`organiza_gmail_V3`, scriptId `1yqqZXC4kysIlMMbY57Bi6Ft5Jf5mtO3fUX9EnT41BJtCOnMXmQ01I_sK`): clasifica la bandeja en etiquetas (Compras, Telecom, Bancos, Gobierno, Trabajo, Facturas, Envíos, Spam, ⭐Importante + etiquetas por empresa: BancoEstado, Tenpo, Fonasa, Mercado Libre, AliExpress, WOM...). Rate limiting + reintentos + reanudación tras pausa/cuota; **fix de paginación**: snapshot único con `search()` en vez de `getInboxThreads(pos)`; `cleanup_tmp.js` = limpieza one-shot de etiquetas de usuario (corre una sola vez vía `cleanupEtiquetasDone` en ScriptProperties).
+2. **`~/proyectos/gmail-scripts-otro/`** = Drive Organizer Pro v5.0 (`ordenar_drive_pro`, scriptId `1TW8pIdyQAUeAI7ZznVY4KCZgZtGirq_leLUX8vXWQa1e0i6prPIpzBOu`): modos MAESTRO (todo el Drive, BFS limitado) / ESPECÍFICO (carpeta por ID) × PRUEBA (simula) / REAL (mueve). Motor de reglas con prioridad (MIME > nombre), carpetas administradas (Scripts, Documentación, Android, Configuraciones, Multimedia, Backups, Web, Recursos, Sin clasificar, Comprimidos, Chats) y excluidas (Google Fotos, Trash...). Rate limiting estilo Gmail Organizer + triggers cada 10 min + reanudación por cola de carpetas.
+3. **Sincronizados con la web** (`script.google.com`) vía `clasp pull` — "los de la página ya tienen mejoras" (el usuario los había mejorado desde la web). Ambos quedaron con **commit inicial** local:
+   - `gmail-scripts`: `a207071` — "chore: estado sincronizado con Apps Script (organiza_gmail_V3) via clasp pull" (13 archivos, 1747 líneas)
+   - `gmail-scripts-otro`: `610a040` — "chore: estado sincronizado con Apps Script (ordenar_drive_pro) via clasp pull" (11 archivos, 1738 líneas)
+4. **opencode actualizado** a **1.18.16** (hoy 15:19, `~/.npm-global/lib/node_modules/opencode-ai`) — la actualización que "no se realizó" en la sesión anterior finalmente se completó. Verificado: `opencode --version` = 1.18.16 = última de npm.
+
+### Lecciones
+- **La sesión desde el teléfono NO quedó en buffy-context** → los datos solo existían en disco (los repos git) y en el historial de prompts de opencode. Lección: tras una sesión que toca proyectos nuevos, registrar en SESION.md/PROJECTS.md aunque no se haya "programado" el cierre. Reconstruible vía `~/.local/state/opencode/prompt-history.jsonl`.
+- Ambos repos son **git locales sin remote** — no están en GitHub. Los scripts viven en la nube de Google (source of truth) y el repo local es el backup.
+
+---
+
 # 🧠 SESION — Buffy opencode (2026-08-09 · cierre noche)
 
 > Contexto de lo implementado durante esta sesión. Corrida en **opencode**.
@@ -156,119 +181,3 @@ El repo solo referenciaba Freebuff; quiere que también apunte a opencode ("no s
 
 ## 🧹 Tareas de protocolo (esta sesión)
 - Actualizados `CONTINUE.md`, `SESION.md` y `CHANGELOG.md` con esta entrada (protocolo fin de sesión).
-
-# 🧠 SESION — Buffy Freebuff (2026-08-07)
-
-> Contexto de todo lo implementado durante esta sesión.
-
----
-
-## 🎮 scrcpy-freefire.sh — sin auto-open de Free Fire + purga de 16 apps (ZTE)
-
-### Pedido del usuario
-Que el script de Free Fire **no abra el juego automáticamente** — solo debe abrir GG Mouse, y el usuario abre Free Fire desde el teléfono después. Además: ver las apps instaladas y desinstalar una lista.
-
-### Cambio al script (`~/scripts/scrcpy-freefire.sh`)
-- **Eliminado** el `am start -n com.dts.freefireth/com.dts.freefireth.FFMainActivity` que corría 0.8s después de GG Mouse. Ahora el flujo es: permisos GG Mouse → `am start` de GG Mouse → resolución alargada → scrcpy. Free Fire queda para apertura manual (comando comentado en el script).
-- **Watchdog corregido** (`FF_SEEN`): antes mataba scrcpy en cuanto Free Fire "dejaba de correr". Como el juego ya no se abre desde el script, al arrancar Free Fire NO está corriendo → el watchdog viejo lo habría matado en 3s. Ahora: espera a que Free Fire **aparezca** (`FF_SEEN=1`) y recién ahí vigila que no se cierre desde el teléfono. Si el usuario nunca lo abre, la sesión termina normal con Alt+Q.
-- Verificado: `bash -n` OK; GG Mouse corriendo (PID 10067) — **el problema percibido era que Free Fire tapaba el overlay de GG Mouse**, no que GG Mouse no se lanzara.
-
-### Purga de apps de terceros (69 → 53)
-Desinstaladas con `pm uninstall --user 0` (todas `Success`):
-Film+, Drivify, KDE Connect (`org.kde.kdeconnect_tp`), KLWP (`org.kustom.weather`), KWGT (`org.kustom.widget`), Firefox, Canta (`org.samo_lego.canta`), Telegram+, Coddy, GitHub Store (`zed.rainxch.githubstore`), AR Core, Excel, `com.xm.csee`, ES File Explorer (`com.estrongs.android.pop`), Downloader (`com.esaba.downloader`), y el tema huérfano `com.estrongs.android.pop.dark`.
-
-**Nota:** KDE Connect y Kustom (KLWP/KWGT) eran dependencias de setups existentes (control remoto PC / widgets Kustom) — si hacen falta, reinstalar en segundos.
-
-### Apps restantes (53) — highlights
-ReVanced (YT/Music/GMS), MacroDroid (+helper), AutoJs6, Termux (+api/widget), Shizuku, aShell, AppOps, Free Fire, GG Mouse, Nova Launcher, hype launcher, bitpit launcher, `com.mangonz.widgetos`, Stremio, CloudStream, GitHub, WhatsApp, Truecaller, Waze, Authenticator, Wallet, Family Link, sndcpy, Mission Control, Sony songpal MDR, Sony 360, Magisk, APKTool, Droidify, AppSend, SendFilesToTV, ManUninstaller, ShifterCalendar, Steps, guardian.tivo.xuper, spocky.projengmenu, graphite, ivuu, autotools, spoofdetect.
-
----
-
-## 🐛→✅ super+Escape eliminado + pantalla que no se apaga + monitor-alert corregido
-
-### Pedido del usuario
-Eliminar la combinación `super + Escape` (no sabía qué hacía, pero bloqueaba el teclado y a veces congelaba la PC), asegurar que la pantalla no se apague sola, y verificar que la carga de CPU de la barra inferior de polybar concuerde con el script que alerta CPU alta.
-
-### `super + Escape` — duplicado mal escrito del reload
-**Causa raíz:** en `~/.config/bspwm/config/sxhkdrc` (línea 154, rice vista) `super + Escape` ejecutaba `bspc wm -r; pkill -USR1 -x sxhkd; dunstify...`. El comentario decía "Reload config (Mango: SUPER + r)" — era un duplicado mal escrito del binding correcto que ya existía en la línea 59 (`super + r`, mismo comando). Al pulsar `super + Escape` reiniciaba el WM en caliente → teclado muerto y a veces cuelgue total. **Fix:** eliminado el binding (quedó solo el comentario NOTA); `super + ctrl + Escape` se mantiene (recarga solo sxhkd, no reinicia bspwm). Recargado con `pkill -USR1 -x sxhkd` (sin reiniciar bspwm) y verificado vivo: `pgrep -a sxhkd`.
-
-### Pantalla que se apagaba a los 10 min
-DPMS estaba habilitado (Standby/Suspend/Off = 600s) + screensaver X con `prefer blanking: yes` (timeout 600). **Fix:** `xset -dpms` + `xset s off` aplicados en vivo y agregados al `~/.config/bspwm/bspwmrc` (después de `SetSysVars`) para persistir. Verificado: `DPMS is Disabled`, screen saver timeout 0.
-
-### monitor-alert — % de CPU incorrecto (no coincidía con la barra)
-El timer systemd `monitor-alert.timer` (cada 45s) corre `~/.local/bin/monitor-alert`, que avisa con notify-send cuando CPU/RAM pasan umbrales. Su `get_cpu()` calculaba mal:
-- `u=$2+$4` (user+system) y `t=$2+$4+$5` (user+system+idle) sobre la línea `cpu ` de `/proc/stat` → el denominador ignoraba `nice`/`iowait`/`irq`/`softirq`/`steal`, así que el % no coincidía con polybar (que usa el cálculo estándar).
-- Ventana de muestreo de 0.1s → valores ruidosos (37/39/35 en mediciones seguidas).
-
-**Fix:** fórmula estándar `(total − idle − iowait)/total × 100` con los 7 campos (user nice system idle iowait irq softirq) y ventana de **1s**. Verificado con carga sintética (2× `yes > /dev/null`): script corregido = estándar = **35% exacto** (antes fluctuaba).
-
-### Umbrales recalibrados (Ryzen 5 3400G 4C/8T + 13GB sin swap)
-| Umbral | Antes | Ahora | Motivo |
-|---|---|---|---|
-| CPU_WARN | 70 | **75** | Mediciones correctas ahora; 4C/8T en uso normal no pasa de ~50%; 75 ≈ 6/8 hilos activos, evita falsos positivos |
-| CPU_CRIT | 90 | 90 | Saturación real |
-| RAM_WARN | 80 | **75** | Sin swap, avisar antes |
-| RAM_CRIT | 92 | **88** | 88% ≈ 11.5GB usados deja ~1.5GB libres para cerrar apps antes del congelamiento |
-
-### Archivos modificados/creados
-
-| Archivo | Cambio |
-|---|---|
-| `~/.config/bspwm/config/sxhkdrc` | eliminado binding `super + Escape` (era duplicado de `super + r`) |
-| `~/.config/bspwm/bspwmrc` | `xset -dpms` + `xset s off` persistente |
-| `~/.local/bin/monitor-alert` | fórmula estándar de CPU + ventana 1s + umbrales recalibrados |
-| `ai-context/CHANGELOG.md` | entrada 2026-08-07 (fixes teclado/pantalla/monitor-alert) |
-| `ai-context/SESION.md` | esta entrada |
-
-### Lecciones
-- **Siempre chequear duplicados de bindings con comentario distinto** al editar sxhkdrc de un rice — el comentario "SUPER + r" no coincidía con la tecla real (Escape).
-- **`bspc wm -r` en caliente es peligroso** para atajos: si se dispara sin querer, colgás el teclado. Preferir `pkill -USR1 -x sxhkd` para recargas frecuentes.
-- **El cálculo "estándar" de CPU** es `(total − idle − iowait)/total` con los 7 campos de la línea `cpu ` de `/proc/stat` — cualquier atajo (solo user+system) desincroniza contra polybar/top.
-- **`xset -dpms` y `xset s off`** deben ir en el autostart (bspwmrc), no solo aplicarse en vivo, o vuelven al reiniciar (Xorg default: 600s).
-
----
-
-## 🌊 Rice "vista" — barras polybar refinadas como vidrio limpio
-
-### Pedido del usuario
-Refinar las barras polybar del rice vista (paneles flotantes de vidrio, jerarquía limpia), quitar el icono de Windows de la barra inferior, corregir los relieves "sucios" de la barra superior, y añadir info a la barra inferior (temp, disco, fecha+tiempo).
-
-### El misterio de los huecos de ~100px — RESUELTO
-Entre módulos había ~95-115px de espacio y ~85-150px antes del primer módulo. **Causa raíz:** en polybar 3.7.2 los valores de `padding`/`spacing` **sin unidad se renderizan como N caracteres de espacio** (`builder.cpp`: `string(value, ' ')`), no píxeles — con JetBrainsMono 10 cada espacio ≈ 8px. `padding-left = 12` ≈ 96px de hueco; `label-padding = 2` ≈ +32px por label. Se confirmó con tests aislados (label box 8px con padding 0 → 40px con padding 2). **Fix:** todos los espaciados con sufijo `px` (`12px`, `14px`, `2px`, `3px`…). Verificado: start pill x40 (antes x124), gaps ~19px, 0 agujeros.
-
-### Bloques "sucios"/relieve de la top bar — causa doble
-1. Módulos `bi`/`bd` (`custom/text` con `label = "%{T4}%{T-}"` y `label-background = ${color.bg}`) pintaban rectángulos del color del bar pegados a los bloques → costuras oscuras entre bloques claros (efecto chip con sombra). 2. network/pulseaudio/updates tenían `format-*-background` + `label-*-background = ${color.mb}` (dobles rectángulos translúcidos) y los escritorios ocupados `label-occupied-background = ${color.mb}`. **Fix:** quitados bi/bd de modules-center/right y eliminados todos los `*background = ${color.mb}` de módulos activos. Se mantuvo la píldora azul enfocada (sólida).
-
-### El reloj sin fecha
-El label usaba `%date%` pero `[module/date]` no tenía la línea `date =` (solo `date-alt`) → `%date%` renderizaba vacío. Fix: `date = "%a, %d %b %Y"`, `label = "%date%  %time%"`, `date-alt = "%d/%m/%Y"`.
-
-### Temperatura leyendo 0 + `%units%` literal
-`hwmon-path` en polybar 3.7.2 es la ruta completa al **ARCHIVO** del sensor, no al directorio. Con `hwmon-path = /sys/class/hwmon/hwmon2` (dir) el módulo leía el directorio como archivo → `strtol("")` = 0 (confirmado con strace: abría el dir y nunca `temp1_input`). `%units%` no es un token (es la opción booleana `units`); `%temperature-c%` ya agrega "°C`. Fix: `hwmon-path = /sys/class/hwmon/hwmon2/temp1_input`, `label = "%temperature-c%"`. Sensor k10temp = CPU AMD (42-51°C); acpitz = ambiente; thermal_zone* → acpitz, no CPU.
-
-### La barra inferior murió sola (una vez)
-`cyn-bar2` desapareció como proceso sin config rota (arranca y se mantiene viva). Sin OOM, sin segfault, sin apps de tray, sin reinicio global (PID de la top intacto). Correlación temporal: timer systemd `ArchUpdates` (cada 15 min) que manda `polybar-msg action updates hook 0` en broadcast; **probado en vivo que NO la mata** (solo loguea "No module named 'updates'", inofensivo). Conclusión: crash transitorio X11/pseudo-transparency. Mitigación: reinicio desacoplado con `setsid` + redirección de fds + log en `/tmp/opencode/bar2.log`.
-
-### Trampa de `pkill -f` (self-kill)
-`pkill -f 'polybar cyn-bar2'` mataba la propia shell del agente (el patrón aparece en su línea de comandos). Usar anclado: `pkill -f '^polybar cyn-bar2'`.
-
-### Estado final verificado
-| Barra | Izquierda | Centro | Derecha |
-|---|---|---|---|
-| Superior (`cyn-bar`) | launcher + título | escritorios (bspwm) | red · volumen · updates · power |
-| Inferior (`cyn-bar2`) | browser · filem · terminal · editor | ` CPU   RAM   42°C   23%` | tray · `vie, 07 ago 2026 02:53 pm` |
-
-### Archivos modificados/creados (sesión 2026-08-07)
-
-| Archivo | Cambio |
-|---|---|
-| `~/.config/bspwm/rices/vista/config.ini` | módulos por barra, paddings/márgenes en px, `[settings]` compositing, sin `start`/`battery` |
-| `~/.config/bspwm/rices/vista/modules.ini` | `[module/start]` eliminado; bi/bd sin uso; network/pulseaudio/updates sin fondos mb; date con `date =`; cpu_bar/memory_bar/filesystem limpios con iconos; `[module/temp]` nuevo (k10temp) |
-| `~/.config/bspwm/rices/vista/CHANGELOG.md` | **NUEVO** — doc completo: 8 bugs con causa raíz, tabla de gotchas polybar 3.7.2, comandos de mantenimiento |
-| `ai-context/PROJECTS.md` | sección "Escritorio — Rice vista" actualizada |
-| `ai-context/CHANGELOG.md` | entrada 2026-08-07 |
-| `ai-context/SESION.md` | esta entrada |
-
----
-
-
-

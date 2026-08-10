@@ -17,6 +17,24 @@ system-id: mangonz-desktop
 - **Revertir:** `RiceSelector` (clic derecho en launcher) → elegir `cynthia`, o `echo cynthia > ~/.config/bspwm/.rice && ~/.config/bspwm/bin/Theme.sh` + reiniciar picom
 - **Nota:** se añadió `blur-background = true` a la regla dock de `picom-rules.conf` (compartida — las barras translúcidas de cualquier rice ahora hacen blur)
 
+## Gmail Organizer V3 (organiza_gmail_V3)
+- **Objetivo:** clasificar automáticamente la bandeja de entrada de Gmail en etiquetas (Compras, Telecom, Bancos, Gobierno, Trabajo, Facturas, Envíos, etc.) con etiquetas específicas por empresa (BancoEstado, Tenpo, Fonasa, Mercado Libre, AliExpress, WOM...)
+- **Plataforma:** Google Apps Script (V8 runtime, timeZone America/Santiago)
+- **Script ID:** `1yqqZXC4kysIlMMbY57Bi6Ft5Jf5mtO3fUX9EnT41BJtCOnMXmQ01I_sK`
+- **Ruta local:** `~/proyectos/gmail-scripts/` (git local, commit `a207071`, sincronizado vía `clasp pull` el 2026-08-10)
+- **Componentes:** `main.js` (entrada con rate limiting + triggers), `gmail.js` (procesamiento por lotes con reanudación), `scoring.js` (scoring de importancia), `classifiers.js`/`companies.js` (reglas de clasificación), `labels.js`, `reports.js` (reporte diario), `config.js`, `constants.js`, `cleanup_tmp.js` (limpieza one-shot de etiquetas), `test.js`
+- **Detalles clave:** fix de paginación con snapshot único `search()` en vez de `getInboxThreads(pos)`; reanudación tras pausa/cuota (`scheduleResume`); restaura cadencia de triggers al completar
+- **Estado:** sincronizado con la web (`script.google.com`) — la versión de la web tenía mejoras que se bajaron al repo
+
+## Drive Organizer Pro (ordenar_drive_pro)
+- **Objetivo:** organizar Google Drive por reglas de clasificación (MIME + nombre + prioridad), modo MAESTRO (todo el Drive BFS) o ESPECÍFICO (carpeta por ID), con modo PRUEBA (simula) / REAL (mueve)
+- **Plataforma:** Google Apps Script (V8 runtime, timeZone America/Santiago)
+- **Script ID:** `1TW8pIdyQAUeAI7ZznVY4KCZgZtGirq_leLUX8vXWQa1e0i6prPIpzBOu`
+- **Ruta local:** `~/proyectos/gmail-scripts-otro/` (git local, commit `610a040`, sincronizado vía `clasp pull` el 2026-08-10)
+- **Componentes:** `main.js` (entrada con rate limiting + triggers), `organizador.js` (núcleo BFS con batches y reanudación por cola de carpetas), `clasificador.js` (motor de reglas con prioridad), `drive.js` (utilidades: carpetas, extensiones, exclusiones), `config.js` (reglas + carpetas administradas/excluidas), `estadisticas.js` (conteo con desglose recursivo), `script_limpieza.js`, `logger.js`, `constants.js`
+- **Detalles clave:** rate limiting estilo Gmail Organizer (batches de 30, delay 1s, runtime limit 270s, retry con backoff); carpetas administradas: Scripts, Documentación, Android, Configuraciones, Multimedia, Backups, Web, Recursos, Sin clasificar, Comprimidos, Chats; excluidas: Google Fotos, Trash, etc.
+- **Estado:** v5.0 sincronizado con la web — la versión de la web tenía mejoras que se bajaron al repo
+
 ## TimeMark
 - **Objetivo:** watermark/timestamp para fotos de seguridad de campo
 - **Stack:** React + TypeScript + Tailwind v4 + Vite

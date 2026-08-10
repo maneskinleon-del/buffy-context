@@ -1,7 +1,36 @@
 # 🔄 CONTINUE — Handoff entre sesiones
 
 > ⚡ **PRÓXIMA SESIÓN: LEE ESTO PRIMERO**
-> Generado: 2026-08-09 noche (opencode — Lyxel/Mantis evaluados, falsos caminos descartados)
+> Generado: 2026-08-10 (opencode — sesión 2026-08-09 reconstruida, gmail/drive documentados)
+
+---
+
+## Resumen de la sesión (2026-08-10 — opencode)
+
+**Tema:** continuar la sesión anterior → se detectó que **los scripts de Gmail/Drive vistos ayer NO quedaron registrados en buffy-context** (hueco de registro: solo existían en disco y en el historial de prompts). Reconstruido y documentado.
+
+1. **`~/proyectos/gmail-scripts/`** = **Gmail Organizer V3** (`organiza_gmail_V3`, scriptId `1yqqZXC4k...`): clasifica bandeja en etiquetas por categoría + empresa, rate limiting + reanudación, fix de paginación (snapshot único con `search()`), `cleanup_tmp.js` one-shot. Commit local `a207071` (13 archivos, 1747 líneas) — **sin remote**.
+2. **`~/proyectos/gmail-scripts-otro/`** = **Drive Organizer Pro v5.0** (`ordenar_drive_pro`, scriptId `1TW8pIdyQ...`): modos MAESTRO/ESPECÍFICO × PRUEBA/REAL, reglas por prioridad (MIME > nombre), carpetas administradas/excluidas, rate limiting + triggers 10 min + reanudación. Commit local `610a040` (11 archivos, 1738 líneas) — **sin remote**.
+3. Ambos sincronizados con la web (`script.google.com`) vía **clasp pull** — la nube de Google es la source of truth; el repo local es backup.
+4. **opencode actualizado a 1.18.16** (la actualización pendiente de ayer se completó — verificado = última de npm).
+5. Registrado en `SESION.md` (nueva entrada 2026-08-10, la de 2026-08-07 archivada) y `PROJECTS.md` (2 proyectos nuevos).
+
+### ⏳ Pendientes para otra sesión
+- **P0 next sigue siendo `bench-context-selection.sh`** (congelamiento vigente — el benchmark justifica el próximo cambio).
+- P1: data_car — asignar precios de la respuesta de la IA a la lista y calcular total CLP (campo en el panel Mi compra + `parseAIResponse` + `formatCLP`).
+- P1: retorno del aprendizaje (SESION-archive meses después → ¿conocimiento activo?).
+- P2: concurrencia 3+ escritores sobre MEMORY.md.
+- Nuevo: si el usuario reporta opencode "lento", investigar limitación de rendimiento (fue señalado el 2026-08-09, quedó sin diagnóstico).
+
+---
+
+## ⛔ DECISIÓN DE CONGELAMIENTO (2026-08-09) — LEER ANTES DE TOCAR CÓDIGO
+
+**buffy-context queda CONGELADO en este estado.** No se agrega ninguna funcionalidad nueva, no se modifica el motor de memoria ni el sistema de tests, hasta que el próximo cambio esté **justificado por el benchmark pendiente**:
+
+> `bench-context-selection.sh` — 500 hechos distribuidos por dominio (Android/Linux/FreeFire/React/misc), tarea real ("el teléfono no aparece en scrcpy"), midiendo router → search con `domain_precision` + `context_chars`/`tokens`/`leaked`.
+
+Disciplina acordada: **el benchmark primero, la feature después.** Si un cambio no responde a una necesidad demostrada por el benchmark, no se hace. El único tipo de commit permitido en el congelamiento es documental (docs/sesion) o fix de bugs reales.
 
 ---
 
