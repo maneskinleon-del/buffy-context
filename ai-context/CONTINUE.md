@@ -1,7 +1,31 @@
 # 🔄 CONTINUE — Handoff entre sesiones
 
 > ⚡ **PRÓXIMA SESIÓN: LEE ESTO PRIMERO**
-> Generado: 2026-08-10 (opencode — sesión 2026-08-09 reconstruida, gmail/drive documentados)
+> Generado: 2026-08-10 (opencode — P0 benchmark completado, congelamiento levantado)
+
+---
+
+## Resumen de la sesión (2026-08-10 — opencode, pendientes P0)
+
+**Tema:** atacar los pendientes con modo autónomo → **P0 completado: `bench-context-selection.sh`** (el benchmark que desbloqueaba el congelamiento).
+
+1. **`scripts/tests/bench-context-selection.sh` (NUEVO)** — benchmark del pipeline completo `USER REQUEST → router → categoría → search → ranking`. Sandbox con repo simulado (Knowledge por dominio: Android/Linux/FreeFire/React + manifests de skills), tarea real "el teléfono no aparece en scrcpy". Mide: `domain_precision`, `domain_recall`, `spurious_categories`, `search_recall`, `search_leaked`, `context_chars/tokens`, `window_utilization`, `pipeline_healthy`.
+2. **Hallazgo (tesis confirmada):** en modo adversarial FTS5 puro se contamina (recall 0/2, leaked 10/10) pero el **router resuelve** — carga el archivo del dominio correcto → `pipeline_healthy=true`. El benchmark demuestra que la selección por dominio del router es la capa que FTS5 aislado no tiene (esto es lo que el CONTINUE anterior decía "lo resuelve el router, no ejercitado aquí" — ahora ejercitado y medido).
+3. **Bug propio encontrado y corregido:** el contador de `search_leaked` usaba `^` anclado al inicio pero los hits del search empiezan con el path (`Knowledge/...:N: Nota Linux...`) → el leaked medía 0 cuando FTS5 estaba 100% contaminado. Corregido a grep sin anclar.
+4. **`scripts/tests/test-context-selection.sh` (NUEVO)** — integra el benchmark a la suite (easy = gate, adversarial = medición). `run-tests.sh` actualizado.
+5. **README** — sección del benchmark actualizada + conteos: **209 full (204 functional + 5 meta) / 193 --quick (188 functional)**.
+6. **Congelamiento LEVANTADO** — el benchmark que lo justificaba existe y produjo la evidencia esperada. Próximo cambio puede justificarse contra este baseline.
+
+### ⏳ Pendientes para otra sesión
+- **P1 (siguiente): data_car** — asignar precios de la respuesta de la IA a la lista y calcular total CLP (campo en el panel Mi compra + `parseAIResponse` + `formatCLP`).
+- P1: retorno del aprendizaje (SESION-archive meses después → ¿conocimiento activo?).
+- P2: concurrencia 3+ escritores sobre MEMORY.md.
+- Opcional: `Knowledge/Tools/Buffy-Memory.md` (ficha de uso del CLI).
+- Opcional: correr `bench-context-selection.sh --count 100` a mayor escala para ver si domain_precision se degrada con más ruido por dominio.
+
+---
+
+## ⛔ DECISIÓN DE CONGELAMIENTO (2026-08-09) — ✅ **LEVANTADO** el 2026-08-10
 
 ---
 
@@ -24,13 +48,16 @@
 
 ---
 
-## ⛔ DECISIÓN DE CONGELAMIENTO (2026-08-09) — LEER ANTES DE TOCAR CÓDIGO
+## ⛔ DECISIÓN DE CONGELAMIENTO (2026-08-09) — ✅ **LEVANTADO** el 2026-08-10
 
-**buffy-context queda CONGELADO en este estado.** No se agrega ninguna funcionalidad nueva, no se modifica el motor de memoria ni el sistema de tests, hasta que el próximo cambio esté **justificado por el benchmark pendiente**:
+**El congelamiento queda LEVANTADO.** El benchmark que lo justificaba — `bench-context-selection.sh` — fue implementado, integrado a la suite y produjo el resultado esperado:
 
-> `bench-context-selection.sh` — 500 hechos distribuidos por dominio (Android/Linux/FreeFire/React/misc), tarea real ("el teléfono no aparece en scrcpy"), midiendo router → search con `domain_precision` + `context_chars`/`tokens`/`leaked`.
+- **Modo fácil (gate):** el router elige el dominio correcto (Android, precision 1.00, 0 spurious), FTS5 recupera 2/2 agujas con 0 leaked → `pipeline_healthy=true`.
+- **Modo adversarial (medición):** FTS5 puro se contamina por completo cuando los irrelevantes comparten vocabulario (recall 0/2, leaked 10/10 en el top-10) — pero el **router resuelve**: carga `Knowledge/Android/scrcpy.md` (domain_recall 2/2) → `pipeline_healthy=true`. Evidencia de que la selección por dominio del router es la capa que FTS5 aislado no tiene.
 
-Disciplina acordada: **el benchmark primero, la feature después.** Si un cambio no responde a una necesidad demostrada por el benchmark, no se hace. El único tipo de commit permitido en el congelamiento es documental (docs/sesion) o fix de bugs reales.
+**Suite: 209 OK / 0 FAIL** (204 functional + 5 meta) · **193 OK / 0 FAIL** (--quick).
+
+La disciplina "el benchmark primero, la feature después" se cumplió: el próximo cambio en el motor de selección de contexto ahora puede justificarse contra este baseline medible.
 
 ---
 

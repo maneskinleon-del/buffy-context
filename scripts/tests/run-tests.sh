@@ -54,6 +54,8 @@ source "$SCRIPT_DIR/test-memory.sh"
 source "$SCRIPT_DIR/test-documentation.sh"
 # shellcheck source=test-scale.sh
 source "$SCRIPT_DIR/test-scale.sh"
+# shellcheck source=test-context-selection.sh
+source "$SCRIPT_DIR/test-context-selection.sh"
 
 trap teardown_sandbox EXIT
 
