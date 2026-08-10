@@ -28,6 +28,22 @@ system-id: mangonz-desktop
 
 ---
 
+### 2026-08-10 — P0: bench-context-selection.sh + congelamiento levantado (opencode)
+
+**Pedido del usuario:** "vamos con los pendientes" + modo autónomo → el P0 pendiente era el benchmark de selección de contexto con router que justificaba el próximo cambio (congelamiento vigente: benchmark primero, feature después).
+
+**Lo hecho:**
+- **`scripts/tests/bench-context-selection.sh` (NUEVO)**: pipeline completo USER REQUEST → router → categoría → search FTS5 → ranking. Sandbox con Knowledge por dominio (Android/Linux/FreeFire/React) + manifests de skills; tarea real "el teléfono no aparece en scrcpy". Métricas: `domain_precision`, `domain_recall`, `spurious_categories`, `search_recall`/`search_leaked`, `context_chars/tokens`, `window_utilization`, `pipeline_healthy`. Flags: `--count/--adversarial/--json/--quick`.
+- **Tesis confirmada (adversarial)**: FTS5 puro se contamina 100% (recall 0/2, leaked 10/10) pero el router carga el archivo del dominio correcto → `pipeline_healthy=true`. El router SÍ es la capa que resuelve lo que FTS5 aislado no puede.
+- **Bug propio corregido**: `search_leaked` usaba grep anclado a `^` pero los hits del search empiezan con el path → medía 0 cuando había 10 contaminados. Corregido sin anclar.
+- **`test-context-selection.sh` (NUEVO)** integra el benchmark a la suite (easy=gate, adversarial=medición). `run-tests.sh` sourceado.
+- **README**: sección nueva + conteos → **209 full (204 functional + 5 meta) / 193 --quick (188 functional)**, árbol con 15 test_*.sh + 2 benchmarks.
+- **Congelamiento LEVANTADO** en CONTINUE.md — el benchmark que lo justificaba existe y dio la evidencia esperada.
+
+**Verificación:** suite full **209 OK / 0 FAIL** · --quick **193 OK / 0 FAIL** · benchmark standalone exit 0 en easy y adversarial.
+
+---
+
 ### 2026-08-09 — Lección: retroalimentación activa antes de instalar herramientas + evaluación Lyxel/Mantis (opencode)
 
 **Pedido del usuario:** "Quiero usar Mantis para scrcpy" → tras instalarlo y activarlo, resultó ser mapper de **gamepad**, no de teclado — no sirve para jugar con teclado+mouse desde PC. Lección de proceso: **preguntar el caso de uso exacto y verificar que la herramienta lo cubre ANTES de instalar/probar** (¿teclado/mouse o gamepad? ¿Linux? ¿login Google?).
