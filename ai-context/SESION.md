@@ -1,3 +1,37 @@
+# 🧠 SESION — Buffy opencode (2026-08-10 · P0 completado: memoria curada sincronizada entre PC y teléfono)
+
+> Contexto de lo implementado durante esta sesión. Corrida en **opencode** (teléfono).
+
+---
+
+## 🔗 P0 completado: `buffy-memory.sh sync` — puente PC ↔ teléfono
+
+### Pedido del usuario
+"En el PC tenemos un modo buffy que hace referencia a lo que construimos en el repo… quizás nos falte ese puente para unificar las sesiones de PC y teléfono. Queremos llegar a la potencia de Hermes."
+
+**Diagnóstico entregado:** el puente base ya existe (repo git: SESION/CONTINUE/PROJECTS/Knowledge/skills — validado en vivo hoy). El hueco real es que la **memoria curada (`~/.buffy/memories/`) es perfil-local y no viaja** — el PC arranca con memoria vacía. Hermes tiene UNA memoria que acompaña al agente; hoy cada dispositivo tiene la suya.
+
+### Lo implementado (en `buffy-context`)
+1. **`scripts/lib/buffy-memory-sync.sh` (NUEVO)** — `sync status|push|pull [--force]`:
+   - Las copias versionadas viven en `<repo>/ai-context/memories/` (MEMORY.md + USER.md) y viajan por git.
+   - **Estado per-host** en `ai-context/memories/.sync-state`: cada dispositivo registra el último sha que sincronizó → el guard de drift es fiable aunque el otro lado escriba (un push del PC no borra la marca del teléfono).
+   - `push`: git pull (ff-only) → comparo contra el repo actual → conflicto si el repo cambió desde mi último sync y no conozco el cambio · `--force` resuelve.
+   - `pull`: conflicto si tengo cambios locales sin sincronizar · `--force` sobrescribe. Primer sync sin marca propia y contenidos distintos → aviso preventivo (nunca piso sin decisión).
+   - Git ops acotadas al repo que contiene SYNC_DIR (nunca toca archivos fuera de `ai-context/memories/`).
+2. **`scripts/buffy-memory.sh`** — comando `sync` añadido (rutas `BUFFY_SYNC_DIR`/`BUFFY_SYNC_HOST` configurables).
+3. **Tests** — 4 suites nuevas en `test-memory.sh` (13 checks): push→pull entre 2 hosts, conflicto push (PC escribió), conflicto pull (local cambió), primer sync preventivo. Verificados con sandbox + escenario con git real (bare origin + 2 clones).
+4. **Memoria real del teléfono versionada** — primer `sync push` desde `telefono-mi10` (commit `9367a43`).
+5. **README** — conteos actualizados: **229 full (224 functional + 5 meta) / 213 --quick (208 functional)**.
+
+### Verificación
+Suite completa: **229 OK / 0 FAIL** · --quick: **213 OK / 0 FAIL** (pasó el pre-commit).
+
+### ⏳ Pendiente
+- En el PC: una vez hecho `git pull`, correr `buffy-memory.sh sync pull` para adoptar la memoria del teléfono → luego la memoria es compartida. Documentar en el AGENTS.md del PC.
+- P1: retorno del aprendizaje (SESION-archive → conocimiento activo). P2: concurrencia 3+ escritores sobre MEMORY.md.
+
+---
+
 # 🧠 SESION — Buffy opencode (2026-08-10 · borrado de etiquetas implementado en organiza_gmail_V3)
 
 > Contexto de lo implementado durante esta sesión. Corrida en **opencode** (teléfono).

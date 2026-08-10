@@ -27,7 +27,7 @@ This repository provides the infrastructure for an AI agent to maintain persiste
 | **Self-diagnostics** | doctor --json detecta drift, repair corrige lo seguro, agent orquesta el ciclo |
 | **Conditional loading** | Token-aware protocol: carga solo lo necesario según el tema |
 | **Auto-pruning** | SESION.md mantiene máximo 5 entradas, el resto se archiva |
-| **CI verde** | Suite 209 checks totales (204 functional + 5 meta · 193 `--quick` con 188 functional) + doctor baseline 0 + verify factual en cada push/PR. El check **documental-truth** (meta) rompe el CI si el README declara un número distinto al real — functional y total se validan por separado (anti-drift de documentación) |
+| **CI verde** | Suite 229 checks totales (224 functional + 5 meta · 213 `--quick` con 208 functional) + doctor baseline 0 + verify factual en cada push/PR. El check **documental-truth** (meta) rompe el CI si el README declara un número distinto al real — functional y total se validan por separado (anti-drift de documentación) |
 | **Provenance de hechos** | `facts.yaml` con source/confidence/scope/fecha/ttl por hecho (genera `buffy-verify.sh --update-facts`); TTL enforzado (`expired` si vence) |
 | **Jerarquía de fuentes** | `buffy-source.sh --resolve <fact>`: real-time → facts → SNAPSHOT → CONTINUE → INFO-core → inferred, con reporte de conflictos |
 | **Reglas declarativas** | `ai-context/facts_rules.yaml` + `scripts/lib/facts_engine.py` — agregar un hecho NO requiere tocar el motor; comandos en lista, ejecución sin shell (hardening) |
@@ -129,7 +129,7 @@ buffy-context/
 │   ├── kimi_vision.js                 # Detección de permisos con visión IA (Kimi K3)
 │   ├── lib/                           # yaml.sh (parsing compartido) + logger/utils.js
 │   ├── hooks/                         # install.sh + pre-commit.sh (suite --quick)
-│   └── tests/                         # run-tests.sh + 15 test_*.sh + bench-scale.sh + bench-context-selection.sh (suite 209 checks totales, 193 --quick)
+│   └── tests/                         # run-tests.sh + 15 test_*.sh + bench-scale.sh + bench-context-selection.sh (suite 229 checks totales, 213 --quick)
 │
 ├── INSTALL.md                         # Setup instructions
 ├── LICENSE                            # MIT license
@@ -218,10 +218,10 @@ La suite es **determinística y segura**: todo lo que escribe (repair `--auto`, 
 
 La suite termina con `doc_truth_check`, que valida **dos números por separado**:
 
-- **Functional** (los checks que prueban Buffy: 204 full / 188 `--quick`) — el README debe declarar exactamente el conteo real derivado del runner.
-- **Total** (functional + meta: 209 full / 193 `--quick`) — los meta-checks son los que validan la representación documental; el check de total se calcula al final contra el PASS completo, así que si la fase meta crece y nadie actualiza el README, el CI rompe.
+- **Functional** (los checks que prueban Buffy: 224 full / 208 `--quick`) — el README debe declarar exactamente el conteo real derivado del runner.
+- **Total** (functional + meta: 229 full / 213 `--quick`) — los meta-checks son los que validan la representación documental; el check de total se calcula al final contra el PASS completo, así que si la fase meta crece y nadie actualiza el README, el CI rompe.
 
-El resumen de la suite los muestra por separado: `Functional: 204 OK · Meta: 5 OK · Total: 209 OK`. También verifica que la regla de poda de `SESION.md` siga unificada ("5 entradas o ~30KB") y que no reaparezcan residuos viejos.
+El resumen de la suite los muestra por separado: `Functional: 224 OK · Meta: 5 OK · Total: 229 OK`. También verifica que la regla de poda de `SESION.md` siga unificada ("5 entradas o ~30KB") y que no reaparezcan residuos viejos.
 
 ### Benchmark de escala y contaminación (P0)
 

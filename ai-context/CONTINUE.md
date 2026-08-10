@@ -1,24 +1,28 @@
 # 🔄 CONTINUE — Handoff entre sesiones
 
 > ⚡ **PRÓXIMA SESIÓN: LEE ESTO PRIMERO**
-> Generado: 2026-08-10 (opencode — sesión cortada: auditoría Apps Scripts con Google Studio API; registro completado y pusheado en sesión siguiente)
+> Generado: 2026-08-10 (opencode — sesión nocturna: **P0 cumplido — memoria curada sincronizada PC ↔ teléfono** con `buffy-memory.sh sync`)
 >
 > 🗝️ **Palabra de cierre acordada:** cuando el usuario diga **"cerrar día"**, ejecutar el protocolo de fin de sesión: actualizar CONTINUE.md/SESION.md/CHANGELOG.md (máx 5 entradas en SESION.md, archivar el resto), regenerar SNAPSHOT, validar con `buffy-doctor.sh --quick`, commit + push de buffy-context (y de los repos tocados en la sesión).
 
 ---
 
-## Resumen de la sesión cortada (2026-08-10 noche — teléfono, Apps Scripts)
+## Resumen de la sesión (2026-08-10 noche — opencode, P0: memoria curada viaja entre dispositivos)
 
-**Tema:** auditoría de los proyectos de Google Apps Script vía API de Google Studio (los clones en `~/gscript-audit/` del teléfono) y discusión sobre **borrar etiquetas** que los scripts crean (v2 obsoleta dejó etiquetas huérfanas; desde el móvil no se pueden borrar).
+**Tema:** el usuario preguntó qué falta para unificar las sesiones de PC y teléfono ("potencia de Hermes") → diagnóstico: el puente base (repo git) ya existe; el hueco real es la memoria curada perfil-local que no viaja. **P0 implementado: `buffy-memory.sh sync`.**
 
-1. **Estado**: `organiza_gmail_V3` tiene mejoras locales (rate limiting, reanudación, triggers) **no pusheadas a la web** (los PCs de Google son la source of truth). `copy_organiza_gmail` = versión original sin mejoras.
-2. **Pregunta del usuario sin resolver:** ¿el script puede borrar las etiquetas que crea (limpieza one-shot o `deleteEmptyLabels`)? Quedó PENDIENTE decidir/implementar.
-3. **Sesión cortada** antes de registrar. Verificado: el PC **no dejó nada nuevo** en el repo (local = origin/main = `4850e91`). Este registro se completó y pusheó en la sesión siguiente.
+1. **`scripts/lib/buffy-memory-sync.sh` (NUEVO)** — `sync status|push|pull [--force]` con copias versionadas en `ai-context/memories/` y estado **per-host** (cada dispositivo guarda el slug de su último sync → el guard de drift es fiable multi-dispositivo).
+2. **`scripts/buffy-memory.sh`** — comando `sync` integrado. Env alternativa: `BUFFY_SYNC_DIR`, `BUFFY_SYNC_HOST` (el hostname del teléfono es "localhost" → usar `BUFFY_SYNC_HOST=telefono-mi10`).
+3. **Tests**: +4 suites en `test-memory.sh` (13 checks): push→pull, conflicto push, conflicto pull, primer sync preventivo. Verificado también con git real (bare origin + 2 clones). **Suite: 229 OK / 0 FAIL (full) · 213 OK / 0 FAIL (--quick)**. README actualizado con los conteos nuevos.
+4. **Primer sync real hecho**: `telefono-mi10` pusheó su memoria (commit `9367a43`) + commit del feature con tests y docs.
 
 ### ⏳ Pendientes para otra sesión
-- Decidir si implementar borrado de etiquetas huérfanas en `organiza_gmail_V3` (v2 → v3, etiquetas que ya no se ocupan).
-- Revisar `~/gscript-audit/sin_titulo_1/` (proyecto con script `Código.js`, sin nombre).
-- Push de las mejoras locales de `organiza_gmail_V3` a la web vía `clasp push` (solo con pedido explícito del usuario).
+- **En el PC**: `git pull` del repo + `buffy-memory.sh sync pull` → adopta la memoria del teléfono → a partir de ahí la memoria es COMPARTIDA (un solo MEMORY.md/USER.md para los dos dispositivos). Documentar el paso en el AGENTS.md/INSTALL del PC.
+- P1: retorno del aprendizaje (SESION-archive meses después → ¿conocimiento activo?).
+- P2: concurrencia 3+ escritores sobre MEMORY.md.
+- Opcional: `Knowledge/Tools/Buffy-Memory.md` (ficha de uso del CLI, ahora con sync).
+- Opcional: correr `bench-context-selection.sh --count 100` a mayor escala.
+- Revisar `~/gscript-audit/sin_titulo_1/` (proyecto sin nombre).
 
 ---
 

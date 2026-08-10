@@ -14,8 +14,12 @@
 #   buffy-memory.sh replace [memory|user] "old_text" "nuevo texto"
 #   buffy-memory.sh remove  [memory|user] "old_text"
 #   buffy-memory.sh batch  [memory|user] 'JSON'
+#   buffy-memory.sh sync status|push|pull [--force]
+#       → puente PC↔teléfono: versiona la memoria en <repo>/ai-context/memories
+#         (push: local→repo + commit/push git · pull: repo→local con guard)
 #   buffy-memory.sh --json ...    → stdout JSON puro (máquina)
 #   BUFFY_MEM_DIR=/ruta buffy-memory.sh ...   → store alterno (tests/portable)
+#   BUFFY_SYNC_DIR=/ruta buffy-memory.sh sync ... → repo alterno (tests)
 #
 # El agente que la use NUNCA re-lee render mid-sesión: el snapshot se captura
 # una vez al inicio (caché de prefijo). Las mutaciones persisten al instante
@@ -28,8 +32,9 @@ if command -v readlink >/dev/null 2>&1; then
 fi
 SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_SRC")" && pwd)"
 ENGINE="$SCRIPT_DIR/lib/memory_engine.py"
+SYNC_ENGINE="$SCRIPT_DIR/lib/buffy-memory-sync.sh"
 
-USAGE="uso: buffy-memory.sh [--json] list|render|stats|add|replace|remove|batch [args...]"
+USAGE="uso: buffy-memory.sh [--json] list|render|stats|add|replace|remove|batch|sync [args...]"
 
 if [[ $# -eq 0 ]]; then
   echo "$USAGE"
@@ -87,9 +92,13 @@ case "$CMD" in
     [[ ${#ARGS[@]} -ge 1 ]] || { echo "uso: buffy-memory.sh batch [memory|user] 'JSON'" >&2; exit 2; }
     PY_ARGS+=(batch --target "$TARGET" --ops "${ARGS[0]}")
     ;;
+  sync)
+    [[ ${#ARGS[@]} -ge 1 ]] || { echo "uso: buffy-memory.sh sync status|push|pull [--force]" >&2; exit 2; }
+    exec bash "$SYNC_ENGINE" "${ARGS[@]}"
+    ;;
   *)
     echo "$USAGE" >&2
-    echo "comandos: list | render | stats | add | replace | remove | batch" >&2
+    echo "comandos: list | render | stats | add | replace | remove | batch | sync" >&2
     exit 2
     ;;
 esac
