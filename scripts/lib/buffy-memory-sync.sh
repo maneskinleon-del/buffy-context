@@ -10,15 +10,19 @@
 #   sync pull  [--force]           → git pull + copia repo → local
 #
 # Guard de drift (filosofía Hermes: nunca sobrescribir lo que no entendemos):
-# el estado per-host en ai-context/memories/.sync-state registra, para CADA
-# dispositivo (host), el último sha que SINCronizó. Así cada máquina sabe qué
-# vio por última vez, y un push del PC no borra la marca de tu dispositivo:
+# el estado POR DISPOSITIVO vive en $MEM_DIR/.sync-state (perfil-local, NO se
+# versiona — no genera ruido git). Registra el último sha que ESE dispositivo
+# sincronizó. Así cada máquina sabe qué vio por última vez, y un push del PC
+# no borra la marca de tu dispositivo:
 #
 #   · push:  si repo != mi_último_sync  Y  local != repo  → alguien más tocó
 #            el repo desde que YO sincronicé → conflicto (no pisar).
 #   · pull:  si local != mi_último_sync  Y  local != repo → tengo cambios
 #            locales sin sincronizar → conflicto (no sobrescribir).
 #   · primer sync sin marca propia y contenidos distintos → aviso preventivo.
+#
+# El repo solo contiene CONTENIDO (ai-context/memories/MEMORY.md + USER.md):
+# el estado es conocimiento local de cada máquina y nunca viaja por git.
 #
 # Env: BUFFY_MEM_DIR (default ~/.buffy/memories) · BUFFY_SYNC_DIR
 #      (default: repo/ai-context/memories junto a este script) ·
@@ -34,7 +38,8 @@ mkdir -p "$SYNC_DIR"
 # El repo git es SIEMPRE el ancestro de SYNC_DIR: en producción buffy-context,
 # en tests/sandbox el repo aislado. Ni un archivo fuera de SYNC_DIR se toca.
 REPO_ROOT="$(cd "$SYNC_DIR/../.." && pwd)"
-STATE="$SYNC_DIR/.sync-state"
+mkdir -p "$MEM_DIR"
+STATE="$MEM_DIR/.sync-state"
 STORES=(memory user)
 FILES=(MEMORY.md USER.md)
 GIT="${BUFFY_SYNC_GIT:-git}"
@@ -162,8 +167,10 @@ do_push() {
     [[ -n "$new" ]] && state_set "$name" "$new"
   done
 
-  ( cd "$REPO_ROOT" && $GIT add ai-context/memories >/dev/null 2>&1 && \
-    $GIT commit -q -m "docs(memory): sync memoria curada desde $HOST" >/dev/null 2>&1 || true )
+  local add_args=()
+  for f in "${to_commit[@]}"; do add_args+=(ai-context/memories/$f); done
+  ( cd "$REPO_ROOT" && $GIT add "${add_args[@]}" >/dev/null 2>&1 && \
+    $GIT commit -q -m "docs(memory): sync memoria curada desde $HOST" >/dev/null 2>&1 )
   if ( cd "$REPO_ROOT" && ! $GIT push -q 2>/dev/null ); then
     echo "⚠ commit local hecho pero git push falló (¿sin red?) — pushea luego" >&2
   else
@@ -215,10 +222,9 @@ do_pull() {
     state_set "$name" "$r"
     changed=true
   done
-  [[ "$changed" == false ]] && echo "ya sincronizado (sin cambios)"
-  if [[ -f "$STATE" ]] && ( cd "$REPO_ROOT" && $GIT add "$STATE" >/dev/null 2>&1 && $GIT commit -q -m "docs(memory): sync estado desde $HOST" >/dev/null 2>&1 ); then
-    ( cd "$REPO_ROOT" && $GIT push -q 2>/dev/null ) || echo "⚠ estado commiteado, push luego" >&2
-  fi
+  [[ "$changed" == false ]] && echo "ya sincronizado (sin cambios)" || true
+  # El estado es LOCAL ($MEM_DIR/.sync-state) — el pull NO commitea nada:
+  # el repo solo contiene contenido, y el estado per-device no viaja por git.
 }
 
 CMD="${1:-}"

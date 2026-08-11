@@ -1,3 +1,27 @@
+# 🧠 SESION — Buffy opencode (2026-08-10 · revisión: sync sin ruido git + pendientes router multi-dominio)
+
+> Contexto de lo implementado durante esta sesión. Corrida en **opencode** (teléfono).
+
+---
+
+## 🔁 Corrección post-revisión: sync sin ruido git (punto A)
+
+### La revisión señaló
+"Versionas MEMORY/USER pero también `.sync-state` que describe quién sincronizó qué → commits adicionales de estado. Vigilaría que el mecanismo no genere ruido git."
+
+### Lo corregido
+1. **`.sync-state` movido fuera del repo** → ahora vive en `$MEM_DIR/.sync-state` (perfil-local, por dispositivo). El repo **solo contiene contenido**; el estado es conocimiento local de cada máquina y nunca viaja.
+2. `pull` ya no commitea nada. `push` commitea solo los archivos de contenido (add explícito, no el directorio).
+3. `.sync-state` versionado en commits anteriores eliminado con `git rm --cached`.
+4. Tests: +2 checks — "el repo NO versiona .sync-state" + "cada host tiene su estado local". **Suite: 241 OK / 0 FAIL (236 functional + 5 meta) · 225 --quick (220)**.
+5. Bug propio de paso en `do_pull`: última línea devolvía exit 1 tras pull exitoso → `|| true`.
+
+### Pendientes de la misma revisión (B y C — router/benchmark)
+- **B. Multi-dominio** (consulta → 2-3 dominios): medir `multi_domain_recall` / `multi_domain_precision` / `cross_domain_leakage`.
+- **C. Benchmark realista**: 500 hechos, 5-10 dominios, consultas reales sin keywords artificiales; medir router precision/recall, search recall, context relevance, token cost, latency, leakage. Disciplina: benchmark primero.
+
+---
+
 # 🧠 SESION — Buffy opencode (2026-08-10 · "cerrar día" automatizado con buffy-close-day.sh)
 
 > Contexto de lo implementado durante esta sesión. Corrida en **opencode** (teléfono).

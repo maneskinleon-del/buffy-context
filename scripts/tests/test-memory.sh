@@ -133,7 +133,8 @@ test_memory_render() {
 # ── sync (P0: puente PC ↔ teléfono) ────────────────────────────────────────
 # Sin git real (BUFFY_SYNC_GIT=true simula push/pull directo sobre SYNC_DIR
 # compartido, como el repo en GitHub visto por ambos hosts). Cada host usa su
-# propio BUFFY_MEM_DIR pero el MISMO SYNC_DIR (el repo versionado).
+# propio BUFFY_MEM_DIR pero el MISMO SYNC_DIR (el repo versionado). El estado
+# .sync-state es LOCAL a cada MEM_DIR (no viaja — el repo solo tiene contenido).
 mem_sync_setup() {
   SYNC_T="${TMPDIR:-/tmp}/buffy-sync-$$"
   rm -rf "$SYNC_T"
@@ -150,7 +151,8 @@ run_sync_b() {  # host "pc" sobre mem-b
   BUFFY_SYNC_HOST="pc" BUFFY_SYNC_GIT=true \
   bash "$SCRIPTS_DIR/buffy-memory.sh" sync "$@"
 }
-sync_state_raw() { cat "$SYNC_T/repo-shared/ai-context/memories/.sync-state" 2>/dev/null; }
+sync_state_a() { cat "$SYNC_T/mem-a/.sync-state" 2>/dev/null; }
+sync_state_b() { cat "$SYNC_T/mem-b/.sync-state" 2>/dev/null; }
 
 test_memory_sync_push_pull_basico() {
   suite "memory sync: push → pull entre dos hosts"
@@ -159,10 +161,12 @@ test_memory_sync_push_pull_basico() {
   BUFFY_MEM_DIR="$SYNC_T/mem-a" bash "$SCRIPTS_DIR/buffy-memory.sh" add memory "hecho del telefono" >/dev/null
   expect_exit 0 "push de A" run_sync_a push
   if [ -f "$SYNC_T/repo-shared/ai-context/memories/MEMORY.md" ]; then ok "MEMORY.md versionado en repo"; else bad "MEMORY.md versionado en repo"; fi
-  if sync_state_raw | grep -q '"telefono"'; then ok ".sync-state registra host telefono"; else bad ".sync-state registra host telefono"; fi
-  # host B (PC) hace pull → recibe la memoria
+  if sync_state_a | grep -q '"telefono"'; then ok ".sync-state LOCAL de A registra su host"; else bad ".sync-state LOCAL de A registra su host"; fi
+  if [ ! -f "$SYNC_T/repo-shared/ai-context/memories/.sync-state" ]; then ok "el repo NO versiona .sync-state (cero ruido git)"; else bad "el repo NO versiona .sync-state (cero ruido git)"; fi
+  # host B (PC) hace pull → recibe la memoria (y su estado queda en SU dir)
   expect_exit 0 "pull de B" run_sync_b pull
   if grep -q "hecho del telefono" "$SYNC_T/mem-b/MEMORY.md"; then ok "B recibió la memoria"; else bad "B recibió la memoria"; fi
+  if sync_state_b | grep -q '"pc"'; then ok ".sync-state LOCAL de B registra su host"; else bad ".sync-state LOCAL de B registra su host"; fi
   # push repetido sin cambios → idempotente
   expect_exit 0 "push idempotente" run_sync_a push
   # status → ok
