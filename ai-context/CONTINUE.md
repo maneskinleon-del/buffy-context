@@ -1,7 +1,7 @@
 # 🔄 CONTINUE — Handoff entre sesiones
 
 > ⚡ **PRÓXIMA SESIÓN: LEE ESTO PRIMERO**
-> Generado: 2026-08-11 (opencode — **Fase 3 · Pasos 1-2 ✅; Paso 3 CERRADO (OR no adoptado); diagnóstico ✅; Paso 4 CERRADO (C/and-norm NO adoptado); Paso 5 auditoría de gold COMPLETADA (Q04 gold defectuoso, Q06 parcial, Q03/Q08 puente léxico roto) — siguiente: decisión del usuario sobre corregir fixture gold**)
+> Generado: 2026-08-11 (opencode — **Fase 3 · Pasos 1-2 ✅; Paso 3 CERRADO (OR no adoptado); diagnóstico ✅; Paso 4 CERRADO (C/and-norm NO adoptado); Paso 5 auditoría de gold COMPLETADA; Paso 6 COMPLETADO (fixture Q04/Q06 corregido + A/B/C regenerados v3 — Q04 era fixture, and-norm lo recupera como gold; problemas retrieval restantes: Q03/Q08 puente léxico, Q06 ranking) — siguiente: decisión del usuario sobre próximo experimento (¿Hybrid?) con gold corregido**)
 
 > 🗝️ **Palabra de cierre acordada ("cerrar día"):** el agente escribe el contexto (SESION.md/CONTINUE.md/CHANGELOG.md, máx 5 entradas en SESION.md) y luego ejecuta **`buffy-close-day.sh`** (mensaje opcional con `--message`) — hace sync push de la memoria curada, regenera SNAPSHOT, corre doctor --quick y commit + push. Si el sync conflictúa, el cierre aborta y hay que resolver.
 
@@ -97,6 +97,43 @@ La revisión señaló que versionar `.sync-state` en el repo generaba commits ex
 - Opcional: `Knowledge/Tools/Buffy-Memory.md` (ficha de uso del CLI, ahora con sync).
 - Opcional: correr `bench-context-selection.sh --count 100` a mayor escala.
 - Revisar `~/gscript-audit/sin_titulo_1/` (proyecto sin nombre).
+
+---
+
+## Resumen de la sesión (2026-08-11 cierre v2 — opencode, Paso 6 del benchmark: fixture gold corregido)
+
+**Tema:** la sesión anterior se cortó por corte de luz durante la transición Paso 5 → Paso 6.
+Retomada y cerrada: **fixture gold corregido (Q04/Q06) + A/B/C regenerados (instrumento v3)**.
+
+1. **Fixture corregido** (`eval-ctx-PC-2026-08-11.json`, nuevo hash `00852568…`): Q04 → gold
+   apunta a `ai-context/CHANGELOG.md` (fuente real de `xset -dpms`/`xset s off`, línea 203);
+   Q06 → `CHANGELOG.md` añadido como gold (FF_SEEN, línea 186). Solo `evidencia real → gold
+   correcto`, nunca gold adaptado al resultado.
+2. **Instrumento v3** (`run-baseline-PC.sh`): `EVAL_HASH` actualizado + `cross_domain_leakage`
+   ya no penaliza archivos gold (un archivo gold NUNCA es leakage).
+3. **A/B/C regenerados** sobre gold corregido: search_recall **A=0.000 / B=0.050 / C=0.100** ·
+   other 0.000/0.200/0.100 · context_relevance 0.600/0.202/0.355 · leakage 0.267/0.694/0.522 ·
+   token 5 069/44 846/37 547 · router Δ=0.
+4. **Hallazgo que corrige el Paso 4:** **Q04 era 100 % fixture, no retrieval.** and-norm SÍ
+   recupera `xset -dpms`+`xset s off` como gold cuando el fixture declara CHANGELOG.md. La
+   conclusión "and-norm no captura el puente léxico" era un artefacto del gold mal anotado.
+5. **Problema retrieval restante (con gold correcto):** Q03/Q08 puente semántico/técnico real
+   (aguja en archivo gold, cero overlap); Q06 ranking trae CONTINUE.md y no scrcpy.md, FF_SEEN
+   no se recupera ni siendo gold.
+6. Registrado en `EVAL-REGISTRY.md` → Paso 6. **No se adoptó ninguna variante.** Runtime
+   congelado (`buffy-search.sh`/`buffy-router.sh` sin tocar).
+
+### ⏳ Pendientes para otra sesión
+- **Decisión del usuario:** con la comparación limpia (gold corregido) sobre la mesa, decidir
+  el próximo experimento. Opciones sobre la mesa: (a) medición del gap de puente léxico
+  Q03/Q08/Q06 con gold correcto — candidato natural para un mecanismo no-léxico (embeddings/
+  semántico), (b) repetir A/B/C con criterio de adopción formal sobre gold corregido, (c)
+  cerrar la Fase 3 con el veredicto de que ninguna variante léxica alcanza el umbral y dejar
+  documentado el caso de negocio del Hybrid. NO tocar runtime hasta esa decisión.
+- Suite PC: 225 OK / 5 FAIL (los 5 preexistentes, fuera de alcance — ver EVAL-REGISTRY).
+- Benchmark SIN commit todavía: artefactos v3, fixture corregido, runner v3, Paso 6.
+- En el PC: tras `git pull`, `buffy-memory.sh sync pull` UNA vez.
+- P1: retorno del aprendizaje · P2: concurrencia 3+ escritores · Opcional: `Knowledge/Tools/Buffy-Memory.md` · Revisar `~/gscript-audit/sin_titulo_1/`.
 
 ---
 

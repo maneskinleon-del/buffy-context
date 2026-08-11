@@ -408,6 +408,78 @@ System.md; Q06: añadir el archivo de sesión donde vive FF_SEEN). Con el gold c
 la medición de search_recall reflejará fact retrieval real y no penalizará al buscador
 por un fixture mal anotado. Decisión del usuario.
 
+## ✅ Paso 6 — Fixture gold CORREGIDO (Q04/Q06) + A/B/C regenerados (instrumento v3) · 2026-08-11
+
+**Decisión del usuario (autorizada en sesión):** corregir el fixture gold ANTES de cualquier
+experimento de retrieval. Solo `evidencia real → gold correcto`, NUNCA
+`resultado del buscador → gold adaptado al resultado`. No tocar runtime ni estrategias.
+
+### Qué se corrigió en el fixture
+
+| Query | Antes | Después | Evidencia verificada |
+|---|---|---|---|
+| Q04 | `gold_files = [Knowledge/Linux/System.md]` (NO contenía la evidencia) | `gold_files = [ai-context/CHANGELOG.md]` + facts `xset -dpms`/`xset s off` source CHANGELOG.md | `CHANGELOG.md:203` (fix DPMS/blanking, registro histórico estable) |
+| Q06 | `gold_files = [scrcpy.md, Keymappers.md, Shell.md]` (FF_SEEN en ninguno) | `gold_files += [ai-context/CHANGELOG.md]` + fact `FF_SEEN` source CHANGELOG.md | `CHANGELOG.md:186` (watchdog FF_SEEN) |
+| Resto | sin cambios (solo reformateo JSON) | — | — |
+
+Nuevo hash del fixture: `0085256874af80e0677a6121384c5702d0aea600d21c2a175441449f4fd19ffd`
+(los v1/v2 quedan en git history).
+
+### Qué se corrigió en el instrumento (v2 → v3)
+
+- `EVAL_HASH` actualizado al hash del fixture corregido.
+- **`cross_domain_leakage` excluye `files_gold`**: un archivo gold NUNCA es leakage — si el
+  fixture declara que CHANGELOG.md es la respuesta esperada, traerlo no puede penalizar.
+
+### Comparación limpia — A/B/C sobre gold corregido (mismo EVAL, 10 queries, 1 corrida)
+
+| métrica | A (and) | B (or) | C (and-norm) |
+|---|---|---|---|
+| search_recall (gold) | 0.000 | 0.050 | **0.100** |
+| search_other_recall | 0.000 | 0.200 | 0.100 |
+| search_recall_raw | 0.000 | 0.250 | 0.200 |
+| context_relevance | 0.600 | 0.202 | 0.355 |
+| cross_domain_leakage | 0.267 | 0.694 | 0.522 |
+| token_cost avg | 5 069 | 44 846 | 37 547 |
+| latency avg | 786 | 564 | 577 ms |
+| router_precision / recall / categories / spurious | 0.667 / 0.650 / 0.800 / 2 | idéntico (Δ=0) | idéntico (Δ=0) |
+
+### Por query — desglose de agujas (v3)
+
+| ID | and | or | and-norm | lectura |
+|---|---|---|---|---|
+| Q03 | — | `gh pr create` gold (Commands.md) | — | puente semántico real (`crear`↔`create`), no lo resuelve ninguna variante |
+| Q04 | — | `xset` en CONTINUE.md (other) | **`xset -dpms` + `xset s off` GOLD (CHANGELOG.md)** | **RESUELTO por and-norm con gold corregido** |
+| Q06 | — | `com.dts.freefireth` en CONTINUE.md (other) | `com.dts.freefireth` en CONTINUE.md (other); FF_SEEN no_match en las 3 | problema de ranking (trae CONTINUE.md, no scrcpy.md) + FF_SEEN sin recuperar |
+| Q08 | — | `picom` en AGENTS.md (other) | `picom` en AGENTS.md (other); P_TERM_OPACITY no_match | puente técnico real (`opaca/transparente`↔`picom`), gold correcto (System.md:3/78) |
+
+### Lectura
+
+1. **Q04 era 100 % fixture, no retrieval.** La evidencia existía y **and-norm la recuperaba**;
+   el gold apuntaba al archivo equivocado → contaba como `other_file_match`. Con el gold
+   corregido, and-norm recupera Q04 completo. **Invalida parcialmente la conclusión del
+   Paso 4** ("and-norm no captura el puente léxico"): el mecanismo SÍ lo captura cuando el
+   fixture declara la fuente correcta.
+2. **and-norm queda como la mejor variante sobre gold corregido**: search_recall 0.100 (vs
+   or 0.050, and 0.000), leakage 0.522 (vs or 0.694) y tokens 37.5k (vs or 44.8k). Sigue por
+   debajo del umbral aspiracional (≥ 0.150) pero es la única que convierte un caso de
+   fact-retrieval completo en recuperación gold válida.
+3. **El problema de retrieval restante es real, específico y medible con gold correcto:**
+   - Q03/Q08 → puente semántico/técnico (aguja en archivo gold, cero overlap léxico).
+   - Q06 → el ranking trae CONTINUE.md y no scrcpy.md (gold); FF_SEEN no se recupera ni
+     siendo gold (CHANGELOG.md:186 comparte tokens `scrcpy`/`free`/`fire` pero el snippet
+     no llega al top).
+4. **Router intacto en las 3 corridas (Δ=0)** — el problema sigue acotado a la capa Search.
+
+### Estado tras el Paso 6
+
+- Artefactos v3: `baseline-and-PC-2026-08-11.json`, `baseline-or-PC-2026-08-11.json`,
+  `baseline-and-norm-PC-2026-08-11.json` (nombres planos; los v2 `baseline-A/B/C-andnorm`
+  quedan en git history).
+- **No se adoptó ninguna variante.** La comparación limpia es la base para decidir el
+  próximo experimento (Hybrid o no) con datos que ya no mezclan fixture con retrieval.
+- Runtime congelado: `buffy-search.sh`/`buffy-router.sh` sin tocar.
+
 ### Estado de la suite en el perfil PC (2026-08-11)
 
 > ⚠️ **La suite del perfil PC no está actualmente 100% verde** por incompatibilidades

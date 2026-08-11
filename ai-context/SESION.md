@@ -1,4 +1,4 @@
-# 🧠 SESION — Buffy opencode (2026-08-11 · Fase 1 medida + Fase 2 diagnóstica aprobada + Fase 3 spec v2 + cierre)
+# 🧠 SESION — Buffy opencode (2026-08-11 · Fase 1 medida + Fase 2 diagnóstica aprobada + Fase 3 spec v2 + Pasos 1-6 del EVAL PC + cierre)
 
 > Contexto de lo implementado durante esta sesión. Corrida en **opencode** (teléfono).
 > ⚠️ La sesión se cortó antes del cierre protocolario; el cierre se completó en la sesión siguiente (mismo día).
@@ -23,6 +23,37 @@ Aprobar/avanzar las fases del benchmark realista contra el hallazgo `search_reca
 - **Fase 3 paso 2**: baseline re-congelada 3 seeds × {and,or} → paso 3: V1 del cap-selector híbrido.
 - En el PC: tras `git pull`, `buffy-memory.sh sync pull` UNA vez.
 - P1: retorno del aprendizaje · P2: concurrencia 3+ escritores · Opcional: `Knowledge/Tools/Buffy-Memory.md` · Revisar `~/gscript-audit/sin_titulo_1/`.
+
+---
+
+## 🔎 EVAL PC — Pasos 5 y 6 (auditoría de gold + fixture corregido)
+
+### Paso 5 — Auditoría de gold/cobertura de evidencia (COMPLETADO)
+- **Q04 — gold DEFECTUOSO (crítico):** `gold_files=[System.md]` pero `xset -dpms`/`xset s off`
+  NO existen en System.md (viven en CONTINUE.md:405, CHANGELOG.md:203, SESION-archive.md:1970).
+  search_recall de Q04 = 0 por construcción del fixture, no por fallo del buscador.
+- **Q06 — gold PARCIALMENTE defectuoso:** `FF_SEEN` no está en ningún gold file declarado;
+  vive en CONTINUE/CHANGELOG/SESION. `com.dts.freefireth` sí está en scrcpy.md:57.
+- **Q03/Q08 — gold CORRECTO pero puente léxico roto:** agujas SÍ en archivo gold pero la línea
+  gold comparte 0-1 tokens con la query (`git push origin` overlap NINGUNO; `picom` NINGUNO).
+- **Q01/Q02/Q05/Q07/Q09/Q10 — gold correcto.** Conclusión: problema MIXTO (2/10 fixture,
+  Q03/Q08 puente semántico/técnico). Detalle en EVAL-REGISTRY.md → Paso 5.
+
+### Paso 6 — Fixture gold corregido + A/B/C regenerados (COMPLETADO, instrumento v3)
+- **Fixture:** Q04 → gold `ai-context/CHANGELOG.md` (fuente real, línea 203); Q06 → `CHANGELOG.md`
+  añadido (FF_SEEN, línea 186). Nuevo hash `00852568…`. Solo `evidencia real → gold correcto`.
+- **Instrumento v3:** `EVAL_HASH` actualizado + leakage ya no penaliza archivos gold.
+- **Resultados (gold corregido):** search_recall **A=0.000 / B=0.050 / C=0.100** · other
+  0.000/0.200/0.100 · context_relevance 0.600/0.202/0.355 · leakage 0.267/0.694/0.522 ·
+  token 5 069/44 846/37 547 · router Δ=0.
+- **Hallazgo clave:** **Q04 era 100 % fixture, no retrieval.** and-norm SÍ recupera
+  `xset -dpms`+`xset s off` como gold con el fixture corregido → invalida parcialmente la
+  conclusión del Paso 4 ("and-norm no captura el puente léxico").
+- **Retrieval restante (con gold correcto):** Q03/Q08 puente semántico/técnico real; Q06
+  ranking trae CONTINUE.md y no scrcpy.md, FF_SEEN no se recupera ni siendo gold.
+- **No se adoptó ninguna variante.** Runtime congelado. Artefactos v3:
+  `baseline-and/or/and-norm-PC-2026-08-11.json`. Detalle en EVAL-REGISTRY.md → Paso 6.
+- **Siguiente:** decisión del usuario sobre el próximo experimento (¿Hybrid?) con gold corregido.
 
 ---
 
