@@ -1,7 +1,7 @@
 # 🔄 CONTINUE — Handoff entre sesiones
 
 > ⚡ **PRÓXIMA SESIÓN: LEE ESTO PRIMERO**
-> Generado: 2026-08-11 (opencode — **Fase 3 · Pasos 1-2 aprobados; Paso 3 CERRADO (OR no adoptado); diagnóstico COMPLETADO; Paso 4 (AND normalizado) EJECUTADO — métricas crudas registradas, SIN veredicto**)
+> Generado: 2026-08-11 (opencode — **Fase 3 · Pasos 1-2 ✅; Paso 3 CERRADO (OR no adoptado); diagnóstico ✅; Paso 4 CERRADO (C/and-norm NO adoptado); Paso 5 auditoría de gold COMPLETADA (Q04 gold defectuoso, Q06 parcial, Q03/Q08 puente léxico roto) — siguiente: decisión del usuario sobre corregir fixture gold**)
 
 > 🗝️ **Palabra de cierre acordada ("cerrar día"):** el agente escribe el contexto (SESION.md/CONTINUE.md/CHANGELOG.md, máx 5 entradas en SESION.md) y luego ejecuta **`buffy-close-day.sh`** (mensaje opcional con `--message`) — hace sync push de la memoria curada, regenera SNAPSHOT, corre doctor --quick y commit + push. Si el sync conflictúa, el cierre aborta y hay que resolver.
 
@@ -193,6 +193,42 @@ documentos hizo que AND fallara y OR acertara. Hipótesis verificable, no saltar
   `baseline-C-andnorm-PC-2026-08-11.json`. Detalle en EVAL-REGISTRY.md → Paso 4.
 - **Siguiente:** esperar decisión del usuario sobre los datos crudos. NO interpretar,
   NO ajustar parámetros (≥2 tokens, stopwords, LIMIT), NO adoptar and-norm.
+
+**PASO 4 CERRADO (2026-08-11) — C (and-norm) NO adoptado:**
+- Veredicto del usuario: and-norm no resuelve el problema. search_recall gold = 0.000.
+  La hipótesis (≥2 tokens significativos en la misma línea recuperaría Q03/Q04 sin
+  ruido de OR) NO ocurrió. C reproduce las agujas no-gold de B (other 0.200) pero no
+  transforma ninguna en recuperación válida del archivo gold.
+- Descartado con evidencia: variantes pequeñas de AND (≥3, ranking, BM25, LIMIT,
+  stopwords) — el mecanismo no captura el puente léxico (crear↔create, pantalla no se
+  apaga↔xset -dpms). El problema es semántico/técnico, no de operador lógico.
+- NO saltar a Hybrid todavía. Pregunta fundamental: ¿el problema está en el retrieval
+  o en el gold/fixture? Q04/Q06/Q08 muestran info encontrada en OTROS archivos
+  (CONTINUE.md, AGENTS.md) — el benchmark puede medir file retrieval cuando el gold
+  representa fact retrieval.
+- **Siguiente: Paso 5 — auditoría de gold/cobertura de evidencia** (10 queries,
+  especialmente Q03/Q04/Q06/Q08): gold file, gold line, gold fact, evidencia en gold,
+  evidencia equivalente fuera de gold, ¿el gold representa la respuesta esperada?
+- Runtime congelado. C NO adoptado.
+
+**PASO 5 COMPLETADO (2026-08-11) — auditoría de gold/cobertura de evidencia:**
+- **Q04 — gold DEFECTUOSO (crítico):** gold_files=[System.md] pero `xset -dpms`/`xset
+  s off` NO existen en System.md (grep 0). Viven en CONTINUE.md:405, CHANGELOG.md:203,
+  SESION-archive.md:1970. search_recall de Q04 = 0 por construcción del fixture, no por
+  fallo del buscador → other_file_match inevitable.
+- **Q06 — gold PARCIALMENTE defectuoso:** `FF_SEEN` no está en ningún gold file
+  declarado; vive en CONTINUE.md/CHANGELOG/SESION. `com.dts.freefireth` sí está en
+  scrcpy.md:57 pero sin overlap léxico con la query.
+- **Q03/Q08 — gold CORRECTO pero puente léxico roto:** agujas SÍ en archivo gold pero
+  la línea gold comparte 0-1 tokens con la query (`git push origin` overlap NINGUNO;
+  `gh pr create` overlap 1 `crear`; `picom`/`P_TERM_OPACITY` overlap NINGUNO).
+- **Q01/Q02/Q05/Q07/Q09/Q10 — gold correcto** (agujas en el archivo gold declarado).
+- **Conclusión: problema MIXTO.** 2/10 (Q04,Q06) gold que no representa la respuesta
+  esperada (file vs fact retrieval); Q03/Q08 puente semántico/técnico roto.
+- **Implicación:** antes de Hybrid/embeddings/query expansion, conviene **corregir el
+  fixture gold** (Q04 → apuntar a CONTINUE.md/CHANGELOG o mover evidencia a System.md;
+  Q06 → añadir archivo de sesión). Decisión del usuario.
+- Detalle completo en EVAL-REGISTRY.md → Paso 5.
 
 **Suite PC — nota (2026-08-11):** `225 OK / 5 FAIL` — los 5 son preexistentes y ajenos
 a la Fase 3 (3 × test-scale.sh con ruta Termux hardcodeada en PC; 2 × drift de conteos
