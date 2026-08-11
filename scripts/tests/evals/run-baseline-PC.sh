@@ -22,6 +22,12 @@
 #   search_recall_raw = (gold + other) / total → para comparar con runner v1.
 #   gold_facts_matches = desglose por aguja con status y path.
 #
+# Instrumento v3 (Paso 6 — fixture corregido Q04/Q06):
+#   gold_files de Q04/Q06 ahora apuntan a la fuente canónica real (ai-context/CHANGELOG.md).
+#   cross_domain_leakage excluye files_gold: un archivo gold NUNCA es leakage (si el fixture
+#   declara que CHANGELOG.md es la respuesta esperada, traerlo no puede penalizar leakage).
+#   EVAL_HASH actualizado al hash del fixture corregido (00852568...).
+#
 # Estrategia and-norm (Paso 4):
 #   normalización idéntica a OR (deaccent → lowercase → alnum → ≥3 chars, STOPWORDS_ES)
 #   + gate de co-ocurrencia de ≥2 tokens significativos en la MISMA línea (sets, no
@@ -42,7 +48,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_DIR="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 EVAL="$SCRIPT_DIR/eval-ctx-PC-2026-08-11.json"
-EVAL_HASH="8e42d119bf7bc4f2014e7239f101e3c37296365f3b24158e0cb0155baaa67f5d"
+EVAL_HASH="0085256874af80e0677a6121384c5702d0aea600d21c2a175441449f4fd19ffd"
 
 STRATEGY="and"
 OUT_FILE=""
@@ -261,7 +267,9 @@ for q in fixture["queries"]:
     ctx = router_kno_set | hit_paths
     files_gold = gold_files
     crel_q = len(ctx & files_gold) / len(ctx) if ctx else 0.0
-    leak_q = len({f for f in ctx if dom_of(f) not in gold_domains}) / len(ctx) if ctx else 0.0
+    # Instrumento v3 (Paso 6): un archivo gold NUNCA es leakage — si el fixture declara
+    # que CHANGELOG.md es la respuesta esperada, traerlo no puede penalizar leakage.
+    leak_q = len({f for f in ctx if f not in files_gold and dom_of(f) not in gold_domains}) / len(ctx) if ctx else 0.0
     crel.append(crel_q); leak.append(leak_q)
 
     # ── token cost: chars(ctx)/4 (mismo estimador del bench realista) ──
@@ -328,7 +336,7 @@ summary = {
     "eval_id": fixture["eval_id"],
     "eval_hash": eval_hash,
     "strategy": strategy,
-    "instrument_version": "v2",
+    "instrument_version": "v3",
     "pipeline": pipeline_desc,
     "runtime_changed": False,
     "num_queries": n,
@@ -367,7 +375,7 @@ if [ "$QUIET" = false ]; then
 import json, sys
 d = json.load(open(sys.argv[1]))
 a = d["aggregate"]
-print("── Baseline %s — perfil PC (eval-ctx-PC-2026-08-11, estrategia '%s', instrumento v2) ──" % (d["baseline"], d["strategy"]))
+print("── Baseline %s — perfil PC (eval-ctx-PC-2026-08-11, estrategia '%s', instrumento v3) ──" % (d["baseline"], d["strategy"]))
 print("  pipeline: %s" % d["pipeline"])
 print("  runtime_changed: %s · queries: %d" % (d["runtime_changed"], d["num_queries"]))
 print("  ── agregado ──")

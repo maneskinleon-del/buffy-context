@@ -1,0 +1,566 @@
+{
+  "baseline": "A",
+  "profile": "PC",
+  "host": "sabrewulf-a320ms2h",
+  "date": "2026-08-11",
+  "eval_id": "eval-ctx-PC-2026-08-11",
+  "eval_hash": "0085256874af80e0677a6121384c5702d0aea600d21c2a175441449f4fd19ffd",
+  "strategy": "and",
+  "instrument_version": "v3",
+  "pipeline": "buffy-router.sh (real) → buffy-search.sh FTS5 bm25 (estrategia 'and', limit=10)",
+  "runtime_changed": false,
+  "num_queries": 10,
+  "aggregate": {
+    "router_precision_avg": 0.667,
+    "router_recall_avg": 0.65,
+    "multi_domain_precision": {
+      "avg": 0.833,
+      "n": 2
+    },
+    "multi_domain_recall": {
+      "avg": 0.75,
+      "n": 2
+    },
+    "categories_recall_avg": 0.8,
+    "search_recall_avg": 0.0,
+    "search_other_recall_avg": 0.0,
+    "search_recall_raw_avg": 0.0,
+    "context_relevance_avg": 0.6,
+    "cross_domain_leakage_avg": 0.267,
+    "total_spurious_categories": 2,
+    "token_cost": {
+      "avg": 5068.7,
+      "p95": 39598
+    },
+    "latency_ms": {
+      "avg": 785.88,
+      "p95": 2753.7
+    },
+    "window_utilization_avg": 0.02534
+  },
+  "per_query": [
+    {
+      "id": "Q01",
+      "query": "el teléfono no aparece en scrcpy",
+      "coverage": [
+        "single-domain"
+      ],
+      "strategy": "and",
+      "gold_domains": [
+        "Android"
+      ],
+      "router_categories": [
+        "Android"
+      ],
+      "categories_recall": 1.0,
+      "spurious_categories": [],
+      "router_precision": 1.0,
+      "router_recall": 1.0,
+      "gold_files": [
+        "Knowledge/Android/ADB.md",
+        "Knowledge/Android/scrcpy.md"
+      ],
+      "router_knowledge": [
+        "Knowledge/Android/ADB.md",
+        "Knowledge/Android/scrcpy.md"
+      ],
+      "gold_in_router": [
+        "Knowledge/Android/ADB.md",
+        "Knowledge/Android/scrcpy.md"
+      ],
+      "search_top_n": 5,
+      "search_recall": 0.0,
+      "search_other_recall": 0.0,
+      "search_recall_raw": 0.0,
+      "gold_facts_matches": [
+        {
+          "text": "adb tcpip 5555",
+          "status": "no_match",
+          "path": null
+        },
+        {
+          "text": "adb connect",
+          "status": "no_match",
+          "path": null
+        }
+      ],
+      "cooccurrence_stats": null,
+      "context_relevance": 0.333,
+      "cross_domain_leakage": 0.667,
+      "context_estimated_tokens": 39598,
+      "latency_ms": 2753.7,
+      "search_hit_paths": [
+        "README.md",
+        "ai-context/CHANGELOG.md",
+        "ai-context/CONTINUE.md",
+        "ai-context/SESION.md"
+      ]
+    },
+    {
+      "id": "Q02",
+      "query": "cómo concedo permisos a una app con shizuku sin root",
+      "coverage": [
+        "single-domain"
+      ],
+      "strategy": "and",
+      "gold_domains": [
+        "Android"
+      ],
+      "router_categories": [
+        "Android"
+      ],
+      "categories_recall": 1.0,
+      "spurious_categories": [],
+      "router_precision": 1.0,
+      "router_recall": 1.0,
+      "gold_files": [
+        "Knowledge/Android/ADB.md",
+        "Knowledge/Android/Shizuku.md"
+      ],
+      "router_knowledge": [
+        "Knowledge/Android/ADB.md",
+        "Knowledge/Android/Shizuku.md"
+      ],
+      "gold_in_router": [
+        "Knowledge/Android/ADB.md",
+        "Knowledge/Android/Shizuku.md"
+      ],
+      "search_top_n": 0,
+      "search_recall": 0.0,
+      "search_other_recall": 0.0,
+      "search_recall_raw": 0.0,
+      "gold_facts_matches": [
+        {
+          "text": "rish -c",
+          "status": "no_match",
+          "path": null
+        },
+        {
+          "text": "moe.shizuku.privileged.api",
+          "status": "no_match",
+          "path": null
+        },
+        {
+          "text": "pm grant",
+          "status": "no_match",
+          "path": null
+        }
+      ],
+      "cooccurrence_stats": null,
+      "context_relevance": 1.0,
+      "cross_domain_leakage": 0.0,
+      "context_estimated_tokens": 1742,
+      "latency_ms": 584.7,
+      "search_hit_paths": []
+    },
+    {
+      "id": "Q03",
+      "query": "quiero pushear el commit y crear el pull request",
+      "coverage": [
+        "single-domain"
+      ],
+      "strategy": "and",
+      "gold_domains": [
+        "Git"
+      ],
+      "router_categories": [
+        "Git"
+      ],
+      "categories_recall": 1.0,
+      "spurious_categories": [],
+      "router_precision": 1.0,
+      "router_recall": 1.0,
+      "gold_files": [
+        "Knowledge/Git/Commands.md"
+      ],
+      "router_knowledge": [
+        "Knowledge/Git/Commands.md"
+      ],
+      "gold_in_router": [
+        "Knowledge/Git/Commands.md"
+      ],
+      "search_top_n": 0,
+      "search_recall": 0.0,
+      "search_other_recall": 0.0,
+      "search_recall_raw": 0.0,
+      "gold_facts_matches": [
+        {
+          "text": "git push origin",
+          "status": "no_match",
+          "path": null
+        },
+        {
+          "text": "gh pr create",
+          "status": "no_match",
+          "path": null
+        }
+      ],
+      "cooccurrence_stats": null,
+      "context_relevance": 1.0,
+      "cross_domain_leakage": 0.0,
+      "context_estimated_tokens": 609,
+      "latency_ms": 527.2,
+      "search_hit_paths": []
+    },
+    {
+      "id": "Q04",
+      "query": "la pantalla se apaga sola después de unos minutos",
+      "coverage": [
+        "no-lexical-signals"
+      ],
+      "strategy": "and",
+      "gold_domains": [
+        "Linux"
+      ],
+      "router_categories": [
+        "Android"
+      ],
+      "categories_recall": 0.0,
+      "spurious_categories": [
+        "Android"
+      ],
+      "router_precision": 0.0,
+      "router_recall": 0.0,
+      "gold_files": [
+        "ai-context/CHANGELOG.md"
+      ],
+      "router_knowledge": [
+        "Knowledge/Android/ADB.md"
+      ],
+      "gold_in_router": [],
+      "search_top_n": 0,
+      "search_recall": 0.0,
+      "search_other_recall": 0.0,
+      "search_recall_raw": 0.0,
+      "gold_facts_matches": [
+        {
+          "text": "xset -dpms",
+          "status": "no_match",
+          "path": null
+        },
+        {
+          "text": "xset s off",
+          "status": "no_match",
+          "path": null
+        }
+      ],
+      "cooccurrence_stats": null,
+      "context_relevance": 0.0,
+      "cross_domain_leakage": 1.0,
+      "context_estimated_tokens": 834,
+      "latency_ms": 545.6,
+      "search_hit_paths": []
+    },
+    {
+      "id": "Q05",
+      "query": "el componente React de la app necesita leer el serial del teléfono por adb",
+      "coverage": [
+        "multi-domain"
+      ],
+      "strategy": "and",
+      "gold_domains": [
+        "Android",
+        "React"
+      ],
+      "router_categories": [
+        "Android",
+        "React"
+      ],
+      "categories_recall": 1.0,
+      "spurious_categories": [],
+      "router_precision": 1.0,
+      "router_recall": 1.0,
+      "gold_files": [
+        "Knowledge/Android/ADB.md",
+        "Knowledge/React/React.md"
+      ],
+      "router_knowledge": [
+        "Knowledge/Android/ADB.md",
+        "Knowledge/React/React.md"
+      ],
+      "gold_in_router": [
+        "Knowledge/Android/ADB.md",
+        "Knowledge/React/React.md"
+      ],
+      "search_top_n": 0,
+      "search_recall": 0.0,
+      "search_other_recall": 0.0,
+      "search_recall_raw": 0.0,
+      "gold_facts_matches": [
+        {
+          "text": "useState",
+          "status": "no_match",
+          "path": null
+        },
+        {
+          "text": "adb devices -l",
+          "status": "no_match",
+          "path": null
+        }
+      ],
+      "cooccurrence_stats": null,
+      "context_relevance": 1.0,
+      "cross_domain_leakage": 0.0,
+      "context_estimated_tokens": 1326,
+      "latency_ms": 603.1,
+      "search_hit_paths": []
+    },
+    {
+      "id": "Q06",
+      "query": "el script bash de scrcpy no abre free fire, revisá el script",
+      "coverage": [
+        "multi-domain"
+      ],
+      "strategy": "and",
+      "gold_domains": [
+        "Android",
+        "Shell"
+      ],
+      "router_categories": [
+        "Android",
+        "Shell"
+      ],
+      "categories_recall": 1.0,
+      "spurious_categories": [],
+      "router_precision": 0.667,
+      "router_recall": 0.5,
+      "gold_files": [
+        "Knowledge/Android/Keymappers.md",
+        "Knowledge/Android/scrcpy.md",
+        "Knowledge/Shell/Shell.md",
+        "ai-context/CHANGELOG.md"
+      ],
+      "router_knowledge": [
+        "Knowledge/Android/ADB.md",
+        "Knowledge/Android/scrcpy.md",
+        "Knowledge/Shell/Shell.md"
+      ],
+      "gold_in_router": [
+        "Knowledge/Android/scrcpy.md",
+        "Knowledge/Shell/Shell.md"
+      ],
+      "search_top_n": 0,
+      "search_recall": 0.0,
+      "search_other_recall": 0.0,
+      "search_recall_raw": 0.0,
+      "gold_facts_matches": [
+        {
+          "text": "FF_SEEN",
+          "status": "no_match",
+          "path": null
+        },
+        {
+          "text": "com.dts.freefireth",
+          "status": "no_match",
+          "path": null
+        }
+      ],
+      "cooccurrence_stats": null,
+      "context_relevance": 0.667,
+      "cross_domain_leakage": 0.0,
+      "context_estimated_tokens": 2080,
+      "latency_ms": 605.4,
+      "search_hit_paths": []
+    },
+    {
+      "id": "Q07",
+      "query": "el celular anda lento, qué puedo hacer",
+      "coverage": [
+        "no-lexical-signals"
+      ],
+      "strategy": "and",
+      "gold_domains": [
+        "Android"
+      ],
+      "router_categories": [
+        "Android"
+      ],
+      "categories_recall": 1.0,
+      "spurious_categories": [],
+      "router_precision": 1.0,
+      "router_recall": 0.5,
+      "gold_files": [
+        "Knowledge/Android/ADB.md",
+        "Knowledge/Android/GameOptimization.md"
+      ],
+      "router_knowledge": [
+        "Knowledge/Android/ADB.md"
+      ],
+      "gold_in_router": [
+        "Knowledge/Android/ADB.md"
+      ],
+      "search_top_n": 0,
+      "search_recall": 0.0,
+      "search_other_recall": 0.0,
+      "search_recall_raw": 0.0,
+      "gold_facts_matches": [
+        {
+          "text": "dumpsys thermalservice",
+          "status": "no_match",
+          "path": null
+        },
+        {
+          "text": "force_gpu_rendering",
+          "status": "no_match",
+          "path": null
+        }
+      ],
+      "cooccurrence_stats": null,
+      "context_relevance": 1.0,
+      "cross_domain_leakage": 0.0,
+      "context_estimated_tokens": 834,
+      "latency_ms": 549.6,
+      "search_hit_paths": []
+    },
+    {
+      "id": "Q08",
+      "query": "la terminal se ve opaca y quiero que se vea transparente",
+      "coverage": [
+        "no-lexical-signals"
+      ],
+      "strategy": "and",
+      "gold_domains": [
+        "Linux"
+      ],
+      "router_categories": [
+        "Android"
+      ],
+      "categories_recall": 0.0,
+      "spurious_categories": [
+        "Android"
+      ],
+      "router_precision": 0.0,
+      "router_recall": 0.0,
+      "gold_files": [
+        "Knowledge/Linux/System.md"
+      ],
+      "router_knowledge": [
+        "Knowledge/Android/ADB.md"
+      ],
+      "gold_in_router": [],
+      "search_top_n": 0,
+      "search_recall": 0.0,
+      "search_other_recall": 0.0,
+      "search_recall_raw": 0.0,
+      "gold_facts_matches": [
+        {
+          "text": "picom",
+          "status": "no_match",
+          "path": null
+        },
+        {
+          "text": "P_TERM_OPACITY",
+          "status": "no_match",
+          "path": null
+        }
+      ],
+      "cooccurrence_stats": null,
+      "context_relevance": 0.0,
+      "cross_domain_leakage": 1.0,
+      "context_estimated_tokens": 834,
+      "latency_ms": 552.4,
+      "search_hit_paths": []
+    },
+    {
+      "id": "Q09",
+      "query": "quiero optimizar el rendimiento",
+      "coverage": [
+        "ambiguous"
+      ],
+      "strategy": "and",
+      "gold_domains": [
+        "Android"
+      ],
+      "router_categories": [
+        "Android"
+      ],
+      "categories_recall": 1.0,
+      "spurious_categories": [],
+      "router_precision": 0.5,
+      "router_recall": 1.0,
+      "gold_files": [
+        "Knowledge/Android/GameOptimization.md"
+      ],
+      "router_knowledge": [
+        "Knowledge/Android/ADB.md",
+        "Knowledge/Android/GameOptimization.md"
+      ],
+      "gold_in_router": [
+        "Knowledge/Android/GameOptimization.md"
+      ],
+      "search_top_n": 0,
+      "search_recall": 0.0,
+      "search_other_recall": 0.0,
+      "search_recall_raw": 0.0,
+      "gold_facts_matches": [
+        {
+          "text": "scaling_governor",
+          "status": "no_match",
+          "path": null
+        },
+        {
+          "text": "force_gpu_rendering",
+          "status": "no_match",
+          "path": null
+        }
+      ],
+      "cooccurrence_stats": null,
+      "context_relevance": 0.5,
+      "cross_domain_leakage": 0.0,
+      "context_estimated_tokens": 1415,
+      "latency_ms": 553.7,
+      "search_hit_paths": []
+    },
+    {
+      "id": "Q10",
+      "query": "la ZTE se calienta cuando juego free fire",
+      "coverage": [
+        "leakage"
+      ],
+      "strategy": "and",
+      "gold_domains": [
+        "Android"
+      ],
+      "router_categories": [
+        "Android"
+      ],
+      "categories_recall": 1.0,
+      "spurious_categories": [],
+      "router_precision": 0.5,
+      "router_recall": 0.5,
+      "gold_files": [
+        "Knowledge/Android/GameOptimization.md",
+        "Knowledge/Android/NubiaLab.md"
+      ],
+      "router_knowledge": [
+        "Knowledge/Android/ADB.md",
+        "Knowledge/Android/GameOptimization.md"
+      ],
+      "gold_in_router": [
+        "Knowledge/Android/GameOptimization.md"
+      ],
+      "search_top_n": 0,
+      "search_recall": 0.0,
+      "search_other_recall": 0.0,
+      "search_recall_raw": 0.0,
+      "gold_facts_matches": [
+        {
+          "text": "dumpsys thermalservice",
+          "status": "no_match",
+          "path": null
+        },
+        {
+          "text": "thermal_control",
+          "status": "no_match",
+          "path": null
+        }
+      ],
+      "cooccurrence_stats": null,
+      "context_relevance": 0.5,
+      "cross_domain_leakage": 0.0,
+      "context_estimated_tokens": 1415,
+      "latency_ms": 583.4,
+      "search_hit_paths": []
+    }
+  ]
+}

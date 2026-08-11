@@ -21,121 +21,254 @@
     {
       "id": "Q01",
       "query": "el teléfono no aparece en scrcpy",
-      "coverage": ["single-domain"],
-      "gold_domains": ["Android"],
-      "gold_files": ["Knowledge/Android/scrcpy.md", "Knowledge/Android/ADB.md"],
+      "coverage": [
+        "single-domain"
+      ],
+      "gold_domains": [
+        "Android"
+      ],
+      "gold_files": [
+        "Knowledge/Android/scrcpy.md",
+        "Knowledge/Android/ADB.md"
+      ],
       "gold_facts": [
-        {"text": "adb tcpip 5555", "source": "Knowledge/Android/ADB.md"},
-        {"text": "adb connect", "source": "Knowledge/Android/ADB.md"}
+        {
+          "text": "adb tcpip 5555",
+          "source": "Knowledge/Android/ADB.md"
+        },
+        {
+          "text": "adb connect",
+          "source": "Knowledge/Android/ADB.md"
+        }
       ],
       "notes": "Caso canónico (idéntico al usado en bench-context-selection P0). Dominio puro Android: scrcpy + ADB."
     },
     {
       "id": "Q02",
       "query": "cómo concedo permisos a una app con shizuku sin root",
-      "coverage": ["single-domain"],
-      "gold_domains": ["Android"],
-      "gold_files": ["Knowledge/Android/Shizuku.md", "Knowledge/Android/ADB.md"],
+      "coverage": [
+        "single-domain"
+      ],
+      "gold_domains": [
+        "Android"
+      ],
+      "gold_files": [
+        "Knowledge/Android/Shizuku.md",
+        "Knowledge/Android/ADB.md"
+      ],
       "gold_facts": [
-        {"text": "rish -c", "source": "Knowledge/Android/Shizuku.md"},
-        {"text": "moe.shizuku.privileged.api", "source": "Knowledge/Android/Shizuku.md"},
-        {"text": "pm grant", "source": "Knowledge/Android/ADB.md"}
+        {
+          "text": "rish -c",
+          "source": "Knowledge/Android/Shizuku.md"
+        },
+        {
+          "text": "moe.shizuku.privileged.api",
+          "source": "Knowledge/Android/Shizuku.md"
+        },
+        {
+          "text": "pm grant",
+          "source": "Knowledge/Android/ADB.md"
+        }
       ],
       "notes": "Shizuku/rish + ADB: mismo dominio Android, dos archivos del dominio."
     },
     {
       "id": "Q03",
       "query": "quiero pushear el commit y crear el pull request",
-      "coverage": ["single-domain"],
-      "gold_domains": ["Git"],
-      "gold_files": ["Knowledge/Git/Commands.md"],
+      "coverage": [
+        "single-domain"
+      ],
+      "gold_domains": [
+        "Git"
+      ],
+      "gold_files": [
+        "Knowledge/Git/Commands.md"
+      ],
       "gold_facts": [
-        {"text": "git push origin", "source": "Knowledge/Git/Commands.md"},
-        {"text": "gh pr create", "source": "Knowledge/Git/Commands.md"}
+        {
+          "text": "git push origin",
+          "source": "Knowledge/Git/Commands.md"
+        },
+        {
+          "text": "gh pr create",
+          "source": "Knowledge/Git/Commands.md"
+        }
       ],
       "notes": "Dominio Git puro: commit/push/PR."
     },
     {
       "id": "Q04",
       "query": "la pantalla se apaga sola después de unos minutos",
-      "coverage": ["no-lexical-signals"],
-      "gold_domains": ["Linux"],
-      "gold_files": ["Knowledge/Linux/System.md"],
-      "gold_facts": [
-        {"text": "xset -dpms", "source": "ai-context/CONTINUE.md"},
-        {"text": "xset s off", "source": "ai-context/CONTINUE.md"}
+      "coverage": [
+        "no-lexical-signals"
       ],
-      "notes": "Caso real 2026-08-07 (fix DPMS/blanking). Sin señal léxica del router (no pacman/systemd/bspwm/kernel): caso duro que mide si el selector resuelve por contexto. La aguja vive en sesión (CONTINUE/CHANGELOG), no en Knowledge."
+      "gold_domains": [
+        "Linux"
+      ],
+      "gold_files": [
+        "ai-context/CHANGELOG.md"
+      ],
+      "gold_facts": [
+        {
+          "text": "xset -dpms",
+          "source": "ai-context/CHANGELOG.md"
+        },
+        {
+          "text": "xset s off",
+          "source": "ai-context/CHANGELOG.md"
+        }
+      ],
+      "notes": "Caso real 2026-08-07 (fix DPMS/blanking). Sin señal léxica del router (no pacman/systemd/bspwm/kernel): caso duro que mide si el selector resuelve por contexto. CORREGIDO Paso 6: gold_files apunta a la fuente canónica real (ai-context/CHANGELOG.md:203, registro histórico estable); antes declaraba Knowledge/Linux/System.md que NO contiene la evidencia."
     },
     {
       "id": "Q05",
       "query": "el componente React de la app necesita leer el serial del teléfono por adb",
-      "coverage": ["multi-domain"],
-      "gold_domains": ["React", "Android"],
-      "gold_files": ["Knowledge/React/React.md", "Knowledge/Android/ADB.md"],
+      "coverage": [
+        "multi-domain"
+      ],
+      "gold_domains": [
+        "React",
+        "Android"
+      ],
+      "gold_files": [
+        "Knowledge/React/React.md",
+        "Knowledge/Android/ADB.md"
+      ],
       "gold_facts": [
-        {"text": "useState", "source": "Knowledge/React/React.md"},
-        {"text": "adb devices -l", "source": "Knowledge/Android/ADB.md"}
+        {
+          "text": "useState",
+          "source": "Knowledge/React/React.md"
+        },
+        {
+          "text": "adb devices -l",
+          "source": "Knowledge/Android/ADB.md"
+        }
       ],
       "notes": "Dos dominios legítimos: React (componente) + Android (adb). El router debe cargar ambos."
     },
     {
       "id": "Q06",
       "query": "el script bash de scrcpy no abre free fire, revisá el script",
-      "coverage": ["multi-domain"],
-      "gold_domains": ["Android", "Shell"],
-      "gold_files": ["Knowledge/Android/scrcpy.md", "Knowledge/Android/Keymappers.md", "Knowledge/Shell/Shell.md"],
-      "gold_facts": [
-        {"text": "FF_SEEN", "source": "ai-context/CONTINUE.md"},
-        {"text": "com.dts.freefireth", "source": "Knowledge/Android/scrcpy.md"}
+      "coverage": [
+        "multi-domain"
       ],
-      "notes": "Caso real 2026-08-07 (script que ya no abría Free Fire automáticamente). Android (scrcpy/free fire) + Shell (script bash). La aguja FF_SEEN está en la sesión."
+      "gold_domains": [
+        "Android",
+        "Shell"
+      ],
+      "gold_files": [
+        "Knowledge/Android/scrcpy.md",
+        "Knowledge/Android/Keymappers.md",
+        "Knowledge/Shell/Shell.md",
+        "ai-context/CHANGELOG.md"
+      ],
+      "gold_facts": [
+        {
+          "text": "FF_SEEN",
+          "source": "ai-context/CHANGELOG.md"
+        },
+        {
+          "text": "com.dts.freefireth",
+          "source": "Knowledge/Android/scrcpy.md"
+        }
+      ],
+      "notes": "Caso real 2026-08-07 (script que ya no abría Free Fire automáticamente). Android (scrcpy/free fire) + Shell (script bash). CORREGIDO Paso 6: gold_files incluye ai-context/CHANGELOG.md:186 (fuente real de FF_SEEN); scrcpy.md ya contenía com.dts.freefireth:57. Antes FF_SEEN no estaba en ningún gold file."
     },
     {
       "id": "Q07",
       "query": "el celular anda lento, qué puedo hacer",
-      "coverage": ["no-lexical-signals"],
-      "gold_domains": ["Android"],
-      "gold_files": ["Knowledge/Android/GameOptimization.md", "Knowledge/Android/ADB.md"],
+      "coverage": [
+        "no-lexical-signals"
+      ],
+      "gold_domains": [
+        "Android"
+      ],
+      "gold_files": [
+        "Knowledge/Android/GameOptimization.md",
+        "Knowledge/Android/ADB.md"
+      ],
       "gold_facts": [
-        {"text": "dumpsys thermalservice", "source": "Knowledge/Android/GameOptimization.md"},
-        {"text": "force_gpu_rendering", "source": "Knowledge/Android/GameOptimization.md"}
+        {
+          "text": "dumpsys thermalservice",
+          "source": "Knowledge/Android/GameOptimization.md"
+        },
+        {
+          "text": "force_gpu_rendering",
+          "source": "Knowledge/Android/GameOptimization.md"
+        }
       ],
       "notes": "'celular' NO es señal léxica del router (android|adb|scrcpy|shizuku|nubia|hyperos|xiaomi|miui|free fire|gg mouse|game boost|keymapper|mantis|apk|dispositivo|telefono|teléfono|rom|logcat|dumpsys|auto.js|automation|permiso). Gold por contexto de dispositivo → Android (optimización)."
     },
     {
       "id": "Q08",
       "query": "la terminal se ve opaca y quiero que se vea transparente",
-      "coverage": ["no-lexical-signals"],
-      "gold_domains": ["Linux"],
-      "gold_files": ["Knowledge/Linux/System.md"],
+      "coverage": [
+        "no-lexical-signals"
+      ],
+      "gold_domains": [
+        "Linux"
+      ],
+      "gold_files": [
+        "Knowledge/Linux/System.md"
+      ],
       "gold_facts": [
-        {"text": "picom", "source": "Knowledge/Linux/System.md"},
-        {"text": "P_TERM_OPACITY", "source": "ai-context/AGENTS.md"}
+        {
+          "text": "picom",
+          "source": "Knowledge/Linux/System.md"
+        },
+        {
+          "text": "P_TERM_OPACITY",
+          "source": "ai-context/AGENTS.md"
+        }
       ],
       "notes": "Transparencia de Alacritty requiere picom (compositor). 'opaca'/'transparente' no son señales léxicas de ninguna categoría del router → caso duro por contexto (Linux/compositor)."
     },
     {
       "id": "Q09",
       "query": "quiero optimizar el rendimiento",
-      "coverage": ["ambiguous"],
-      "gold_domains": ["Android"],
-      "gold_files": ["Knowledge/Android/GameOptimization.md"],
+      "coverage": [
+        "ambiguous"
+      ],
+      "gold_domains": [
+        "Android"
+      ],
+      "gold_files": [
+        "Knowledge/Android/GameOptimization.md"
+      ],
       "gold_facts": [
-        {"text": "scaling_governor", "source": "Knowledge/Android/GameOptimization.md"},
-        {"text": "force_gpu_rendering", "source": "Knowledge/Android/GameOptimization.md"}
+        {
+          "text": "scaling_governor",
+          "source": "Knowledge/Android/GameOptimization.md"
+        },
+        {
+          "text": "force_gpu_rendering",
+          "source": "Knowledge/Android/GameOptimization.md"
+        }
       ],
       "notes": "Ambigua: 'optimizar rendimiento' puede referir a Android (juego/dispositivo) o Linux (kernel/sysctl). Gold toma el caso predominante del perfil (rendimiento móvil → GameOptimization). La decisión queda documentada como gold manual."
     },
     {
       "id": "Q10",
       "query": "la ZTE se calienta cuando juego free fire",
-      "coverage": ["leakage"],
-      "gold_domains": ["Android"],
-      "gold_files": ["Knowledge/Android/GameOptimization.md", "Knowledge/Android/NubiaLab.md"],
+      "coverage": [
+        "leakage"
+      ],
+      "gold_domains": [
+        "Android"
+      ],
+      "gold_files": [
+        "Knowledge/Android/GameOptimization.md",
+        "Knowledge/Android/NubiaLab.md"
+      ],
       "gold_facts": [
-        {"text": "dumpsys thermalservice", "source": "Knowledge/Android/GameOptimization.md"},
-        {"text": "thermal_control", "source": "Knowledge/Android/GameOptimization.md"}
+        {
+          "text": "dumpsys thermalservice",
+          "source": "Knowledge/Android/GameOptimization.md"
+        },
+        {
+          "text": "thermal_control",
+          "source": "Knowledge/Android/GameOptimization.md"
+        }
       ],
       "notes": "Susceptible de leakage: 'ZTE'/'free fire' aparecen en NubiaLab.md, scrcpy.md, Keymappers.md y GameOptimization.md. FTS5 puro puede filtrar a scrcpy.md (también contiene dumpsys thermalservice) en vez del dominio correcto (GameOptimization = thermal del dispositivo)."
     }
