@@ -1,7 +1,7 @@
 # 🔄 CONTINUE — Handoff entre sesiones
 
 > ⚡ **PRÓXIMA SESIÓN: LEE ESTO PRIMERO**
-> Generado: 2026-08-11 (opencode — **Fase 3 · EVAL PC aprobado (Paso 1) + Baseline A PC medida (Paso 2, sin tocar runtime) — pendiente autorización del Paso 3**)
+> Generado: 2026-08-11 (opencode — **Fase 3 · Paso 1 (EVAL) + Paso 2 (Baseline A) APROBADOS por el usuario; Paso 3 = experimento Search OR/BM25 sobre el mismo EVAL (pendiente autorización)**)
 
 > 🗝️ **Palabra de cierre acordada ("cerrar día"):** el agente escribe el contexto (SESION.md/CONTINUE.md/CHANGELOG.md, máx 5 entradas en SESION.md) y luego ejecuta **`buffy-close-day.sh`** (mensaje opcional con `--message`) — hace sync push de la memoria curada, regenera SNAPSHOT, corre doctor --quick y commit + push. Si el sync conflictúa, el cierre aborta y hay que resolver.
 
@@ -101,7 +101,7 @@ La revisión señaló que versionar `.sync-state` en el repo generaba commits ex
 ---
 
 ## 📌 Fase 3 · Paso 1 — EVAL congelado (perfil PC) ✅ COMPLETADO
-## 📌 Fase 3 · Paso 2 — Baseline A (perfil PC) ✅ COMPLETADO · 2026-08-11
+## 📌 Fase 3 · Paso 2 — Baseline A (perfil PC) ✅ APROBADO por el usuario · 2026-08-11
 
 **Qué (Paso 1):** EVAL de selección de contexto congelado en `scripts/tests/evals/eval-ctx-PC-2026-08-11.json`
 (10 queries reales con gold manual). Hash `8e42d119bf7bc4f2014e7239f101e3c37296365f3b24158e0cb0155baaa67f5d`,
@@ -124,9 +124,17 @@ ADB de más, Q10 sin NubiaLab.
 **⛔ Reglas:** congelado ANTES de tocar router/search/selector/Hybrid. No podrá usarse para
 calibrar `θ_c`, presupuesto ni pesos. Nada del perfil PC entra en memoria curada.
 
-**▶ Siguiente paso (paso 3):** con la **aprobación del usuario** de la baseline A → decidir el
-siguiente cambio (p.ej. evaluar la estrategia `or` de search como mejora, o Hybrid). NO avanzar
-hasta que el usuario autorice explícitamente.
+**▶ Siguiente paso (paso 3) — RECOMENDADO y pendiente de autorización:** experimento
+**controlado A → Search OR/BM25 → mismo EVAL PC → comparar contra A**, sin tocar
+Hybrid ni cap-selector, sin calibrar con el EVAL, sin convertir OR en default.
+Regla del usuario: NO saltar a Hybrid con la evidencia actual — primero medir cuánto
+resuelve la mejora mínima de Search. Si OR/BM25 mejora search_recall sin destruir
+precision/leakage/cost → base empírica para decidir si el problema restante justifica
+el selector híbrido.
+
+**Suite PC — nota (2026-08-11):** `225 OK / 5 FAIL` — los 5 son preexistentes y ajenos
+a la Fase 3 (3 × test-scale.sh con ruta Termux hardcodeada en PC; 2 × drift de conteos
+README tras commits del teléfono). Documentado en EVAL-REGISTRY; NO arreglar ahora.
 
 ---
 
