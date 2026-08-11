@@ -1,3 +1,34 @@
+# 🧠 SESION — Buffy opencode (2026-08-10 · "cerrar día" automatizado con buffy-close-day.sh)
+
+> Contexto de lo implementado durante esta sesión. Corrida en **opencode** (teléfono).
+
+---
+
+## 🌙 "Cerrar día" automatizado — `buffy-close-day.sh`
+
+### Pedido del usuario
+"En el PC creé una nueva tarea y es cuando le diga 'cerrar día', cierra la sesión de memoria con todo lo hecho en esta. ¿Si lo implementamos acá o ya con el script de buffy-memory-sync ya se hace eso?"
+
+**Respuesta:** el sync cubre SOLO la memoria curada; el cierre completo era protocolo manual. Implementado el script que une ambas cosas.
+
+### Lo implementado
+`scripts/buffy-close-day.sh` (NUEVO) — protocolo de cierre en 4 pasos:
+1. `buffy-memory.sh sync push` → la memoria curada viaja al repo/GitHub (si conflictúa con el otro dispositivo → **aborta con guía**, nunca pisa).
+2. Regenera SNAPSHOT (buffy-context.sh, queda local, no se versiona).
+3. `buffy-doctor.sh --quick` → valida el cierre; aborta si hay errores.
+4. Commit (`docs(sesion): cerrar día — <fecha> [· mensaje]`) + push, y por cada `--extra-repo RUTA` también.
+
+Flags: `--message "texto"` · `--no-push` · `--skip-doctor` (solo pruebas) · `--extra-repo RUTA` · `--repo RUTA`.
+
+Tests en `scripts/tests/test-close-day.sh` (3 suites, +10 checks). **Suite: 239 OK / 0 FAIL (full, 234 functional + 5 meta) · 223 OK / 0 FAIL (--quick)**.
+
+**Lección de bash:** `trap '...' RETURN` dentro de una función setup se dispara al retornar ESA función (borra el sandbox antes de usarlo) — el trap va en cada test, no en el setup.
+
+### ⏳ Pendiente para el PC
+Tras `git pull`: `buffy-memory.sh sync pull` UNA vez (adopta la memoria del teléfono) → desde ahí "cerrar día" en el PC = escribir el contexto + `buffy-close-day.sh`.
+
+---
+
 # 🧠 SESION — Buffy opencode (2026-08-10 · P0 completado: memoria curada sincronizada entre PC y teléfono)
 
 > Contexto de lo implementado durante esta sesión. Corrida en **opencode** (teléfono).

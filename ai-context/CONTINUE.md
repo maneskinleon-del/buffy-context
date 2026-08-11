@@ -3,7 +3,30 @@
 > ⚡ **PRÓXIMA SESIÓN: LEE ESTO PRIMERO**
 > Generado: 2026-08-10 (opencode — sesión nocturna: **P0 cumplido — memoria curada sincronizada PC ↔ teléfono** con `buffy-memory.sh sync`)
 >
-> 🗝️ **Palabra de cierre acordada:** cuando el usuario diga **"cerrar día"**, ejecutar el protocolo de fin de sesión: actualizar CONTINUE.md/SESION.md/CHANGELOG.md (máx 5 entradas en SESION.md, archivar el resto), regenerar SNAPSHOT, validar con `buffy-doctor.sh --quick`, commit + push de buffy-context (y de los repos tocados en la sesión).
+> 🗝️ **Palabra de cierre acordada ("cerrar día"):** el agente escribe el contexto (SESION.md/CONTINUE.md/CHANGELOG.md, máx 5 entradas en SESION.md) y luego ejecuta **`buffy-close-day.sh`** (mensaje opcional con `--message`) — hace sync push de la memoria curada, regenera SNAPSHOT, corre doctor --quick y commit + push. Si el sync conflictúa, el cierre aborta y hay que resolver.
+
+---
+
+## Resumen de la sesión (2026-08-10 noche — opencode, "cerrar día" automatizado)
+
+**Tema:** el usuario creó una tarea nueva en el PC y preguntó si "cerrar día" ya quedaba cubierto con el sync de memoria → la memoria curada SÍ viaja, pero el cierre completo era protocolo manual. **Implementado: `buffy-close-day.sh`.**
+
+1. **`scripts/buffy-close-day.sh` (NUEVO)** — cierre de sesión automatizado:
+   - Paso 1: `buffy-memory.sh sync push` (memoria curada → repo → GitHub)
+   - Paso 2: regenera SNAPSHOT (buffy-context.sh, queda local)
+   - Paso 3: `buffy-doctor.sh --quick` (valida el cierre; aborta si hay errores)
+   - Paso 4: commit + push `docs(sesion): cerrar día — <fecha>`
+   - Flags: `--message "texto"`, `--no-push`, `--skip-doctor` (pruebas), `--extra-repo RUTA` (repos adicionales tocados), `--repo RUTA`.
+   - Si la memoria está en conflicto → cierre ABORTADO con guía de resolución (nunca pisa sin decisión).
+2. **Tests**: `test-close-day.sh` (3 suites, +10 checks): flujo completo (memoria versionada + SNAPSHOT + commit + repo limpio), conflicto de memoria aborta (exit != 0), --help/uso inválido. OJO con `trap RETURN` dentro de funciones setup: se dispara al retornar la función misma y borra el sandbox → el trap va en cada test.
+3. **README**: suite **239 full (234 functional + 5 meta) / 223 --quick (218 functional)**.
+
+### ⏳ Pendientes para otra sesión
+- **En el PC**: tras `git pull`, correr `buffy-memory.sh sync pull` UNA vez para adoptar la memoria del teléfono; desde ahí "cerrar día" = `buffy-close-day.sh` (o que la tarea nueva lo llame al recibir la palabra).
+- P1: retorno del aprendizaje (SESION-archive meses después → ¿conocimiento activo?).
+- P2: concurrencia 3+ escritores sobre MEMORY.md.
+- Opcional: `Knowledge/Tools/Buffy-Memory.md` (ficha de uso del CLI, ahora con sync).
+- Revisar `~/gscript-audit/sin_titulo_1/` (proyecto sin nombre).
 
 ---
 

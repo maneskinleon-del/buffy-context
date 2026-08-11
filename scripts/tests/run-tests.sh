@@ -50,6 +50,8 @@ source "$SCRIPT_DIR/test-router.sh"
 source "$SCRIPT_DIR/test-verify.sh"
 # shellcheck source=test-memory.sh
 source "$SCRIPT_DIR/test-memory.sh"
+# shellcheck source=test-close-day.sh
+source "$SCRIPT_DIR/test-close-day.sh"
 # shellcheck source=test-documentation.sh
 source "$SCRIPT_DIR/test-documentation.sh"
 # shellcheck source=test-scale.sh
@@ -67,7 +69,7 @@ echo "   bash puro (bats no requerido) · python3 para asserts JSON"
 
 # ── 0. Sintaxis previa (todos los scripts) ─────────────────
 suite "Sintaxis (bash -n)"
-for s in buffy-doctor.sh buffy-repair.sh buffy-agent.sh buffy-router.sh buffy-context.sh buffy-verify.sh buffy-source.sh buffy-memory.sh set-version.sh migrate-system.sh changelog-entry.sh skill-lint.sh ai-context-lint.sh; do
+for s in buffy-doctor.sh buffy-repair.sh buffy-agent.sh buffy-router.sh buffy-context.sh buffy-verify.sh buffy-source.sh buffy-memory.sh buffy-close-day.sh set-version.sh migrate-system.sh changelog-entry.sh skill-lint.sh ai-context-lint.sh; do
   if bash -n "$SCRIPTS_DIR/$s" 2>/dev/null; then
     ok "bash -n $s"
   else
