@@ -6,6 +6,7 @@
   "eval_id": "eval-ctx-PC-2026-08-11",
   "eval_hash": "8e42d119bf7bc4f2014e7239f101e3c37296365f3b24158e0cb0155baaa67f5d",
   "strategy": "or",
+  "instrument_version": "v2",
   "pipeline": "buffy-router.sh (real) → buffy-search.sh FTS5 bm25 (estrategia 'or', limit=10)",
   "runtime_changed": false,
   "num_queries": 10,
@@ -21,19 +22,21 @@
       "n": 2
     },
     "categories_recall_avg": 0.8,
-    "search_recall_avg": 0.25,
+    "search_recall_avg": 0.05,
+    "search_other_recall_avg": 0.2,
+    "search_recall_raw_avg": 0.25,
     "context_relevance_avg": 0.192,
     "cross_domain_leakage_avg": 0.704,
     "total_spurious_categories": 2,
     "token_cost": {
-      "avg": 43910.1,
-      "p95": 68954
+      "avg": 44337.4,
+      "p95": 69808
     },
     "latency_ms": {
-      "avg": 591.75,
-      "p95": 626.1
+      "avg": 555.67,
+      "p95": 608.1
     },
-    "window_utilization_avg": 0.21955
+    "window_utilization_avg": 0.22169
   },
   "per_query": [
     {
@@ -67,11 +70,25 @@
       ],
       "search_top_n": 10,
       "search_recall": 0.0,
-      "gold_facts_found": [],
+      "search_other_recall": 0.0,
+      "search_recall_raw": 0.0,
+      "gold_facts_matches": [
+        {
+          "text": "adb tcpip 5555",
+          "status": "no_match",
+          "path": null
+        },
+        {
+          "text": "adb connect",
+          "status": "no_match",
+          "path": null
+        }
+      ],
+      "cooccurrence_stats": null,
       "context_relevance": 0.286,
       "cross_domain_leakage": 0.714,
       "context_estimated_tokens": 19058,
-      "latency_ms": 622.2,
+      "latency_ms": 560.7,
       "search_hit_paths": [
         "INSTALL.md",
         "Knowledge/Android/ADB.md",
@@ -113,11 +130,30 @@
       ],
       "search_top_n": 10,
       "search_recall": 0.0,
-      "gold_facts_found": [],
+      "search_other_recall": 0.0,
+      "search_recall_raw": 0.0,
+      "gold_facts_matches": [
+        {
+          "text": "rish -c",
+          "status": "no_match",
+          "path": null
+        },
+        {
+          "text": "moe.shizuku.privileged.api",
+          "status": "no_match",
+          "path": null
+        },
+        {
+          "text": "pm grant",
+          "status": "no_match",
+          "path": null
+        }
+      ],
+      "cooccurrence_stats": null,
       "context_relevance": 0.286,
       "cross_domain_leakage": 0.714,
       "context_estimated_tokens": 48165,
-      "latency_ms": 622.1,
+      "latency_ms": 575.5,
       "search_hit_paths": [
         "Knowledge/Android/Shizuku.md",
         "Knowledge/README.md",
@@ -155,13 +191,27 @@
       ],
       "search_top_n": 10,
       "search_recall": 0.5,
-      "gold_facts_found": [
-        "gh pr create"
+      "search_other_recall": 0.0,
+      "search_recall_raw": 0.5,
+      "gold_facts_matches": [
+        {
+          "text": "git push origin",
+          "status": "no_match",
+          "path": null
+        },
+        {
+          "text": "gh pr create",
+          "status": "gold_file_match",
+          "path": [
+            "Knowledge/Git/Commands.md"
+          ]
+        }
       ],
+      "cooccurrence_stats": null,
       "context_relevance": 0.2,
       "cross_domain_leakage": 0.8,
-      "context_estimated_tokens": 17773,
-      "latency_ms": 555.2,
+      "context_estimated_tokens": 18628,
+      "latency_ms": 512.5,
       "search_hit_paths": [
         "CONTRIBUTING.md",
         "Knowledge/Git/Commands.md",
@@ -197,15 +247,30 @@
       ],
       "gold_in_router": [],
       "search_top_n": 10,
-      "search_recall": 1.0,
-      "gold_facts_found": [
-        "xset -dpms",
-        "xset s off"
+      "search_recall": 0.0,
+      "search_other_recall": 1.0,
+      "search_recall_raw": 1.0,
+      "gold_facts_matches": [
+        {
+          "text": "xset -dpms",
+          "status": "other_file_match",
+          "path": [
+            "ai-context/CONTINUE.md"
+          ]
+        },
+        {
+          "text": "xset s off",
+          "status": "other_file_match",
+          "path": [
+            "ai-context/CONTINUE.md"
+          ]
+        }
       ],
+      "cooccurrence_stats": null,
       "context_relevance": 0.0,
       "cross_domain_leakage": 1.0,
-      "context_estimated_tokens": 58807,
-      "latency_ms": 573.7,
+      "context_estimated_tokens": 59662,
+      "latency_ms": 526.3,
       "search_hit_paths": [
         "Knowledge/Tools/Benchmark-realista.md",
         "ai-context/CHANGELOG-archive.md",
@@ -247,11 +312,25 @@
       ],
       "search_top_n": 10,
       "search_recall": 0.0,
-      "gold_facts_found": [],
+      "search_other_recall": 0.0,
+      "search_recall_raw": 0.0,
+      "gold_facts_matches": [
+        {
+          "text": "useState",
+          "status": "no_match",
+          "path": null
+        },
+        {
+          "text": "adb devices -l",
+          "status": "no_match",
+          "path": null
+        }
+      ],
+      "cooccurrence_stats": null,
       "context_relevance": 0.25,
       "cross_domain_leakage": 0.5,
-      "context_estimated_tokens": 55717,
-      "latency_ms": 617.6,
+      "context_estimated_tokens": 56572,
+      "latency_ms": 580.4,
       "search_hit_paths": [
         "Knowledge/Android/ADB.md",
         "Knowledge/Android/Keymappers.md",
@@ -297,14 +376,28 @@
         "Knowledge/Shell/Shell.md"
       ],
       "search_top_n": 10,
-      "search_recall": 0.5,
-      "gold_facts_found": [
-        "com.dts.freefireth"
+      "search_recall": 0.0,
+      "search_other_recall": 0.5,
+      "search_recall_raw": 0.5,
+      "gold_facts_matches": [
+        {
+          "text": "FF_SEEN",
+          "status": "no_match",
+          "path": null
+        },
+        {
+          "text": "com.dts.freefireth",
+          "status": "other_file_match",
+          "path": [
+            "ai-context/CONTINUE.md"
+          ]
+        }
       ],
+      "cooccurrence_stats": null,
       "context_relevance": 0.2,
       "cross_domain_leakage": 0.7,
-      "context_estimated_tokens": 68954,
-      "latency_ms": 626.1,
+      "context_estimated_tokens": 69808,
+      "latency_ms": 608.1,
       "search_hit_paths": [
         "Knowledge/Android/scrcpy.md",
         "Knowledge/Node/Node.md",
@@ -345,11 +438,25 @@
       ],
       "search_top_n": 10,
       "search_recall": 0.0,
-      "gold_facts_found": [],
+      "search_other_recall": 0.0,
+      "search_recall_raw": 0.0,
+      "gold_facts_matches": [
+        {
+          "text": "dumpsys thermalservice",
+          "status": "no_match",
+          "path": null
+        },
+        {
+          "text": "force_gpu_rendering",
+          "status": "no_match",
+          "path": null
+        }
+      ],
+      "cooccurrence_stats": null,
       "context_relevance": 0.111,
       "cross_domain_leakage": 0.778,
-      "context_estimated_tokens": 58781,
-      "latency_ms": 585.2,
+      "context_estimated_tokens": 59635,
+      "latency_ms": 535.0,
       "search_hit_paths": [
         "CONTRIBUTING.md",
         "Knowledge/Android/HyperOS.md",
@@ -388,14 +495,28 @@
       ],
       "gold_in_router": [],
       "search_top_n": 10,
-      "search_recall": 0.5,
-      "gold_facts_found": [
-        "picom"
+      "search_recall": 0.0,
+      "search_other_recall": 0.5,
+      "search_recall_raw": 0.5,
+      "gold_facts_matches": [
+        {
+          "text": "picom",
+          "status": "other_file_match",
+          "path": [
+            "ai-context/AGENTS.md"
+          ]
+        },
+        {
+          "text": "P_TERM_OPACITY",
+          "status": "no_match",
+          "path": null
+        }
       ],
+      "cooccurrence_stats": null,
       "context_relevance": 0.125,
       "cross_domain_leakage": 0.875,
       "context_estimated_tokens": 48393,
-      "latency_ms": 571.3,
+      "latency_ms": 535.6,
       "search_hit_paths": [
         "Knowledge/Linux/System.md",
         "Knowledge/React/Vite.md",
@@ -435,11 +556,25 @@
       ],
       "search_top_n": 10,
       "search_recall": 0.0,
-      "gold_facts_found": [],
+      "search_other_recall": 0.0,
+      "search_recall_raw": 0.0,
+      "gold_facts_matches": [
+        {
+          "text": "scaling_governor",
+          "status": "no_match",
+          "path": null
+        },
+        {
+          "text": "force_gpu_rendering",
+          "status": "no_match",
+          "path": null
+        }
+      ],
+      "cooccurrence_stats": null,
       "context_relevance": 0.125,
       "cross_domain_leakage": 0.625,
       "context_estimated_tokens": 11640,
-      "latency_ms": 548.4,
+      "latency_ms": 548.6,
       "search_hit_paths": [
         "Knowledge/Android/ADB.md",
         "Knowledge/Android/GameOptimization.md",
@@ -481,11 +616,25 @@
       ],
       "search_top_n": 10,
       "search_recall": 0.0,
-      "gold_facts_found": [],
+      "search_other_recall": 0.0,
+      "search_recall_raw": 0.0,
+      "gold_facts_matches": [
+        {
+          "text": "dumpsys thermalservice",
+          "status": "no_match",
+          "path": null
+        },
+        {
+          "text": "thermal_control",
+          "status": "no_match",
+          "path": null
+        }
+      ],
+      "cooccurrence_stats": null,
       "context_relevance": 0.333,
       "cross_domain_leakage": 0.333,
       "context_estimated_tokens": 51813,
-      "latency_ms": 595.7,
+      "latency_ms": 574.0,
       "search_hit_paths": [
         "Knowledge/Android/Keymappers.md",
         "Knowledge/Android/NubiaLab.md",

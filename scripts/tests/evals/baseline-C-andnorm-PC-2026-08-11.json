@@ -1,13 +1,13 @@
 {
-  "baseline": "A",
+  "baseline": "C",
   "profile": "PC",
   "host": "sabrewulf-a320ms2h",
   "date": "2026-08-11",
   "eval_id": "eval-ctx-PC-2026-08-11",
   "eval_hash": "8e42d119bf7bc4f2014e7239f101e3c37296365f3b24158e0cb0155baaa67f5d",
-  "strategy": "and",
+  "strategy": "and-norm",
   "instrument_version": "v2",
-  "pipeline": "buffy-router.sh (real) → buffy-search.sh FTS5 bm25 (estrategia 'and', limit=10)",
+  "pipeline": "buffy-router.sh (real) → buffy-search.sh FTS5 bm25 (OR top-50) → gate co-ocurrencia ≥2 tokens → top-10",
   "runtime_changed": false,
   "num_queries": 10,
   "aggregate": {
@@ -23,20 +23,20 @@
     },
     "categories_recall_avg": 0.8,
     "search_recall_avg": 0.0,
-    "search_other_recall_avg": 0.0,
-    "search_recall_raw_avg": 0.0,
-    "context_relevance_avg": 0.6,
-    "cross_domain_leakage_avg": 0.267,
+    "search_other_recall_avg": 0.2,
+    "search_recall_raw_avg": 0.2,
+    "context_relevance_avg": 0.319,
+    "cross_domain_leakage_avg": 0.558,
     "total_spurious_categories": 2,
     "token_cost": {
-      "avg": 4966.9,
-      "p95": 38580
+      "avg": 37037.8,
+      "p95": 69433
     },
     "latency_ms": {
-      "avg": 554.76,
-      "p95": 610.5
+      "avg": 567.28,
+      "p95": 615.3
     },
-    "window_utilization_avg": 0.02483
+    "window_utilization_avg": 0.18519
   },
   "per_query": [
     {
@@ -45,7 +45,7 @@
       "coverage": [
         "single-domain"
       ],
-      "strategy": "and",
+      "strategy": "and-norm",
       "gold_domains": [
         "Android"
       ],
@@ -68,7 +68,7 @@
         "Knowledge/Android/ADB.md",
         "Knowledge/Android/scrcpy.md"
       ],
-      "search_top_n": 5,
+      "search_top_n": 4,
       "search_recall": 0.0,
       "search_other_recall": 0.0,
       "search_recall_raw": 0.0,
@@ -84,14 +84,22 @@
           "path": null
         }
       ],
-      "cooccurrence_stats": null,
-      "context_relevance": 0.333,
-      "cross_domain_leakage": 0.667,
-      "context_estimated_tokens": 38580,
-      "latency_ms": 610.5,
+      "cooccurrence_stats": {
+        "query_tokens": [
+          "aparece",
+          "scrcpy",
+          "telefono"
+        ],
+        "hits_before_gate": 50,
+        "hits_after_gate": 4
+      },
+      "context_relevance": 0.4,
+      "cross_domain_leakage": 0.6,
+      "context_estimated_tokens": 24205,
+      "latency_ms": 615.3,
       "search_hit_paths": [
+        "Knowledge/Android/ADB.md",
         "README.md",
-        "ai-context/CHANGELOG.md",
         "ai-context/CONTINUE.md",
         "ai-context/SESION.md"
       ]
@@ -102,7 +110,7 @@
       "coverage": [
         "single-domain"
       ],
-      "strategy": "and",
+      "strategy": "and-norm",
       "gold_domains": [
         "Android"
       ],
@@ -125,7 +133,7 @@
         "Knowledge/Android/ADB.md",
         "Knowledge/Android/Shizuku.md"
       ],
-      "search_top_n": 0,
+      "search_top_n": 10,
       "search_recall": 0.0,
       "search_other_recall": 0.0,
       "search_recall_raw": 0.0,
@@ -146,12 +154,29 @@
           "path": null
         }
       ],
-      "cooccurrence_stats": null,
-      "context_relevance": 1.0,
-      "cross_domain_leakage": 0.0,
-      "context_estimated_tokens": 1742,
-      "latency_ms": 561.8,
-      "search_hit_paths": []
+      "cooccurrence_stats": {
+        "query_tokens": [
+          "app",
+          "concedo",
+          "permisos",
+          "root",
+          "shizuku"
+        ],
+        "hits_before_gate": 50,
+        "hits_after_gate": 34
+      },
+      "context_relevance": 0.286,
+      "cross_domain_leakage": 0.714,
+      "context_estimated_tokens": 48165,
+      "latency_ms": 595.2,
+      "search_hit_paths": [
+        "Knowledge/Android/Shizuku.md",
+        "Knowledge/README.md",
+        "README.md",
+        "ai-context/INFO-full.md",
+        "ai-context/LOAD_CONTEXT.md",
+        "ai-context/SESION-archive.md"
+      ]
     },
     {
       "id": "Q03",
@@ -159,7 +184,7 @@
       "coverage": [
         "single-domain"
       ],
-      "strategy": "and",
+      "strategy": "and-norm",
       "gold_domains": [
         "Git"
       ],
@@ -179,7 +204,7 @@
       "gold_in_router": [
         "Knowledge/Git/Commands.md"
       ],
-      "search_top_n": 0,
+      "search_top_n": 6,
       "search_recall": 0.0,
       "search_other_recall": 0.0,
       "search_recall_raw": 0.0,
@@ -195,12 +220,28 @@
           "path": null
         }
       ],
-      "cooccurrence_stats": null,
-      "context_relevance": 1.0,
-      "cross_domain_leakage": 0.0,
-      "context_estimated_tokens": 609,
-      "latency_ms": 504.8,
-      "search_hit_paths": []
+      "cooccurrence_stats": {
+        "query_tokens": [
+          "commit",
+          "crear",
+          "pull",
+          "pushear",
+          "request"
+        ],
+        "hits_before_gate": 50,
+        "hits_after_gate": 6
+      },
+      "context_relevance": 0.167,
+      "cross_domain_leakage": 0.833,
+      "context_estimated_tokens": 25906,
+      "latency_ms": 510.6,
+      "search_hit_paths": [
+        "CONTRIBUTING.md",
+        "ai-context/CONTINUE.md",
+        "ai-context/LOAD_CONTEXT.md",
+        "ai-context/PROJECTS.md",
+        "ai-context/SESION.md"
+      ]
     },
     {
       "id": "Q04",
@@ -208,7 +249,7 @@
       "coverage": [
         "no-lexical-signals"
       ],
-      "strategy": "and",
+      "strategy": "and-norm",
       "gold_domains": [
         "Linux"
       ],
@@ -228,28 +269,49 @@
         "Knowledge/Android/ADB.md"
       ],
       "gold_in_router": [],
-      "search_top_n": 0,
+      "search_top_n": 8,
       "search_recall": 0.0,
-      "search_other_recall": 0.0,
-      "search_recall_raw": 0.0,
+      "search_other_recall": 1.0,
+      "search_recall_raw": 1.0,
       "gold_facts_matches": [
         {
           "text": "xset -dpms",
-          "status": "no_match",
-          "path": null
+          "status": "other_file_match",
+          "path": [
+            "ai-context/CHANGELOG.md",
+            "ai-context/CONTINUE.md"
+          ]
         },
         {
           "text": "xset s off",
-          "status": "no_match",
-          "path": null
+          "status": "other_file_match",
+          "path": [
+            "ai-context/CHANGELOG.md",
+            "ai-context/CONTINUE.md"
+          ]
         }
       ],
-      "cooccurrence_stats": null,
+      "cooccurrence_stats": {
+        "query_tokens": [
+          "apaga",
+          "despues",
+          "minutos",
+          "pantalla",
+          "sola",
+          "unos"
+        ],
+        "hits_before_gate": 50,
+        "hits_after_gate": 8
+      },
       "context_relevance": 0.0,
       "cross_domain_leakage": 1.0,
-      "context_estimated_tokens": 834,
-      "latency_ms": 531.8,
-      "search_hit_paths": []
+      "context_estimated_tokens": 61010,
+      "latency_ms": 543.3,
+      "search_hit_paths": [
+        "ai-context/CHANGELOG.md",
+        "ai-context/CONTINUE.md",
+        "ai-context/SESION-archive.md"
+      ]
     },
     {
       "id": "Q05",
@@ -257,7 +319,7 @@
       "coverage": [
         "multi-domain"
       ],
-      "strategy": "and",
+      "strategy": "and-norm",
       "gold_domains": [
         "Android",
         "React"
@@ -282,7 +344,7 @@
         "Knowledge/Android/ADB.md",
         "Knowledge/React/React.md"
       ],
-      "search_top_n": 0,
+      "search_top_n": 10,
       "search_recall": 0.0,
       "search_other_recall": 0.0,
       "search_recall_raw": 0.0,
@@ -298,12 +360,32 @@
           "path": null
         }
       ],
-      "cooccurrence_stats": null,
-      "context_relevance": 1.0,
-      "cross_domain_leakage": 0.0,
-      "context_estimated_tokens": 1326,
-      "latency_ms": 579.5,
-      "search_hit_paths": []
+      "cooccurrence_stats": {
+        "query_tokens": [
+          "adb",
+          "app",
+          "componente",
+          "leer",
+          "necesita",
+          "react",
+          "serial",
+          "telefono"
+        ],
+        "hits_before_gate": 50,
+        "hits_after_gate": 14
+      },
+      "context_relevance": 0.286,
+      "cross_domain_leakage": 0.429,
+      "context_estimated_tokens": 51869,
+      "latency_ms": 581.4,
+      "search_hit_paths": [
+        "Knowledge/Android/ADB.md",
+        "Knowledge/Android/HyperOS.md",
+        "Knowledge/Android/Keymappers.md",
+        "ai-context/CONTINUE.md",
+        "ai-context/SESION-archive.md",
+        "ai-context/SHIZUKU-RISH-BUG.md"
+      ]
     },
     {
       "id": "Q06",
@@ -311,7 +393,7 @@
       "coverage": [
         "multi-domain"
       ],
-      "strategy": "and",
+      "strategy": "and-norm",
       "gold_domains": [
         "Android",
         "Shell"
@@ -338,10 +420,10 @@
         "Knowledge/Android/scrcpy.md",
         "Knowledge/Shell/Shell.md"
       ],
-      "search_top_n": 0,
+      "search_top_n": 10,
       "search_recall": 0.0,
-      "search_other_recall": 0.0,
-      "search_recall_raw": 0.0,
+      "search_other_recall": 0.5,
+      "search_recall_raw": 0.5,
       "gold_facts_matches": [
         {
           "text": "FF_SEEN",
@@ -350,16 +432,38 @@
         },
         {
           "text": "com.dts.freefireth",
-          "status": "no_match",
-          "path": null
+          "status": "other_file_match",
+          "path": [
+            "ai-context/CONTINUE.md"
+          ]
         }
       ],
-      "cooccurrence_stats": null,
-      "context_relevance": 0.667,
-      "cross_domain_leakage": 0.0,
-      "context_estimated_tokens": 2080,
-      "latency_ms": 544.9,
-      "search_hit_paths": []
+      "cooccurrence_stats": {
+        "query_tokens": [
+          "abre",
+          "bash",
+          "fire",
+          "free",
+          "revisa",
+          "scrcpy",
+          "script"
+        ],
+        "hits_before_gate": 50,
+        "hits_after_gate": 46
+      },
+      "context_relevance": 0.222,
+      "cross_domain_leakage": 0.667,
+      "context_estimated_tokens": 69433,
+      "latency_ms": 603.5,
+      "search_hit_paths": [
+        "Knowledge/Android/scrcpy.md",
+        "Knowledge/README.md",
+        "README.md",
+        "USER-MANU.md",
+        "ai-context/CHANGELOG.md",
+        "ai-context/CONTINUE.md",
+        "ai-context/SESION-archive.md"
+      ]
     },
     {
       "id": "Q07",
@@ -367,7 +471,7 @@
       "coverage": [
         "no-lexical-signals"
       ],
-      "strategy": "and",
+      "strategy": "and-norm",
       "gold_domains": [
         "Android"
       ],
@@ -404,11 +508,21 @@
           "path": null
         }
       ],
-      "cooccurrence_stats": null,
+      "cooccurrence_stats": {
+        "query_tokens": [
+          "anda",
+          "celular",
+          "hacer",
+          "lento",
+          "puedo"
+        ],
+        "hits_before_gate": 13,
+        "hits_after_gate": 0
+      },
       "context_relevance": 1.0,
       "cross_domain_leakage": 0.0,
       "context_estimated_tokens": 834,
-      "latency_ms": 538.9,
+      "latency_ms": 536.1,
       "search_hit_paths": []
     },
     {
@@ -417,7 +531,7 @@
       "coverage": [
         "no-lexical-signals"
       ],
-      "strategy": "and",
+      "strategy": "and-norm",
       "gold_domains": [
         "Linux"
       ],
@@ -437,15 +551,17 @@
         "Knowledge/Android/ADB.md"
       ],
       "gold_in_router": [],
-      "search_top_n": 0,
+      "search_top_n": 3,
       "search_recall": 0.0,
-      "search_other_recall": 0.0,
-      "search_recall_raw": 0.0,
+      "search_other_recall": 0.5,
+      "search_recall_raw": 0.5,
       "gold_facts_matches": [
         {
           "text": "picom",
-          "status": "no_match",
-          "path": null
+          "status": "other_file_match",
+          "path": [
+            "ai-context/AGENTS.md"
+          ]
         },
         {
           "text": "P_TERM_OPACITY",
@@ -453,12 +569,24 @@
           "path": null
         }
       ],
-      "cooccurrence_stats": null,
+      "cooccurrence_stats": {
+        "query_tokens": [
+          "opaca",
+          "terminal",
+          "transparente",
+          "vea"
+        ],
+        "hits_before_gate": 42,
+        "hits_after_gate": 3
+      },
       "context_relevance": 0.0,
       "cross_domain_leakage": 1.0,
-      "context_estimated_tokens": 834,
-      "latency_ms": 552.8,
-      "search_hit_paths": []
+      "context_estimated_tokens": 35728,
+      "latency_ms": 548.7,
+      "search_hit_paths": [
+        "ai-context/AGENTS.md",
+        "ai-context/SESION-archive.md"
+      ]
     },
     {
       "id": "Q09",
@@ -466,7 +594,7 @@
       "coverage": [
         "ambiguous"
       ],
-      "strategy": "and",
+      "strategy": "and-norm",
       "gold_domains": [
         "Android"
       ],
@@ -503,11 +631,18 @@
           "path": null
         }
       ],
-      "cooccurrence_stats": null,
+      "cooccurrence_stats": {
+        "query_tokens": [
+          "optimizar",
+          "rendimiento"
+        ],
+        "hits_before_gate": 11,
+        "hits_after_gate": 0
+      },
       "context_relevance": 0.5,
       "cross_domain_leakage": 0.0,
       "context_estimated_tokens": 1415,
-      "latency_ms": 548.5,
+      "latency_ms": 545.8,
       "search_hit_paths": []
     },
     {
@@ -516,7 +651,7 @@
       "coverage": [
         "leakage"
       ],
-      "strategy": "and",
+      "strategy": "and-norm",
       "gold_domains": [
         "Android"
       ],
@@ -538,7 +673,7 @@
       "gold_in_router": [
         "Knowledge/Android/GameOptimization.md"
       ],
-      "search_top_n": 0,
+      "search_top_n": 10,
       "search_recall": 0.0,
       "search_other_recall": 0.0,
       "search_recall_raw": 0.0,
@@ -554,12 +689,27 @@
           "path": null
         }
       ],
-      "cooccurrence_stats": null,
-      "context_relevance": 0.5,
-      "cross_domain_leakage": 0.0,
-      "context_estimated_tokens": 1415,
-      "latency_ms": 574.1,
-      "search_hit_paths": []
+      "cooccurrence_stats": {
+        "query_tokens": [
+          "calienta",
+          "fire",
+          "free",
+          "juego",
+          "zte"
+        ],
+        "hits_before_gate": 50,
+        "hits_after_gate": 43
+      },
+      "context_relevance": 0.333,
+      "cross_domain_leakage": 0.333,
+      "context_estimated_tokens": 51813,
+      "latency_ms": 592.9,
+      "search_hit_paths": [
+        "Knowledge/Android/Keymappers.md",
+        "Knowledge/Android/NubiaLab.md",
+        "ai-context/CHANGELOG.md",
+        "ai-context/SESION-archive.md"
+      ]
     }
   ]
 }

@@ -278,6 +278,51 @@ runtime.** Diseño completo en `and-normalizado-DESIGN.md` (reproducible).
 **Nota de integridad:** los JSON de A y B se REGENERAN con el instrumento corregido
 (§4) para comparación justa; los originales del Paso 2/3 quedan en git history.
 
+## 📊 Paso 4 — EJECUTADO · métricas crudas (instrumento v2) · 2026-08-11
+
+**Ejecución:** runner corregido (instrumento v2) + estrategia `and-norm` implementada
+en el runner (runtime congelado, `runtime_changed: false`). A y B regenerados con el
+mismo instrumento. C = and-norm. Gates: **G1 ✅** (hash coincide), **G2 ✅** (2 corridas
+and-norm idénticas salvo latency), **G3 ✅** (A/B/C mismo eval_hash, misma corrida).
+
+### Agregado (instrumento v2)
+
+| métrica | A (and) | B (or) | C (and-norm) |
+|---|---|---|---|
+| search_recall (solo gold) | 0.000 | **0.050** | 0.000 |
+| search_other_recall (diag) | 0.000 | 0.200 | 0.200 |
+| search_recall_raw (gold+other) | 0.000 | 0.250 | 0.200 |
+| context_relevance | **0.600** | 0.192 | 0.319 |
+| cross_domain_leakage | **0.267** | 0.704 | 0.558 |
+| categories_recall | 0.800 | 0.800 | 0.800 |
+| router_precision / recall | 0.667 / 0.667 | 0.667 / 0.667 | 0.667 / 0.667 |
+| spurious_categories | 2 | 2 | 2 |
+| token_cost avg / p95 | 4 967 / 38 580 | 44 337 / 69 808 | 37 038 / 69 433 |
+| latency avg / p95 | 555 / 611 ms | 556 / 608 ms | 567 / 615 ms |
+| window_utilization | 2.5% | 22.2% | 18.5% |
+
+### Por query — search_recall (solo gold) / other / raw
+
+| ID | A sRec/sOth/raw | B sRec/sOth/raw | C sRec/sOth/raw |
+|---|---|---|---|
+| Q01 | 0/0/0 | 0/0/0 | 0/0/0 |
+| Q02 | 0/0/0 | 0/0/0 | 0/0/0 |
+| Q03 | 0/0/0 | **0.5**/0/0.5 | 0/0/0 |
+| Q04 | 0/0/0 | 0/**1.0**/1.0 | 0/**1.0**/1.0 |
+| Q05 | 0/0/0 | 0/0/0 | 0/0/0 |
+| Q06 | 0/0/0 | 0/**0.5**/0.5 | 0/**0.5**/0.5 |
+| Q07 | 0/0/0 | 0/0/0 | 0/0/0 |
+| Q08 | 0/0/0 | 0/**0.5**/0.5 | 0/**0.5**/0.5 |
+| Q09 | 0/0/0 | 0/0/0 | 0/0/0 |
+| Q10 | 0/0/0 | 0/0/0 | 0/0/0 |
+
+**Nota de registro (hechos, sin interpretación):** con el instrumento corregido, B
+pasa de search_recall 0.250 (v1, inflado) a **0.050** (v2, solo gold). Q04/Q06/Q08
+quedan como `other_file_match` (aguja en archivo no-gold). C (and-norm) no recupera
+ninguna aguja gold (0.000) y mantiene las mismas `other_file_match` que B en
+Q04/Q06/Q08. `cooccurrence_stats` por query en el JSON de C (hits antes/después del
+gate). **Sin veredicto — el usuario pidió ver los datos crudos antes de decidir.**
+
 ### Estado de la suite en el perfil PC (2026-08-11)
 
 > ⚠️ **La suite del perfil PC no está actualmente 100% verde** por incompatibilidades
