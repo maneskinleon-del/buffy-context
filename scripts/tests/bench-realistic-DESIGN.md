@@ -43,6 +43,12 @@ falla si los conteos no coinciden (gate G1).
 
 ### 1.2 Reglas de generación (anti-favoritismo)
 
+> **ACTUALIZACIÓN DEL CONTRATO (2026-08-11, decisión registrada — ver §1.4):**
+> los 8 dominios de la tabla §1.1 se sustituyen por las **categorías reales del
+> router** (`buffy-router.sh`): Android, Code Search, React, Linux, Git, Node,
+> Shell, Visión/VLM. El corpus se alinea al espacio de selección real (la
+> distribución efectiva usada está en `fixtures-realistic/domains.json`).
+
 1. **Sin tokens de dominio**: el nombre del dominio ni sus keywords puerta
    (`android`, `adb`, `scrcpy`, `shizuku`, `gmail`, `react`, `bspwm`, `ollama`,
    `buffy`, `clasp`, ...) NO aparecen en el texto de los hechos de ese dominio.
@@ -62,6 +68,39 @@ falla si los conteos no coinciden (gate G1).
    en el sandbox (mismo mecanismo que `bench-context-selection.sh`:
    `$SB/Knowledge/...`, `BUFFY_REPO="$SB"`), con id `f_XXXX` inyectado como
    comentario para el ground truth.
+
+### 1.3 Dominios efectivos (actualización registrada del contrato)
+
+La tabla §1.1 (dominios abstractos del ecosistema: gmail-apps, buffer-ai, red-hogar,
+scrcpy-ff, vision-ollama, linux-pc, frontend) **NO es la que se midió**. Decisión
+tomada durante la implementación (2026-08-11) y aceptada por el usuario: los dominios
+abstractos no existen en el espacio de selección real del router, con lo que
+`router_precision`/`router_recall` no serían medibles contra el componente real.
+
+El corpus usado por la baseline (y por `fixtures-realistic/domains.json`,
+fuente de verdad de la distribución) es:
+
+| dominio | hechos | archivos Knowledge (rutas reales del router) |
+|---|---|---|
+| android | 90 | Android/{ADB,Shizuku,scrcpy,GameOptimization,HyperOS,Keymappers}.md |
+| react | 70 | React/{React,Vite,Tailwind,PWA}.md |
+| linux | 60 | Linux/{System,Kernel}.md |
+| git | 60 | Git/Commands.md |
+| node | 50 | Node/Node.md |
+| shell | 70 | Shell/Shell.md |
+| vision | 60 | Vision.md (plano, `knowledge_dir` vacío — layout hardcodeado del router; NO `Vision/Vision.md`) |
+| code-search | 40 | CodeSearch/Search.md (el router no carga knowledge de esta categoría) |
+
+Total: **500**. Notas:
+- Identificadores de dominio en minúscula para el gold; los directorios Knowledge
+  usan la capitalización hardcodeada del router (los hechos viven en el archivo de su
+  dominio primario).
+- `code-search` no tiene archivo de knowledge en el router (solo skill) → su
+  `context_relevance` esperada es 0 por construcción; se mantiene para medir el
+  recall de categoría y el hueco real.
+- Sigue vigente todo lo demás del contrato: 60 queries (36/14/6/4), gold por
+  construcción, reglas anti-favoritismo, gates G1-G3, 9 métricas, 3 modos, seeds
+  baseline 20260810/20260811/20260812.
 
 ## 2. Queries (60, tareas reales de agente)
 

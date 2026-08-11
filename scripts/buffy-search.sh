@@ -18,6 +18,16 @@ DB="$CACHE/search.db"
 LIMIT=15
 CMD="search"
 SEP=$'\x1f'
+STRATEGY="${BUFFY_SEARCH_STRATEGY:-and}"
+
+# Stopwords ES (normalizadas: minúsculas sin diacríticos, coherentes con el tokenizer).
+STOPWORDS_ES="a al algo aunque asi aun cada casi como con cual cuando cuanta cuantas cuanto
+cuantos de del demasiado donde el ella ellas ellos en entre esa esas ese esos esta estas
+este estos fue haber hasta haya hay he hizo la las le les lo los mas me mi mis mucho muchos
+mucha muchas muy nada nadie ni no nosotros nosotras nuestra nuestras nuestro nuestros o otra
+otras otro otros para pero poca pocas poco pocos por porque que quien quienes quiero quiere
+se sea ser si sin solo sino sobre su sus tal tambien tampoco tan tanto tanta te tiene tienes
+todo todos toda todas tu tus un una uno unas usted y ya"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -113,9 +123,46 @@ do_stats() {
                              ELSE 'raíz' END AS d, count(*) FROM docs GROUP BY d;"
 }
 
+deaccent() { tr 'áéíóúüñÁÉÍÓÚÜÑ' 'aeiouunAEIOUUN'; }
+
+# Construcción de la query FTS5 según la estrategia:
+#   and (default) — comportamiento histórico byte a byte: "t1" AND "t2" ...
+#   or  — Fase 1 del benchmark realista: normalizar → stopwords → términos
+#         significativos (longitud >= 3, nunca descartar tokens técnicos de 3
+#         chars como adb/api/dpi) → "t1" OR "t2" ... (máx 8) → fallback AND si
+#         no queda ningún término útil (para no devolver basura).
+build_query() {
+  local raw="$1" q tok
+  if [[ "$STRATEGY" != "or" ]]; then
+    q="$(awk '{ for (i=1; i<=NF; i++) { gsub(/"/, "\"\"", $i); printf "\"%s\"%s", $i, (i<NF ? " AND " : "") } }' <<<"$raw")"
+    printf '%s' "$q"
+    return
+  fi
+  local norm parts=()
+  norm="$(printf '%s' "$raw" | deaccent | sed 's/[^[:alnum:] ]/ /g' | tr -s ' ')"
+  for tok in $norm; do
+    tok="${tok,,}"
+    [[ ${#tok} -ge 3 ]] || continue
+    case " $STOPWORDS_ES " in
+      *" $tok "*) continue ;;
+    esac
+    parts+=("$tok")
+    [[ ${#parts[@]} -ge 8 ]] && break
+  done
+  if [[ ${#parts[@]} -gt 0 ]]; then
+    q="\"${parts[0]}\""
+    for tok in "${parts[@]:1}"; do
+      q+=" OR \"$tok\""
+    done
+  else
+    q="$(awk '{ for (i=1; i<=NF; i++) { gsub(/"/, "\"\"", $i); printf "\"%s\"%s", $i, (i<NF ? " AND " : "") } }' <<<"$raw")"
+  fi
+  printf '%s' "$q"
+}
+
 search() {
   local q raw="$1"
-  q="$(awk '{ for (i=1; i<=NF; i++) { gsub(/"/, "\"\"", $i); printf "\"%s\"%s", $i, (i<NF ? " AND " : "") } }' <<<"$raw")"
+  q="$(build_query "$raw")"
   q="${q//\'/''}"
   [[ -n "$q" ]] || return 0
   local out n=0 path lineno snip

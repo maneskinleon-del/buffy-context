@@ -1,0 +1,125 @@
+{
+  "_meta": {
+    "name": "dev-set",
+    "descripcion": "DEV set de Fase 3 — queries reales/representativas del usuario para CALIBRAR (theta_c, presupuesto, pesos, formato de evidencia). NO es el evaluador: el evaluador es eval-set.json (congelado).",
+    "gold": "Dominios cuyo conocimiento seria necesario (mapeo router_categories de domains.json).",
+    "uso": "Libre de iterar durante el desarrollo. El resultado final se mide en eval-set.json.",
+    "congelado_meta": "2026-08-11",
+    "sha256": "0cd8d5a646c77c2946429d818d2bfb638a8d5d6ba0568d5d60160930b21dcc5f"
+  },
+  "queries": [
+    {
+      "id": "d_001",
+      "kind": "multi",
+      "text": "el script de scrcpy no debe abrir Free Fire automaticamente, solo GG Mouse",
+      "gold_domains": [
+        "android",
+        "shell"
+      ],
+      "fuente": "Pedido real (CONTINUE 2026-08-07 noche: scrcpy-freefire.sh ya no abre Free Fire)"
+    },
+    {
+      "id": "d_002",
+      "kind": "single",
+      "text": "ver las apps instaladas en el telefono y purgar las de terceros",
+      "gold_domains": [
+        "android"
+      ],
+      "fuente": "Tarea real (CONTINUE 2026-08-07 noche: purga de 16 apps en ZTE con pm uninstall)"
+    },
+    {
+      "id": "d_003",
+      "kind": "single",
+      "text": "el mouse de GG Mouse no responde en Free Fire con scrcpy",
+      "gold_domains": [
+        "android"
+      ],
+      "fuente": "Diagnostico real (CONTINUE 2026-08-07: GG Mouse corria pero Free Fire lo tapaba)"
+    },
+    {
+      "id": "d_004",
+      "kind": "single",
+      "text": "super mas Escape mato el teclado del escritorio",
+      "gold_domains": [
+        "linux"
+      ],
+      "fuente": "Bug real (CONTINUE 2026-08-07 tarde: super+Escape reiniciaba bspwm)"
+    },
+    {
+      "id": "d_005",
+      "kind": "multi",
+      "text": "monitor-alert no coincide con la barra en la medicion de CPU",
+      "gold_domains": [
+        "linux",
+        "shell"
+      ],
+      "fuente": "Fix real (CONTINUE 2026-08-07 tarde: formula /proc/stat en monitor-alert)"
+    },
+    {
+      "id": "d_006",
+      "kind": "single",
+      "text": "como sincronizo la memoria curada entre el PC y el telefono",
+      "gold_domains": [
+        "git"
+      ],
+      "fuente": "Feature real (CONTINUE 2026-08-10: buffy-memory.sh sync via git)"
+    },
+    {
+      "id": "d_007",
+      "kind": "multi",
+      "text": "npm run build da error de typecheck en el proyecto vite",
+      "gold_domains": [
+        "node",
+        "react"
+      ],
+      "fuente": "Flujo real del usuario (data_car: typecheck + build antes de deploy Vercel)"
+    },
+    {
+      "id": "d_008",
+      "kind": "single",
+      "text": "el modelo local de vision no analiza la captura",
+      "gold_domains": [
+        "vision"
+      ],
+      "fuente": "Flujo real (vision-adapter: Ollama + MiniCPM-V/Qwen2.5-VL en el dispositivo)"
+    },
+    {
+      "id": "d_009",
+      "kind": "single",
+      "text": "el overlay de la app no aparece sobre el juego",
+      "gold_domains": [
+        "android"
+      ],
+      "fuente": "Problema real (SESION 2026-08-07: overlay de GG Mouse tapado por Free Fire; permisos overlay MIUI/HyperOS)"
+    },
+    {
+      "id": "d_010",
+      "kind": "multi",
+      "text": "busca donde se define la funcion de precios en el panel de compra",
+      "gold_domains": [
+        "code-search",
+        "react"
+      ],
+      "fuente": "Patron code-search sobre data_car (parseAIResponse/findPrice, src/lib/aiShare.ts)"
+    },
+    {
+      "id": "d_011",
+      "kind": "multi",
+      "text": "como instalo sqlite en termux",
+      "gold_domains": [
+        "linux",
+        "shell"
+      ],
+      "fuente": "Instalacion real (CONTINUE 2026-08-09: pkg install sqlite para FTS5 de buffy-search)"
+    },
+    {
+      "id": "d_012",
+      "kind": "single",
+      "text": "la temperatura de la CPU sale mal en la barra",
+      "gold_domains": [
+        "linux"
+      ],
+      "fuente": "Fix real (SESION-archive: hwmon-path en polybar)"
+    }
+  ]
+}

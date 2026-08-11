@@ -1,0 +1,119 @@
+{
+  "_meta": {
+    "name": "eval-set",
+    "descripcion": "EVAL set de Fase 3 — queries REALES del usuario (o representativas de su trabajo documentado). Representa al USUARIO, no al benchmark sintetico. CONGELADO: no se edita; su hash sha256 queda registrado en la spec FASE3 (seccion 5.2) y aqui abajo.",
+    "gold": "Dominios cuyo conocimiento seria necesario para resolver la tarea (mapeo router_categories de domains.json). Anotado a mano, por revision del historial de trabajo real.",
+    "regla_decision": "benchmark+ y EVAL+ = evidencia fuerte · benchmark+ y EVAL- = DESCARTAR · EVAL+ y benchmark- = investigar antes de adoptar",
+    "sha256": "180e14a03e07a433818c312f3ae84c076df018c5dbad1e54a10b8d6ab1ac5ed9",
+    "congelado": "2026-08-11",
+    "uso": "UNICA medicion final, despues de calibrar en DEV. Prohibido tocarlas durante calibracion/desarrollo."
+  },
+  "queries": [
+    {
+      "id": "e_001",
+      "kind": "multi",
+      "text": "el telefono no aparece en scrcpy",
+      "gold_domains": [
+        "android",
+        "linux"
+      ],
+      "fuente": "Tarea real del usuario, documentada en bench-context-selection.sh (2026-08-10) y Knowledge/Android/scrcpy.md",
+      "por_que_eval": "Es la tarea de diagnostico mas repetida del usuario (scrcpy + Mi 10/ZTE); gold multi android+linux: requiere contexto ADB/scrcpy del telefono y de red/driver del PC."
+    },
+    {
+      "id": "e_002",
+      "kind": "multi",
+      "text": "se puede jugar Free Fire desde el PC con scrcpy pero el teclado no responde",
+      "gold_domains": [
+        "android",
+        "linux"
+      ],
+      "fuente": "Ejemplo de query real dado por el usuario en la revision de Fase 2 (spec FASE2, seccion 0)",
+      "por_que_eval": "Patron central del setup diario (scrcpy-freefire.sh, GG Mouse, keymappers); gold: android (free fire/scrcpy/gg mouse) + linux (teclado desde el PC)."
+    },
+    {
+      "id": "e_003",
+      "kind": "multi",
+      "text": "no me aparece el componente cuando ejecuto npm",
+      "gold_domains": [
+        "react",
+        "node"
+      ],
+      "fuente": "Ejemplo de query real dado por el usuario en la revision de Fase 2 (mensaje de decision, seccion 'Problema real de Buffy')",
+      "por_que_eval": "Representa el trabajo React/Vite+Node del usuario (data_car, TypeScript); gold multi react+node sin tokens literales 'react'/'node'."
+    },
+    {
+      "id": "e_004",
+      "kind": "single",
+      "text": "Agrego packs a compra y no veo nada",
+      "gold_domains": [
+        "react"
+      ],
+      "fuente": "Cita textual del usuario, SESION 2026-08-08 (data_car: el boton 'Agregar pack a compra' no guardaba nada)",
+      "por_que_eval": "Bug real reportado por el usuario sobre la app React (data_car); gold react."
+    },
+    {
+      "id": "e_005",
+      "kind": "multi",
+      "text": "como hago rebase de una branch en la terminal",
+      "gold_domains": [
+        "git",
+        "shell"
+      ],
+      "fuente": "Patron de trabajo real (CONTINUE 2026-08-07+, Knowledge/Git/Commands.md); la terminal es parte del contexto",
+      "por_que_eval": "Representa el uso de git del usuario (repos locales, push por SSH); gold git + shell."
+    },
+    {
+      "id": "e_006",
+      "kind": "multi",
+      "text": "la pantalla se apaga a los 10 minutos y quiero que no se apague",
+      "gold_domains": [
+        "linux",
+        "shell"
+      ],
+      "fuente": "Fix real documentado (CONTINUE 2026-08-07 tarde: xset -dpms + xset s off en bspwmrc)",
+      "por_que_eval": "Problema de escritorio real resuelto con comandos de terminal y config; gold linux + shell."
+    },
+    {
+      "id": "e_007",
+      "kind": "single",
+      "text": "asignar los precios de la IA a mi lista de compra y calcular el total en CLP",
+      "gold_domains": [
+        "react"
+      ],
+      "fuente": "Pedido real del usuario (CONTINUE 2026-08-08/10: P1 data_car — panel 'Mi compra')",
+      "por_que_eval": "Feature solicitada por el usuario para data_car (React); gold react."
+    },
+    {
+      "id": "e_008",
+      "kind": "single",
+      "text": "la captura de pantalla queda borrosa y el modelo se confunde",
+      "gold_domains": [
+        "vision"
+      ],
+      "fuente": "Uso real del VLM local del usuario (skills vision-adapter, kimi_vision.js, Knowledge/Vision.md)",
+      "por_que_eval": "Representa el flujo VLM del usuario (analisis de capturas con Ollama local); gold vision."
+    },
+    {
+      "id": "e_009",
+      "kind": "multi",
+      "text": "buscar en el codigo donde se usa formatCLP",
+      "gold_domains": [
+        "code-search",
+        "react"
+      ],
+      "fuente": "Skill code-search del usuario (buscar donde se usa una funcion en data_car/react)",
+      "por_que_eval": "Patron de la skill code-search sobre proyectos React; gold code-search + react."
+    },
+    {
+      "id": "e_010",
+      "kind": "single",
+      "text": "instalar y probar la app en el telefono con permisos de Shizuku y overlay",
+      "gold_domains": [
+        "android"
+      ],
+      "fuente": "Flujo real de la skill android-project-setup (compilar → instalar → Shizuku → overlay → lanzar)",
+      "por_que_eval": "Flujo de instalacion de apps del usuario (ManUninstaller, GameBoost Pro) en Mi 10/ZTE; gold android."
+    }
+  ]
+}

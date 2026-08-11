@@ -35,11 +35,13 @@ source "$SCRIPT_DIR/lib/yaml.sh"
 source "$SCRIPT_DIR/lib/common.sh"
 REPO_DIR="${SCRIPT_DIR%/scripts}"
 MODE="normal"   # normal | json | quick
+DIAGNOSE=false  # report-only: explica la selección sin cambiarla (requiere --json)
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --json) MODE="json"; shift ;;
     --quick) MODE="quick"; shift ;;
+    --diagnose) DIAGNOSE=true; shift ;;
     --list)
       cat <<'EOF'
 🧭 Categorías del router (según LOAD_CONTEXT.md)
@@ -84,7 +86,45 @@ normalize() {
 }
 MSG_LOWER="$(normalize "$MESSAGE")"
 
-has() { grep -qiE "$1" <<< "$MSG_LOWER" && return 0 || return 1; }
+# ── Diagnóstico (observabilidad pura, no cambia la selección) ──
+# has() registra el primer token que matcheó + cuántos tokens de la regex hay;
+# los detect_* registran su nombre; diag_cat() asocia la señal a la categoría
+# que el bloque acaba de agregar. --diagnose solo añade "signals" al JSON.
+declare -A DIAG_SIGNALS=()
+HAS_TOKEN="" HAS_SCORE=0 HAS_REGEX="" DIAG_DETECTOR=""
+
+has() {
+  if [ "$DIAGNOSE" = true ]; then
+    local tok
+    HAS_TOKEN=""; HAS_SCORE=0
+    tok="$(printf '%s\n' "$MSG_LOWER" | grep -oiE "$1" | head -1)"
+    if [ -n "$tok" ]; then
+      HAS_TOKEN="$tok"
+      HAS_SCORE="$(printf '%s\n' "$MSG_LOWER" | grep -oiE "$1" | wc -l | tr -d ' ')"
+      HAS_REGEX="$1"
+      return 0
+    fi
+    return 1
+  fi
+  grep -qiE "$1" <<< "$MSG_LOWER" && return 0 || return 1
+}
+
+diag_cat() { # <categoría> — registra la señal que la activó (solo --diagnose)
+  local cat="$1"
+  if [ "$DIAGNOSE" = true ]; then
+    if [ -n "$HAS_TOKEN" ]; then
+      DIAG_SIGNALS["$cat"]="$(printf '%s\t%s\t%s\thas\t%s' "$cat" "$HAS_TOKEN" "$HAS_SCORE" "$HAS_REGEX")"
+    elif [ -n "$DIAG_DETECTOR" ]; then
+      DIAG_SIGNALS["$cat"]="$(printf '%s\t%s\t1\tdetector\t' "$cat" "$DIAG_DETECTOR")"
+    else
+      DIAG_SIGNALS["$cat"]="$(printf '%s\tsin señal registrada\t0\tdesconocido\t' "$cat")"
+    fi
+  fi
+  HAS_TOKEN=""; HAS_SCORE=0; HAS_REGEX=""; DIAG_DETECTOR=""
+}
+
+[ "$DIAGNOSE" = true ] && [ "$MODE" != "json" ] && {
+  echo "❌ --diagnose requiere --json" >&2; exit 2; }
 
 # ── Manifests de skills (contrato B2) ─────────────────────
 # El router resuelve las skills desde su skill.yaml (id/entry/safe/triggers)
@@ -148,10 +188,30 @@ discover_skills() {  # añade toda skill cuyo manifest matchee el mensaje (y no 
 }
 
 # ── Detección de proyectos (señales de archivo) ────────────
-detect_android_project() { ls *.gradle.kts *.gradle 2>/dev/null | grep -q .; }
-detect_android_manifest() { [ -f app/src/main/AndroidManifest.xml ]; }
-detect_react_project() { [ -f package.json ] && grep -qi '"react"' package.json 2>/dev/null; }
-detect_node_project() { [ -f package.json ] && ! grep -qi '"react"' package.json 2>/dev/null; }
+# OJO: miran el REPO (REPO_DIR), no el CWD del proceso — un package.json suelto
+# en el directorio desde donde se invoca buffy (p.ej. ~) contaminaba el router
+# con categorías espurias (Node/React) para cualquier mensaje.
+# En modo --diagnose registran su nombre como señal (DIAG_DETECTOR).
+detect_android_project() {
+  if ls "$REPO_DIR"/*.gradle.kts "$REPO_DIR"/*.gradle 2>/dev/null | grep -q .; then
+    DIAG_DETECTOR="detect_android_project"; return 0; fi
+  return 1
+}
+detect_android_manifest() {
+  if [ -f "$REPO_DIR/app/src/main/AndroidManifest.xml" ]; then
+    DIAG_DETECTOR="detect_android_manifest"; return 0; fi
+  return 1
+}
+detect_react_project() {
+  if [ -f "$REPO_DIR/package.json" ] && grep -qi '"react"' "$REPO_DIR/package.json" 2>/dev/null; then
+    DIAG_DETECTOR="detect_react_project"; return 0; fi
+  return 1
+}
+detect_node_project() {
+  if [ -f "$REPO_DIR/package.json" ] && ! grep -qi '"react"' "$REPO_DIR/package.json" 2>/dev/null; then
+    DIAG_DETECTOR="detect_node_project"; return 0; fi
+  return 1
+}
 detect_adb_device() { command -v adb >/dev/null 2>&1 && timeout 3 adb devices 2>/dev/null | grep -qw device; }
 
 # ── Categorías (flags + arrays de archivos) ────────────────
@@ -202,10 +262,12 @@ android_by_device=''
 if detect_adb_device \
    && ! has 'react|jsx|tsx|vite|tailwind|pwa|componente|hook|estado|npm|npx|package\.json|dependencia|commit|push|merge|rebase|branch|stash|git|bash|zsh|awk|sed|grep|imagen|screenshot|captura|vlm|ocr'; then
   android_by_device=1
+  DIAG_DETECTOR="entorno: dispositivo adb conectado"
 fi
 if has 'android|adb|scrcpy|shizuku|nubia|hyperos|xiaomi|miui|free fire|gg mouse|game boost|keymapper|mantis|apk|dispositivo|telefono|teléfono|rom|logcat|dumpsys|auto\.js|automation|permiso' \
    || detect_android_project || detect_android_manifest || [ -n "$android_by_device" ]; then
   CATS+=("Android")
+  diag_cat "Android"
 
   KNOWLEDGE_FILES+=("Knowledge/Android/ADB.md")
   add_skill android-adb
@@ -238,6 +300,7 @@ fi
 # ── CODE SEARCH ────────────────────────────────────────────
 if has 'busca .*codigo|busca .*código|encuentra donde|encuentra dónde|buscar en|buscar donde|definicion|definición|explora el codigo|entiende el flujo|donde se usa|dónde se usa'; then
   CATS+=("Code Search")
+  diag_cat "Code Search"
   add_skill code-search
   if has 'compleja|complejo|varias busquedas|varias búsquedas|multiple|múltiple'; then
     add_skill search_criteria_v4
@@ -247,6 +310,7 @@ fi
 # ── REACT ──────────────────────────────────────────────────
 if has 'react|jsx|tsx|componente|hook|estado|vite|tailwind|pwa|\btypescript\b' || detect_react_project; then
   CATS+=("React")
+  diag_cat "React"
   KNOWLEDGE_FILES+=("Knowledge/React/React.md")
   if has 'vite|build|config|dev server|bundle'; then
     KNOWLEDGE_FILES+=("Knowledge/React/Vite.md")
@@ -262,6 +326,7 @@ fi
 # ── LINUX ──────────────────────────────────────────────────
 if has 'pacman|systemd|bspwm|hyprland|arch|kernel|modulo|módulo|driver|sysctl|dmesg|wm|compositor|error de sistema'; then
   CATS+=("Linux")
+  diag_cat "Linux"
   KNOWLEDGE_FILES+=("Knowledge/Linux/System.md")
   if has 'kernel|modulo|módulo|sysctl|driver'; then
     KNOWLEDGE_FILES+=("Knowledge/Linux/Kernel.md")
@@ -271,24 +336,28 @@ fi
 # ── GIT ────────────────────────────────────────────────────
 if has 'commit|push|pull|merge|rebase|branch|stash|conflicto|diff|\bgit\b'; then
   CATS+=("Git")
+  diag_cat "Git"
   KNOWLEDGE_FILES+=("Knowledge/Git/Commands.md")
 fi
 
 # ── NODE ───────────────────────────────────────────────────
 if has 'npm|npx|package\.json|dependencia|\bnode\b' || detect_node_project; then
   CATS+=("Node")
+  diag_cat "Node"
   KNOWLEDGE_FILES+=("Knowledge/Node/Node.md")
 fi
 
 # ── SHELL ──────────────────────────────────────────────────
 if has 'bash|zsh|\bscript(s)?\b|awk|sed|grep|shell'; then
   CATS+=("Shell")
+  diag_cat "Shell"
   KNOWLEDGE_FILES+=("Knowledge/Shell/Shell.md")
 fi
 
 # ── VISIÓN/VLM ─────────────────────────────────────────────
 if has 'imagen|screenshot|captura|vlm|vision|visión|ocr|ve esta|mira esta|error en pantalla|ui visible'; then
   CATS+=("Visión/VLM")
+  diag_cat "Visión/VLM"
   KNOWLEDGE_FILES+=("Knowledge/Vision.md")
   add_skill vision-adapter
   add_skill code-search
@@ -344,6 +413,10 @@ exists() { # acepta ruta con anotación, absoluta o relativa al repo/HOME
 }
 
 # ── Salida JSON ────────────────────────────────────────────
+jesc() { # JSON-escape un string (argumento, no pipe: evita errores de argv)
+  python3 -c 'import json,sys; print(json.dumps(sys.argv[1])[1:-1])' "$1" 2>/dev/null \
+    || printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g'
+}
 if [ "$MODE" = "json" ]; then
   {
     printf '{\n'
@@ -355,6 +428,26 @@ if [ "$MODE" = "json" ]; then
       printf '"%s"' "$c"
     done
     printf '],\n'
+    if [ "$DIAGNOSE" = true ]; then
+      printf '  "signals": {'
+      first=1
+      for c in "${!DIAG_SIGNALS[@]}"; do
+        reason=""
+        IFS=$'\t' read -r cat tok score typ rex <<< "${DIAG_SIGNALS[$c]}"
+        if [ "$typ" = has ]; then
+          reason="has '$rex' → '$tok' ($score tokens)"
+        elif [ "$typ" = detector ]; then
+          reason="$tok"
+        else
+          reason="$tok"
+        fi
+        [ "$first" = 1 ] && first=0 || printf ', '
+        printf '\n    "%s": {"domain": "%s", "signal": "%s", "score": %s, "reason": "%s"}' \
+          "$(jesc "$cat")" "$(jesc "$cat")" "$(jesc "$tok")" "$score" "$(jesc "$reason")"
+      done
+      [ "$first" = 1 ] || printf '\n'
+      printf '  },\n'
+    fi
     printf '  "base": ['
     first=1
     while IFS= read -r f; do
