@@ -1,7 +1,7 @@
 # 🔄 CONTINUE — Handoff entre sesiones
 
 > ⚡ **PRÓXIMA SESIÓN: LEE ESTO PRIMERO**
-> Generado: 2026-08-11 (opencode — **Fase 3 · Pasos 1-2 aprobados; Paso 3 CERRADO (OR no adoptado); diagnóstico Q03/Q04/Q06/Q08 COMPLETADO (AND normalizado = hipótesis del próximo experimento)**)
+> Generado: 2026-08-11 (opencode — **Fase 3 · Pasos 1-2 aprobados; Paso 3 CERRADO (OR no adoptado); diagnóstico Q03/Q04/Q06/Q08 COMPLETADO; Paso 4 (AND normalizado) DISEÑO APROBADO — pendiente implementar y medir**)
 
 > 🗝️ **Palabra de cierre acordada ("cerrar día"):** el agente escribe el contexto (SESION.md/CONTINUE.md/CHANGELOG.md, máx 5 entradas en SESION.md) y luego ejecuta **`buffy-close-day.sh`** (mensaje opcional con `--message`) — hace sync push de la memoria curada, regenera SNAPSHOT, corre doctor --quick y commit + push. Si el sync conflictúa, el cierre aborta y hay que resolver.
 
@@ -158,6 +158,23 @@ documentos hizo que AND fallara y OR acertara. Hipótesis verificable, no saltar
   de ≥2 tokens significativos por línea) debería recuperar Q03/Q04 sin el leakage de OR.
   El runner debe reportar dónde se encontró cada aguja (gold vs otro archivo).
 - Detalle completo en `scripts/tests/evals/EVAL-REGISTRY.md` → sección 🔬 Diagnóstico.
+
+**PASO 4 — AND NORMALIZADO · DISEÑO APROBADO (2026-08-11), pendiente implementar:**
+- Diseño completo y reproducible: `scripts/tests/evals/and-normalizado-DESIGN.md`.
+- Estrategia `and-norm`: normalización idéntica a OR (deaccent→lowercase→alnum→≥3
+  chars, misma STOPWORDS_ES) + **co-ocurrencia de ≥2 tokens significativos en la
+  misma línea** (sets, no substring). Ranking bm25 conservado; gate POST-query sobre
+  top-50 → recorta a LIMIT=10. Fallback <2 tokens → AND crudo / 1-token con marca.
+- **Corregir el instrumento ANTES de medir:** `search_recall` = solo `gold_file_match`
+  (aguja en snippet de archivo gold); `other_file_match` → `search_other_recall`
+  (diagnóstico); `search_recall_raw` para comparar con runner viejo. Corrige el falso
+  positivo del Paso 3 (Q06/Q08).
+- Regenerar A y B con el instrumento corregido (comparación justa); originales quedan
+  en git history. Correr A/B/and-norm sobre el MISMO EVAL en la misma corrida (G3).
+- Criterio de lectura (reportar, no bloquear): search_recall_corregido ≥ 0.150,
+  context_relevance ≥ 0.600, cross_domain_leakage ≤ 0.267, token_cost ≤ ~2× A.
+- **NO tocar runtime** (`buffy-search.sh`/`buffy-router.sh`), NO Hybrid, NO
+  calibración, NO default and, NO los 5 FAIL de suite. Veredicto de adopción = usuario.
 
 **Suite PC — nota (2026-08-11):** `225 OK / 5 FAIL` — los 5 son preexistentes y ajenos
 a la Fase 3 (3 × test-scale.sh con ruta Termux hardcodeada en PC; 2 × drift de conteos
