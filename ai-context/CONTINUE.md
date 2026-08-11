@@ -21,10 +21,10 @@ La revisión señaló que versionar `.sync-state` en el repo generaba commits ex
 
 ### B y C (PENDIENTES — evolución del router/benchmark, de la misma revisión)
 - **B. Multi-dominio**: cuando una consulta pertenece a 2-3 dominios ("scrcpy + ADB + game"), `domain_precision` es demasiado simplista. Próxima métrica: `multi_domain_recall`, `multi_domain_precision`, `cross_domain_leakage`.
-- **C. Benchmark realista**: 500 hechos, 5-10 dominios, consultas reales sin palabras clave artificiales ni nombres de dominio obvios; medir router precision/recall, search recall, context relevance, token cost, latency, leakage. Disciplina del repo: benchmark primero, feature después.
+- **C. Benchmark realista — CONTRATO DEFINIDO** en `scripts/tests/bench-realistic-DESIGN.md` (500 hechos/8 dominios, 60 queries single/multi/ambiguous/adversarial, 9 métricas con definición operativa, gates de sanidad G1-G3, 3 modos de comparación). `bench-realistic.sh` NO existe todavía. No tocar router ni motor; disciplina: benchmark → evidencia → feature → benchmark.
 
 ### ⏳ Pendientes para otra sesión
-- B/C: benchmark multi-dominio y realista (cuando se ataque el router).
+- **[Implementar] bench-realistic.sh según el contrato** (`scripts/tests/bench-realistic-DESIGN.md` §8, orden exacto): 1) `fixtures-realistic/generator.py` + `domains.json` (validar G1) → 2) `bench-realistic.sh` (modos search/router/multi, flags --facts/--queries/--seed/--quick/--json, exit 0/1/2) → 3) G1-G3 auto → 4) línea base 3 seeds (20260810/11/12) registrada en `Knowledge/Tools/Benchmark-realista.md` → 5) con la evidencia decidir la capa multi-dominio del router → 6) recién ahí integrar --quick a run-tests.sh + README.
 - **En el PC**: tras `git pull`, correr `buffy-memory.sh sync pull` UNA vez para adoptar la memoria del teléfono; desde ahí "cerrar día" = `buffy-close-day.sh`.
 - P1: retorno del aprendizaje (SESION-archive meses después → ¿conocimiento activo?).
 - P2: concurrencia 3+ escritores sobre MEMORY.md.
