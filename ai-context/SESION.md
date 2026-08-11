@@ -57,6 +57,33 @@ Aprobar/avanzar las fases del benchmark realista contra el hallazgo `search_reca
 
 ---
 
+## 🔎 EVAL PC — Paso 6b (auditoría Q06 + gold definitivo) y Paso 7 (diseño)
+
+### Paso 6b — Auditoría específica de Q06 (COMPLETADO)
+- **Veredicto:** `scrcpy.md` NO contiene evidencia equivalente de `FF_SEEN` (solo
+  `com.dts.freefireth:57` en diagnóstico de lag — paquete tangencial, no el hecho
+  evaluado). La evidencia real vive en CHANGELOG.md:186, CONTINUE.md:448 y el script
+  real `~/scripts/scrcpy-freefire.sh:272-276` (fuera del corpus).
+- **Gold definitivo Q06:** `gold_files=[ai-context/CHANGELOG.md]`,
+  `gold_facts=[FF_SEEN]`. `com.dts.freefireth` quitado del gold.
+- **Fixture actualizado** (hash `98a0e308…`) + runner v3.1 + **A/B/C regenerados**:
+  search_recall 0.000/0.050/0.100 · other 0.000/0.150/0.050 · context_relevance
+  0.533/0.182/0.333 · leakage 0.267/0.694/0.522 · token 5 197/45 259/38 017.
+  Nota: router_precision 0.667→0.600 por variabilidad de entorno (router no lee fixture).
+
+### Paso 7 — Experimento semántico diagnóstico (DISEÑADO, pendiente aprobación)
+- **Spec:** `scripts/tests/evals/semantic-retrieval-DESIGN.md`.
+- **Pregunta:** ¿un retrieval semántico recupera Q03/Q06/Q08 sin el leakage/coste de OR?
+- **Invariantes:** MISMO EVAL/gold/limit/métricas. UNA variable: lexical → semantic.
+- **Enfoque:** Ollama local (ya instalado) + `bge-m3` (multilingüe, default) o
+  `nomic-embed-text` (sanity). Embeddings por línea → coseno → top-LIMIT. Runner nuevo
+  `run-semantic-PC.sh` — NO toca runtime.
+- **Gate pre-fijado:** search_recall > 0.100 · context_relevance ≥ 0.600 · leakage
+  ≤ 0.267 · token ≤ ~2× A · determinismo · mismo EVAL hash.
+- **NO adoptar todavía** — experimento diagnóstico; veredicto = usuario.
+
+---
+
 # 🧠 SESION — Buffy opencode (2026-08-10 · revisión: sync sin ruido git + pendientes router multi-dominio)
 
 > Contexto de lo implementado durante esta sesión. Corrida en **opencode** (teléfono).

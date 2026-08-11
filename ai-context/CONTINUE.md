@@ -1,7 +1,7 @@
 # 🔄 CONTINUE — Handoff entre sesiones
 
 > ⚡ **PRÓXIMA SESIÓN: LEE ESTO PRIMERO**
-> Generado: 2026-08-11 (opencode — **Fase 3 · Pasos 1-2 ✅; Paso 3 CERRADO (OR no adoptado); diagnóstico ✅; Paso 4 CERRADO (C/and-norm NO adoptado); Paso 5 auditoría de gold COMPLETADA; Paso 6 COMPLETADO (fixture Q04/Q06 corregido + A/B/C regenerados v3 — Q04 era fixture, and-norm lo recupera como gold; problemas retrieval restantes: Q03/Q08 puente léxico, Q06 ranking) — siguiente: decisión del usuario sobre próximo experimento (¿Hybrid?) con gold corregido**)
+> Generado: 2026-08-11 (opencode — **Fase 3 · Pasos 1-2 ✅; Paso 3 CERRADO (OR no adoptado); diagnóstico ✅; Paso 4 CERRADO (C/and-norm NO adoptado); Paso 5 auditoría de gold COMPLETADA; Paso 6 COMPLETADO (fixture Q04/Q06 corregido + A/B/C regenerados v3); Paso 6b COMPLETADO (auditoría Q06 → gold definitivo, A/B/C regenerados v3.1); Paso 7 DISEÑADO (experimento semántico diagnóstico, spec lista, pendiente aprobación) — siguiente: aprobar spec Paso 7 e implementar run-semantic-PC.sh**)
 
 > 🗝️ **Palabra de cierre acordada ("cerrar día"):** el agente escribe el contexto (SESION.md/CONTINUE.md/CHANGELOG.md, máx 5 entradas en SESION.md) y luego ejecuta **`buffy-close-day.sh`** (mensaje opcional con `--message`) — hace sync push de la memoria curada, regenera SNAPSHOT, corre doctor --quick y commit + push. Si el sync conflictúa, el cierre aborta y hay que resolver.
 
@@ -132,6 +132,46 @@ Retomada y cerrada: **fixture gold corregido (Q04/Q06) + A/B/C regenerados (inst
   documentado el caso de negocio del Hybrid. NO tocar runtime hasta esa decisión.
 - Suite PC: 225 OK / 5 FAIL (los 5 preexistentes, fuera de alcance — ver EVAL-REGISTRY).
 - Benchmark SIN commit todavía: artefactos v3, fixture corregido, runner v3, Paso 6.
+- En el PC: tras `git pull`, `buffy-memory.sh sync pull` UNA vez.
+- P1: retorno del aprendizaje · P2: concurrencia 3+ escritores · Opcional: `Knowledge/Tools/Buffy-Memory.md` · Revisar `~/gscript-audit/sin_titulo_1/`.
+
+---
+
+## Resumen de la sesión (2026-08-11 cierre v3 — opencode, Paso 6b + diseño Paso 7)
+
+**Tema:** auditoría específica de Q06 + gold definitivo + diseño del experimento
+semántico diagnóstico (Paso 7). Sesión retomada tras corte de luz (Paso 6 ya estaba
+ejecutado en disco).
+
+1. **Auditoría Q06 (Paso 6b):** `scrcpy.md` NO contiene evidencia equivalente de
+   `FF_SEEN` (solo `com.dts.freefireth:57` en diagnóstico de lag — paquete tangencial,
+   no el hecho evaluado). La evidencia real vive en CHANGELOG.md:186, CONTINUE.md:448
+   y el script real `~/scripts/scrcpy-freefire.sh:272-276` (fuera del corpus).
+   → **Gold definitivo Q06:** `gold_files=[ai-context/CHANGELOG.md]`,
+   `gold_facts=[FF_SEEN]`. `com.dts.freefireth` quitado del gold.
+2. **Fixture actualizado** (nuevo hash `98a0e308…`) + runner v3.1 (EVAL_HASH) +
+   **A/B/C regenerados**: search_recall 0.000/0.050/0.100 · other 0.000/0.150/0.050 ·
+   context_relevance 0.533/0.182/0.333 · leakage 0.267/0.694/0.522 · token
+   5 197/45 259/38 017. Nota: router_precision bajó 0.667→0.600 por variabilidad de
+   entorno (el router no lee el fixture; Δ=0 entre estrategias).
+3. **Paso 7 DISEÑADO** (`semantic-retrieval-DESIGN.md`): experimento semántico
+   diagnóstico, NO Hybrid. Pregunta: ¿un retrieval semántico recupera Q03/Q06/Q08 sin
+   el leakage/coste de OR? Invariantes: MISMO EVAL/gold/limit/métricas. Enfoque:
+   Ollama local (ya instalado) + `bge-m3` (multilingüe, default) o `nomic-embed-text`
+   (sanity), embeddings por línea → coseno → top-LIMIT, runner nuevo
+   `run-semantic-PC.sh` (no toca runtime). **Gate pre-fijado:** search_recall > 0.100 ·
+   context_relevance ≥ 0.600 · leakage ≤ 0.267 · token ≤ ~2× A · determinismo ·
+   mismo EVAL hash. NO adoptar todavía.
+4. Registrado en `EVAL-REGISTRY.md` → Paso 6b + Paso 7. Runtime congelado.
+
+### ⏳ Pendientes para otra sesión
+- **Aprobar spec Paso 7** (`semantic-retrieval-DESIGN.md`) → implementar
+  `run-semantic-PC.sh` → `ollama pull bge-m3` → correr D (semantic) sobre el MISMO
+  EVAL → comparar contra A/B/C → reportar tabla + per-query (Q03/Q06/Q08 en foco) →
+  decisión del usuario (NO adoptar todavía).
+- Suite PC: 225 OK / 5 FAIL (los 5 preexistentes, fuera de alcance — ver EVAL-REGISTRY).
+- Benchmark SIN commit todavía: fixture gold definitivo, runner v3.1, baselines v3.1,
+  spec Paso 7, Paso 6b.
 - En el PC: tras `git pull`, `buffy-memory.sh sync pull` UNA vez.
 - P1: retorno del aprendizaje · P2: concurrencia 3+ escritores · Opcional: `Knowledge/Tools/Buffy-Memory.md` · Revisar `~/gscript-audit/sin_titulo_1/`.
 
