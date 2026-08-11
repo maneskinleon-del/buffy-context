@@ -100,3 +100,21 @@ Resultado: `scripts/tests/evals/baseline-A-PC-2026-08-11.json`
 > ⛔ Esta baseline es del perfil PC y NO se compara contra Termux.
 > ⛔ No se usará para calibrar `θ_c`, presupuesto ni pesos (es referencia de TEST).
 
+### Estado de la suite en el perfil PC (2026-08-11)
+
+> ⚠️ **La suite del perfil PC no está actualmente 100% verde** por incompatibilidades
+> de entorno/drift documental **preexistentes** (verificadas: no fueron producidas por
+> la Fase 3 ni por la Baseline A):
+>
+> - 3 FAIL en `test-scale.sh` → usa `TMPDIR:-/data/data/com.termux/files/usr/tmp`
+>   (ruta hardcodeada del perfil Termux) que no existe en el PC → el sandbox no se
+>   puede crear y los 3 checks de estrategia OR fallan.
+> - 2 FAIL en `test-documentation.sh` → el README declara conteos de la suite
+>   (`--quick`: functional 225 / total 230) que no coinciden con la suite real
+>   (222 / 226) tras cambios provenientes del perfil teléfono.
+>
+> Estos FAIL **NO forman parte de la medición de Baseline A** y quedan **fuera de
+> alcance** de esta fase: arreglarlos ahora introduciría ruido en el experimento.
+> No tocar hasta que se decida un cleanup de portabilidad del perfil PC, con su
+> propia justificación.
+
