@@ -100,6 +100,22 @@ La revisión señaló que versionar `.sync-state` en el repo generaba commits ex
 
 ---
 
+## 📌 Fase 3 · Paso 1 — EVAL congelado (perfil PC) ✅ COMPLETADO
+
+**Qué:** EVAL de selección de contexto congelado en `scripts/tests/evals/eval-ctx-PC-2026-08-11.json`
+(10 queries reales con gold manual). Hash `8e42d119bf7bc4f2014e7239f101e3c37296365f3b24158e0cb0155baaa67f5d`,
+registro en `scripts/tests/evals/EVAL-REGISTRY.md`. Perfil **PC** (host `sabrewulf-a320ms2h`) —
+NO comparable con la baseline de Termux.
+
+**⛔ Reglas:** congelado ANTES de tocar router/search/selector/Hybrid. No podrá usarse para
+calibrar `θ_c`, presupuesto ni pesos. Nada del perfil PC entra en memoria curada.
+
+**▶ Siguiente paso (paso 2):** con la **aprobación del usuario** del EVAL → correr la **baseline A
+del perfil PC** (pipeline actual router→search sobre el EVAL, medir sin tocar código). No avanzar
+hasta que el usuario apruebe el EVAL congelado.
+
+---
+
 ## Resumen de la sesión (2026-08-10 — opencode, pendientes P0 y P1)
 
 **Tema:** atacar los pendientes con modo autónomo → **P0 completado: `bench-context-selection.sh`** (el benchmark que desbloqueaba el congelamiento) y **P1 completado: data_car precios IA + total CLP**. Ambos cambios commiteados y pusheados al cierre de la sesión.
