@@ -323,6 +323,91 @@ ninguna aguja gold (0.000) y mantiene las mismas `other_file_match` que B en
 Q04/Q06/Q08. `cooccurrence_stats` por query en el JSON de C (hits antes/después del
 gate). **Sin veredicto — el usuario pidió ver los datos crudos antes de decidir.**
 
+## ✅ Paso 4 — CERRADO como experimento diagnóstico · 2026-08-11 · C (and-norm) NO adoptado
+
+**Veredicto del usuario (2026-08-11):** and-norm **no resuelve el problema**.
+`search_recall gold = 0.000` — la hipótesis (≥2 tokens significativos en la misma
+línea recuperaría Q03/Q04 sin el ruido de OR) **no ocurrió**. C reproduce las agujas
+no-gold de B (other_file_match 0.200) pero no transforma ninguna en recuperación
+válida del archivo gold.
+
+**Descartado (con evidencia):** variantes pequeñas de AND (≥3 tokens, ranking, BM25,
+LIMIT, stopwords) — sería optimización sobre un mecanismo que ya demostró que no
+captura el puente léxico necesario (`crear`↔`create`, `pantalla no se apaga`↔`xset -dpms`).
+
+**Conclusión del usuario:** el buscador actual resuelve por coincidencia léxica, pero
+el problema es **semántico/técnico** (consulta natural → concepto → terminología
+técnica → documento). **NO se salta a Hybrid todavía.**
+
+**Pregunta fundamental del siguiente paso:** ¿el problema está en el **retrieval** o
+en el **gold/fixture**? Q04/Q06/Q08 ya mostraron información encontrada en OTROS
+archivos (CONTINUE.md, AGENTS.md) — el benchmark puede estar midiendo file retrieval
+cuando el gold representa fact retrieval.
+
+**Estado:** C NO adoptado. Runtime congelado. Siguiente: **Paso 5 — auditoría de
+gold / cobertura de evidencia** (para las 10 queries, especialmente Q03/Q04/Q06/Q08):
+gold file, gold line, gold fact, evidencia en gold, evidencia equivalente fuera de
+gold, ¿el gold representa la respuesta esperada?
+
+## 🔎 Paso 5 — Auditoría de gold / cobertura de evidencia · 2026-08-11
+
+**Objetivo:** responder si el problema está en el **retrieval** o en el **gold/fixture**.
+Para cada query: ¿la aguja gold existe en el archivo gold declarado? ¿La línea gold
+comparte tokens con la query? ¿Hay evidencia equivalente fuera del gold?
+
+### Resultado por query (10/10 auditadas)
+
+| ID | aguja | ¿en gold declarado? | ¿línea gold comparte tokens con query? | ¿evidencia fuera de gold? |
+|---|---|---|---|---|
+| Q01 | adb tcpip 5555 / adb connect | ✅ GOLD (ADB.md) | — | — |
+| Q02 | rish -c / moe.shizuku / pm grant | ✅ GOLD (Shizuku.md, ADB.md) | — | sí (INFO-full, SHIZUKU-RISH-BUG) |
+| Q03 | git push origin | ✅ GOLD (Commands.md:13) | **NINGUNO** | — |
+| Q03 | gh pr create | ✅ GOLD (Commands.md:64) | **1** (`crear`) | — |
+| Q04 | xset -dpms / xset s off | ❌ **NO en System.md** | — | **sí** (CONTINUE.md:405, CHANGELOG.md:203, SESION-archive.md:1970) |
+| Q05 | useState / adb devices -l | ✅ GOLD (React.md, ADB.md) | — | — |
+| Q06 | FF_SEEN | ❌ **NO en gold files** | — | **sí** (CONTINUE.md, CHANGELOG.md, SESION-archive.md) |
+| Q06 | com.dts.freefireth | ✅ GOLD (scrcpy.md:57) | **NINGUNO** | sí (NubiaLab.md, CONTINUE.md) |
+| Q07 | dumpsys thermalservice / force_gpu_rendering | ✅ GOLD (GameOptimization.md) | — | sí (scrcpy.md) |
+| Q08 | picom | ✅ GOLD (System.md:3) | **NINGUNO** | sí (README, INFO-core, CONTINUE.md) |
+| Q08 | P_TERM_OPACITY | ✅ GOLD (System.md:78) | **NINGUNO** | sí (AGENTS.md, INFO-full) |
+| Q09 | scaling_governor / force_gpu_rendering | ✅ GOLD (GameOptimization.md) | — | sí (ADB.md) |
+| Q10 | dumpsys thermalservice / thermal_control | ✅ GOLD (GameOptimization.md) | — | sí (scrcpy.md) |
+
+### Hallazgos
+
+1. **Q04 — gold DEFECTUOSO (crítico):** `gold_files = [Knowledge/Linux/System.md]`
+   pero las agujas `xset -dpms` / `xset s off` **NO existen en System.md** (grep: 0
+   coincidencias de pantalla/dpms/blanking). Viven en `CONTINUE.md:405`,
+   `CHANGELOG.md:203`, `SESION-archive.md:1970`. El gold declara un archivo que NO
+   contiene la respuesta → search_recall de Q04 es 0 **por construcción del fixture**,
+   no por fallo del buscador. Es `other_file_match` inevitable.
+2. **Q06 — gold PARCIALMENTE defectuoso:** `FF_SEEN` no está en ningún gold file
+   declarado (scrcpy.md/Keymappers.md/Shell.md); vive en CONTINUE.md/CHANGELOG/
+   SESION-archive. `com.dts.freefireth` sí está en scrcpy.md:57 pero esa línea no
+   comparte tokens con la query.
+3. **Q03/Q08 — gold CORRECTO pero puente léxico roto:** las agujas SÍ están en el
+   archivo gold, pero la línea gold comparte 0-1 tokens con la query:
+   - Q03 `git push origin` (Commands.md:13) → overlap NINGUNO.
+   - Q03 `gh pr create` (Commands.md:64) → overlap 1 (`crear`, por el comentario ES).
+   - Q08 `picom` (System.md:3) → overlap NINGUNO.
+   - Q08 `P_TERM_OPACITY` (System.md:78) → overlap NINGUNO.
+4. **Conclusión de la auditoría:** el problema es **MIXTO**:
+   - **2/10 queries (Q04, Q06)** tienen gold que no representa la respuesta esperada
+     (aguja fuera del archivo gold declarado) → el benchmark mide file retrieval
+     cuando el gold representa fact retrieval.
+   - **Q03/Q08** tienen gold correcto pero el buscador léxico no captura el puente
+     semántico/técnico (`crear`↔`create`, `pantalla no se apaga`↔`xset -dpms`,
+     `terminal opaca`↔`picom`).
+   - **Q01/Q02/Q05/Q07/Q09/Q10** tienen gold correcto y agujas en el archivo gold.
+
+### Implicación para el diseño del próximo experimento
+
+Antes de gastar presupuesto en Hybrid/embeddings/query expansion, conviene **corregir
+el fixture gold** (Q04: apuntar a CONTINUE.md/CHANGELOG.md o mover la evidencia a
+System.md; Q06: añadir el archivo de sesión donde vive FF_SEEN). Con el gold corregido,
+la medición de search_recall reflejará fact retrieval real y no penalizará al buscador
+por un fixture mal anotado. Decisión del usuario.
+
 ### Estado de la suite en el perfil PC (2026-08-11)
 
 > ⚠️ **La suite del perfil PC no está actualmente 100% verde** por incompatibilidades
