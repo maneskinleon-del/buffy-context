@@ -247,6 +247,37 @@ en el snippet del archivo gold) = **0.150** (solo Q03/Q04). La mejora real de OR
    debería recuperar Q03/Q04 sin el leakage de OR. El runner debe reportar **dónde**
    se encontró cada aguja (archivo gold vs otro) para no inflar recall.
 
+## 📋 Paso 4 — AND normalizado · ⏳ DISEÑO aprobado para implementar · 2026-08-11
+
+**Decisión del usuario (2026-08-11):** revisado el diagnóstico, cerrado, y **aprobado
+el diseño del experimento de AND normalizado** como Paso 4. Orden metodológico
+mantenido: una hipótesis, un cambio experimental, una medición. **Sin modificar
+runtime.** Diseño completo en `and-normalizado-DESIGN.md` (reproducible).
+
+**Resumen del diseño (ver `and-normalizado-DESIGN.md` para especificación completa):**
+
+- **Estrategia `and-norm`:** tokenización/normalización idéntica a OR (deaccent →
+  lowercase → alnum → ≥3 chars), misma `STOPWORDS_ES`, pero exigiendo **co-ocurrencia
+  de ≥2 tokens significativos en la misma línea** (comparación por sets, no substring).
+- **Ranking:** bm25 conservado (misma variable que A/B) — el gate de co-ocurrencia
+  actúa POST-query sobre un top-N amplio (50) y recorta a LIMIT=10.
+- **Fallback:** <2 tokens significativos → AND crudo (histórico) o 1-token con marca
+  `cooccurrence_gate: n/a` (defensivo; en el EVAL las 10 queries tienen ≥2).
+- **Corrección del instrumento (crítica):** `search_recall` pasa a contar SOLO
+  `gold_file_match` (aguja en snippet de archivo gold). `other_file_match` se reporta
+  como `search_other_recall` (diagnóstico). `search_recall_raw` para comparar con el
+  runner viejo. Esto corrige el falso positivo del Paso 3 (Q06/Q08).
+- **Gates:** G1 (fixture verificado), G2 (determinismo: JSON idéntico salvo latency),
+  G3 (A/B/C corren sobre el MISMO EVAL en la misma corrida).
+- **Criterio de lectura (reportar, no bloquear):** interesante si
+  search_recall_corregido ≥ 0.150 (igualar recall real de OR) con context_relevance
+  ≥ 0.600 y cross_domain_leakage ≤ 0.267 (no degradar vs A); token_cost ≤ ~2× A.
+- **Fuera:** Hybrid, cap-selector, calibración, default and, EVAL/baselines A/B,
+  los 5 FAIL de suite, runtime de producción.
+
+**Nota de integridad:** los JSON de A y B se REGENERAN con el instrumento corregido
+(§4) para comparación justa; los originales del Paso 2/3 quedan en git history.
+
 ### Estado de la suite en el perfil PC (2026-08-11)
 
 > ⚠️ **La suite del perfil PC no está actualmente 100% verde** por incompatibilidades
