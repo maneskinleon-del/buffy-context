@@ -2206,3 +2206,30 @@ add/replace/remove básicos, duplicado, replace ambiguo ('Mi 10' en 2 entradas �
 - En los tests, `$TMPDIR` con `BUFFY_MEM_DIR` aislado basta (sin sandbox de repo): el motor es independiente del repo.
 
 ---
+# 🧠 SESION — Buffy opencode (2026-08-10 · scripts Gmail/Drive + update opencode)
+
+> Contexto de lo implementado durante esta sesión. Corrida en **opencode**.
+
+---
+
+## 📧🗂️ Scripts de Google Apps Script: Gmail Organizer V3 + Drive Organizer Pro
+
+### Pedido del usuario
+"Estaba viendo unos scripts de Google, para ordenar Gmail y Drive que tengo, pero no sé si la sesión del teléfono te dejó la info en el repo" → la sesión anterior (desde el teléfono) NO había quedado registrada en buffy-context; se reconstruyó desde el historial de prompts de opencode (`~/.local/state/opencode/prompt-history.jsonl`).
+
+### Lo hecho
+1. **`~/proyectos/gmail-scripts/`** = Gmail Organizer v3 (`organiza_gmail_V3`, scriptId `1yqqZXC4kysIlMMbY57Bi6Ft5Jf5mtO3fUX9EnT41BJtCOnMXmQ01I_sK`): clasifica la bandeja en etiquetas (Compras, Telecom, Bancos, Gobierno, Trabajo, Facturas, Envíos, Spam, ⭐Importante + etiquetas por empresa: BancoEstado, Tenpo, Fonasa, Mercado Libre, AliExpress, WOM...). Rate limiting + reintentos + reanudación tras pausa/cuota; **fix de paginación**: snapshot único con `search()` en vez de `getInboxThreads(pos)`; `cleanup_tmp.js` = limpieza one-shot de etiquetas de usuario (corre una sola vez vía `cleanupEtiquetasDone` en ScriptProperties).
+2. **`~/proyectos/gmail-scripts-otro/`** = Drive Organizer Pro v5.0 (`ordenar_drive_pro`, scriptId `1TW8pIdyQAUeAI7ZznVY4KCZgZtGirq_leLUX8vXWQa1e0i6prPIpzBOu`): modos MAESTRO (todo el Drive, BFS limitado) / ESPECÍFICO (carpeta por ID) × PRUEBA (simula) / REAL (mueve). Motor de reglas con prioridad (MIME > nombre), carpetas administradas (Scripts, Documentación, Android, Configuraciones, Multimedia, Backups, Web, Recursos, Sin clasificar, Comprimidos, Chats) y excluidas (Google Fotos, Trash...). Rate limiting estilo Gmail Organizer + triggers cada 10 min + reanudación por cola de carpetas.
+3. **Sincronizados con la web** (`script.google.com`) vía `clasp pull` — "los de la página ya tienen mejoras" (el usuario los había mejorado desde la web). Ambos quedaron con **commit inicial** local:
+   - `gmail-scripts`: `a207071` — "chore: estado sincronizado con Apps Script (organiza_gmail_V3) via clasp pull" (13 archivos, 1747 líneas)
+   - `gmail-scripts-otro`: `610a040` — "chore: estado sincronizado con Apps Script (ordenar_drive_pro) via clasp pull" (11 archivos, 1738 líneas)
+4. **opencode actualizado** a **1.18.16** (hoy 15:19, `~/.npm-global/lib/node_modules/opencode-ai`) — la actualización que "no se realizó" en la sesión anterior finalmente se completó. Verificado: `opencode --version` = 1.18.16 = última de npm.
+
+### Lecciones
+- **La sesión desde el teléfono NO quedó en buffy-context** → los datos solo existían en disco (los repos git) y en el historial de prompts de opencode. Lección: tras una sesión que toca proyectos nuevos, registrar en SESION.md/PROJECTS.md aunque no se haya "programado" el cierre. Reconstruible vía `~/.local/state/opencode/prompt-history.jsonl`.
+- Ambos repos son **git locales sin remote** — no están en GitHub. Los scripts viven en la nube de Google (source of truth) y el repo local es el backup.
+
+---
+
+---
+

@@ -1,0 +1,475 @@
+{
+ "version": "1.0",
+ "note": "8 dominios = categorías REALES del router (buffy-router.sh). El corpus se alinea al espacio de selección real para que router_precision/recall sean medibles. forbidden_tokens son las FIRMAS del dominio (nombres + keywords fuertes del router); el vocabulario situacional (permitido) crea el traslape léxico real.",
+ "domains": {
+  "android": {
+   "count": 90,
+   "knowledge_dir": "Android",
+   "files": [
+    "ADB.md",
+    "Shizuku.md",
+    "scrcpy.md",
+    "GameOptimization.md",
+    "HyperOS.md",
+    "Keymappers.md"
+   ],
+   "forbidden_tokens": [
+    "android",
+    "adb",
+    "scrcpy",
+    "shizuku",
+    "hyperos",
+    "miui",
+    "logcat",
+    "dumpsys",
+    "xiaomi",
+    "nubia",
+    "gg mouse",
+    "game boost",
+    "keymapper",
+    "keymapping"
+   ],
+   "vocab": [
+    "teléfono",
+    "celular",
+    "celu",
+    "terminal",
+    "paquete instalado",
+    "app",
+    "permiso",
+    "conexión",
+    "cable usb",
+    "depuración inalámbrica",
+    "reinicio",
+    "apagado",
+    "batería",
+    "almacenamiento",
+    "versión del sistema",
+    "gesto",
+    "pantalla del teléfono",
+    "configuración del dispositivo"
+   ],
+   "templates": [
+    "El {V} del {S} se quedó colgado y no responde a los {P}.",
+    "Al {V} el {S} la {P} se pierde y hay que volver a {V}.",
+    "La {P} del {S} se agota rápido desde la última {V} del sistema.",
+    "El {S} no reconoce el {P} hasta que lo {V}.",
+    "Para {V} el {S} primero hay que autorizar la {P} en la configuración.",
+    "El {S} muestra un error de {P} al intentar {V} la app.",
+    "Después de {V} el {S} vuelve a pedir {P} para cada app.",
+    "La {P} de almacenamiento del {S} está casi llena y bloquea {V}."
+   ]
+  },
+  "react": {
+   "count": 70,
+   "knowledge_dir": "React",
+   "files": [
+    "React.md",
+    "Vite.md",
+    "Tailwind.md",
+    "PWA.md"
+   ],
+   "forbidden_tokens": [
+    "react",
+    "jsx",
+    "tsx",
+    "vite",
+    "tailwind",
+    "pwa",
+    "service worker",
+    "typescript",
+    "componente",
+    "hook"
+   ],
+   "vocab": [
+    "página web",
+    "botón",
+    "formulario",
+    "estilos",
+    "build",
+    "despliegue",
+    "rama",
+    "servidor de desarrollo",
+    "trabajador en segundo plano",
+    "interfaz",
+    "navegador",
+    "archivo de entrada",
+    "módulo compartido",
+    "estado visual"
+   ],
+   "templates": [
+    "El {V} del {S} no se ve bien en el navegador después de {V}.",
+    "Al {V} la {S} el {P} pierde los estilos.",
+    "La {S} nueva se rompe cuando {V} el {P}.",
+    "El {V} del {S} funciona en local pero no tras el {P}.",
+    "Para {V} la {S} hay que tocar el {P} de arranque.",
+    "El {S} no carga el {P} hasta que se {V} el caché.",
+    "Cambiar el {P} de la {S} rompe el {V} en producción.",
+    "El {S} quedó desactualizado y el {P} no refleja los cambios."
+   ]
+  },
+  "linux": {
+   "count": 60,
+   "knowledge_dir": "Linux",
+   "files": [
+    "System.md",
+    "Kernel.md"
+   ],
+   "forbidden_tokens": [
+    "linux",
+    "bspwm",
+    "hyprland",
+    "arch",
+    "pacman",
+    "systemd",
+    "kernel",
+    "sysctl",
+    "dmesg",
+    "compositor"
+   ],
+   "vocab": [
+    "escritorio",
+    "ventanas",
+    "atajos",
+    "sesión de escritorio",
+    "inicio del sistema",
+    "servicios del sistema",
+    "terminal del equipo",
+    "imagen de fondo",
+    "iconos",
+    "barra inferior",
+    "reinicio de la sesión",
+    "error de arranque",
+    "controladores"
+   ],
+   "templates": [
+    "El {V} del {S} no arranca hasta {V} la sesión dos veces.",
+    "La {S} se bloquea al {V} el {P} de ventanas.",
+    "El {V} entre {S} dejó de funcionar tras la última {P}.",
+    "Al {V} el equipo la {S} pierde los {P} guardados.",
+    "El {S} muestra un {P} al {V} la sesión de escritorio.",
+    "Para {V} el {P} hay que esperar al {S}.",
+    "El {V} del sistema deja la {S} sin {P}."
+   ]
+  },
+  "git": {
+   "count": 60,
+   "knowledge_dir": "Git",
+   "files": [
+    "Commands.md"
+   ],
+   "forbidden_tokens": [
+    "git",
+    "commit",
+    "push",
+    "pull",
+    "merge",
+    "rebase",
+    "branch",
+    "stash",
+    "diff"
+   ],
+   "vocab": [
+    "cambios",
+    "historial",
+    "rama",
+    "guardar el estado",
+    "enviar los cambios",
+    "traer los cambios",
+    "unir ramas",
+    "deshacer cambios",
+    "copia de trabajo",
+    "repositorio",
+    "conflicto",
+    "versión anterior"
+   ],
+   "templates": [
+    "Hay un {P} al {V} la rama con los cambios del {S}.",
+    "El {V} del {S} quedó con cambios sin {V}.",
+    "Quiero {V} el {S} pero el {P} no deja avanzar.",
+    "La {S} se adelantó y ahora {V} los cambios da {P}.",
+    "Al {V} la rama el {P} del {S} desapareció.",
+    "El {S} guarda {P} que no deberían subir al {V}."
+   ]
+  },
+  "node": {
+   "count": 50,
+   "knowledge_dir": "Node",
+   "files": [
+    "Node.md"
+   ],
+   "forbidden_tokens": [
+    "npm",
+    "npx",
+    "node",
+    "package.json"
+   ],
+   "vocab": [
+    "dependencias",
+    "paquetes de la app",
+    "instalador de paquetes",
+    "script de arranque",
+    "manejador de versiones",
+    "entorno de ejecución",
+    "módulos externos",
+    "carpeta de instalación",
+    "actualización de librerías",
+    "compatibilidad de versiones"
+   ],
+   "templates": [
+    "Al {V} el {S} se rompen las {P} de la app.",
+    "El {V} del {S} no encuentra los {P} instalados.",
+    "Actualizar las {P} rompe el {S} de arranque.",
+    "El {S} pide {V} los módulos antes de correr.",
+    "La {P} de instalación quedó a medias y el {S} falla.",
+    "El {S} de la app no arranca con esta {P} de versiones."
+   ]
+  },
+  "shell": {
+   "count": 70,
+   "knowledge_dir": "Shell",
+   "files": [
+    "Shell.md"
+   ],
+   "forbidden_tokens": [
+    "bash",
+    "zsh",
+    "awk",
+    "sed",
+    "grep",
+    "shell"
+   ],
+   "vocab": [
+    "comandos",
+    "terminal",
+    "scripts",
+    "procesar texto",
+    "tubería de comandos",
+    "variables",
+    "directorio",
+    "automatizar tareas",
+    "permisos de ejecución",
+    "salida del comando",
+    "archivo de configuración"
+   ],
+   "templates": [
+    "El {V} del {S} tarda mucho al {P} de texto.",
+    "Quiero {V} una tarea repetitiva con un {P} en el terminal.",
+    "El {S} no tiene permisos para {V} el {P}.",
+    "La {P} del comando se corta si el {S} no termina.",
+    "El {S} no encuentra el {P} de configuración al {V}.",
+    "Para {V} el {S} hay que encadenar varios {P}."
+   ]
+  },
+  "vision": {
+   "count": 60,
+   "knowledge_dir": "",
+   "files": [
+    "Vision.md"
+   ],
+   "forbidden_tokens": [
+    "vlm",
+    "ocr",
+    "visión",
+    "screenshot"
+   ],
+   "vocab": [
+    "captura de pantalla",
+    "imagen",
+    "foto",
+    "describir",
+    "reconocer texto",
+    "etiquetar",
+    "modelo local",
+    "carpeta de imágenes",
+    "pantalla bloqueada",
+    "vídeo corto",
+    "apretar el botón de captura",
+    "ver el contenido"
+   ],
+   "templates": [
+    "La {V} de la {S} no se puede {P} bien.",
+    "Quiero {V} el {S} de una imagen guardada en la {P}.",
+    "El {S} no reconoce lo que hay en la {P} de pantalla.",
+    "Para {V} el contenido hay que pasarle una {S}.",
+    "La {P} de la imagen queda borrosa y el {S} se confunde.",
+    "El {S} describe mal la {P} cuando hay poco brillo."
+   ]
+  },
+  "code-search": {
+   "count": 40,
+   "knowledge_dir": "CodeSearch",
+   "files": [
+    "Search.md"
+   ],
+   "forbidden_tokens": [
+    "código",
+    "definición",
+    "dónde se usa",
+    "buscar en",
+    "explotar el código",
+    "entiende el flujo",
+    "encontrar dónde"
+   ],
+   "vocab": [
+    "función",
+    "variable",
+    "módulo",
+    "archivo fuente",
+    "proyecto",
+    "referencias",
+    "llamada",
+    "clase",
+    "interfaz compartida",
+    "ruta del archivo",
+    "fragmento",
+    "nombre de la función"
+   ],
+   "templates": [
+    "Necesito {V} dónde {P} la {S} dentro del proyecto.",
+    "Hay que {V} todas las {P} de la {S} antes de cambiarla.",
+    "El {S} se usa desde varios {P} y quiero {V} cuáles.",
+    "Quiero {V} el {P} que llama a la {S}.",
+    "La {S} quedó sin {P} y hay que {V} el archivo fuente.",
+    "El {V} del {S} está en otro módulo del proyecto."
+   ]
+  }
+ },
+ "overlap_pairs": [
+  {
+   "a": "android",
+   "b": "vision",
+   "phrases": [
+    "captura de pantalla",
+    "pantalla del teléfono",
+    "imagen",
+    "ver el contenido"
+   ]
+  },
+  {
+   "a": "android",
+   "b": "linux",
+   "phrases": [
+    "terminal",
+    "cable usb",
+    "reinicio",
+    "conexión",
+    "versión del sistema"
+   ]
+  },
+  {
+   "a": "android",
+   "b": "git",
+   "phrases": [
+    "versión anterior",
+    "cambios",
+    "conflicto",
+    "deshacer"
+   ]
+  },
+  {
+   "a": "react",
+   "b": "node",
+   "phrases": [
+    "despliegue",
+    "actualización",
+    "versiones",
+    "carpeta",
+    "build"
+   ]
+  },
+  {
+   "a": "react",
+   "b": "code-search",
+   "phrases": [
+    "archivo fuente",
+    "módulo compartido",
+    "proyecto",
+    "función"
+   ]
+  },
+  {
+   "a": "linux",
+   "b": "shell",
+   "phrases": [
+    "terminal",
+    "archivo de configuración",
+    "permisos de ejecución",
+    "inicio del sistema"
+   ]
+  },
+  {
+   "a": "shell",
+   "b": "node",
+   "phrases": [
+    "automatizar tareas",
+    "scripts",
+    "instalación",
+    "arranque"
+   ]
+  },
+  {
+   "a": "git",
+   "b": "shell",
+   "phrases": [
+    "historial",
+    "deshacer cambios",
+    "cambios",
+    "copia de trabajo"
+   ]
+  },
+  {
+   "a": "vision",
+   "b": "code-search",
+   "phrases": [
+    "proyecto",
+    "archivo fuente",
+    "ver el contenido",
+    "función"
+   ]
+  },
+  {
+   "a": "android",
+   "b": "node",
+   "phrases": [
+    "actualización",
+    "compatibilidad de versiones",
+    "instalación"
+   ]
+  }
+ ],
+ "router_categories": {
+  "Android": "android",
+  "Code Search": "code-search",
+  "React": "react",
+  "Linux": "linux",
+  "Git": "git",
+  "Node": "node",
+  "Shell": "shell",
+  "Visión/VLM": "vision"
+ },
+ "query_templates": {
+  "single": [
+   "¿cómo hago para {A} sin que se rompa el {B}?",
+   "el {B} no anda y quiero {A}, ¿qué hago?",
+   "necesito {A} y el {B} está fallando",
+   "se jodió el {B} al intentar {A}",
+   "¿por qué el {B} no responde cuando intento {A}?",
+   "ayudame con {A} porque el {B} quedó inestable"
+  ],
+  "multi": [
+   "quiero {A} desde la {B} pero a la vez {C}",
+   "se me rompió {A} y además {B} ya no permite {C}",
+   "haciendo {A} con {B} el {C} no termina",
+   "¿se puede {A} y {B} al mismo tiempo para {C}?"
+  ],
+  "ambiguous": [
+   "no sé si el problema es {A} o {B}, el {C} no responde",
+   "con {A} el {B} falla igual que cuando uso {C}"
+  ],
+  "adversarial": [
+   "cada vez que hago {A} el {B} se corta y quería {C}",
+   "después de {A} con el {B} intento {C} y nada"
+  ]
+ }
+}

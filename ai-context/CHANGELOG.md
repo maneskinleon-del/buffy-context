@@ -14,7 +14,21 @@ system-id: mangonz-desktop
 # CHANGELOG.md — Historial de cambios del sistema
 
 
-### 2026-08-10 — Cierre de sesión: commits + push al día + acuerdo "cerrar día" (opencode)
+### 2026-08-11 — Benchmark realista: Fase 1 medida + Fase 2 diagnóstica + Fase 3 spec + cierre (opencode)
+
+**Pedido del usuario:** avanzar las fases del benchmark realista; cierre de sesión por protocolo (la sesión se cortó antes).
+
+**Lo hecho (buffy-context, sin commit previo):**
+- **Fase 1 Search** (`buffy-search.sh`): `BUFFY_SEARCH_STRATEGY=or` (default `and` = baseline byte a byte) — deacent + lowercase → términos ≥3 chars sin stopwords ES → máx 8 → `OR`/BM25 → top-K. Medida: search_recall **0.000 → 0.736**, context_relevance → 0.505, controles router/multi exactos → aislamiento demostrado, FTS5 exonerado.
+- **3 fixes de exactitud**: router CWD→`$REPO_DIR` (Node espurio), corpus visión path plano (`knowledge_dir: ""`), `search_recall` = `|recov ∩ gold| / |gold|`.
+- **Fase 2 diagnóstica** (router `--diagnose`, report-only): 14 multi × 3 seeds = 42/42 invariante; matriz por query (23/42 sin señales, react/code-search/git/vision = cero detecciones). Veredicto usuario 🟢.
+- **Fase 3 spec v2 APROBADA** (selector híbrido): gates G-R1..R6 con δ pre-fijado, regla de descarte §4.4, barrido presupuesto 700/900/1400. Paso 1: EVAL/dev congelados con sha256.
+- **Reglas de arquitectura** CORE/ADAPTATION/TEST/RESEARCH en `~/AGENTS.md` y spec §11.
+- Suite: **246/246 full · 230 --quick**. SESION.md podada a 5 entradas (Gmail/Drive → archive).
+
+**Pendiente:** Fase 3 paso 2 (baseline re-congelada 3 seeds) → paso 3 (V1 híbrido). En el PC: `git pull` + `buffy-memory.sh sync pull` una vez.
+
+---
 
 **Cierre del día (protocolo fin de sesión):**
 - **data_car commit `aea4e15` + push** — precios de la IA en Mi compra (P1 completado).

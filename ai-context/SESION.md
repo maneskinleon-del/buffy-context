@@ -1,3 +1,31 @@
+# 🧠 SESION — Buffy opencode (2026-08-11 · Fase 1 medida + Fase 2 diagnóstica aprobada + Fase 3 spec v2 + cierre)
+
+> Contexto de lo implementado durante esta sesión. Corrida en **opencode** (teléfono).
+> ⚠️ La sesión se cortó antes del cierre protocolario; el cierre se completó en la sesión siguiente (mismo día).
+
+---
+
+## 🔬 Fases 1-2-3 del benchmark realista (buffy-context)
+
+### Pedido del usuario
+Aprobar/avanzar las fases del benchmark realista contra el hallazgo `search_recall = 0.000` (FTS5 AND) y el router débil (`router_recall ~0.225`).
+
+### Lo hecho
+1. **Fase 1 — Search mejorada** (`buffy-search.sh`): `BUFFY_SEARCH_STRATEGY` (default `and` = baseline byte a byte) con `or` = deacent + lowercase → términos ≥3 chars sin stopwords ES (~70) → máx 8 → `"t1" OR ...` + BM25 → top-K. Corrección del usuario: términos ≥3 chars (ADB/API/Git/SSH/CPU/DPI/VLM/APK/USB son valiosos; ≥4 los descartaba).
+2. **Medición Fase 1 (3 seeds × and vs or)**: search_recall **0.000 → 0.736** · context_relevance → 0.505 · leakage +0.031 · token ×4.4 · latencia +52 ms · **controles router/multi EXACTOS** → aislamiento demostrado (el 0.000 era el AND absoluto, FTS5 exonerado) → **Fase 2 habilitada**.
+3. **3 fixes de exactitud del benchmark**: router miraba CWD no repo (contaminaba Node espurio) → `$REPO_DIR`; corpus de visión path plano vs anidado → `knowledge_dir: ""` + fallback basename; `search_recall` contaba no-gold → `|recov ∩ gold| / |gold|`.
+4. **Fase 2 — diagnóstico del router** (modo `--diagnose`, report-only): ejecutado 14 multi × 3 seeds = **42/42 invariante**, matriz por query (23/42 sin señales · react 0/22, code-search 0/13, git 0/6, vision 0/4 = cero detecciones · rom 9ok/4bad). **Veredicto usuario 🟢 aprobado.**
+5. **Fase 3 — spec v2 APROBADA** (selector híbrido router léxico + evidencia de Search): gates G-R1..R6 con δ pre-fijado, regla de descarte §4.4, promoción score_d ≥ θ_c, barrido presupuesto, `BUFFY_SELECTOR=lexical` default. **Paso 1 HECHO: EVAL congelado** (`eval-set.json` 10 queries sha256 180e14a0… + `dev-set.json` 12 sha256 0cd8d5a6…). **Siguiente: paso 2 (baseline re-congelada 3 seeds × {and,or}) → paso 3 (V1).**
+6. **Reglas de arquitectura registradas** (CORE/ADAPTATION/TEST/RESEARCH + aislamiento dispositivo↔usuario) en `~/AGENTS.md` y spec §11.
+7. Suite: **246/246 full (241 functional + 5 meta) · 230 --quick**. Informes: `/sdcard/Download/informe-benchmark-realista.txt`, `/sdcard/Download/diagnostico-router-fase2.txt`.
+
+### ⏳ Pendientes para otra sesión
+- **Fase 3 paso 2**: baseline re-congelada 3 seeds × {and,or} → paso 3: V1 del cap-selector híbrido.
+- En el PC: tras `git pull`, `buffy-memory.sh sync pull` UNA vez.
+- P1: retorno del aprendizaje · P2: concurrencia 3+ escritores · Opcional: `Knowledge/Tools/Buffy-Memory.md` · Revisar `~/gscript-audit/sin_titulo_1/`.
+
+---
+
 # 🧠 SESION — Buffy opencode (2026-08-10 · revisión: sync sin ruido git + pendientes router multi-dominio)
 
 > Contexto de lo implementado durante esta sesión. Corrida en **opencode** (teléfono).
@@ -216,27 +244,3 @@ La tesis quedó demostrada: cuando FTS5 puro se contamina por completo (adversar
 
 ---
 
-# 🧠 SESION — Buffy opencode (2026-08-10 · scripts Gmail/Drive + update opencode)
-
-> Contexto de lo implementado durante esta sesión. Corrida en **opencode**.
-
----
-
-## 📧🗂️ Scripts de Google Apps Script: Gmail Organizer V3 + Drive Organizer Pro
-
-### Pedido del usuario
-"Estaba viendo unos scripts de Google, para ordenar Gmail y Drive que tengo, pero no sé si la sesión del teléfono te dejó la info en el repo" → la sesión anterior (desde el teléfono) NO había quedado registrada en buffy-context; se reconstruyó desde el historial de prompts de opencode (`~/.local/state/opencode/prompt-history.jsonl`).
-
-### Lo hecho
-1. **`~/proyectos/gmail-scripts/`** = Gmail Organizer v3 (`organiza_gmail_V3`, scriptId `1yqqZXC4kysIlMMbY57Bi6Ft5Jf5mtO3fUX9EnT41BJtCOnMXmQ01I_sK`): clasifica la bandeja en etiquetas (Compras, Telecom, Bancos, Gobierno, Trabajo, Facturas, Envíos, Spam, ⭐Importante + etiquetas por empresa: BancoEstado, Tenpo, Fonasa, Mercado Libre, AliExpress, WOM...). Rate limiting + reintentos + reanudación tras pausa/cuota; **fix de paginación**: snapshot único con `search()` en vez de `getInboxThreads(pos)`; `cleanup_tmp.js` = limpieza one-shot de etiquetas de usuario (corre una sola vez vía `cleanupEtiquetasDone` en ScriptProperties).
-2. **`~/proyectos/gmail-scripts-otro/`** = Drive Organizer Pro v5.0 (`ordenar_drive_pro`, scriptId `1TW8pIdyQAUeAI7ZznVY4KCZgZtGirq_leLUX8vXWQa1e0i6prPIpzBOu`): modos MAESTRO (todo el Drive, BFS limitado) / ESPECÍFICO (carpeta por ID) × PRUEBA (simula) / REAL (mueve). Motor de reglas con prioridad (MIME > nombre), carpetas administradas (Scripts, Documentación, Android, Configuraciones, Multimedia, Backups, Web, Recursos, Sin clasificar, Comprimidos, Chats) y excluidas (Google Fotos, Trash...). Rate limiting estilo Gmail Organizer + triggers cada 10 min + reanudación por cola de carpetas.
-3. **Sincronizados con la web** (`script.google.com`) vía `clasp pull` — "los de la página ya tienen mejoras" (el usuario los había mejorado desde la web). Ambos quedaron con **commit inicial** local:
-   - `gmail-scripts`: `a207071` — "chore: estado sincronizado con Apps Script (organiza_gmail_V3) via clasp pull" (13 archivos, 1747 líneas)
-   - `gmail-scripts-otro`: `610a040` — "chore: estado sincronizado con Apps Script (ordenar_drive_pro) via clasp pull" (11 archivos, 1738 líneas)
-4. **opencode actualizado** a **1.18.16** (hoy 15:19, `~/.npm-global/lib/node_modules/opencode-ai`) — la actualización que "no se realizó" en la sesión anterior finalmente se completó. Verificado: `opencode --version` = 1.18.16 = última de npm.
-
-### Lecciones
-- **La sesión desde el teléfono NO quedó en buffy-context** → los datos solo existían en disco (los repos git) y en el historial de prompts de opencode. Lección: tras una sesión que toca proyectos nuevos, registrar en SESION.md/PROJECTS.md aunque no se haya "programado" el cierre. Reconstruible vía `~/.local/state/opencode/prompt-history.jsonl`.
-- Ambos repos son **git locales sin remote** — no están en GitHub. Los scripts viven en la nube de Google (source of truth) y el repo local es el backup.
-
----

@@ -1,9 +1,34 @@
 # 🔄 CONTINUE — Handoff entre sesiones
 
 > ⚡ **PRÓXIMA SESIÓN: LEE ESTO PRIMERO**
-> Generado: 2026-08-10 (opencode — sesión nocturna: **P0 cumplido — memoria curada sincronizada PC ↔ teléfono** con `buffy-memory.sh sync`)
->
+> Generado: 2026-08-11 (opencode — **Fase 1 medida (Search 0→0.736) + Fase 2 diagnóstica APROBADA (42/42, señales) + Fase 3 spec APROBADA (selector híbrido, δ pre-fijado + regla de descarte) + reglas de arquitectura CORE/ADAPTATION/TEST/RESEARCH registradas**)
+
 > 🗝️ **Palabra de cierre acordada ("cerrar día"):** el agente escribe el contexto (SESION.md/CONTINUE.md/CHANGELOG.md, máx 5 entradas en SESION.md) y luego ejecuta **`buffy-close-day.sh`** (mensaje opcional con `--message`) — hace sync push de la memoria curada, regenera SNAPSHOT, corre doctor --quick y commit + push. Si el sync conflictúa, el cierre aborta y hay que resolver.
+
+---
+
+## Resumen de la sesión (2026-08-11 — opencode, Fase 1 del benchmark realista)
+
+**Tema:** aprobada la spec FASE 1 con corrección del usuario (términos ≥3 chars — ADB/API/Git/SSH/CPU/DPI/VLM/APK/USB son técnicos valiosos; ≥4 los descartaba) → implementada, testeada y medida. **Luego en la misma sesión: Fase 2 diagnóstica implementada (modo `--diagnose` del router, report-only) y EJECUTADA (14 multi × 3 seeds) con veredicto del usuario 🟢 aprobado; Fase 3 spec v2 escrita con los 5 ajustes de revisión; reglas de arquitectura del proyecto registradas en `~/AGENTS.md` y spec §11.**
+
+1. **`buffy-search.sh`**: `BUFFY_SEARCH_STRATEGY` (default `and` = baseline byte a byte) con `or` = deacent + lowercase → términos ≥3 chars sin stopwords ES (~70) → máx 8 → `"t1" OR ...` + BM25 → top-K. Verificado en corpus real.
+2. **Tests nuevos** (`test-scale.sh`, +5 checks): or recupera query natural, and sigue en 0, token de 3 chars conservado, default == and explícito, determinismo or. **Suite 246/246 (241 functional + 5 meta) · 230 --quick** (README actualizado).
+3. **3 fixes de exactitud del benchmark** (bugs REALES preexistentes, no gaming):
+   - `detect_node/react/android` del router miraban el **CWD** no el repo → con `~/package.json` TODA query sumaba Node espurio (rompía la suite desde `~` y contaminaba producción). Ahora `$REPO_DIR`.
+   - Corpus de visión generaba `Knowledge/Vision/Vision.md` pero el router hardcodea `Knowledge/Vision.md` (plano, como el repo real) → `knowledge_dir: ""` en `domains.json` + fallback basename en `dom_of_file`.
+   - `search_recall` contaba hechos no-gold (recall "10.0" imposible) → `|recov ∩ gold| / |gold|`.
+4. **Baseline v2 re-corrida (3 seeds, manifest 20260810 = `6701f446…`)**: router_precision 0.250±0.095 · router_recall 0.225±0.048 · search_recall 0.000 · context_relevance 0.177±0.061 · leakage 0.189±0.047 · token 448±57 · multi_p 0.310±0.218 · multi_r 0.107±0.092.
+5. **Fase 1 medida (3 seeds × and vs or)**: search_recall **0.000 → 0.736** (0.692/0.733/0.783) · context_relevance → 0.505 · leakage +0.031 · token ×4.4 · latencia +52 ms · **controles router/multi EXACTOS** (0.250/0.225/0.310/0.107) → aislamiento demostrado: el 0.000 era el AND absoluto, FTS5 exonerado, problemas independientes → **Fase 2 habilitada**.
+6. Documentación: ficha `Knowledge/Tools/Benchmark-realista.md` (correcciones + tabla Fase 1 + veredicto), informe `/sdcard/Download/informe-benchmark-realista.txt` regenerado.
+
+### ⏳ Pendientes para otra sesión
+- **[Fase 3 — spec v2 APROBADA; PASO 1 COMPLETADO]** `scripts/tests/bench-realistic-FASE3-Hybrid.md`: capa de selección híbrida (router léxico + evidencia de candidatos de Search → cap-selector). Incluye: gates G-R1..R6 con δ fijado antes de medir (δ_p=δ_r=max(sd lexical en A, 0.05)), targets aspiracionales, **regla de descarte §4.4** (si ninguna variante supera → conservar CORE y descartar Hybrid; si D no mejora ≥0.05 → adoptar B/C), promoción score_d ≥ θ_c, degradación operacional, medición por componente A/B/C/D, barrido presupuesto 700/900/1400, `BUFFY_SELECTOR=lexical` default. **Paso 1 HECHO: EVAL congelado** — `fixtures-realistic/eval-set.json` (10 queries reales del historial, sha256 180e14a0…) + `dev-set.json` (12, sha256 0cd8d5a6…), cada query con fuente+justificación; regla: benchmark↑+EVAL↑=fuerte, benchmark↑+EVAL↓=DESCARTAR, EVAL↑+benchmark↓=investigar. Sanity lexical: 3/10 sin señal, 5/10 parcial. **Siguiente: paso 2 (baseline re-congelada 3 seeds × {and,or}) → paso 3 (V1).**
+- **Reglas de arquitectura del proyecto registradas (2026-08-11)**: clasificación CORE/ADAPTATION/TEST/RESEARCH + aislamiento dispositivo↔usuario — en `~/AGENTS.md` y spec Fase 3 §11. Ver AGENTS.md local; aplican a todo cambio futuro de buffy-context.
+- **Fase 2 🟢 APROBADA por el usuario**: diagnóstico 42/42 invariante, matriz por query + agregados (23/42 sin señales = problema principal · react 0/22, code-search 0/13, git 0/6, vision 0/4 = cero detecciones · rom 9ok/4bad). Informe: `/sdcard/Download/diagnostico-router-fase2.txt`; datos crudos en `/data/data/com.termux/files/usr/tmp/opencode/fase2/`. Sin commit.
+- Suite: **246/246 full (241 functional + 5 meta) · 230 --quick (225 functional)** — README ya declarado.
+- Benchmark SIN commit todavía: `bench-realistic.sh`, `fixtures-realistic/`, specs FASE 1/2/3, `buffy-search.sh` (or), fix router CWD-detect, `test-scale.sh`, `--diagnose` del router, README (conteos), ficha, informes. Sin pushear.
+- En el PC: tras `git pull`, `buffy-memory.sh sync pull` UNA vez.
+- P1: retorno del aprendizaje · P2: concurrencia 3+ escritores · Opcional: `Knowledge/Tools/Buffy-Memory.md` · Revisar `~/gscript-audit/sin_titulo_1/`.
 
 ---
 
@@ -19,12 +44,12 @@ La revisión señaló que versionar `.sync-state` en el repo generaba commits ex
 4. Tests actualizados: verifican que el repo NO contiene .sync-state ("cero ruido git") y que cada host tiene su estado local. **Suite: 241 OK / 0 FAIL (full, 236 functional + 5 meta) · 225 OK (--quick, 220)**.
 5. Bug propio encontrado de paso en `do_pull`: la última línea (`[[ $changed == false ]] && echo`) devolvía 1 tras un pull exitoso — el `|| true` final.
 
-### B y C (PENDIENTES — evolución del router/benchmark, de la misma revisión)
+### B y C (estado: C IMPLEMENTADO + BASELINE — decisión B pendiente)
 - **B. Multi-dominio**: cuando una consulta pertenece a 2-3 dominios ("scrcpy + ADB + game"), `domain_precision` es demasiado simplista. Próxima métrica: `multi_domain_recall`, `multi_domain_precision`, `cross_domain_leakage`.
-- **C. Benchmark realista — CONTRATO DEFINIDO** en `scripts/tests/bench-realistic-DESIGN.md` (500 hechos/8 dominios, 60 queries single/multi/ambiguous/adversarial, 9 métricas con definición operativa, gates de sanidad G1-G3, 3 modos de comparación). `bench-realistic.sh` NO existe todavía. No tocar router ni motor; disciplina: benchmark → evidencia → feature → benchmark.
+- **C. Benchmark realista — IMPLEMENTADO** (`scripts/tests/bench-realistic.sh` + `fixtures-realistic/generator.py` + `domains.json`). Pipeline real (FTS5 + router real, nada simulado), 9 métricas, gates G1-G3 pasando, exit 0/1/2. Baseline 3 seeds (20260810/11/12) en `Knowledge/Tools/Benchmark-realista.md`. Hallazgo fuerte: `search_recall = 0.000` en las 3 seeds (FTS5 AND de todos los términos vs queries naturales de 6-10 palabras → zero hits), multi-dominio el más débil (`multi_domain_recall` 0.101/0.018/0.202), leakage estable ~0.24. No tocar router ni motor hasta decidir B con la evidencia.
 
 ### ⏳ Pendientes para otra sesión
-- **[Implementar] bench-realistic.sh según el contrato** (`scripts/tests/bench-realistic-DESIGN.md` §8, orden exacto): 1) `fixtures-realistic/generator.py` + `domains.json` (validar G1) → 2) `bench-realistic.sh` (modos search/router/multi, flags --facts/--queries/--seed/--quick/--json, exit 0/1/2) → 3) G1-G3 auto → 4) línea base 3 seeds (20260810/11/12) registrada en `Knowledge/Tools/Benchmark-realista.md` → 5) con la evidencia decidir la capa multi-dominio del router → 6) recién ahí integrar --quick a run-tests.sh + README.
+- **[Cierre de etapa: baseline validada — NO implementar nada todavía]** Veredicto 2026-08-11: 🟢 benchmark validado + baseline 3 seeds + G1/G2/G3 3/3 · 🔴 search_recall 0.000 (mecánico: buffy-search construye `"w1" AND "w2"...`, una query natural de 8 palabras exige las 8 en la misma línea — limitación de la construcción de query, no de FTS5) · 🔴 router_recall ~0.225 · 🔴 multi_domain_recall ~0.107 · 🟠 leakage ~0.236 · 🟠 latencia ~739 ms. Conclusión: dos problemas independientes (recuperación Search + selección Router con degradación severa multi-dominio). **PRÓXIMO PASO: revisar y aprobar la especificación de FASE 1 — mejora mínima de Search** (`scripts/tests/bench-realistic-FASE1-Search.md`): normalización → stopwords ES → términos significativos (≥4 chars, máx 8) → `OR`/BM25 → top-K; activable por env `BUFFY_SEARCH_STRATEGY=or` con default `and` (baseline reproducible byte a byte, tests verdes); mismas 60 queries/seeds/métricas/gates, el buscador recibe solo `q["text"]` (nunca gold), NO tocar router. Pregunta a contestar: ¿cuánto del 0.000 es exclusivo de la estrategia AND? (si search_recall sube y router_recall queda ~0.225 → independencia confirmada). SOLO tras aprobación: implementación (5 pasos §5) → 3 seeds × and/or → tabla en ficha → reporte. Después: Fase 2 (router aislado, foco 14 queries multi) → Fase 3 (diseñar B) → `--quick` al final. Benchmark sin commit (3 archivos) + spec Fase 1 sin commit.
 - **En el PC**: tras `git pull`, correr `buffy-memory.sh sync pull` UNA vez para adoptar la memoria del teléfono; desde ahí "cerrar día" = `buffy-close-day.sh`.
 - P1: retorno del aprendizaje (SESION-archive meses después → ¿conocimiento activo?).
 - P2: concurrencia 3+ escritores sobre MEMORY.md.
