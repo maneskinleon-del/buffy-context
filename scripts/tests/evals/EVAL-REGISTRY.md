@@ -480,6 +480,85 @@ Nuevo hash del fixture: `0085256874af80e0677a6121384c5702d0aea600d21c2a175441449
   próximo experimento (Hybrid o no) con datos que ya no mezclan fixture con retrieval.
 - Runtime congelado: `buffy-search.sh`/`buffy-router.sh` sin tocar.
 
+## 🔎 Paso 6b — Auditoría específica de Q06 + gold definitivo · 2026-08-11
+
+**Motivo:** antes de diseñar el experimento semántico, resolver si Q06 es otro caso de
+gold incompleto/múltiple. La query Q06 ("el script bash de scrcpy no abre free fire,
+revisá el script") pretende recuperar el hecho `FF_SEEN` (cambio del script).
+
+### Evidencia verificada
+
+| Fuente | ¿Contiene FF_SEEN / watchdog / auto-open? |
+|---|---|
+| `Knowledge/Android/scrcpy.md` | ❌ **NO.** Solo `com.dts.freefireth:57` (diagnóstico de lag) y `am start:82` (teclado). Es referencia de comandos scrcpy, NO documenta el script. |
+| `ai-context/CHANGELOG.md:186` | ✅ Documenta el cambio (sin auto-open + watchdog FF_SEEN). |
+| `ai-context/CONTINUE.md:448` | ✅ Documenta el watchdog FF_SEEN. |
+| `~/scripts/scrcpy-freefire.sh:272-276` | ✅ Fuente primaria real (watchdog FF_SEEN) — fuera del corpus del benchmark. |
+
+### Veredicto
+
+**Q06 era otro caso de gold incompleto/múltiple.** El gold mezclaba dos agujas de
+naturaleza distinta:
+- `FF_SEEN` → hecho central (cambio del script) → vive en CHANGELOG.md/CONTINUE.md.
+- `com.dts.freefireth` → paquete tangencial (evidencia de "Free Fire", NO del cambio
+  del script) → vive en scrcpy.md:57.
+
+**Gold definitivo Q06:** `gold_files = [ai-context/CHANGELOG.md]`,
+`gold_facts = [FF_SEEN]`. `com.dts.freefireth` quitado del gold (no es el hecho
+evaluado). Nuevo hash del fixture: `98a0e3082d920e71a30b1f1a759332808a251f9d02b899a7db3e2604369b34ac`.
+
+### A/B/C regenerados con gold definitivo (instrumento v3.1)
+
+| métrica | A (and) | B (or) | C (and-norm) |
+|---|---|---|---|
+| search_recall (gold) | 0.000 | 0.050 | **0.100** |
+| search_other_recall | 0.000 | 0.150 | 0.050 |
+| search_recall_raw | 0.000 | 0.200 | 0.150 |
+| context_relevance | 0.533 | 0.182 | 0.333 |
+| cross_domain_leakage | 0.267 | 0.694 | 0.522 |
+| token_cost avg | 5 197 | 45 259 | 38 017 |
+| latency avg | 900 | 525 | 538 ms |
+| router_precision / recall | 0.600 / 0.600 | idéntico (Δ=0) | idéntico (Δ=0) |
+
+> ⚠️ Nota de entorno: `router_precision/recall` bajaron de 0.667/0.650 (v3) a
+> 0.600/0.600 (v3.1) — el router NO lee el fixture; es variabilidad de entorno
+> (detección de dispositivo/CWD). No afecta la comparación de Search (Δ=0 entre
+> estrategias en la misma corrida).
+
+### Lectura tras gold definitivo
+
+1. **search_recall se mantiene** (0.000/0.050/0.100): Q06 no se recuperaba como gold
+   en ninguna variante → el cierre del gold no cambia el recall, pero **elimina el
+   ruido de `com.dts.freefireth` como aguja** (other baja: or 0.200→0.150,
+   and-norm 0.100→0.050).
+2. **El gap de retrieval restante es exactamente Q03/Q06/Q08** — los tres casos que
+   el experimento semántico debe atacar.
+3. **context_relevance de A baja a 0.533** (antes 0.600): Q06 con gold de 1 archivo
+   reduce el overlap del router. Sigue siendo el más limpio.
+
+## 📋 Paso 7 — Experimento semántico diagnóstico · ⏳ DISEÑO (2026-08-11)
+
+**Spec:** `scripts/tests/evals/semantic-retrieval-DESIGN.md` (completa y reproducible).
+
+**Pregunta:** ¿un retrieval semántico puede recuperar Q03/Q06/Q08 sin reproducir el
+nivel de leakage y coste de OR?
+
+**Invariantes:** MISMO EVAL (hash `98a0e308…`), MISMAS QUERIES, MISMO GOLD, MISMO
+LIMIT, MISMAS MÉTRICAS. Cambia UNA variable: lexical → semantic.
+
+**Enfoque:** Ollama local (ya instalado) + modelo `bge-m3` (multilingüe, default) o
+`nomic-embed-text` (sanity). Embeddings por línea → coseno → top-LIMIT. Runner nuevo
+`run-semantic-PC.sh` — NO toca runtime ni router.
+
+**Gate pre-fijado (todos obligatorios):** search_recall **> 0.100** ·
+context_relevance **≥ 0.600** · leakage **≤ 0.267** · token **≤ ~2× A (≈10.4k)** ·
+latencia reportada · determinismo (2 corridas) · mismo EVAL hash.
+
+**Criterio de lectura:** benchmark↑+EVAL↑ = fuerte (considerar Hybrid) ·
+benchmark↑+EVAL↓ = DESCARTAR · EVAL↑+benchmark↓ = investigar.
+
+**NO adoptar todavía** — experimento diagnóstico; veredicto = usuario.
+
 ### Estado de la suite en el perfil PC (2026-08-11)
 
 > ⚠️ **La suite del perfil PC no está actualmente 100% verde** por incompatibilidades

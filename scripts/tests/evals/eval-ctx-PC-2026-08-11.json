@@ -157,22 +157,15 @@
         "Shell"
       ],
       "gold_files": [
-        "Knowledge/Android/scrcpy.md",
-        "Knowledge/Android/Keymappers.md",
-        "Knowledge/Shell/Shell.md",
         "ai-context/CHANGELOG.md"
       ],
       "gold_facts": [
         {
           "text": "FF_SEEN",
           "source": "ai-context/CHANGELOG.md"
-        },
-        {
-          "text": "com.dts.freefireth",
-          "source": "Knowledge/Android/scrcpy.md"
         }
       ],
-      "notes": "Caso real 2026-08-07 (script que ya no abría Free Fire automáticamente). Android (scrcpy/free fire) + Shell (script bash). CORREGIDO Paso 6: gold_files incluye ai-context/CHANGELOG.md:186 (fuente real de FF_SEEN); scrcpy.md ya contenía com.dts.freefireth:57. Antes FF_SEEN no estaba en ningún gold file."
+      "notes": "Caso real 2026-08-07 (script que ya no abría Free Fire automáticamente). Android (scrcpy/free fire) + Shell (script bash). GOLD DEFINITIVO (auditoría Q06, Paso 6b): el hecho evaluado es el cambio del script (sin auto-open + watchdog FF_SEEN); su única evidencia dentro del corpus es ai-context/CHANGELOG.md:186 (y CONTINUE.md:448; fuente primaria real ~/scripts/scrcpy-freefire.sh:272-276, fuera del corpus). scrcpy.md NO contiene evidencia equivalente (solo com.dts.freefireth:57 en diagnóstico de lag — paquete tangencial, no el hecho evaluado) → quitado de gold_files y gold_facts."
     },
     {
       "id": "Q07",

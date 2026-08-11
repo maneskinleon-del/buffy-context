@@ -28,6 +28,12 @@
 #   declara que CHANGELOG.md es la respuesta esperada, traerlo no puede penalizar leakage).
 #   EVAL_HASH actualizado al hash del fixture corregido (00852568...).
 #
+# Instrumento v3.1 (Paso 6b — gold definitivo Q06):
+#   Q06 gold cerrado tras auditoría: gold_files = [ai-context/CHANGELOG.md], gold_facts = [FF_SEEN].
+#   scrcpy.md NO contiene evidencia equivalente del hecho evaluado (solo com.dts.freefireth:57
+#   en diagnóstico de lag — paquete tangencial) → quitado de gold_files y gold_facts.
+#   EVAL_HASH actualizado al hash del fixture con gold definitivo (98a0e308...).
+#
 # Estrategia and-norm (Paso 4):
 #   normalización idéntica a OR (deaccent → lowercase → alnum → ≥3 chars, STOPWORDS_ES)
 #   + gate de co-ocurrencia de ≥2 tokens significativos en la MISMA línea (sets, no
@@ -48,7 +54,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_DIR="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 EVAL="$SCRIPT_DIR/eval-ctx-PC-2026-08-11.json"
-EVAL_HASH="0085256874af80e0677a6121384c5702d0aea600d21c2a175441449f4fd19ffd"
+EVAL_HASH="98a0e3082d920e71a30b1f1a759332808a251f9d02b899a7db3e2604369b34ac"
 
 STRATEGY="and"
 OUT_FILE=""

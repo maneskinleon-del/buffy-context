@@ -4,39 +4,39 @@
   "host": "sabrewulf-a320ms2h",
   "date": "2026-08-11",
   "eval_id": "eval-ctx-PC-2026-08-11",
-  "eval_hash": "0085256874af80e0677a6121384c5702d0aea600d21c2a175441449f4fd19ffd",
+  "eval_hash": "98a0e3082d920e71a30b1f1a759332808a251f9d02b899a7db3e2604369b34ac",
   "strategy": "and-norm",
   "instrument_version": "v3",
   "pipeline": "buffy-router.sh (real) → buffy-search.sh FTS5 bm25 (OR top-50) → gate co-ocurrencia ≥2 tokens → top-10",
   "runtime_changed": false,
   "num_queries": 10,
   "aggregate": {
-    "router_precision_avg": 0.667,
-    "router_recall_avg": 0.65,
+    "router_precision_avg": 0.6,
+    "router_recall_avg": 0.6,
     "multi_domain_precision": {
-      "avg": 0.833,
+      "avg": 0.5,
       "n": 2
     },
     "multi_domain_recall": {
-      "avg": 0.75,
+      "avg": 0.5,
       "n": 2
     },
     "categories_recall_avg": 0.8,
     "search_recall_avg": 0.1,
-    "search_other_recall_avg": 0.1,
-    "search_recall_raw_avg": 0.2,
-    "context_relevance_avg": 0.355,
+    "search_other_recall_avg": 0.05,
+    "search_recall_raw_avg": 0.15,
+    "context_relevance_avg": 0.333,
     "cross_domain_leakage_avg": 0.522,
     "total_spurious_categories": 2,
     "token_cost": {
-      "avg": 37546.7,
-      "p95": 70451
+      "avg": 38017.0,
+      "p95": 71163
     },
     "latency_ms": {
-      "avg": 577.25,
-      "p95": 610.1
+      "avg": 537.67,
+      "p95": 569.7
     },
-    "window_utilization_avg": 0.18773
+    "window_utilization_avg": 0.19009
   },
   "per_query": [
     {
@@ -95,8 +95,8 @@
       },
       "context_relevance": 0.4,
       "cross_domain_leakage": 0.6,
-      "context_estimated_tokens": 25223,
-      "latency_ms": 582.8,
+      "context_estimated_tokens": 26506,
+      "latency_ms": 569.7,
       "search_hit_paths": [
         "Knowledge/Android/ADB.md",
         "README.md",
@@ -168,7 +168,7 @@
       "context_relevance": 0.286,
       "cross_domain_leakage": 0.714,
       "context_estimated_tokens": 48165,
-      "latency_ms": 603.0,
+      "latency_ms": 568.8,
       "search_hit_paths": [
         "Knowledge/Android/Shizuku.md",
         "Knowledge/README.md",
@@ -233,8 +233,8 @@
       },
       "context_relevance": 0.167,
       "cross_domain_leakage": 0.833,
-      "context_estimated_tokens": 26924,
-      "latency_ms": 535.9,
+      "context_estimated_tokens": 28207,
+      "latency_ms": 494.8,
       "search_hit_paths": [
         "CONTRIBUTING.md",
         "ai-context/CONTINUE.md",
@@ -305,8 +305,8 @@
       },
       "context_relevance": 0.25,
       "cross_domain_leakage": 0.75,
-      "context_estimated_tokens": 62027,
-      "latency_ms": 557.9,
+      "context_estimated_tokens": 62740,
+      "latency_ms": 521.8,
       "search_hit_paths": [
         "ai-context/CHANGELOG.md",
         "ai-context/CONTINUE.md",
@@ -376,8 +376,8 @@
       },
       "context_relevance": 0.286,
       "cross_domain_leakage": 0.429,
-      "context_estimated_tokens": 52887,
-      "latency_ms": 604.4,
+      "context_estimated_tokens": 53599,
+      "latency_ms": 558.7,
       "search_hit_paths": [
         "Knowledge/Android/ADB.md",
         "Knowledge/Android/HyperOS.md",
@@ -404,12 +404,9 @@
       ],
       "categories_recall": 1.0,
       "spurious_categories": [],
-      "router_precision": 0.667,
-      "router_recall": 0.5,
+      "router_precision": 0.0,
+      "router_recall": 0.0,
       "gold_files": [
-        "Knowledge/Android/Keymappers.md",
-        "Knowledge/Android/scrcpy.md",
-        "Knowledge/Shell/Shell.md",
         "ai-context/CHANGELOG.md"
       ],
       "router_knowledge": [
@@ -417,26 +414,16 @@
         "Knowledge/Android/scrcpy.md",
         "Knowledge/Shell/Shell.md"
       ],
-      "gold_in_router": [
-        "Knowledge/Android/scrcpy.md",
-        "Knowledge/Shell/Shell.md"
-      ],
+      "gold_in_router": [],
       "search_top_n": 10,
       "search_recall": 0.0,
-      "search_other_recall": 0.5,
-      "search_recall_raw": 0.5,
+      "search_other_recall": 0.0,
+      "search_recall_raw": 0.0,
       "gold_facts_matches": [
         {
           "text": "FF_SEEN",
           "status": "no_match",
           "path": null
-        },
-        {
-          "text": "com.dts.freefireth",
-          "status": "other_file_match",
-          "path": [
-            "ai-context/CONTINUE.md"
-          ]
         }
       ],
       "cooccurrence_stats": {
@@ -452,10 +439,10 @@
         "hits_before_gate": 50,
         "hits_after_gate": 46
       },
-      "context_relevance": 0.333,
+      "context_relevance": 0.111,
       "cross_domain_leakage": 0.556,
-      "context_estimated_tokens": 70451,
-      "latency_ms": 610.1,
+      "context_estimated_tokens": 71163,
+      "latency_ms": 565.2,
       "search_hit_paths": [
         "Knowledge/Android/scrcpy.md",
         "Knowledge/README.md",
@@ -523,7 +510,7 @@
       "context_relevance": 1.0,
       "cross_domain_leakage": 0.0,
       "context_estimated_tokens": 834,
-      "latency_ms": 553.9,
+      "latency_ms": 509.5,
       "search_hit_paths": []
     },
     {
@@ -583,7 +570,7 @@
       "context_relevance": 0.0,
       "cross_domain_leakage": 1.0,
       "context_estimated_tokens": 35728,
-      "latency_ms": 564.7,
+      "latency_ms": 516.7,
       "search_hit_paths": [
         "ai-context/AGENTS.md",
         "ai-context/SESION-archive.md"
@@ -643,7 +630,7 @@
       "context_relevance": 0.5,
       "cross_domain_leakage": 0.0,
       "context_estimated_tokens": 1415,
-      "latency_ms": 559.6,
+      "latency_ms": 513.7,
       "search_hit_paths": []
     },
     {
@@ -704,7 +691,7 @@
       "context_relevance": 0.333,
       "cross_domain_leakage": 0.333,
       "context_estimated_tokens": 51813,
-      "latency_ms": 600.2,
+      "latency_ms": 557.8,
       "search_hit_paths": [
         "Knowledge/Android/Keymappers.md",
         "Knowledge/Android/NubiaLab.md",
