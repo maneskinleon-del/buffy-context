@@ -1,7 +1,7 @@
 # 🔄 CONTINUE — Handoff entre sesiones
 
 > ⚡ **PRÓXIMA SESIÓN: LEE ESTO PRIMERO**
-> Generado: 2026-08-11 (opencode — **Fase 3 · Pasos 1-2 aprobados; Paso 3 CERRADO (OR no adoptado); diagnóstico Q03/Q04/Q06/Q08 COMPLETADO; Paso 4 (AND normalizado) DISEÑO APROBADO — pendiente implementar y medir**)
+> Generado: 2026-08-11 (opencode — **Fase 3 · Pasos 1-2 aprobados; Paso 3 CERRADO (OR no adoptado); diagnóstico COMPLETADO; Paso 4 (AND normalizado) EJECUTADO — métricas crudas registradas, SIN veredicto**)
 
 > 🗝️ **Palabra de cierre acordada ("cerrar día"):** el agente escribe el contexto (SESION.md/CONTINUE.md/CHANGELOG.md, máx 5 entradas en SESION.md) y luego ejecuta **`buffy-close-day.sh`** (mensaje opcional con `--message`) — hace sync push de la memoria curada, regenera SNAPSHOT, corre doctor --quick y commit + push. Si el sync conflictúa, el cierre aborta y hay que resolver.
 
@@ -175,6 +175,24 @@ documentos hizo que AND fallara y OR acertara. Hipótesis verificable, no saltar
   context_relevance ≥ 0.600, cross_domain_leakage ≤ 0.267, token_cost ≤ ~2× A.
 - **NO tocar runtime** (`buffy-search.sh`/`buffy-router.sh`), NO Hybrid, NO
   calibración, NO default and, NO los 5 FAIL de suite. Veredicto de adopción = usuario.
+
+**PASO 4 EJECUTADO (2026-08-11) — métricas crudas, SIN veredicto:**
+- Runner corregido (instrumento v2) + estrategia `and-norm` implementadas en el
+  runner; runtime congelado (`runtime_changed: false`). A y B regenerados con el
+  mismo instrumento. Gates: G1 ✅, G2 ✅ (2 corridas idénticas salvo latency), G3 ✅.
+- **Agregado (v2):** search_recall A=0.000 / B=0.050 / C=0.000 · search_other_recall
+  A=0.000 / B=0.200 / C=0.200 · raw A=0.000 / B=0.250 / C=0.200 · context_relevance
+  A=0.600 / B=0.192 / C=0.319 · leakage A=0.267 / B=0.704 / C=0.558 · token_cost
+  A=4 967 / B=44 337 / C=37 038 · latency A=555 / B=556 / C=567 ms · router Δ=0.
+- **Por query:** B recupera Q03 (0.5 gold) y Q04/Q06/Q08 como other_file_match. C
+  recupera 0 gold; mantiene Q04/Q06/Q08 como other_file_match (igual que B).
+- **Hecho clave (sin interpretar):** con instrumento corregido, B pasa de 0.250 (v1
+  inflado) a 0.050 (solo gold). Q04/Q06/Q08 son other_file_match (aguja en archivo
+  no-gold). C no recupera agujas gold.
+- Artefactos: `baseline-A/B-PC-2026-08-11.json` (v2) y
+  `baseline-C-andnorm-PC-2026-08-11.json`. Detalle en EVAL-REGISTRY.md → Paso 4.
+- **Siguiente:** esperar decisión del usuario sobre los datos crudos. NO interpretar,
+  NO ajustar parámetros (≥2 tokens, stopwords, LIMIT), NO adoptar and-norm.
 
 **Suite PC — nota (2026-08-11):** `225 OK / 5 FAIL` — los 5 son preexistentes y ajenos
 a la Fase 3 (3 × test-scale.sh con ruta Termux hardcodeada en PC; 2 × drift de conteos
