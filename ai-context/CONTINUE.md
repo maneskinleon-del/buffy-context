@@ -7,6 +7,32 @@
 
 ---
 
+## Resumen de la sesión (2026-08-10 noche — opencode, corrección post-revisión: sync sin ruido git)
+
+**Tema:** revisión externa de Buffy Context → punto A accionable (ruido git del sync) + evolución B/C del router/benchmark.
+
+### A (IMPLEMENTADO): el estado de sync ya NO se versiona
+La revisión señaló que versionar `.sync-state` en el repo generaba commits extra (`docs(memory): sync estado...`). Corregido:
+1. `STATE` movido a `$MEM_DIR/.sync-state` (perfil-local por dispositivo) — **el repo solo contiene contenido** (MEMORY.md/USER.md), el estado es conocimiento local de cada máquina y nunca viaja.
+2. El `pull` ya no commitea nada; el `push` commitea solo los archivos de contenido (`git add ai-context/memories/<archivo>` explícito).
+3. `.sync-state` versionado en commits anteriores eliminado del repo (`git rm --cached`).
+4. Tests actualizados: verifican que el repo NO contiene .sync-state ("cero ruido git") y que cada host tiene su estado local. **Suite: 241 OK / 0 FAIL (full, 236 functional + 5 meta) · 225 OK (--quick, 220)**.
+5. Bug propio encontrado de paso en `do_pull`: la última línea (`[[ $changed == false ]] && echo`) devolvía 1 tras un pull exitoso — el `|| true` final.
+
+### B y C (PENDIENTES — evolución del router/benchmark, de la misma revisión)
+- **B. Multi-dominio**: cuando una consulta pertenece a 2-3 dominios ("scrcpy + ADB + game"), `domain_precision` es demasiado simplista. Próxima métrica: `multi_domain_recall`, `multi_domain_precision`, `cross_domain_leakage`.
+- **C. Benchmark realista**: 500 hechos, 5-10 dominios, consultas reales sin palabras clave artificiales ni nombres de dominio obvios; medir router precision/recall, search recall, context relevance, token cost, latency, leakage. Disciplina del repo: benchmark primero, feature después.
+
+### ⏳ Pendientes para otra sesión
+- B/C: benchmark multi-dominio y realista (cuando se ataque el router).
+- **En el PC**: tras `git pull`, correr `buffy-memory.sh sync pull` UNA vez para adoptar la memoria del teléfono; desde ahí "cerrar día" = `buffy-close-day.sh`.
+- P1: retorno del aprendizaje (SESION-archive meses después → ¿conocimiento activo?).
+- P2: concurrencia 3+ escritores sobre MEMORY.md.
+- Opcional: `Knowledge/Tools/Buffy-Memory.md`.
+- Revisar `~/gscript-audit/sin_titulo_1/`.
+
+---
+
 ## Resumen de la sesión (2026-08-10 noche — opencode, "cerrar día" automatizado)
 
 **Tema:** el usuario creó una tarea nueva en el PC y preguntó si "cerrar día" ya quedaba cubierto con el sync de memoria → la memoria curada SÍ viaja, pero el cierre completo era protocolo manual. **Implementado: `buffy-close-day.sh`.**
