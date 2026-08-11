@@ -1,7 +1,7 @@
 # 🔄 CONTINUE — Handoff entre sesiones
 
 > ⚡ **PRÓXIMA SESIÓN: LEE ESTO PRIMERO**
-> Generado: 2026-08-11 (opencode — **Fase 3 · Paso 1 (EVAL) + Paso 2 (Baseline A) APROBADOS por el usuario; Paso 3 = experimento Search OR/BM25 sobre el mismo EVAL (pendiente autorización)**)
+> Generado: 2026-08-11 (opencode — **Fase 3 · Pasos 1-2 aprobados; Paso 3 (Search OR/BM25 sobre EVAL PC) MEDIDO — veredicto pendiente del usuario**)
 
 > 🗝️ **Palabra de cierre acordada ("cerrar día"):** el agente escribe el contexto (SESION.md/CONTINUE.md/CHANGELOG.md, máx 5 entradas en SESION.md) y luego ejecuta **`buffy-close-day.sh`** (mensaje opcional con `--message`) — hace sync push de la memoria curada, regenera SNAPSHOT, corre doctor --quick y commit + push. Si el sync conflictúa, el cierre aborta y hay que resolver.
 
@@ -102,6 +102,7 @@ La revisión señaló que versionar `.sync-state` en el repo generaba commits ex
 
 ## 📌 Fase 3 · Paso 1 — EVAL congelado (perfil PC) ✅ COMPLETADO
 ## 📌 Fase 3 · Paso 2 — Baseline A (perfil PC) ✅ APROBADO por el usuario · 2026-08-11
+## 📌 Fase 3 · Paso 3 — Baseline B (Search OR/BM25) ⏸️ MEDIDO · veredicto pendiente del usuario
 
 **Qué (Paso 1):** EVAL de selección de contexto congelado en `scripts/tests/evals/eval-ctx-PC-2026-08-11.json`
 (10 queries reales con gold manual). Hash `8e42d119bf7bc4f2014e7239f101e3c37296365f3b24158e0cb0155baaa67f5d`,
@@ -131,6 +132,13 @@ Regla del usuario: NO saltar a Hybrid con la evidencia actual — primero medir 
 resuelve la mejora mínima de Search. Si OR/BM25 mejora search_recall sin destruir
 precision/leakage/cost → base empírica para decidir si el problema restante justifica
 el selector híbrido.
+
+**Paso 3 EJECUTADO (2026-08-11, autorizado):** `run-baseline-PC.sh --strategy or` →
+`baseline-B-PC-2026-08-11.json`. Resultado crudo: search_recall **0.000 → 0.250**
+(mejoran Q03/Q04/Q06/Q08) PERO context_relevance **0.600 → 0.192**, cross_domain_leakage
+**0.267 → 0.704**, token_cost **×9** (4.9k → 43.9k avg, 22% de ventana), latencia +10 ms.
+Router aislado (Δ=0). **SIN VEREDICTO — el usuario pidió ver la medición cruda antes de
+decidir adoptar OR. No se cambió el default. No se avanzó a Hybrid.**
 
 **Suite PC — nota (2026-08-11):** `225 OK / 5 FAIL` — los 5 son preexistentes y ajenos
 a la Fase 3 (3 × test-scale.sh con ruta Termux hardcodeada en PC; 2 × drift de conteos

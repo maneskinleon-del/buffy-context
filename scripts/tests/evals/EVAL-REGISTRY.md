@@ -100,6 +100,73 @@ Resultado: `scripts/tests/evals/baseline-A-PC-2026-08-11.json`
 > ⛔ Esta baseline es del perfil PC y NO se compara contra Termux.
 > ⛔ No se usará para calibrar `θ_c`, presupuesto ni pesos (es referencia de TEST).
 
+---
+
+## ⏸️ Paso 3 — Baseline B (perfil PC, Search OR/BM25) · 2026-08-11 · MEDIDA, SIN VEREDICTO
+
+Experimento controlado **A → Search OR/BM25 → mismo EVAL PC → comparar contra A**,
+autorizado por el usuario. Mismo EVAL congelado, mismo gold, mismo perfil PC.
+`BUFFY_SEARCH_STRATEGY=or` (variable que `buffy-search.sh` ya soporta; el default
+`sigue siendo and`). **No se modificó ningún código de runtime** (`runtime_changed: false`).
+**No se implementó Hybrid ni cap-selector. No se calibró nada.**
+
+Runner: `scripts/tests/evals/run-baseline-PC.sh --strategy or`
+Resultado: `scripts/tests/evals/baseline-B-PC-2026-08-11.json`
+(la baseline A original `baseline-A-PC-2026-08-11.json` queda intacta)
+
+### Comparación A (and) vs B (or) — agregado
+
+| Métrica | A (and) | B (or) | Δ |
+|---|---|---|---|
+| **router_precision_avg** | 0.667 | 0.667 | 0.0 (aislado ✓) |
+| **router_recall_avg** | 0.667 | 0.667 | 0.0 (aislado ✓) |
+| **categories_recall_avg** | 0.800 | 0.800 | 0.0 (aislado ✓) |
+| **search_recall_avg** | 0.000 | **0.250** | **+0.250** |
+| **context_relevance_avg** | 0.600 | **0.192** | **−0.408** |
+| **cross_domain_leakage_avg** | 0.267 | **0.704** | **+0.437** |
+| spurious_categories | 2 | 2 | 0 |
+| token_cost avg | 4 881 | **43 910** | **×9.0** |
+| token_cost p95 | 37 726 | 68 954 | +31 228 |
+| latency avg | 582 ms | 592 ms | +10 ms |
+| window_utilization | 2.4% | 22.0% | +19.6 pp |
+
+### Por query — search_recall A→B
+
+| ID | sRec A | sRec B | Δ | cRel A→B |
+|---|---|---|---|---|
+| Q01 | 0.0 | 0.0 | 0 | 0.333→0.286 |
+| Q02 | 0.0 | 0.0 | 0 | 1.0→0.286 |
+| Q03 | 0.0 | **0.5** | +0.5 | 1.0→0.2 |
+| Q04 | 0.0 | **1.0** | +1.0 | 0.0→0.0 |
+| Q05 | 0.0 | 0.0 | 0 | 1.0→0.25 |
+| Q06 | 0.0 | **0.5** | +0.5 | 0.667→0.2 |
+| Q07 | 0.0 | 0.0 | 0 | 1.0→0.111 |
+| Q08 | 0.0 | **0.5** | +0.5 | 0.0→0.125 |
+| Q09 | 0.0 | 0.0 | 0 | 0.5→0.125 |
+| Q10 | 0.0 | 0.0 | 0 | 0.5→0.333 |
+
+**Mejoraron (4/10):** Q03, Q04, Q06, Q08. **Sin cambio (6/10):** Q01, Q02, Q05, Q07, Q09, Q10.
+
+### Leakage detectado en B
+
+OR trae al top-10 muchos archivos **no-gold**: README.md, INSTALL.md, CONTRIBUTING.md,
+Knowledge/README.md, ai-context/LOAD_CONTEXT.md, ai-context/INFO-full.md,
+ai-context/CONTINUE.md, archivos de sesión, y Knowledge de otros dominios
+(Node.md, Vite.md, Kernel.md, HyperOS.md, Vision.md, Keymappers.md, NubiaLab.md).
+`cross_domain_leakage` sube de 0.267 → 0.704.
+
+### Lectura cruda (sin veredicto — decisión pendiente del usuario)
+
+- OR **recupera** lo que AND no podía (search_recall 0 → 0.25, 4 queries con agujas).
+- Pero **destruye** context_relevance (0.6 → 0.192) y **dispara** leakage (0.267 → 0.704)
+  y token cost (×9, 22% de la ventana).
+- Las métricas de router permanecen **aisladas** (Δ=0 en precision/recall/categories).
+- El EVAL PC **reproduce el fenómeno** del benchmark realista (OR sube recall) pero
+  con un coste de contexto/leakage que el benchmark realista no penalizaba igual.
+
+> ⛔ **Sin veredicto todavía.** El usuario pidió ver la medición cruda y la comparación
+> antes de decidir adoptar OR. No se convirtió OR en default. No se avanzó a Hybrid.
+
 ### Estado de la suite en el perfil PC (2026-08-11)
 
 > ⚠️ **La suite del perfil PC no está actualmente 100% verde** por incompatibilidades

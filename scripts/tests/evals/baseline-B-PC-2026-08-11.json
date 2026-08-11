@@ -1,0 +1,497 @@
+{
+  "baseline": "B",
+  "profile": "PC",
+  "host": "sabrewulf-a320ms2h",
+  "date": "2026-08-11",
+  "eval_id": "eval-ctx-PC-2026-08-11",
+  "eval_hash": "8e42d119bf7bc4f2014e7239f101e3c37296365f3b24158e0cb0155baaa67f5d",
+  "strategy": "or",
+  "pipeline": "buffy-router.sh (real) → buffy-search.sh FTS5 bm25 (estrategia 'or', limit=10)",
+  "runtime_changed": false,
+  "num_queries": 10,
+  "aggregate": {
+    "router_precision_avg": 0.667,
+    "router_recall_avg": 0.667,
+    "multi_domain_precision": {
+      "avg": 0.833,
+      "n": 2
+    },
+    "multi_domain_recall": {
+      "avg": 0.833,
+      "n": 2
+    },
+    "categories_recall_avg": 0.8,
+    "search_recall_avg": 0.25,
+    "context_relevance_avg": 0.192,
+    "cross_domain_leakage_avg": 0.704,
+    "total_spurious_categories": 2,
+    "token_cost": {
+      "avg": 43910.1,
+      "p95": 68954
+    },
+    "latency_ms": {
+      "avg": 591.75,
+      "p95": 626.1
+    },
+    "window_utilization_avg": 0.21955
+  },
+  "per_query": [
+    {
+      "id": "Q01",
+      "query": "el teléfono no aparece en scrcpy",
+      "coverage": [
+        "single-domain"
+      ],
+      "strategy": "or",
+      "gold_domains": [
+        "Android"
+      ],
+      "router_categories": [
+        "Android"
+      ],
+      "categories_recall": 1.0,
+      "spurious_categories": [],
+      "router_precision": 1.0,
+      "router_recall": 1.0,
+      "gold_files": [
+        "Knowledge/Android/ADB.md",
+        "Knowledge/Android/scrcpy.md"
+      ],
+      "router_knowledge": [
+        "Knowledge/Android/ADB.md",
+        "Knowledge/Android/scrcpy.md"
+      ],
+      "gold_in_router": [
+        "Knowledge/Android/ADB.md",
+        "Knowledge/Android/scrcpy.md"
+      ],
+      "search_top_n": 10,
+      "search_recall": 0.0,
+      "gold_facts_found": [],
+      "context_relevance": 0.286,
+      "cross_domain_leakage": 0.714,
+      "context_estimated_tokens": 19058,
+      "latency_ms": 622.2,
+      "search_hit_paths": [
+        "INSTALL.md",
+        "Knowledge/Android/ADB.md",
+        "Knowledge/Android/scrcpy.md",
+        "Knowledge/README.md",
+        "README.md",
+        "ai-context/LOAD_CONTEXT.md",
+        "ai-context/SESION.md"
+      ]
+    },
+    {
+      "id": "Q02",
+      "query": "cómo concedo permisos a una app con shizuku sin root",
+      "coverage": [
+        "single-domain"
+      ],
+      "strategy": "or",
+      "gold_domains": [
+        "Android"
+      ],
+      "router_categories": [
+        "Android"
+      ],
+      "categories_recall": 1.0,
+      "spurious_categories": [],
+      "router_precision": 1.0,
+      "router_recall": 1.0,
+      "gold_files": [
+        "Knowledge/Android/ADB.md",
+        "Knowledge/Android/Shizuku.md"
+      ],
+      "router_knowledge": [
+        "Knowledge/Android/ADB.md",
+        "Knowledge/Android/Shizuku.md"
+      ],
+      "gold_in_router": [
+        "Knowledge/Android/ADB.md",
+        "Knowledge/Android/Shizuku.md"
+      ],
+      "search_top_n": 10,
+      "search_recall": 0.0,
+      "gold_facts_found": [],
+      "context_relevance": 0.286,
+      "cross_domain_leakage": 0.714,
+      "context_estimated_tokens": 48165,
+      "latency_ms": 622.1,
+      "search_hit_paths": [
+        "Knowledge/Android/Shizuku.md",
+        "Knowledge/README.md",
+        "README.md",
+        "ai-context/INFO-full.md",
+        "ai-context/LOAD_CONTEXT.md",
+        "ai-context/SESION-archive.md"
+      ]
+    },
+    {
+      "id": "Q03",
+      "query": "quiero pushear el commit y crear el pull request",
+      "coverage": [
+        "single-domain"
+      ],
+      "strategy": "or",
+      "gold_domains": [
+        "Git"
+      ],
+      "router_categories": [
+        "Git"
+      ],
+      "categories_recall": 1.0,
+      "spurious_categories": [],
+      "router_precision": 1.0,
+      "router_recall": 1.0,
+      "gold_files": [
+        "Knowledge/Git/Commands.md"
+      ],
+      "router_knowledge": [
+        "Knowledge/Git/Commands.md"
+      ],
+      "gold_in_router": [
+        "Knowledge/Git/Commands.md"
+      ],
+      "search_top_n": 10,
+      "search_recall": 0.5,
+      "gold_facts_found": [
+        "gh pr create"
+      ],
+      "context_relevance": 0.2,
+      "cross_domain_leakage": 0.8,
+      "context_estimated_tokens": 17773,
+      "latency_ms": 555.2,
+      "search_hit_paths": [
+        "CONTRIBUTING.md",
+        "Knowledge/Git/Commands.md",
+        "Knowledge/React/PWA.md",
+        "ai-context/CONTINUE.md",
+        "ai-context/LOAD_CONTEXT.md"
+      ]
+    },
+    {
+      "id": "Q04",
+      "query": "la pantalla se apaga sola después de unos minutos",
+      "coverage": [
+        "no-lexical-signals"
+      ],
+      "strategy": "or",
+      "gold_domains": [
+        "Linux"
+      ],
+      "router_categories": [
+        "Android"
+      ],
+      "categories_recall": 0.0,
+      "spurious_categories": [
+        "Android"
+      ],
+      "router_precision": 0.0,
+      "router_recall": 0.0,
+      "gold_files": [
+        "Knowledge/Linux/System.md"
+      ],
+      "router_knowledge": [
+        "Knowledge/Android/ADB.md"
+      ],
+      "gold_in_router": [],
+      "search_top_n": 10,
+      "search_recall": 1.0,
+      "gold_facts_found": [
+        "xset -dpms",
+        "xset s off"
+      ],
+      "context_relevance": 0.0,
+      "cross_domain_leakage": 1.0,
+      "context_estimated_tokens": 58807,
+      "latency_ms": 573.7,
+      "search_hit_paths": [
+        "Knowledge/Tools/Benchmark-realista.md",
+        "ai-context/CHANGELOG-archive.md",
+        "ai-context/CONTINUE.md",
+        "ai-context/SESION-archive.md",
+        "ai-context/SHIZUKU-RISH-BUG.md"
+      ]
+    },
+    {
+      "id": "Q05",
+      "query": "el componente React de la app necesita leer el serial del teléfono por adb",
+      "coverage": [
+        "multi-domain"
+      ],
+      "strategy": "or",
+      "gold_domains": [
+        "Android",
+        "React"
+      ],
+      "router_categories": [
+        "Android",
+        "React"
+      ],
+      "categories_recall": 1.0,
+      "spurious_categories": [],
+      "router_precision": 1.0,
+      "router_recall": 1.0,
+      "gold_files": [
+        "Knowledge/Android/ADB.md",
+        "Knowledge/React/React.md"
+      ],
+      "router_knowledge": [
+        "Knowledge/Android/ADB.md",
+        "Knowledge/React/React.md"
+      ],
+      "gold_in_router": [
+        "Knowledge/Android/ADB.md",
+        "Knowledge/React/React.md"
+      ],
+      "search_top_n": 10,
+      "search_recall": 0.0,
+      "gold_facts_found": [],
+      "context_relevance": 0.25,
+      "cross_domain_leakage": 0.5,
+      "context_estimated_tokens": 55717,
+      "latency_ms": 617.6,
+      "search_hit_paths": [
+        "Knowledge/Android/ADB.md",
+        "Knowledge/Android/Keymappers.md",
+        "Knowledge/Android/NubiaLab.md",
+        "Knowledge/React/React.md",
+        "REVIEW-BASELINE.md",
+        "ai-context/CONTINUE.md",
+        "ai-context/SESION-archive.md",
+        "ai-context/SHIZUKU-RISH-BUG.md"
+      ]
+    },
+    {
+      "id": "Q06",
+      "query": "el script bash de scrcpy no abre free fire, revisá el script",
+      "coverage": [
+        "multi-domain"
+      ],
+      "strategy": "or",
+      "gold_domains": [
+        "Android",
+        "Shell"
+      ],
+      "router_categories": [
+        "Android",
+        "Shell"
+      ],
+      "categories_recall": 1.0,
+      "spurious_categories": [],
+      "router_precision": 0.667,
+      "router_recall": 0.667,
+      "gold_files": [
+        "Knowledge/Android/Keymappers.md",
+        "Knowledge/Android/scrcpy.md",
+        "Knowledge/Shell/Shell.md"
+      ],
+      "router_knowledge": [
+        "Knowledge/Android/ADB.md",
+        "Knowledge/Android/scrcpy.md",
+        "Knowledge/Shell/Shell.md"
+      ],
+      "gold_in_router": [
+        "Knowledge/Android/scrcpy.md",
+        "Knowledge/Shell/Shell.md"
+      ],
+      "search_top_n": 10,
+      "search_recall": 0.5,
+      "gold_facts_found": [
+        "com.dts.freefireth"
+      ],
+      "context_relevance": 0.2,
+      "cross_domain_leakage": 0.7,
+      "context_estimated_tokens": 68954,
+      "latency_ms": 626.1,
+      "search_hit_paths": [
+        "Knowledge/Android/scrcpy.md",
+        "Knowledge/Node/Node.md",
+        "Knowledge/README.md",
+        "README.md",
+        "USER-MANU.md",
+        "ai-context/CHANGELOG.md",
+        "ai-context/CONTINUE.md",
+        "ai-context/SESION-archive.md"
+      ]
+    },
+    {
+      "id": "Q07",
+      "query": "el celular anda lento, qué puedo hacer",
+      "coverage": [
+        "no-lexical-signals"
+      ],
+      "strategy": "or",
+      "gold_domains": [
+        "Android"
+      ],
+      "router_categories": [
+        "Android"
+      ],
+      "categories_recall": 1.0,
+      "spurious_categories": [],
+      "router_precision": 1.0,
+      "router_recall": 0.5,
+      "gold_files": [
+        "Knowledge/Android/ADB.md",
+        "Knowledge/Android/GameOptimization.md"
+      ],
+      "router_knowledge": [
+        "Knowledge/Android/ADB.md"
+      ],
+      "gold_in_router": [
+        "Knowledge/Android/ADB.md"
+      ],
+      "search_top_n": 10,
+      "search_recall": 0.0,
+      "gold_facts_found": [],
+      "context_relevance": 0.111,
+      "cross_domain_leakage": 0.778,
+      "context_estimated_tokens": 58781,
+      "latency_ms": 585.2,
+      "search_hit_paths": [
+        "CONTRIBUTING.md",
+        "Knowledge/Android/HyperOS.md",
+        "Knowledge/Tools/Benchmark-realista.md",
+        "Knowledge/Vision.md",
+        "USER-MANU.md",
+        "ai-context/CHANGELOG-archive.md",
+        "ai-context/CONTINUE.md",
+        "ai-context/SESION-archive.md"
+      ]
+    },
+    {
+      "id": "Q08",
+      "query": "la terminal se ve opaca y quiero que se vea transparente",
+      "coverage": [
+        "no-lexical-signals"
+      ],
+      "strategy": "or",
+      "gold_domains": [
+        "Linux"
+      ],
+      "router_categories": [
+        "Android"
+      ],
+      "categories_recall": 0.0,
+      "spurious_categories": [
+        "Android"
+      ],
+      "router_precision": 0.0,
+      "router_recall": 0.0,
+      "gold_files": [
+        "Knowledge/Linux/System.md"
+      ],
+      "router_knowledge": [
+        "Knowledge/Android/ADB.md"
+      ],
+      "gold_in_router": [],
+      "search_top_n": 10,
+      "search_recall": 0.5,
+      "gold_facts_found": [
+        "picom"
+      ],
+      "context_relevance": 0.125,
+      "cross_domain_leakage": 0.875,
+      "context_estimated_tokens": 48393,
+      "latency_ms": 571.3,
+      "search_hit_paths": [
+        "Knowledge/Linux/System.md",
+        "Knowledge/React/Vite.md",
+        "ai-context/AGENTS.md",
+        "ai-context/CHANGELOG-archive.md",
+        "ai-context/INFO-full.md",
+        "ai-context/PROJECTS.md",
+        "ai-context/SESION-archive.md"
+      ]
+    },
+    {
+      "id": "Q09",
+      "query": "quiero optimizar el rendimiento",
+      "coverage": [
+        "ambiguous"
+      ],
+      "strategy": "or",
+      "gold_domains": [
+        "Android"
+      ],
+      "router_categories": [
+        "Android"
+      ],
+      "categories_recall": 1.0,
+      "spurious_categories": [],
+      "router_precision": 0.5,
+      "router_recall": 1.0,
+      "gold_files": [
+        "Knowledge/Android/GameOptimization.md"
+      ],
+      "router_knowledge": [
+        "Knowledge/Android/ADB.md",
+        "Knowledge/Android/GameOptimization.md"
+      ],
+      "gold_in_router": [
+        "Knowledge/Android/GameOptimization.md"
+      ],
+      "search_top_n": 10,
+      "search_recall": 0.0,
+      "gold_facts_found": [],
+      "context_relevance": 0.125,
+      "cross_domain_leakage": 0.625,
+      "context_estimated_tokens": 11640,
+      "latency_ms": 548.4,
+      "search_hit_paths": [
+        "Knowledge/Android/ADB.md",
+        "Knowledge/Android/GameOptimization.md",
+        "Knowledge/Android/scrcpy.md",
+        "Knowledge/Linux/Kernel.md",
+        "Knowledge/README.md",
+        "USER-MANU.md",
+        "ai-context/LOAD_CONTEXT.md",
+        "ai-context/SHIZUKU-RISH-BUG.md"
+      ]
+    },
+    {
+      "id": "Q10",
+      "query": "la ZTE se calienta cuando juego free fire",
+      "coverage": [
+        "leakage"
+      ],
+      "strategy": "or",
+      "gold_domains": [
+        "Android"
+      ],
+      "router_categories": [
+        "Android"
+      ],
+      "categories_recall": 1.0,
+      "spurious_categories": [],
+      "router_precision": 0.5,
+      "router_recall": 0.5,
+      "gold_files": [
+        "Knowledge/Android/GameOptimization.md",
+        "Knowledge/Android/NubiaLab.md"
+      ],
+      "router_knowledge": [
+        "Knowledge/Android/ADB.md",
+        "Knowledge/Android/GameOptimization.md"
+      ],
+      "gold_in_router": [
+        "Knowledge/Android/GameOptimization.md"
+      ],
+      "search_top_n": 10,
+      "search_recall": 0.0,
+      "gold_facts_found": [],
+      "context_relevance": 0.333,
+      "cross_domain_leakage": 0.333,
+      "context_estimated_tokens": 51813,
+      "latency_ms": 595.7,
+      "search_hit_paths": [
+        "Knowledge/Android/Keymappers.md",
+        "Knowledge/Android/NubiaLab.md",
+        "ai-context/CHANGELOG.md",
+        "ai-context/SESION-archive.md"
+      ]
+    }
+  ]
+}

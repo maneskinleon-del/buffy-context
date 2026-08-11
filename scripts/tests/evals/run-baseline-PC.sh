@@ -1,74 +1,107 @@
 #!/usr/bin/env bash
-# run-baseline-PC.sh — Paso 2 (baseline A) del plan EVAL del perfil PC.
+# run-baseline-PC.sh — baseline del plan EVAL del perfil PC (Paso 2: A; Paso 3: B).
 #
 # Mide el pipeline ACTUAL del sistema contra el EVAL congelado:
 #
 #   USER REQUEST → buffy-router.sh (real) → categoría → knowledge files
-#                → buffy-search.sh (real, FTS5 BM25, estrategia 'and' default)
+#                → buffy-search.sh (real, FTS5 BM25)
 #
 # SIN modificar nada del runtime (router/search/selector/Hybrid NO se tocan).
 # Es medición pura sobre el repo real (~/buffy-context). Los resultados se
-# registran como baseline A del perfil PC — NO se comparan con Termux.
+# registran como baseline del perfil PC — NO se comparan con Termux.
 #
-# Salida:
-#   --json              → JSON completo (stdout) + copia en baseline-A-PC-*.json
-#   (default)           → tabla legible + resumen
+# Métricas (contrato bench-realistic-DESIGN.md §3):
+#   router_precision/recall · multi_domain_precision/recall · search_recall
+#   context_relevance · token_cost (media+p95) · latency (media+p95)
+#   cross_domain_leakage
+#   (además categories_recall y spurious_categories, específicas del EVAL)
 #
-# Exit: 0 siempre que la medición corra (es medición, no gate).
 # Uso:
-#   bash scripts/tests/evals/run-baseline-PC.sh [--json] [--limit N]
+#   run-baseline-PC.sh [--strategy and|or] [--out FILE] [--limit N] [--json] [--quiet]
+#   --strategy and → baseline A (default, replica del Paso 2)
+#   --strategy or  → baseline B (Paso 3: BUFFY_SEARCH_STRATEGY=or)
+#   --out FILE     → archivo de salida (default: baseline-<estrategia>-PC-*.json)
+#   --quiet        → no imprimir tabla (solo "registrada en ...")
+#   --json         → además volcar el JSON a stdout
+# Exit: 0 siempre que la medición corra (es medición, no gate).
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_DIR="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 EVAL="$SCRIPT_DIR/eval-ctx-PC-2026-08-11.json"
-OUT_FILE="$SCRIPT_DIR/baseline-A-PC-2026-08-11.json"
+EVAL_HASH="8e42d119bf7bc4f2014e7239f101e3c37296365f3b24158e0cb0155baaa67f5d"
 
+STRATEGY="and"
+OUT_FILE=""
 JSON=false
+QUIET=false
 LIMIT=10
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --json) JSON=true; shift ;;
+    --strategy) STRATEGY="${2:?falta and|or}"; shift 2 ;;
+    --out) OUT_FILE="${2:?falta ruta}"; shift 2 ;;
     --limit) LIMIT="${2:?falta número}"; shift 2 ;;
-    -h|--help) sed -n '2,24p' "$0"; exit 0 ;;
+    --json) JSON=true; shift ;;
+    --quiet) QUIET=true; shift ;;
+    -h|--help) sed -n '2,26p' "$0"; exit 0 ;;
     *) echo "opción desconocida: $1" >&2; exit 2 ;;
   esac
 done
+
+case "$STRATEGY" in
+  and|or) ;;
+  *) echo "estrategia inválida: $STRATEGY (and|or)" >&2; exit 2 ;;
+esac
 
 [[ -f "$EVAL" ]] || { echo "falta fixture: $EVAL" >&2; exit 2; }
 [[ -x "$REPO_DIR/scripts/buffy-router.sh" ]] || { echo "falta router" >&2; exit 2; }
 [[ -x "$REPO_DIR/scripts/buffy-search.sh" ]] || { echo "falta search" >&2; exit 2; }
 
-TMP=$(mktemp -d "${TMPDIR:-/tmp}/baselineA.XXXXXX")
+if [ -z "$OUT_FILE" ]; then
+  OUT_FILE="$SCRIPT_DIR/baseline-$STRATEGY-PC-2026-08-11.json"
+fi
+
+TMP=$(mktemp -d "${TMPDIR:-/tmp}/baseline$STRATEGY.XXXXXX")
 trap 'rm -rf "$TMP"' EXIT
 
-RESULT_FILE="$(python3 - "$REPO_DIR" "$EVAL" "$TMP" "$LIMIT" <<'PY'
-import json, os, subprocess, sys, unicodedata
+RESULT_FILE="$(STRATEGY="$STRATEGY" LIMIT="$LIMIT" REPO_DIR="$REPO_DIR" EVAL="$EVAL" TMP="$TMP" EVAL_HASH="$EVAL_HASH" python3 - "$REPO_DIR" "$EVAL" "$TMP" "$STRATEGY" "$LIMIT" "$EVAL_HASH" <<'PY'
+import json, os, subprocess, sys, time, unicodedata, statistics
 
-repo, eval_path, tmpdir, limit = sys.argv[1], sys.argv[2], sys.argv[3], int(sys.argv[4])
+repo, eval_path, tmpdir, strategy, limit, eval_hash = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], int(sys.argv[5]), sys.argv[6]
 router = os.path.join(repo, "scripts/buffy-router.sh")
 search = os.path.join(repo, "scripts/buffy-search.sh")
 
 def deaccent(s):
     return ''.join(c for c in unicodedata.normalize('NFD', s) if unicodedata.category(c) != 'Mn')
 
+def dom_of(path):
+    # dominio = carpeta bajo Knowledge/ ("Knowledge/Android/x.md" → "Android")
+    # archivos de sesión/raíz → "session" (nunca está en gold_domains → leakage si entra)
+    if path.startswith("Knowledge/"):
+        parts = path.split("/")
+        return parts[1] if len(parts) > 2 else "root"
+    return "session"
+
 def run_router(q):
+    t0 = time.monotonic()
     try:
         out = subprocess.run(["bash", router, "--json", q], capture_output=True, text=True, timeout=30)
-        return json.loads(out.stdout)
+        return json.loads(out.stdout), (time.monotonic() - t0) * 1000
     except Exception as e:
-        return {"error": str(e)}
+        return {"error": str(e)}, 0.0
 
 def run_search(q):
+    t0 = time.monotonic()
+    env = dict(os.environ, BUFFY_SEARCH_STRATEGY=strategy)
     try:
         out = subprocess.run(["bash", search, "-l", str(limit), q],
-                             capture_output=True, text=True, timeout=60)
-        return [l for l in out.stdout.splitlines() if ':' in l]
+                             capture_output=True, text=True, timeout=60, env=env)
+        lines = [l for l in out.stdout.splitlines() if ':' in l]
+        return lines, (time.monotonic() - t0) * 1000
     except Exception as e:
-        return [f"ERROR: {e}"]
+        return [f"ERROR: {e}"], 0.0
 
 def valid_hit(hit):
-    # formato válido: "path:lineno: snippet" con path que existe en el repo
     if ':' not in hit:
         return False
     path, rest = hit.split(':', 1)
@@ -77,16 +110,13 @@ def valid_hit(hit):
     return os.path.exists(os.path.join(repo, path))
 
 def hit_parts(hit):
-    # formato: "path:lineno: snippet"
     path, rest = hit.split(':', 1)
     lineno, _, snip = rest.partition(': ')
     return path, lineno, snip
 
 fixture = json.load(open(eval_path))
 per_query = []
-agg = {"domain_precision": [], "domain_recall": [], "search_recall": [],
-       "categories_recall": [], "spurious_categories": [], "search_leaked": [],
-       "context_tokens": []}
+router_p, router_r, multi_p, multi_r, srec, crel, leak, toks, lats = [], [], [], [], [], [], [], [], []
 
 for q in fixture["queries"]:
     qid, query = q["id"], q["query"]
@@ -94,92 +124,115 @@ for q in fixture["queries"]:
     gold_files = set(q.get("gold_files", []))
     gold_facts = q.get("gold_facts", [])
 
-    r = run_router(query)
+    r, lat_router = run_router(query)
     cats = r.get("categories", [])
     kno = r.get("knowledge", [])
     skills = r.get("skills", [])
 
-    hits = run_search(query)
+    hits, lat_search = run_search(query)
     hits = [h for h in hits if valid_hit(h)]
+    latency = round(lat_router + lat_search, 1)
 
-    # ── métricas de router ──
+    # ── router ──
     router_kno_set = set(kno)
     gold_in_router = router_kno_set & gold_files
-    domain_precision = len(gold_in_router) / len(router_kno_set) if router_kno_set else 0.0
-    domain_recall = len(gold_in_router) / len(gold_files) if gold_files else 0.0
+    rp = len(gold_in_router) / len(router_kno_set) if router_kno_set else 0.0
+    rr = len(gold_in_router) / len(gold_files) if gold_files else 0.0
     cats_recall = len(gold_domains & set(cats)) / len(gold_domains) if gold_domains else 0.0
     spurious = sorted(set(cats) - gold_domains)
+    router_p.append(rp); router_r.append(rr)
+    if len(gold_domains) >= 2:
+        multi_p.append(rp); multi_r.append(rr)
 
-    # ── métricas de search (FTS5 real) ──
+    # ── search ──
     hit_text = deaccent(" ".join(h[2] for h in [hit_parts(x) for x in hits] if h)).lower()
-    search_recall = 0
+    found = 0
     found_facts = []
     for f in gold_facts:
-        needle = deaccent(f["text"].lower())
-        if needle in hit_text:
-            search_recall += 1
+        if deaccent(f["text"].lower()) in hit_text:
+            found += 1
             found_facts.append(f["text"])
-    search_recall = search_recall / len(gold_facts) if gold_facts else 0.0
+    sr = found / len(gold_facts) if gold_facts else 0.0
+    srec.append(sr)
 
-    gold_hit_paths = {p for p, _, _ in [hit_parts(x) for x in hits] if p}
-    search_leaked = len(gold_hit_paths - gold_files)  # hits de archivos fuera del gold
+    # ── contexto final ctx_q = router ∪ topK (dedup) ──
+    hit_paths = {p for p, _, _ in [hit_parts(x) for x in hits] if p}
+    ctx = router_kno_set | hit_paths
+    files_gold = gold_files
+    crel_q = len(ctx & files_gold) / len(ctx) if ctx else 0.0
+    leak_q = len({f for f in ctx if dom_of(f) not in gold_domains}) / len(ctx) if ctx else 0.0
+    crel.append(crel_q); leak.append(leak_q)
 
-    # ── presupuesto de contexto (lo que el router cargaría) ──
-    ctx_bytes = 0
-    for f in list(kno) + list(skills):
+    # ── token cost: chars(ctx)/4 (mismo estimador del bench realista) ──
+    ctx_chars = 0
+    for f in ctx:
         p = os.path.join(repo, f)
         if os.path.isfile(p):
-            ctx_bytes += os.path.getsize(p)
-    est_tokens = ctx_bytes // 4
-
-    agg["domain_precision"].append(domain_precision)
-    agg["domain_recall"].append(domain_recall)
-    agg["search_recall"].append(search_recall)
-    agg["categories_recall"].append(cats_recall)
-    agg["spurious_categories"].append(len(spurious))
-    agg["search_leaked"].append(search_leaked)
-    agg["context_tokens"].append(est_tokens)
+            ctx_chars += os.path.getsize(p)
+    tok_q = ctx_chars // 4
+    toks.append(tok_q)
+    lats.append(latency)
 
     per_query.append({
         "id": qid, "query": query, "coverage": q.get("coverage"),
+        "strategy": strategy,
         "gold_domains": sorted(gold_domains),
         "router_categories": cats,
         "categories_recall": round(cats_recall, 3),
         "spurious_categories": spurious,
+        "router_precision": round(rp, 3),
+        "router_recall": round(rr, 3),
         "gold_files": sorted(gold_files),
         "router_knowledge": kno,
         "gold_in_router": sorted(gold_in_router),
-        "domain_precision": round(domain_precision, 3),
-        "domain_recall": round(domain_recall, 3),
-        "router_skills": skills,
         "search_top_n": len(hits),
-        "search_recall": round(search_recall, 3),
+        "search_recall": round(sr, 3),
         "gold_facts_found": found_facts,
-        "search_leaked_files": search_leaked,
-        "context_estimated_tokens": est_tokens,
+        "context_relevance": round(crel_q, 3),
+        "cross_domain_leakage": round(leak_q, 3),
+        "context_estimated_tokens": tok_q,
+        "latency_ms": latency,
+        "search_hit_paths": sorted(hit_paths),
     })
 
 n = len(per_query)
+
+def agg(name, vals, multi=False):
+    if not vals:
+        return "n/a"
+    m = sum(vals) / len(vals)
+    if multi:
+        return {"avg": round(m, 3), "n": len(vals)}
+    if name in ("latency_ms", "token_cost"):
+        s = sorted(vals)
+        idx = min(len(s) - 1, int(round(0.95 * (len(s) - 1))))
+        return {"avg": round(m, 3), "p95": round(s[idx], 3)}
+    return {"avg": round(m, 3)}
+
 summary = {
-    "baseline": "A",
+    "baseline": "B" if strategy == "or" else "A",
     "profile": "PC",
     "host": "sabrewulf-a320ms2h",
     "date": fixture["date"],
     "eval_id": fixture["eval_id"],
-    "eval_hash": "8e42d119bf7bc4f2014e7239f101e3c37296365f3b24158e0cb0155baaa67f5d",
-    "pipeline": "buffy-router.sh (real) → buffy-search.sh FTS5 bm25 (estrategia 'and' default, limit=%d)" % limit,
+    "eval_hash": eval_hash,
+    "strategy": strategy,
+    "pipeline": "buffy-router.sh (real) → buffy-search.sh FTS5 bm25 (estrategia '%s', limit=%d)" % (strategy, limit),
     "runtime_changed": False,
     "num_queries": n,
     "aggregate": {
-        "domain_precision_avg": round(sum(agg["domain_precision"])/n, 3),
-        "domain_recall_avg": round(sum(agg["domain_recall"])/n, 3),
-        "categories_recall_avg": round(sum(agg["categories_recall"])/n, 3),
-        "search_recall_avg": round(sum(agg["search_recall"])/n, 3),
-        "total_spurious_categories": sum(agg["spurious_categories"]),
-        "total_search_leaked_files": sum(agg["search_leaked"]),
-        "context_tokens_total": sum(agg["context_tokens"]),
-        "context_tokens_avg": round(sum(agg["context_tokens"])/n),
-        "window_utilization_avg": round(sum(agg["context_tokens"])/n/200000, 5),
+        "router_precision_avg": round(sum(router_p)/n, 3) if router_p else "n/a",
+        "router_recall_avg": round(sum(router_r)/n, 3) if router_r else "n/a",
+        "multi_domain_precision": agg("m", multi_p, multi=True),
+        "multi_domain_recall": agg("m", multi_r, multi=True),
+        "categories_recall_avg": round(sum([q["categories_recall"] for q in per_query])/n, 3),
+        "search_recall_avg": round(sum(srec)/n, 3),
+        "context_relevance_avg": round(sum(crel)/n, 3),
+        "cross_domain_leakage_avg": round(sum(leak)/n, 3),
+        "total_spurious_categories": sum(len(q["spurious_categories"]) for q in per_query),
+        "token_cost": agg("token_cost", toks),
+        "latency_ms": agg("latency_ms", lats),
+        "window_utilization_avg": round((sum(toks)/n)/200000, 5),
     },
     "per_query": per_query,
 }
@@ -194,40 +247,34 @@ cp "$RESULT_FILE" "$OUT_FILE"
 
 if [ "$JSON" = true ]; then
   cat "$RESULT_FILE"
-else
+fi
+if [ "$QUIET" = false ]; then
   python3 - "$RESULT_FILE" <<'PY'
 import json, sys
 d = json.load(open(sys.argv[1]))
 a = d["aggregate"]
-print("── Baseline A — perfil PC (eval-ctx-PC-2026-08-11) ──")
+print("── Baseline %s — perfil PC (eval-ctx-PC-2026-08-11, estrategia '%s') ──" % (d["baseline"], d["strategy"]))
 print("  pipeline: %s" % d["pipeline"])
-print("  runtime_changed: %s" % d["runtime_changed"])
-print("  queries: %d" % d["num_queries"])
+print("  runtime_changed: %s · queries: %d" % (d["runtime_changed"], d["num_queries"]))
 print("  ── agregado ──")
-print("  domain_precision_avg:    %.3f" % a["domain_precision_avg"])
-print("  domain_recall_avg:       %.3f" % a["domain_recall_avg"])
-print("  categories_recall_avg:   %.3f" % a["categories_recall_avg"])
-print("  search_recall_avg (FTS5):%.3f" % a["search_recall_avg"])
-print("  spurious_categories:     %d" % a["total_spurious_categories"])
-print("  search_leaked_files:     %d" % a["total_search_leaked_files"])
-print("  context_tokens: %d total / %d avg (window 200k → %s)" % (
-    a["context_tokens_total"], a["context_tokens_avg"], a["window_utilization_avg"]))
+print("  router_precision_avg:    %s" % a["router_precision_avg"])
+print("  router_recall_avg:       %s" % a["router_recall_avg"])
+print("  categories_recall_avg:   %s" % a["categories_recall_avg"])
+print("  search_recall_avg:       %s" % a["search_recall_avg"])
+print("  context_relevance_avg:   %s" % a["context_relevance_avg"])
+print("  cross_domain_leakage_avg:%s" % a["cross_domain_leakage_avg"])
+print("  spurious_categories:     %s" % a["total_spurious_categories"])
+print("  token_cost:              %s (media) / p95 %s" % (a["token_cost"]["avg"], a["token_cost"].get("p95")))
+print("  latency_ms:              %s (media) / p95 %s" % (a["latency_ms"]["avg"], a["latency_ms"].get("p95")))
+print("  window_utilization:      %s (200k)" % a["window_utilization_avg"])
+print("  multi_domain_precision:  %s (n=%s)" % (a["multi_domain_precision"]["avg"], a["multi_domain_precision"]["n"]))
+print("  multi_domain_recall:     %s (n=%s)" % (a["multi_domain_recall"]["avg"], a["multi_domain_recall"]["n"]))
 print("  ── por query ──")
-print("  %-4s %-8s %-8s %-8s %-8s %-6s %-6s" % ("ID", "catRec", "domPre", "domRec", "sRec", "spur", "leak"))
+print("  %-4s %-7s %-7s %-7s %-7s %-7s %-7s %-8s" % ("ID", "rPrec", "rRec", "sRec", "cRel", "leak", "tok", "latMs"))
 for q in d["per_query"]:
-    print("  %-4s %-8s %-8s %-8s %-8s %-6s %-6s" % (
-        q["id"], q["categories_recall"], q["domain_precision"], q["domain_recall"],
-        q["search_recall"], len(q["spurious_categories"]), q["search_leaked_files"]))
-print("  detalle (gold_files vs router_knowledge):")
-for q in d["per_query"]:
-    print("  %s «%s»" % (q["id"], q["query"]))
-    print("    gold:  %s" % ", ".join(q["gold_files"]))
-    print("    router:%s" % (", ".join(q["router_knowledge"]) if q["router_knowledge"] else " (ninguno)"))
-    print("    cats:  %s (spurious: %s)" % (", ".join(q["router_categories"]) if q["router_categories"] else "(ninguna)", ", ".join(q["spurious_categories"]) if q["spurious_categories"] else "ninguna"))
-    if q["gold_facts_found"]:
-        print("    facts encontradas: %s" % ", ".join(q["gold_facts_found"]))
-    else:
-        print("    facts encontradas: NINGUNA")
+    print("  %-4s %-7s %-7s %-7s %-7s %-7s %-7s %-8s" % (
+        q["id"], q["router_precision"], q["router_recall"], q["search_recall"],
+        q["context_relevance"], q["cross_domain_leakage"], q["context_estimated_tokens"], q["latency_ms"]))
 PY
 fi
-echo "baseline A registrada en $OUT_FILE"
+echo "baseline $STRATEGY registrada en $OUT_FILE"
