@@ -1,0 +1,401 @@
+{
+  "baseline": "A",
+  "profile": "PC",
+  "host": "sabrewulf-a320ms2h",
+  "date": "2026-08-11",
+  "eval_id": "eval-ctx-PC-2026-08-11",
+  "eval_hash": "8e42d119bf7bc4f2014e7239f101e3c37296365f3b24158e0cb0155baaa67f5d",
+  "pipeline": "buffy-router.sh (real) → buffy-search.sh FTS5 bm25 (estrategia 'and' default, limit=10)",
+  "runtime_changed": false,
+  "num_queries": 10,
+  "aggregate": {
+    "domain_precision_avg": 0.667,
+    "domain_recall_avg": 0.667,
+    "categories_recall_avg": 0.8,
+    "search_recall_avg": 0.0,
+    "total_spurious_categories": 2,
+    "total_search_leaked_files": 4,
+    "context_tokens_total": 47726,
+    "context_tokens_avg": 4773,
+    "window_utilization_avg": 0.02386
+  },
+  "per_query": [
+    {
+      "id": "Q01",
+      "query": "el teléfono no aparece en scrcpy",
+      "coverage": [
+        "single-domain"
+      ],
+      "gold_domains": [
+        "Android"
+      ],
+      "router_categories": [
+        "Android"
+      ],
+      "categories_recall": 1.0,
+      "spurious_categories": [],
+      "gold_files": [
+        "Knowledge/Android/ADB.md",
+        "Knowledge/Android/scrcpy.md"
+      ],
+      "router_knowledge": [
+        "Knowledge/Android/ADB.md",
+        "Knowledge/Android/scrcpy.md"
+      ],
+      "gold_in_router": [
+        "Knowledge/Android/ADB.md",
+        "Knowledge/Android/scrcpy.md"
+      ],
+      "domain_precision": 1.0,
+      "domain_recall": 1.0,
+      "router_skills": [
+        ".agents/skills/android-adb/SKILL.md",
+        ".agents/skills/scrcpy-freefire/SKILL.md",
+        ".agents/skills/android-agent/SKILL.md"
+      ],
+      "search_top_n": 5,
+      "search_recall": 0.0,
+      "gold_facts_found": [],
+      "search_leaked_files": 4,
+      "context_estimated_tokens": 5256
+    },
+    {
+      "id": "Q02",
+      "query": "cómo concedo permisos a una app con shizuku sin root",
+      "coverage": [
+        "single-domain"
+      ],
+      "gold_domains": [
+        "Android"
+      ],
+      "router_categories": [
+        "Android"
+      ],
+      "categories_recall": 1.0,
+      "spurious_categories": [],
+      "gold_files": [
+        "Knowledge/Android/ADB.md",
+        "Knowledge/Android/Shizuku.md"
+      ],
+      "router_knowledge": [
+        "Knowledge/Android/ADB.md",
+        "Knowledge/Android/Shizuku.md"
+      ],
+      "gold_in_router": [
+        "Knowledge/Android/ADB.md",
+        "Knowledge/Android/Shizuku.md"
+      ],
+      "domain_precision": 1.0,
+      "domain_recall": 1.0,
+      "router_skills": [
+        ".agents/skills/android-adb/SKILL.md",
+        ".agents/skills/shizuku-rikka/SKILL.md",
+        ".agents/skills/android-agent/SKILL.md",
+        ".agents/skills/android-project-setup/SKILL.md"
+      ],
+      "search_top_n": 0,
+      "search_recall": 0.0,
+      "gold_facts_found": [],
+      "search_leaked_files": 0,
+      "context_estimated_tokens": 7999
+    },
+    {
+      "id": "Q03",
+      "query": "quiero pushear el commit y crear el pull request",
+      "coverage": [
+        "single-domain"
+      ],
+      "gold_domains": [
+        "Git"
+      ],
+      "router_categories": [
+        "Git"
+      ],
+      "categories_recall": 1.0,
+      "spurious_categories": [],
+      "gold_files": [
+        "Knowledge/Git/Commands.md"
+      ],
+      "router_knowledge": [
+        "Knowledge/Git/Commands.md"
+      ],
+      "gold_in_router": [
+        "Knowledge/Git/Commands.md"
+      ],
+      "domain_precision": 1.0,
+      "domain_recall": 1.0,
+      "router_skills": [],
+      "search_top_n": 0,
+      "search_recall": 0.0,
+      "gold_facts_found": [],
+      "search_leaked_files": 0,
+      "context_estimated_tokens": 609
+    },
+    {
+      "id": "Q04",
+      "query": "la pantalla se apaga sola después de unos minutos",
+      "coverage": [
+        "no-lexical-signals"
+      ],
+      "gold_domains": [
+        "Linux"
+      ],
+      "router_categories": [
+        "Android"
+      ],
+      "categories_recall": 0.0,
+      "spurious_categories": [
+        "Android"
+      ],
+      "gold_files": [
+        "Knowledge/Linux/System.md"
+      ],
+      "router_knowledge": [
+        "Knowledge/Android/ADB.md"
+      ],
+      "gold_in_router": [],
+      "domain_precision": 0.0,
+      "domain_recall": 0.0,
+      "router_skills": [
+        ".agents/skills/android-adb/SKILL.md"
+      ],
+      "search_top_n": 0,
+      "search_recall": 0.0,
+      "gold_facts_found": [],
+      "search_leaked_files": 0,
+      "context_estimated_tokens": 2048
+    },
+    {
+      "id": "Q05",
+      "query": "el componente React de la app necesita leer el serial del teléfono por adb",
+      "coverage": [
+        "multi-domain"
+      ],
+      "gold_domains": [
+        "Android",
+        "React"
+      ],
+      "router_categories": [
+        "Android",
+        "React"
+      ],
+      "categories_recall": 1.0,
+      "spurious_categories": [],
+      "gold_files": [
+        "Knowledge/Android/ADB.md",
+        "Knowledge/React/React.md"
+      ],
+      "router_knowledge": [
+        "Knowledge/Android/ADB.md",
+        "Knowledge/React/React.md"
+      ],
+      "gold_in_router": [
+        "Knowledge/Android/ADB.md",
+        "Knowledge/React/React.md"
+      ],
+      "domain_precision": 1.0,
+      "domain_recall": 1.0,
+      "router_skills": [
+        ".agents/skills/android-adb/SKILL.md",
+        ".agents/skills/android-agent/SKILL.md",
+        ".agents/skills/shizuku-rikka/SKILL.md",
+        ".agents/skills/vercel-react-best-practices/SKILL.md",
+        ".agents/skills/vite/SKILL.md",
+        ".agents/skills/xiaomi-adb-tricks/SKILL.md"
+      ],
+      "search_top_n": 0,
+      "search_recall": 0.0,
+      "gold_facts_found": [],
+      "search_leaked_files": 0,
+      "context_estimated_tokens": 11090
+    },
+    {
+      "id": "Q06",
+      "query": "el script bash de scrcpy no abre free fire, revisá el script",
+      "coverage": [
+        "multi-domain"
+      ],
+      "gold_domains": [
+        "Android",
+        "Shell"
+      ],
+      "router_categories": [
+        "Android",
+        "Shell"
+      ],
+      "categories_recall": 1.0,
+      "spurious_categories": [],
+      "gold_files": [
+        "Knowledge/Android/Keymappers.md",
+        "Knowledge/Android/scrcpy.md",
+        "Knowledge/Shell/Shell.md"
+      ],
+      "router_knowledge": [
+        "Knowledge/Android/ADB.md",
+        "Knowledge/Android/scrcpy.md",
+        "Knowledge/Shell/Shell.md"
+      ],
+      "gold_in_router": [
+        "Knowledge/Android/scrcpy.md",
+        "Knowledge/Shell/Shell.md"
+      ],
+      "domain_precision": 0.667,
+      "domain_recall": 0.667,
+      "router_skills": [
+        ".agents/skills/android-adb/SKILL.md",
+        ".agents/skills/scrcpy-freefire/SKILL.md",
+        ".agents/skills/android-agent/SKILL.md",
+        ".agents/skills/android-game-opt/SKILL.md"
+      ],
+      "search_top_n": 0,
+      "search_recall": 0.0,
+      "gold_facts_found": [],
+      "search_leaked_files": 0,
+      "context_estimated_tokens": 6828
+    },
+    {
+      "id": "Q07",
+      "query": "el celular anda lento, qué puedo hacer",
+      "coverage": [
+        "no-lexical-signals"
+      ],
+      "gold_domains": [
+        "Android"
+      ],
+      "router_categories": [
+        "Android"
+      ],
+      "categories_recall": 1.0,
+      "spurious_categories": [],
+      "gold_files": [
+        "Knowledge/Android/ADB.md",
+        "Knowledge/Android/GameOptimization.md"
+      ],
+      "router_knowledge": [
+        "Knowledge/Android/ADB.md"
+      ],
+      "gold_in_router": [
+        "Knowledge/Android/ADB.md"
+      ],
+      "domain_precision": 1.0,
+      "domain_recall": 0.5,
+      "router_skills": [
+        ".agents/skills/android-adb/SKILL.md"
+      ],
+      "search_top_n": 0,
+      "search_recall": 0.0,
+      "gold_facts_found": [],
+      "search_leaked_files": 0,
+      "context_estimated_tokens": 2048
+    },
+    {
+      "id": "Q08",
+      "query": "la terminal se ve opaca y quiero que se vea transparente",
+      "coverage": [
+        "no-lexical-signals"
+      ],
+      "gold_domains": [
+        "Linux"
+      ],
+      "router_categories": [
+        "Android"
+      ],
+      "categories_recall": 0.0,
+      "spurious_categories": [
+        "Android"
+      ],
+      "gold_files": [
+        "Knowledge/Linux/System.md"
+      ],
+      "router_knowledge": [
+        "Knowledge/Android/ADB.md"
+      ],
+      "gold_in_router": [],
+      "domain_precision": 0.0,
+      "domain_recall": 0.0,
+      "router_skills": [
+        ".agents/skills/android-adb/SKILL.md"
+      ],
+      "search_top_n": 0,
+      "search_recall": 0.0,
+      "gold_facts_found": [],
+      "search_leaked_files": 0,
+      "context_estimated_tokens": 2048
+    },
+    {
+      "id": "Q09",
+      "query": "quiero optimizar el rendimiento",
+      "coverage": [
+        "ambiguous"
+      ],
+      "gold_domains": [
+        "Android"
+      ],
+      "router_categories": [
+        "Android"
+      ],
+      "categories_recall": 1.0,
+      "spurious_categories": [],
+      "gold_files": [
+        "Knowledge/Android/GameOptimization.md"
+      ],
+      "router_knowledge": [
+        "Knowledge/Android/ADB.md",
+        "Knowledge/Android/GameOptimization.md"
+      ],
+      "gold_in_router": [
+        "Knowledge/Android/GameOptimization.md"
+      ],
+      "domain_precision": 0.5,
+      "domain_recall": 1.0,
+      "router_skills": [
+        ".agents/skills/android-adb/SKILL.md",
+        ".agents/skills/android-game-opt/SKILL.md"
+      ],
+      "search_top_n": 0,
+      "search_recall": 0.0,
+      "gold_facts_found": [],
+      "search_leaked_files": 0,
+      "context_estimated_tokens": 3636
+    },
+    {
+      "id": "Q10",
+      "query": "la ZTE se calienta cuando juego free fire",
+      "coverage": [
+        "leakage"
+      ],
+      "gold_domains": [
+        "Android"
+      ],
+      "router_categories": [
+        "Android"
+      ],
+      "categories_recall": 1.0,
+      "spurious_categories": [],
+      "gold_files": [
+        "Knowledge/Android/GameOptimization.md",
+        "Knowledge/Android/NubiaLab.md"
+      ],
+      "router_knowledge": [
+        "Knowledge/Android/ADB.md",
+        "Knowledge/Android/GameOptimization.md"
+      ],
+      "gold_in_router": [
+        "Knowledge/Android/GameOptimization.md"
+      ],
+      "domain_precision": 0.5,
+      "domain_recall": 0.5,
+      "router_skills": [
+        ".agents/skills/android-adb/SKILL.md",
+        ".agents/skills/android-game-opt/SKILL.md",
+        ".agents/skills/android-agent/SKILL.md",
+        ".agents/skills/scrcpy-freefire/SKILL.md"
+      ],
+      "search_top_n": 0,
+      "search_recall": 0.0,
+      "gold_facts_found": [],
+      "search_leaked_files": 0,
+      "context_estimated_tokens": 6164
+    }
+  ]
+}
