@@ -56,3 +56,47 @@
 | Q08 | la terminal se ve opaca y quiero que se vea transparente | sin señales léxicas | Linux |
 | Q09 | quiero optimizar el rendimiento | ambigua | Android |
 | Q10 | la ZTE se calienta cuando juego free fire | leakage | Android |
+
+---
+
+## ✅ Paso 2 — Baseline A (perfil PC) · 2026-08-11
+
+Medición del pipeline **actual** (`buffy-router.sh` → `buffy-search.sh`) contra el
+EVAL congelado, sobre el repo real (`~/buffy-context`), **sin tocar runtime**
+(`runtime_changed: false` — no se implementó Hybrid, no se modificó
+router/search/selector).
+
+Runner: `scripts/tests/evals/run-baseline-PC.sh`
+Resultado: `scripts/tests/evals/baseline-A-PC-2026-08-11.json`
+
+| Métrica | Valor |
+|---|---|
+| **domain_precision_avg** | 0.667 |
+| **domain_recall_avg** | 0.667 |
+| **categories_recall_avg** | 0.800 |
+| **search_recall_avg (FTS5, estrategia `and` default)** | 0.000 |
+| **spurious_categories** | 2 (Q04, Q08 → Android espurio) |
+| **search_leaked_files** | 4 (Q01) |
+| **context_tokens** | 47 726 total / 4 773 avg → ventana 200k = 2.4% |
+
+### Hallazgos de la baseline A
+
+1. **Router sano en dominios con señal léxica** (Q01/Q02/Q03/Q05): precision y
+   recall 1.0 — el pipeline actual resuelve los casos canónicos.
+2. **Casos sin señales léxicas (Q04/Q08, gold Linux) → Android espurio**: el router
+   activa Android por *entorno* (`detect_adb_device`: dispositivo Mi 10 conectado)
+   y no hay señal Linux. Es el comportamiento real del perfil PC con el teléfono
+   conectado; gold esperaba Linux.
+3. **search_recall = 0.000 en las 10 queries**: con la estrategia `and` por defecto,
+   el FTS5 exige que TODAS las palabras de la query natural estén en una misma
+   línea indexada → no recupera ninguna aguja gold. Coincide con la conclusión de
+   `bench-realistic-FASE1-Search.md` (0.000 → 0.736 con `or`), que es del track
+   RESEARCH: la baseline A confirma que el runtime actual (default `and`) no
+   recupera las agujas con queries en lenguaje natural.
+4. **Domain gaps del router** (Q06/Q07/Q09/Q10): falta Keymappers (Q06), falta
+   GameOptimization (Q07 — "lento" no es señal), ADB sobra en Q09/Q10, falta
+   NubiaLab (Q10 — el router no mapea ese archivo).
+
+> ⛔ Esta baseline es del perfil PC y NO se compara contra Termux.
+> ⛔ No se usará para calibrar `θ_c`, presupuesto ni pesos (es referencia de TEST).
+

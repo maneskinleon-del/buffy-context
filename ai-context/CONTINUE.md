@@ -1,7 +1,7 @@
 # 🔄 CONTINUE — Handoff entre sesiones
 
 > ⚡ **PRÓXIMA SESIÓN: LEE ESTO PRIMERO**
-> Generado: 2026-08-11 (opencode — **Fase 1 medida (Search 0→0.736) + Fase 2 diagnóstica APROBADA (42/42, señales) + Fase 3 spec APROBADA (selector híbrido, δ pre-fijado + regla de descarte) + reglas de arquitectura CORE/ADAPTATION/TEST/RESEARCH registradas**)
+> Generado: 2026-08-11 (opencode — **Fase 3 · EVAL PC aprobado (Paso 1) + Baseline A PC medida (Paso 2, sin tocar runtime) — pendiente autorización del Paso 3**)
 
 > 🗝️ **Palabra de cierre acordada ("cerrar día"):** el agente escribe el contexto (SESION.md/CONTINUE.md/CHANGELOG.md, máx 5 entradas en SESION.md) y luego ejecuta **`buffy-close-day.sh`** (mensaje opcional con `--message`) — hace sync push de la memoria curada, regenera SNAPSHOT, corre doctor --quick y commit + push. Si el sync conflictúa, el cierre aborta y hay que resolver.
 
@@ -101,18 +101,32 @@ La revisión señaló que versionar `.sync-state` en el repo generaba commits ex
 ---
 
 ## 📌 Fase 3 · Paso 1 — EVAL congelado (perfil PC) ✅ COMPLETADO
+## 📌 Fase 3 · Paso 2 — Baseline A (perfil PC) ✅ COMPLETADO · 2026-08-11
 
-**Qué:** EVAL de selección de contexto congelado en `scripts/tests/evals/eval-ctx-PC-2026-08-11.json`
+**Qué (Paso 1):** EVAL de selección de contexto congelado en `scripts/tests/evals/eval-ctx-PC-2026-08-11.json`
 (10 queries reales con gold manual). Hash `8e42d119bf7bc4f2014e7239f101e3c37296365f3b24158e0cb0155baaa67f5d`,
 registro en `scripts/tests/evals/EVAL-REGISTRY.md`. Perfil **PC** (host `sabrewulf-a320ms2h`) —
-NO comparable con la baseline de Termux.
+NO comparable con la baseline de Termux. Commit `0491700` + push.
+
+**Qué (Paso 2):** baseline A medida con `scripts/tests/evals/run-baseline-PC.sh` sobre el repo real,
+sin tocar runtime (`runtime_changed: false`). Resultado: `scripts/tests/evals/baseline-A-PC-2026-08-11.json`.
+Métricas: domain_precision **0.667** · domain_recall **0.667** · categories_recall **0.800** ·
+**search_recall 0.000** (FTS5 estrategia `and` default: una query natural de N palabras exige las N
+en la misma línea → cero agujas) · spurious **2** (Q04/Q08 → Android espurio por `detect_adb_device`,
+Mi 10 conectado) · context **4 773 tokens avg** (2.4% de 200k).
+
+**Hallazgos baseline A:** (1) router 1.0/1.0 en Q01/Q02/Q03/Q05 (dominios con señal léxica) ·
+(2) sin señales léxicas (Q04/Q08) → Android espurio por entorno · (3) search_recall 0.000 en las 10 —
+confirma en runtime real lo que FASE1-Search ya midió (0→0.736 con `or`, track RESEARCH) ·
+(4) gaps del router: Q06 sin Keymappers, Q07 sin GameOptimization ("lento" no es señal), Q09/Q10 con
+ADB de más, Q10 sin NubiaLab.
 
 **⛔ Reglas:** congelado ANTES de tocar router/search/selector/Hybrid. No podrá usarse para
 calibrar `θ_c`, presupuesto ni pesos. Nada del perfil PC entra en memoria curada.
 
-**▶ Siguiente paso (paso 2):** con la **aprobación del usuario** del EVAL → correr la **baseline A
-del perfil PC** (pipeline actual router→search sobre el EVAL, medir sin tocar código). No avanzar
-hasta que el usuario apruebe el EVAL congelado.
+**▶ Siguiente paso (paso 3):** con la **aprobación del usuario** de la baseline A → decidir el
+siguiente cambio (p.ej. evaluar la estrategia `or` de search como mejora, o Hybrid). NO avanzar
+hasta que el usuario autorice explícitamente.
 
 ---
 
