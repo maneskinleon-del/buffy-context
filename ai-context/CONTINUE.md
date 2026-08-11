@@ -1,7 +1,7 @@
 # 🔄 CONTINUE — Handoff entre sesiones
 
 > ⚡ **PRÓXIMA SESIÓN: LEE ESTO PRIMERO**
-> Generado: 2026-08-11 (opencode — **Fase 3 · Pasos 1-2 aprobados; Paso 3 (Search OR/BM25 sobre EVAL PC) MEDIDO — veredicto pendiente del usuario**)
+> Generado: 2026-08-11 (opencode — **Fase 3 · Pasos 1-2 aprobados; Paso 3 CERRADO (OR no adoptado); diagnóstico Q03/Q04/Q06/Q08 COMPLETADO (AND normalizado = hipótesis del próximo experimento)**)
 
 > 🗝️ **Palabra de cierre acordada ("cerrar día"):** el agente escribe el contexto (SESION.md/CONTINUE.md/CHANGELOG.md, máx 5 entradas en SESION.md) y luego ejecuta **`buffy-close-day.sh`** (mensaje opcional con `--message`) — hace sync push de la memoria curada, regenera SNAPSHOT, corre doctor --quick y commit + push. Si el sync conflictúa, el cierre aborta y hay que resolver.
 
@@ -102,7 +102,7 @@ La revisión señaló que versionar `.sync-state` en el repo generaba commits ex
 
 ## 📌 Fase 3 · Paso 1 — EVAL congelado (perfil PC) ✅ COMPLETADO
 ## 📌 Fase 3 · Paso 2 — Baseline A (perfil PC) ✅ APROBADO por el usuario · 2026-08-11
-## 📌 Fase 3 · Paso 3 — Baseline B (Search OR/BM25) ⏸️ MEDIDO · veredicto pendiente del usuario
+## 📌 Fase 3 · Paso 3 — Baseline B (Search OR/BM25) ✅ CERRADO · OR NO adoptado · 2026-08-11
 
 **Qué (Paso 1):** EVAL de selección de contexto congelado en `scripts/tests/evals/eval-ctx-PC-2026-08-11.json`
 (10 queries reales con gold manual). Hash `8e42d119bf7bc4f2014e7239f101e3c37296365f3b24158e0cb0155baaa67f5d`,
@@ -137,8 +137,27 @@ el selector híbrido.
 `baseline-B-PC-2026-08-11.json`. Resultado crudo: search_recall **0.000 → 0.250**
 (mejoran Q03/Q04/Q06/Q08) PERO context_relevance **0.600 → 0.192**, cross_domain_leakage
 **0.267 → 0.704**, token_cost **×9** (4.9k → 43.9k avg, 22% de ventana), latencia +10 ms.
-Router aislado (Δ=0). **SIN VEREDICTO — el usuario pidió ver la medición cruda antes de
-decidir adoptar OR. No se cambió el default. No se avanzó a Hybrid.**
+Router aislado (Δ=0). **CERRADO por el usuario: OR NO adoptado como default.**
+Trade-off recuperación ↔ relevancia/leakage/coste no justifica sustituir AND.
+No se tocó `buffy-search.sh` ni `buffy-router.sh`. No se avanzó a Hybrid.
+
+**Siguiente (diagnóstico, antes de diseñar el próximo experimento):** revisar Q03/Q04/
+Q06/Q08 — las 4 queries que OR recuperó — para determinar qué patrón de consulta/
+documentos hizo que AND fallara y OR acertara. Hipótesis verificable, no saltar a Hybrid.
+
+**DIAGNÓSTICO COMPLETADO (2026-08-11):** patrón identificado en las 4 queries.
+- **AND falla** porque exige TODAS las palabras crudas (incl. stopwords `el/de/no/y/que/se/la`)
+  en la misma línea → queries naturales de 8-12 palabras nunca matchean.
+- **OR acierta** por puente léxico de 1-2 tokens significativos: Q03 (`crear` en el
+  comentario de Commands.md:64), Q04 (`pantalla`+`apaga` en CONTINUE.md:339).
+- **2 de las 4 recuperaciones son artefactos cross-file**: Q06 (`com.dts.freefireth`
+  hallado en CONTINUE.md:325, no en scrcpy.md:57) y Q08 (`picom` hallado en AGENTS.md:36,
+  no en System.md:3). El runner cuenta agujas en el texto concatenado de snippets sin
+  verificar el archivo gold → recall real de OR ≈ **0.150**, no 0.250.
+- **Hipótesis para el próximo experimento:** AND normalizado (tokens OR, co-ocurrencia
+  de ≥2 tokens significativos por línea) debería recuperar Q03/Q04 sin el leakage de OR.
+  El runner debe reportar dónde se encontró cada aguja (gold vs otro archivo).
+- Detalle completo en `scripts/tests/evals/EVAL-REGISTRY.md` → sección 🔬 Diagnóstico.
 
 **Suite PC — nota (2026-08-11):** `225 OK / 5 FAIL` — los 5 son preexistentes y ajenos
 a la Fase 3 (3 × test-scale.sh con ruta Termux hardcodeada en PC; 2 × drift de conteos

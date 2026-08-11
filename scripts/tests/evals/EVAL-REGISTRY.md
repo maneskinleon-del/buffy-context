@@ -167,6 +167,86 @@ ai-context/CONTINUE.md, archivos de sesión, y Knowledge de otros dominios
 > ⛔ **Sin veredicto todavía.** El usuario pidió ver la medición cruda y la comparación
 > antes de decidir adoptar OR. No se convirtió OR en default. No se avanzó a Hybrid.
 
+---
+
+## ✅ Paso 3 — CERRADO como experimento diagnóstico · 2026-08-11 · OR NO adoptado
+
+**Veredicto del usuario:** Paso 3 aprobado como medición y cerrado. **OR no se adopta
+como default.** Los resultados quedan congelados como evidencia para el diseño del
+siguiente experimento. No se toca `buffy-search.sh` ni `buffy-router.sh`.
+
+**Lectura objetiva (del usuario):** OR mejoró search_recall (0.000 → 0.250, 4/10
+queries) pero con caída fuerte de context_relevance (0.600 → 0.192) y aumento de
+cross_domain_leakage (0.267 → 0.704) y token cost ×9. **El trade-off
+recuperación ↔ relevancia/leakage/coste no justifica sustituir AND por OR.**
+
+**Siguiente paso (diagnóstico, antes de Hybrid):** revisar las 4 queries que OR
+recuperó (Q03, Q04, Q06, Q08) para determinar **qué patrón de consulta/documentos
+hizo que AND fallara y OR acertara** — hipótesis verificable para el diseño del
+siguiente experimento, en vez de saltar a `AND → OR → Hybrid` sin saber qué
+problema se intenta resolver.
+
+## 🔬 Diagnóstico Q03/Q04/Q06/Q08 — patrón AND-falla / OR-acierta · 2026-08-11
+
+**Objetivo:** determinar qué patrón de consulta/documentos hizo que AND fallara y OR
+acertara, para diseñar el siguiente experimento con hipótesis verificable.
+
+### Causa raíz de AND = 0.000
+
+AND exige **todas las palabras crudas de la query en la misma línea**, incluyendo
+stopwords (`el/de/no/y/que/se/la`). Las queries naturales de 8-12 palabras hacen
+prácticamente imposible matchear una línea del corpus.
+
+| Query | Tokens AND (crudos) | Tokens OR (normalizados) |
+|---|---|---|
+| Q03 | quiero, pushear, el, commit, y, crear, el, pull, request | pushear, commit, crear, pull, request |
+| Q04 | la, pantalla, se, apaga, sola, después, de, unos, minutos | pantalla, apaga, sola, despues, unos, minutos |
+| Q06 | el, script, bash, de, scrcpy, no, abre, free, fire,, revisá, el, script | script, bash, scrcpy, abre, free, fire, revisa, script |
+| Q08 | la, terminal, se, ve, opaca, y, quiero, que, se, vea, transparente | terminal, opaca, vea, transparente |
+
+### Puente léxico de OR (por qué acertó)
+
+OR normaliza (quita stopwords, exige ≥3 chars) y matchea **cualquier** token. Las
+líneas gold que recuperó comparten 1-2 tokens significativos con la query:
+
+- **Q03** → `Knowledge/Git/Commands.md:64` "gh pr create **# Crear PR**" — puente:
+  `crear` (comentario en español de la línea, no el comando). `git push origin`
+  (Commands.md:13) NO se recuperó: la línea no comparte tokens OR.
+- **Q04** → `ai-context/CONTINUE.md:339` "**Pantalla** ya no se **apaga**: `xset -dpms`
+  + `xset s off`..." — puente: `pantalla` + `apaga`. Ambas agujas viven en la misma
+  línea → 2/2.
+
+### Hallazgo crítico: 2 de las 4 "recuperaciones" son artefactos cross-file
+
+El runner cuenta agujas en el **texto concatenado de todos los snippets**, sin
+verificar que la aguja provenga del archivo gold:
+
+- **Q06** → `com.dts.freefireth` se encontró en `ai-context/CONTINUE.md:325`, NO en
+  `Knowledge/Android/scrcpy.md:57` (el hit de scrcpy.md fue la línea 3, no la 57).
+  `FF_SEEN` NO se recuperó.
+- **Q08** → `picom` se encontró en `ai-context/AGENTS.md:36`, NO en
+  `Knowledge/Linux/System.md:3` (el hit de System.md fue la línea 27, no la 3).
+  `P_TERM_OPACITY` NO se recuperó.
+
+**Corrección del recall real de OR:** con artefactos = 0.250; sin artefactos (aguja
+en el snippet del archivo gold) = **0.150** (solo Q03/Q04). La mejora real de OR es
+~60% menor de lo que reporta el runner.
+
+### Conclusión → hipótesis para el siguiente experimento
+
+1. **El problema no es AND vs OR en abstracto**: las líneas gold comparten solo 1-2
+   tokens con la query. AND no recupera nada; OR recupera con ruido.
+2. **El puente léxico es español↔técnico**: "pushear"→push, "crear"→create,
+   "apaga"→dpms/s off. OR acertó Q03 solo porque el doc tenía un comentario en español.
+3. **Las anotaciones gold están incompletas**: las agujas también viven en
+   `CONTINUE.md`/`AGENTS.md` (archivos de sesión/contexto) que no están en
+   `gold_files`. OR las encontró ahí — contenido genuinamente relevante que el gold
+   no anota.
+4. **Hipótesis verificable (próximo experimento):** un **AND normalizado** (mismos
+   tokens que OR, exigiendo co-ocurrencia de ≥2 tokens significativos en la línea)
+   debería recuperar Q03/Q04 sin el leakage de OR. El runner debe reportar **dónde**
+   se encontró cada aguja (archivo gold vs otro) para no inflar recall.
+
 ### Estado de la suite en el perfil PC (2026-08-11)
 
 > ⚠️ **La suite del perfil PC no está actualmente 100% verde** por incompatibilidades
