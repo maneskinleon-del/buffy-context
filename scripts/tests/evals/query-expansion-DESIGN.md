@@ -1,10 +1,14 @@
-# Paso 10 — Query Expansion (diseño)
+# Paso 10 — Query Expansion (diseño + ejecución)
 
-> Estado: **⏳ DISEÑO aprobado para implementar** (2026-08-12) — aún SIN runner.
+> Estado: **EJECUTADO** (2026-08-12) — H1 y H2 medidos, NO pasan el gate
+> (passage_relevance/leakage, capa de selección), nada se adopta.
+> Runner: `scripts/tests/evals/run-expansion-PC.sh`. Resultados en
+> `EVAL-REGISTRY.md` §Paso 10 + Anexo A abajo.
 > Base: EVAL con gold definitivo (hash `98a0e308…`), pasajes G1-VENTANA validados
 > (Paso 9 ejecutado: `run-passage-PC.sh`), serie A→G2 completa en `EVAL-REGISTRY.md`.
-> Autorizado por el usuario (2026-08-12): \"diseñar el Paso 10 — Query Expansion, sin
-> implementar todavía\". Orden de ejecución pendiente de aprobación de esta spec.
+> Autorizado por el usuario (2026-08-12): \"implementar y ejecutar H1 + H2 sobre el
+> mismo EVAL, con G1-VENTANA y los gates ya fijados; después de medir, detenerse
+> otra vez; NO implementar 10B todavía\".
 
 ## 1. Objetivo e hipótesis
 
@@ -313,9 +317,64 @@ queda atribuido a la capa de selección (Paso 10B), no a la expansión.
   por el usuario. Q08 entra al pool y al top-10 pero el gold file queda fuera → es
   selección, no generación. NO se intenta resolver con expansión. Se diseñará como
   experimento propio (probablemente: puntuar pasajes por señal de dominio/co-ocurrencia
-  con la query, sin calibración con el EVAL).
+  con la query, sin calibración con el EVAL). **Tras el Paso 10, 10B gana fuerza
+  experimental: las agujas del gap quedaron TODAS en el pool (ranked_out) y el RRF no
+  las priorizó.**
 - Cambiar la unidad de contexto, el presupuesto, la fusión o los tamaños de rama.
 - Nuevos modelos / entrenamiento.
 - Calibración de pesos del diccionario con el EVAL.
 - Integrar la expansión al runtime antes del veredicto.
 - Modificar el corpus, fixture, gold o métricas (anti-gaming).
+
+---
+
+## Anexo A — Resultados medidos (2026-08-12, EVAL 98a0e308…, instrumento v3.1)
+
+Corridas reales con índice bge-m3 de D (cache hit), ramas L/X/S, fusión V1-RRF,
+pasajes VENTANA ±4. Determinismo G2: hash idéntico en 2 corridas por variante
+(H1 `3618caf4…`, H2 `e942eadc…`). Diccionarios congelados (dict_hash
+`b0406a3368003bea` en el JSON). `snippet_scope: passage`.
+
+| Estrategia | Recall | pRel | cRel(file) | Leakage | Tokens | gold_containment |
+|---|---:|---:|---:|---:|---:|---:|
+| G1 — VENTANA | 0.417 | 0.072 | 0.214 | 0.606 | 2 569 | 0.8 |
+| G2 — SECCIÓN | 0.333 | 0.054 | 0.214 | 0.606 | 3 373 | 0.7 |
+| H1 — DICT-MIN | 0.317 | 0.064 | 0.199 | 0.616 | 2 451 | **1.0** |
+| H2 — DICT-FULL | 0.367 | 0.064 | 0.197 | 0.621 | 2 454 | **1.0** |
+
+### Gate (5 criterios simultáneos) — H1 y H2 NO pasan
+
+| Criterio | Umbral | H1 | H2 |
+|---|---|---:|---:|
+| search_recall | > 0.100 | 0.317 ✅ | 0.367 ✅ |
+| passage_relevance | ≥ 0.600 | 0.064 ❌ | 0.064 ❌ |
+| cross_domain_leakage | ≤ 0.267 | 0.616 ❌ | 0.621 ❌ |
+| token_cost | ≤ ~10.4k | 2 451 ✅ | 2 454 ✅ |
+| gold_containment | ≥ 0.80 | 1.0 ✅ | 1.0 ✅ |
+
+### candidate_gap_recovery — objetivo cumplido
+
+- **H1-DICT-MIN: 5/6 (0.833)** — `adb tcpip 5555` y `adb connect` (X: adb devices),
+  **`gh pr create` (X: `push` — regla genérica de `pushear`; `create` de `crear`
+  también era término X)**, `dumpsys thermalservice` y `thermal_control` (X: thermal).
+- **H2-DICT-FULL: 6/6 (1.0)** — las 5 de H1 + `useState` (X: useState, símbolo exacto).
+
+### Hallazgo principal: generación resuelta, SELECCIÓN rota (Caso D confirmado)
+
+Las 6 agujas del gap pasaron a `in_pool_ranked_out` — NINGUNA llegó al top-10 →
+Q01/Q03/Q05/Q10 siguen con sRec 0.0. Recall global H1/H2 (0.317/0.367) < G1 (0.417).
+El RRF no prioriza las agujas frente al ruido del pool expandido (1071-1364 hits X
+únicos vs ~100 de G1). **Caso D de la spec, confirmado al pie de la letra**: la
+expansión resuelve la generación; la calidad del ctx depende de la selección (10B).
+
+### Regresión vs G1 (9/12)
+
+3 agujas `in_pool_top10` de G1 cayeron en H1/H2: Q05 `adb devices -l`, Q07
+`dumpsys thermalservice`, Q07 `force_gpu_rendering`. Contrapartida: Q09 sube
+0.5 → 1.0 en H2 (`force_gpu_rendering` → top10 vía X). Coste tokens 2.5k ✅;
+latency ~4.1 s (coste de la expansión, no gate).
+
+### Conclusión
+
+H1/H2 no adoptados. La expansión cierra el candidate gap y mueve el cuello de
+botella al reranking → **10B justificado experimentalmente**. Runtime congelado.

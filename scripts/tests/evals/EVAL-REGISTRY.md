@@ -980,6 +980,91 @@ usuario aprueba además la corrección del dedup a (path, rango) hecha durante l
 implementación: evitó que el experimento quedara contaminado por una violación de su
 propia spec.
 
+## 🔬 Paso 10 — EJECUTADO · H1 y H2 no pasan el gate (pRel/leakage) · 2026-08-12
+
+**Runner:** `scripts/tests/evals/run-expansion-PC.sh` · dicts H1/H2 congelados
+(dict_hash `b0406a3368003bea`, incluido en el JSON) · pasajes VENTANA ±4 (G1) ·
+presupuesto 10.4k · fusión V1-RRF · EVAL 98a0e308… · instrumento v3.1 ·
+`runtime_changed: false`. Determinismo G2 OK ×2 por variante (H1 `3618caf4…`,
+H2 `e942eadc…`). Referencia del gap: G1 (6 agujas out_of_pool, corpus=True).
+
+| Estrategia | Recall | pRel | cRel(file) | Leakage | Tokens | gold_containment |
+|---|---:|---:|---:|---:|---:|---:|
+| A — AND | 0.000 | — | 0.533 | 0.267 | 5 197 | — |
+| C — AND-norm | 0.100 | — | 0.333 | 0.522 | 38 017 | — |
+| D — Semantic | 0.200 | — | 0.192 | 0.669 | 47 980 | — |
+| E/F — Hybrid | 0.200 | — | 0.185/0.179 | 0.605/0.612 | ~10 000 | 0.0 |
+| G1 — VENTANA | **0.417** | 0.072 | 0.214 | 0.606 | 2 569 | 0.8 |
+| G2 — SECCIÓN | 0.333 | 0.054 | 0.214 | 0.606 | 3 373 | 0.7 |
+| **H1 — DICT-MIN** | 0.317 | 0.064 | 0.199 | 0.616 | 2 451 | **1.0** |
+| **H2 — DICT-FULL** | 0.367 | 0.064 | 0.197 | 0.621 | 2 454 | **1.0** |
+
+### Gate (5 criterios simultáneos) — H1 y H2 NO pasan
+
+| Criterio | Umbral | H1 | H2 |
+|---|---|---:|---:|
+| search_recall | > 0.100 | 0.317 ✅ | 0.367 ✅ |
+| passage_relevance | ≥ 0.600 | 0.064 ❌ | 0.064 ❌ |
+| cross_domain_leakage | ≤ 0.267 | 0.616 ❌ | 0.621 ❌ |
+| token_cost | ≤ ~10.4k | 2 451 ✅ | 2 454 ✅ |
+| gold_containment | ≥ 0.80 | 1.0 ✅ | 1.0 ✅ |
+
+### ★ candidate_gap_recovery — el objetivo del paso SÍ se cumplió
+
+| Variante | Fracción | Agujas recuperadas (G1 `out_of_pool` → H `in_pool_*`) |
+|---|---|---|
+| **H1-DICT-MIN** | **5/6 (0.833)** | `adb tcpip 5555` (X: adb devices) · `adb connect` (X: adb devices) · `gh pr create` (X: **push** — regla de `pushear`) · `dumpsys thermalservice` (X: thermal) · `thermal_control` (X: thermal) |
+| **H2-DICT-FULL** | **6/6 (1.0)** | las 5 de H1 + `useState` (X: useState — símbolo exacto, solo H2) |
+
+**El diccionario GENÉRICO (H1) cerró 5/6 del gap.** Q03 `gh pr create` (la aguja
+estrella) pasó de `out_of_pool` a `in_pool_ranked_out` **vía la rama X con términos
+ES→EN genéricos** (`pushear→push`; `crear→create` también era término X). Solo
+`useState` (símbolo de código) requirió el término exacto de H2. Todas las agujas
+quedaron `in_pool_ranked_out` (rank de fusión 50-132 — muy fuera del top-10).
+
+### Hallazgo principal: generación resuelta, SELECCIÓN rota (Caso D confirmado)
+
+**Ninguna de las 6 agujas del gap llegó al top-10** → todas quedaron
+`in_pool_ranked_out` → Q01/Q03/Q05/Q10 siguen con search_recall 0.0. El recall
+global de H1/H2 (0.317/0.367) es **inferior al de G1 (0.417)**:
+
+```text
+candidate gap    ✅ resuelto (H1 5/6, H2 6/6)   → generación OK
+pool             ✅ agujas DENTRO del pool
+fusión/ranking   ❌ RRF no las prioriza → ranked_out
+contexto final   ❌ fuera del top-10 → sRec no sube
+```
+
+Esto es exactamente el **Caso D** que el usuario anticipó al aprobar la spec:
+"H1/H2 recuperan candidatos pero pRel/leakage siguen ~0.07/~0.61 → generación
+resuelta, selección todavía rota". Se cumple al pie de la letra.
+
+### Regresión vs G1 (9/12) — el ruido de X desplaza gold del top-10
+
+3 agujas que en G1 estaban `in_pool_top10` salieron del top-10 en H1/H2: Q05
+`adb devices -l`, Q07 `dumpsys thermalservice`, Q07 `force_gpu_rendering`. El pool
+más grande (1071-1364 hits X únicos vs ~100 de G1) inunda el RRF. Contrapartida
+positiva: **Q09 sube 0.5 → 1.0 en H2** (`force_gpu_rendering` pasa de
+`ranked_out` a `top10` vía X).
+
+### Otros datos
+
+- **gold_containment 1.0** en ambas (igual que G1 en Q04/Q06) — el pasaje sigue
+  siendo la unidad correcta.
+- **Costo**: tokens 2.5k ✅ se mantiene; pero **latency sube a ~4.1 s** (59-90
+  re-consultas X por corrida vs 1 de la rama L) — coste de la expansión, no gate.
+- Q08 sigue sin resolverse (selección — `picom`/`P_TERM_OPACITY` ahora incluso
+  `other_file_match` por el ruido de X) — 10B confirmado como hipótesis pendiente.
+
+### Conclusión
+
+H1 y H2 **NO se adoptan** (fallan el gate por pRel/leakage, capa de selección). Pero
+el Paso 10 demostró con evidencia: **la expansión léxica cierra el candidate gap
+(5/6 con diccionario genérico; 6/6 con términos exactos) y el cuello de botella se
+movió al reranking** — las agujas existen en el pool y el RRF no las prioriza. El
+**Paso 10B (selección/rerank de pasajes)** queda con una justificación experimental
+muy fuerte. Fase 3 sigue abierta; runtime congelado; nada se adopta.
+
 ### Estado de la suite en el perfil PC (2026-08-11)
 > ⚠️ **La suite del perfil PC no está actualmente 100% verde** por incompatibilidades
 > de entorno/drift documental **preexistentes** (verificadas: no fueron producidas por
