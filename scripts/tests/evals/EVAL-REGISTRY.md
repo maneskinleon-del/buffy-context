@@ -1234,6 +1234,61 @@ el recall por 2 (0.367 → 0.750), cerró 4/6 del gap y redujo leakage 29%. La s
 `x_overlap` (expansión) es la pieza clave; el embedding no aporta como señal de
 ranking. Fase 3 sigue abierta; runtime congelado; nada se adopta.
 
+## ✅ Paso 10B — CERRADO · R1/R2 no adoptados · ranking = cuello de botella real · calidad del contexto = problema dominante · 2026-08-12
+
+**Veredicto del usuario (confirmación del estado de Fase 3 + punto de continuación):**
+
+> El handoff deja una línea de continuidad clara: A 0.000 → G1 0.417 → H2 0.367 →
+> **R1 0.750** (récord). Nada adoptado y runtime congelado.
+> La conclusión queda separada por capas: **generación** resuelta (H2 6/6 agujas),
+> **granularidad** resuelta (pasajes 28-46×), **ranking** = cuello de botella real
+> (R1 lo demostró), **calidad del contexto** = problema dominante (pRel 0.175, leak
+> 0.441). La próxima sesión NO debe volver a recorrer A→R1 ni reabrir decisiones.
+
+**Punto exacto de continuación — Paso 11: diseñar `quality-aware passage selection`**, manteniendo:
+
+```text
+EVAL = 98a0e308… · runtime = congelado · H2 pool = congelado
+R1-LEX = baseline de ranking · presupuesto = 10.4k
+```
+
+**Pregunta experimental del Paso 11:**
+
+> Dado que R1 ya coloca bastante de la evidencia correcta entre los candidatos,
+> ¿podemos distinguir evidencia realmente útil de pasajes relacionados/ruidosos
+> ANTES de construir el contexto final?
+
+### Señales medidas HOY que dimensionan el diseño (pool/contexto de R1)
+
+**1. El contexto R1 tiene 60 pasajes y solo 15 (25%) contienen la aguja** → pRel 0.175.
+
+**2. Las señales de similitud NO discriminan gold vs noise a nivel de pasaje:**
+
+| Señal | Pasajes con aguja | Pasajes sin aguja | ¿Discrimina? |
+|---|---|---:|---|
+| `x_hits` | 2.47 | 1.71 | ❌ casi (e invertido en Q03/Q06: el ruido tiene MÁS) |
+| `q_hits` | 0.68 | **1.89** | ❌ **INVERTIDA** — el ruido matchea más la query que el gold |
+| `curated` | 91% | 100% | ❌ no separa |
+| `cmds` (tokens de comando) | 1.8 | **7.0** | ❌ **INVERTIDA** — el ruido tiene MÁS comandos (hipótesis refutada) |
+
+**3. La señal que SÍ discrimina — densidad de evidencia X:** `x_hits / tokens` =
+**0.071** (con aguja, 2.47/35) vs **0.026** (sin aguja, 1.71/65) → **2.7× más denso**.
+El pasaje con aguja es más corto y concentrado (35 vs 65 tokens).
+
+**4. Redundancia estructural cuantificada:** 8/10 queries tienen pasajes solapados
+en el contexto (la ventana ±4 duplica cuando entran ítems adyacentes del mismo
+archivo). **Dedup greedy por solapamiento (overlap > 4 líneas): elimina 17/60
+pasajes (28%), recorta 15-59% de tokens por query, sin perder ni una aguja**
+(Q07/Q08/Q10 1→1, Q04/Q06 0→0).
+
+### Lectura por capas para el Paso 11
+
+La poda/selección quality-aware ataca la capa de **selección de pasajes** (qué
+entra al contexto), NO la generación ni el ranking — ambos congelados (pool H2,
+orden R1). Si pRel sube sin perder sRec → la hipótesis (evidencia distinguible por
+calidad antes del contexto) se confirma. Riesgo declarado: sobre-poda que elimine
+agujas → protegido por gold_containment y baseline_regression.
+
 ### Estado de la suite en el perfil PC (2026-08-11)
 > ⚠️ **La suite del perfil PC no está actualmente 100% verde** por incompatibilidades
 > de entorno/drift documental **preexistentes** (verificadas: no fueron producidas por
