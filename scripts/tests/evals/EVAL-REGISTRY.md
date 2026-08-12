@@ -1323,10 +1323,17 @@ baseline + timestamps solo como apoyo + atribución de contenido + estado git 3 
 adopta, revierte, commitea ni descarta"), gate previo a escritura, puntos de
 enganche (pre-flight, pre-commit, doctor, close-day) y criterios de aceptación.
 
-**Estado:** DISEÑADO, pendiente de aprobación e implementación. Los cambios ajenos
-del working tree (MCP_REGISTRY.md, SKILLS_INDEX.md, README 43 skills,
-CONTINUE/SESION tooling, buffy-doctor.sh drift check) **quedan intactos y sin
-commitear** por decisión del usuario: revisarlos por separado tras el diseño.
-Pendiente: registrar la referencia en el Roadmap de CONTINUE.md cuando el archivo
-no esté bloqueado.
+**Estado:** SPEC APROBADA (2026-08-12, decisión del usuario) — congelada como
+diseño, implementación posterior (no durante Fase 3, runtime deliberadamente
+congelado). **Registrada en el Roadmap de Buffy 2.0** (CONTINUE.md, punto 6).
+Justificada por 2 incidentes reales y simétricos el mismo día: `ed06814` (mi commit
+absorbió 4 borrados staged ajenos — lección: `git commit -- paths`) y `6ed1bb1`
+(commit de la otra sesión absorbió mi §4.2 unstaged — lección: pre-write re-hash +
+pre-commit inspection del índice). Ambos sentidos ocurrieron, sin pérdida; la
+contaminación cruzada del historial quedó documentada en la spec §4.2.
+Los cambios ajenos del working tree fueron **commiteados por la otra sesión** en
+`6ed1bb1` (MCP_REGISTRY, SKILLS_INDEX, README 43 skills, CONTINUE/SESION tooling,
+buffy-doctor.sh drift check) — no se tocaron desde esta sesión.
+**Siguiente lógico: Paso 11 (quality-passage-DESIGN.md) — pendiente de aprobación
+para implementar.**
 

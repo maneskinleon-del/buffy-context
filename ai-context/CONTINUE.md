@@ -59,6 +59,7 @@
 3. **OpenCode ejecuta; NO compite con Buffy por el routing** (un solo router/dominio; el agente ejecuta, no re-enruta).
 4. **Plugins/adapters = capa de integración, NO dentro del CORE.**
 5. **Regla de hierro**: implementación SOLO con evidencia previa (mismas gates/medición que Fase 3) antes de incorporar cualquier pieza al CORE.
+6. **Foreign Worktree Detection (FWD) — SPEC APROBADA 2026-08-12, implementación posterior**: detecta/clasifica/protege cambios ajenos en el working tree (manifest de sesión + baseline + timestamps apoyo + contenido juicio + git 3 vías + procesos; OWN/FOREIGN/UNKNOWN/CONFLICT; política "nunca adopta/revierte/descarta"; gate pre-escritura con re-hash; commit selectivo = `git commit -- paths`). **Justificado por 2 incidentes reales y simétricos el mismo día** (ed06814: mi commit absorbió 4 borrados staged ajenos; 6ed1bb1: el commit de la otra sesión absorbió mi §4.2 unstaged). Congelado como diseño; implementar DESPUÉS de Fase 3, igual que el resto del roadmap. Spec: `FWD-DESIGN.md` (raíz).
 
 ---
 
