@@ -1,13 +1,14 @@
-# Paso 10B — Reranking / Passage Selection (diseño)
+# Paso 10B — Reranking / Passage Selection (diseño + ejecución)
 
-> Estado: **⏳ DISEÑO — pendiente de aprobación** (2026-08-12) — aún SIN runner.
+> Estado: **EJECUTADO** (2026-08-12) — R1 y R2 medidos, NO pasan el gate
+> (passage_relevance/leakage), nada se adopta. Runner:
+> `scripts/tests/evals/run-rerank-PC.sh`. Resultados en `EVAL-REGISTRY.md`
+> §Paso 10B + Anexo A abajo.
 > Base: EVAL con gold definitivo (hash `98a0e308…`), pasajes G1-VENTANA validados,
 > serie A→H2 completa en `EVAL-REGISTRY.md`. Generación CONGELADA: pool del Paso 10
-> con diccionario H2 (`baseline-H2-expansion-PC-2026-08-12.json`).
-> Autorizado por el usuario (2026-08-12): \"cerrar Paso 10 como experimento no
-> adoptado y diseñar Paso 10B — Reranking/Passage Selection. Sin tocar runtime.
-> Sin ampliar diccionarios. Sin otro embedding. Sin aumentar presupuesto.
-> Primero aislar ranking.\" Implementación pendiente de aprobación de esta spec.
+> con diccionario H2 (`baseline-H2-expansion-PC-2026-08-12.json`), verificado == H2.
+> Autorizado por el usuario (2026-08-12): \"implementar y ejecutar R1 y R2 exactamente
+> como están especificados… y después detenerse sin adoptar ninguna variante\".
 
 ## 1. Objetivo e hipótesis
 
@@ -288,3 +289,49 @@ pesos con un protocolo de calibración separado, fuera de este EVAL).
 - Calibración de pesos con el EVAL.
 - Integrar el reranker al runtime antes del veredicto.
 - Modificar el corpus, fixture, gold o métricas (anti-gaming).
+
+---
+
+## Anexo A — Resultados medidos (2026-08-12, EVAL 98a0e308…, instrumento v3.1)
+
+Corridas reales con pool CONGELADO de H2 (verificado == H2 por query), señales
+normalizadas [0,1] pesos 1.0. Determinismo G2: hash idéntico en 2 corridas por
+variante (R1 `8316343e…`, R2 `06037bab…`). dict_hash `b0406a3368003bea`.
+`snippet_scope: passage`.
+
+| Estrategia | Recall | pRel | cRel(file) | Leakage | Tokens | gold_containment |
+|---|---:|---:|---:|---:|---:|---:|
+| G1 — VENTANA | 0.417 | 0.072 | 0.214 | 0.606 | 2 569 | 0.8 |
+| H1 — DICT-MIN | 0.317 | 0.064 | 0.199 | 0.616 | 2 451 | 1.0 |
+| H2 — DICT-FULL | 0.367 | 0.064 | 0.197 | 0.621 | 2 454 | 1.0 |
+| R1 — LEX | **0.750** | 0.175 | 0.175 | **0.441** | **1 903** | **1.0** |
+| R2 — LEX+SEM | 0.700 | 0.131 | 0.131 | 0.502 | 2 169 | **1.0** |
+
+### Gate (6 criterios simultáneos) — R1 y R2 NO pasan
+
+| Criterio | Umbral | R1 | R2 |
+|---|---|---:|---:|
+| search_recall | > 0.100 | 0.750 ✅ (récord serie) | 0.700 ✅ |
+| passage_relevance | ≥ 0.600 | 0.175 ❌ | 0.131 ❌ |
+| cross_domain_leakage | ≤ 0.267 | 0.441 ❌ | 0.502 ❌ |
+| token_cost | ≤ ~10.4k | 1 903 ✅ | 2 169 ✅ |
+| gold_containment | ≥ 0.80 | 1.0 ✅ | 1.0 ✅ |
+| baseline_regression | ≤ 0.167 | 0.167 ✅ | 0.083 ✅ |
+
+### gap_to_top10 y ablación
+
+- **R1: 4/6** (Q01 ×2 a rank 2, Q10 ×2 a rank 1) · R2: 2/6 (solo Q10 ×2, rank 9).
+  Q03 `gh pr create` a rank 12 (R1); Q05 `useState` a rank 42.
+- **Ablación**: `x_overlap` es la señal crítica (sin ella gap 0/6); `curated` aporta
+  2/6; `q_overlap` estorba (5/6 sin ella); **`r2_no_sem` (4/6) > `r2_full` (2/6)** —
+  el embedding como señal de ranking empeora la selección.
+- Q10 perfecto (rank 1), Q01 rank 2, Q08 `picom` gold en System.md sube (R1 0.5,
+  R2 1.0), Q06 cae en R1 (FF_SEEN 0.0, regresión de aguja).
+
+### Conclusión
+
+R1/R2 no adoptados (falta una capa quality-aware para pRel/leakage — Caso 3).
+Demostrado: con el MISMO pool y solo el orden, sRec 0.367 → 0.750 (2.0×), gap
+0/6 → 4/6, leakage 0.621 → 0.441. **Buffy ya tiene la evidencia; el problema era
+ordenarla.** La señal `x_overlap` (expansión) es la pieza clave; el embedding no
+aporta como señal de ranking. Runtime congelado; nada se adopta.
