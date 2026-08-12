@@ -1,9 +1,31 @@
-# 🧠 SESION — Buffy opencode (2026-08-11 · Fase 1 medida + Fase 2 diagnóstica aprobada + Fase 3 spec v2 + Pasos 1-6 del EVAL PC + cierre)
+# 🧠 SESION — Buffy opencode (2026-08-12 · EVAL PC Fase 3 — Pasos 7→10B ejecutados y cerrados: Semantic ❌ · Hybrid ❌ · Passages ✅hipótesis · Expansion ✅gap · Rerank R1 récord 0.750 → cuello de botella = ranking)
 
-> Contexto de lo implementado durante esta sesión. Corrida en **opencode** (teléfono).
-> ⚠️ La sesión se cortó antes del cierre protocolario; el cierre se completó en la sesión siguiente (mismo día).
+> Contexto de lo implementado durante esta sesión. Corrida en **opencode** (PC).
+> Compactación 2026-08-12: entrada de hoy + handoff; sesiones 2026-08-10 y anteriores archivadas.
 
 ---
+
+## 🔎 EVAL PC — Pasos 7→10B (Fase 3 · runner experimentales · runtime congelado)
+
+### Pedido del usuario
+Aprobar/implementar/medir los experimentos de Fase 3 del EVAL PC uno a uno, con gates pre-fijados, determinismo G2 y sin tocar runtime; detenerse tras cada medición.
+
+### Lo hecho (serie completa A→R2 en `scripts/tests/evals/EVAL-REGISTRY.md`)
+1. **Paso 7 — Semantic D** (`run-semantic-PC.sh` + `bge-m3` vía Ollama): D = 0.200/0.192/0.669/48k. **Descartado**: el embedding aporta capacidad de recuperación que el léxico no tiene (Q06 resuelta por primera vez) pero sin precisión de buscador final; Q03/Q08 siguen sin resolver.
+2. **Paso 8 — Hybrid bounded** (`run-hybrid-PC.sh`, pool L∪S, RRF y POOL): E/F ≈ 0.200/0.185/0.605/~10k. **Descartado**: redujo 4.8× el coste de D pero no recuperó calidad de contexto; G-H0 demostró que Q03/Q08 ni siquiera entraban al pool (fallo de generación, no de fusión).
+3. **Paso 9 — Passage retrieval** (`run-passage-PC.sh`, G1-VENTANA ±4 / G2-SECCIÓN): G1 = 0.417/0.072/0.606/2.6k/0.8 · G2 = 0.333/0.054/0.606/3.4k/0.7. **Gate ❌ pero hipótesis ✅**: archivo completo (Q04/Q06 = 14.4k tok) → pasajes (310-505 tok) = reducción 28-46×. Dedup corregido de (path) a (path,rango). Problema restante: selección del pasaje correcto (Q08 llega al pool/top-10 pero no el gold; Q03 out_of_pool).
+4. **Paso 10 — Query expansion** (`run-expansion-PC.sh`, rama X aditiva H1-DICT-MIN/H2-DICT-FULL congelados con hash): H1 = 0.317/0.064/0.616/2.45k/gap 5/6 · H2 = 0.367/0.064/0.621/2.45k/gap 6/6. **Caso D confirmado**: candidate gap CERRADO (Q03 `gh pr create` entra al pool vía X `push`/`create` — diccionario genérico) pero todas las agujas quedan `in_pool_ranked_out` rank 50-132 → generación resuelta, selección rota. Regresión 9/12 (pool 1071-1364 hits X inunda el RRF). **H1/H2 no adoptados.**
+5. **Paso 10B — Reranking** (`run-rerank-PC.sh`, pool H2 CONGELADO y verificado == H2, señales normalizadas [0,1] pesos 1.0, `curated` estructural sin gold, ablación obligatoria): **R1-LEX = 0.750** (récord serie, 2.0× sobre H2) / pRel 0.175 / leak 0.441 / 1 903 tok / gap_to_top10 4/6 / regresión 0.167. R2-LEX+SEM = 0.700 / 0.131 / 0.502 / 2 169 / gap 2/6 / 0.083. **El cuello de botella ERA el ranking** (mismo pool, solo cambió el orden). Ablación: `x_overlap` = señal crítica (sin ella gap 0/6); `curated` aporta 2/6; `q_overlap` crudo ESTORBA (r1_no_q_overlap 5/6); el embedding empeora incluso como señal subordinada (r2_no_sem 4/6 > r2_full 2/6). **R1/R2 no adoptados** (fallan pRel/leakage → falta capa quality-aware).
+
+### Veredicto y estado
+- Serie: A 0.000/0.533/0.267/5.2k · G1 0.417 · H2 0.367 · **R1 0.750**. Ninguna variante pasa el gate completo. Fase 3 sigue abierta.
+- **Mapa de capas**: candidate generation ✅ (expansion 6/6 techo) · passage granularity ✅ (28-46×) · context-size ✅ · **ranking/selection 🔴 = cuello de botella actual**.
+- Commits: `8677347` (Paso 8) · `7595428` (Paso 9 cerrado + diseño 10) · `0aaa46f` (Paso 10 ejecutado) · `a778080` (Paso 10 cerrado + diseño 10B) · `18df679` (Paso 10B ejecutado).
+- Runtime intacto (`buffy-search.sh`/`buffy-router.sh` intactos), EVAL congelado `98a0e308…`, determinismo G2 OK en todas las variantes.
+
+### ⏳ Pendientes
+- **Diseñar el Paso 11 — reranking quality-aware / passage selection** (próximo experimento, sin implementar todavía): la evidencia de R1/R2 (pRel 0.175/0.131, leak 0.441/0.502) indica que falta una capa que seleccione por calidad de evidencia, no solo por similitud; Q03 llegó a rank 12 (casi completa la cadena expansion→candidate→rerank→passage→context).
+- Handoff completo en `/tmp/handoff-buffy-2026-08-12.md`.
 
 ## 🔬 Fases 1-2-3 del benchmark realista (buffy-context)
 
@@ -87,218 +109,6 @@ Aprobar/avanzar las fases del benchmark realista contra el hallazgo `search_reca
 # 🧠 SESION — Buffy opencode (2026-08-10 · revisión: sync sin ruido git + pendientes router multi-dominio)
 
 > Contexto de lo implementado durante esta sesión. Corrida en **opencode** (teléfono).
-
----
-
-## 🔁 Corrección post-revisión: sync sin ruido git (punto A)
-
-### La revisión señaló
-"Versionas MEMORY/USER pero también `.sync-state` que describe quién sincronizó qué → commits adicionales de estado. Vigilaría que el mecanismo no genere ruido git."
-
-### Lo corregido
-1. **`.sync-state` movido fuera del repo** → ahora vive en `$MEM_DIR/.sync-state` (perfil-local, por dispositivo). El repo **solo contiene contenido**; el estado es conocimiento local de cada máquina y nunca viaja.
-2. `pull` ya no commitea nada. `push` commitea solo los archivos de contenido (add explícito, no el directorio).
-3. `.sync-state` versionado en commits anteriores eliminado con `git rm --cached`.
-4. Tests: +2 checks — "el repo NO versiona .sync-state" + "cada host tiene su estado local". **Suite: 241 OK / 0 FAIL (236 functional + 5 meta) · 225 --quick (220)**.
-5. Bug propio de paso en `do_pull`: última línea devolvía exit 1 tras pull exitoso → `|| true`.
-
-### Pendientes de la misma revisión (B y C — router/benchmark)
-- **B. Multi-dominio** (consulta → 2-3 dominios): medir `multi_domain_recall` / `multi_domain_precision` / `cross_domain_leakage`.
-- **C. Benchmark realista**: 500 hechos, 5-10 dominios, consultas reales sin keywords artificiales; medir router precision/recall, search recall, context relevance, token cost, latency, leakage. Disciplina: benchmark primero.
-
----
-
-# 🧠 SESION — Buffy opencode (2026-08-10 · "cerrar día" automatizado con buffy-close-day.sh)
-
-> Contexto de lo implementado durante esta sesión. Corrida en **opencode** (teléfono).
-
----
-
-## 🌙 "Cerrar día" automatizado — `buffy-close-day.sh`
-
-### Pedido del usuario
-"En el PC creé una nueva tarea y es cuando le diga 'cerrar día', cierra la sesión de memoria con todo lo hecho en esta. ¿Si lo implementamos acá o ya con el script de buffy-memory-sync ya se hace eso?"
-
-**Respuesta:** el sync cubre SOLO la memoria curada; el cierre completo era protocolo manual. Implementado el script que une ambas cosas.
-
-### Lo implementado
-`scripts/buffy-close-day.sh` (NUEVO) — protocolo de cierre en 4 pasos:
-1. `buffy-memory.sh sync push` → la memoria curada viaja al repo/GitHub (si conflictúa con el otro dispositivo → **aborta con guía**, nunca pisa).
-2. Regenera SNAPSHOT (buffy-context.sh, queda local, no se versiona).
-3. `buffy-doctor.sh --quick` → valida el cierre; aborta si hay errores.
-4. Commit (`docs(sesion): cerrar día — <fecha> [· mensaje]`) + push, y por cada `--extra-repo RUTA` también.
-
-Flags: `--message "texto"` · `--no-push` · `--skip-doctor` (solo pruebas) · `--extra-repo RUTA` · `--repo RUTA`.
-
-Tests en `scripts/tests/test-close-day.sh` (3 suites, +10 checks). **Suite: 239 OK / 0 FAIL (full, 234 functional + 5 meta) · 223 OK / 0 FAIL (--quick)**.
-
-**Lección de bash:** `trap '...' RETURN` dentro de una función setup se dispara al retornar ESA función (borra el sandbox antes de usarlo) — el trap va en cada test, no en el setup.
-
-### ⏳ Pendiente para el PC
-Tras `git pull`: `buffy-memory.sh sync pull` UNA vez (adopta la memoria del teléfono) → desde ahí "cerrar día" en el PC = escribir el contexto + `buffy-close-day.sh`.
-
----
-
-# 🧠 SESION — Buffy opencode (2026-08-10 · P0 completado: memoria curada sincronizada entre PC y teléfono)
-
-> Contexto de lo implementado durante esta sesión. Corrida en **opencode** (teléfono).
-
----
-
-## 🔗 P0 completado: `buffy-memory.sh sync` — puente PC ↔ teléfono
-
-### Pedido del usuario
-"En el PC tenemos un modo buffy que hace referencia a lo que construimos en el repo… quizás nos falte ese puente para unificar las sesiones de PC y teléfono. Queremos llegar a la potencia de Hermes."
-
-**Diagnóstico entregado:** el puente base ya existe (repo git: SESION/CONTINUE/PROJECTS/Knowledge/skills — validado en vivo hoy). El hueco real es que la **memoria curada (`~/.buffy/memories/`) es perfil-local y no viaja** — el PC arranca con memoria vacía. Hermes tiene UNA memoria que acompaña al agente; hoy cada dispositivo tiene la suya.
-
-### Lo implementado (en `buffy-context`)
-1. **`scripts/lib/buffy-memory-sync.sh` (NUEVO)** — `sync status|push|pull [--force]`:
-   - Las copias versionadas viven en `<repo>/ai-context/memories/` (MEMORY.md + USER.md) y viajan por git.
-   - **Estado per-host** en `ai-context/memories/.sync-state`: cada dispositivo registra el último sha que sincronizó → el guard de drift es fiable aunque el otro lado escriba (un push del PC no borra la marca del teléfono).
-   - `push`: git pull (ff-only) → comparo contra el repo actual → conflicto si el repo cambió desde mi último sync y no conozco el cambio · `--force` resuelve.
-   - `pull`: conflicto si tengo cambios locales sin sincronizar · `--force` sobrescribe. Primer sync sin marca propia y contenidos distintos → aviso preventivo (nunca piso sin decisión).
-   - Git ops acotadas al repo que contiene SYNC_DIR (nunca toca archivos fuera de `ai-context/memories/`).
-2. **`scripts/buffy-memory.sh`** — comando `sync` añadido (rutas `BUFFY_SYNC_DIR`/`BUFFY_SYNC_HOST` configurables).
-3. **Tests** — 4 suites nuevas en `test-memory.sh` (13 checks): push→pull entre 2 hosts, conflicto push (PC escribió), conflicto pull (local cambió), primer sync preventivo. Verificados con sandbox + escenario con git real (bare origin + 2 clones).
-4. **Memoria real del teléfono versionada** — primer `sync push` desde `telefono-mi10` (commit `9367a43`).
-5. **README** — conteos actualizados: **229 full (224 functional + 5 meta) / 213 --quick (208 functional)**.
-
-### Verificación
-Suite completa: **229 OK / 0 FAIL** · --quick: **213 OK / 0 FAIL** (pasó el pre-commit).
-
-### ⏳ Pendiente
-- En el PC: una vez hecho `git pull`, correr `buffy-memory.sh sync pull` para adoptar la memoria del teléfono → luego la memoria es compartida. Documentar en el AGENTS.md del PC.
-- P1: retorno del aprendizaje (SESION-archive → conocimiento activo). P2: concurrencia 3+ escritores sobre MEMORY.md.
-
----
-
-# 🧠 SESION — Buffy opencode (2026-08-10 · borrado de etiquetas implementado en organiza_gmail_V3)
-
-> Contexto de lo implementado durante esta sesión. Corrida en **opencode** (teléfono).
-
----
-
-## 🗑️ Borrado de etiquetas — implementado en Gmail Organizer V3
-
-### Pedido del usuario
-Retomando la sesión cortada: "borra las etiquetas" → la pregunta abierta era si el script podía **borrar las etiquetas que crea** (v2 quedó obsoleta → etiquetas huérfanas; desde el móvil no se borraban en script.google.com).
-
-### Lo implementado (`~/gscript-audit/organiza_gmail_V3/`, pusheado a la web con clasp)
-1. **`cleanupLabels(options)` en `labels.js`** — limpieza one-shot:
-   - Borra etiquetas **gestionadas** (`CONFIG.LABELS`) cuando están vacías.
-   - Borra etiquetas **huérfanas vacías** (restos de v2/limpiezas previas).
-   - **NUNCA** borra etiquetas del sistema (INBOX, SPAM, TRASH, DRAFT, SENT, IMPORTANT, STARRED, UNREAD, CHAT, Scheduled) ni **manuales con hilos**.
-   - `dryRun: true` solo informa · `force: true` extiende a gestionadas con hilos (los correos NO se borran, solo la etiqueta).
-   - Protección de cuota: `Utilities.sleep(500)` entre borrados.
-2. **`applyCleanupOnce()` en `labels.js`** — guard one-shot integrado a `main()`: corre **una sola vez** (flag `cleanupLabelsDone` en ScriptProperties) al inicio de la primera corrida, antes de `processInbox()`. Así la limpieza la ejecuta el **trigger de 10 min existente** sin intervención del usuario.
-3. **`main.js`** — llamada a `applyCleanupOnce()` envuelta en try/catch (si falla la limpieza, el procesamiento continúa).
-
-### Ejecución
-- La ejecución remota vía Apps Script API **no fue posible**: el token OAuth de clasp no tiene el scope de ejecución (`script.external_request`) → `404 NOT_FOUND` (síntoma típico). Se intentó con deployment creado (`@4`) y sin él.
-- La limpieza quedó **auto-programada**: corre en la próxima corrida del trigger `main` (10 min) o `manualRun()`. Alternativa manual: abrir el proyecto en `script.google.com` → función `cleanupLabels` → Run (o `{dryRun:true}` primero).
-
-### Lecciones
-- **El token de clasp NO sirve para ejecutar funciones** — solo para push/pull de código. Para invocar `scripts.run` se necesitaría OAuth re-hecho con scope `script.external_request` + los scopes de Gmail, lo cual requiere navegador.
-- Solución sin fricción: acoplar la acción al ciclo de vida del script (arquitectura trigger + guard one-shot) en lugar de pelear con OAuth desde Termux.
-
----
-
-## 🔍 Auditoría de Apps Scripts con Google Studio API — estado y pendientes
-
-### Lo que se hizo
-1. **Auditoría vía API de Google Studio** (API key de Google AI Studio SK-ws-...) de los proyectos de Apps Script: `organiza_gmail_V3`, `copy_organiza_gmail`, `ordenar_drive_pro`, `sin_titulo_1` — clones con `clasp` en **`~/gscript-audit/`** (teléfono; el PC los tiene en `~/proyectos/gmail-scripts` y `~/proyectos/gmail-scripts-otro`).
-2. **`organiza_gmail_V3` (Gmail Organizer)**: versión local con mejoras de rate limiting/reanudación — `main.js` (entrada con rate limiting, `scheduleResume`, `scheduleDelayedRetry`, `setupTriggersIfMissing`, `resetDailyQuota`, triggers 10 min + reset diario 00:05 + resumen 22:00), `gmail.js` (snapshot único `search()`, reintentos con `withRetry`, control de cuota/runtime). Diferente de `copy_organiza_gmail` (= versión original bajada de la web).
-3. **Discusión de etiquetas:** el usuario preguntó si el script, **así como crea etiquetas automáticamente, puede borrarlas** (v2 quedó obsoleta; fue reemplazada por v3 y dejó etiquetas huérfanas; desde el móvil no se pueden borrar en `script.google.com`). **Quedó como pregunta abierta** — no se implementó borrado automático de etiquetas (ni en Gmail Organizer ni en Drive Organizer).
-4. El usuario haría la revisión visual desde el PC.
-
-### ⚠️ Sesión cortada (18:51-19:02)
-- **"de esto no esta enterada la version de pc, lo dejamos al dia..."** → pendiente: registrar esta sesión en buffy-context + push para que el PC quede al día (ejecutado en la sesión siguiente: commit + push).
-- **"igual hice cambios en el pc, ve si dejo algo en nuestro repo"** → verificado: **origin/main = local = `4850e91`**, el PC NO dejó nada nuevo pusheado.
-
-### ⏳ Pendientes
-- Decidir si implementar **borrado de etiquetas huérfanas** en `organiza_gmail_V3` (función one-shot tipo `cleanup_tmp.js` o `deleteEmptyLabels`).
-- Revisar `sin_titulo_1` (proyecto sin nombre, quedó identificado como tal).
-
----
-
-## 🛒 data_car — P1 completado: precios de la IA asignados a la lista + total CLP
-
-### Pedido del usuario
-Pendiente P1 del CONTINUE (heredado de la sesión 2026-08-08): "elegir pack → agregar a compra → compartir con IA → pegar respuesta → precios asignados + total". `parseAIResponse` y `formatCLP` ya existían en `src/lib/aiShare.ts`; faltaba la UI y la lógica en el panel de compra.
-
-### Lo implementado (`src/components/MaintenancePacks.tsx`, +118 líneas)
-1. **Sección "💸 Precios desde la IA"** en el panel Mi compra: textarea para pegar la respuesta JSON de la IA + botón "Asignar precios" + contador `N/M con precio` + fila Total (CLP).
-2. **`handleAssignPrices`**: `parseAIResponse(text)` → si no hay `repuestos` → toast de error; si parsea → por cada item de la shopping list busca su precio con `findPrice()` y lo guarda como `price` (unitario) en el item → toast con total o con faltantes.
-3. **`findPrice` + `normalizeName`**: match tolerante — minúsculas, sin acentos (NFD), sin contenido entre paréntesis (refs tipo "UJ-1797"), solo alfanumérico, `includes` bidireccional ("Bujías NGK" ↔ "Bujías"). La IA puede variar el nombre (agregar "5W/40", "semisintético") y el match sigue funcionando.
-4. **`computeTotal`**: suma `precio × cantidad` de cada item con precio → muestra con `formatCLP`. Los precios viven en el item (`price?: number`) → se persisten en `mg350_shopping_list` → sobreviven recarga.
-5. Precio unitario visible por item en la lista (`— $18.490` en verde).
-
-### Verificación (Playwright sobre `vite preview`, hash build `index-D4lIbUUa.js`)
-| Caso | Resultado |
-|---|---|
-| JSON realista (Aceite 18.490 ×4,5 + Filtro 6.990) | Toast "total **$90.195**" ✓ (83.205 + 6.990) |
-| Items con precio en lista + "2/2 con precio" + fila Total | ✓ |
-| Caso límite: nombres parciales ("Aceite de Motor 5W/40 semisintético", "Filtro de aceite UJ-1797") | Match ✓ → total **$75.000** |
-| JSON inválido ("esto no es json", `{"repuestos":[]}`) | Toast de error, 0 errores en consola, no rompe |
-| Recarga (reload) | Total y precios persisten (localStorage) |
-
-Typecheck (`npx tsc --noEmit`) y build (`npm run build`) OK.
-
-### Lección
-- La transformación **Python incremental** vuelve a ser el método que funciona sobre `MaintenancePacks.tsx` (confirmado por tercera vez; las ediciones con `edit` sobre este archivo no persisten). Ver sesión 2026-08-08.
-
-### ⏳ Pendiente
-- **Commit + push del cambio en data_car** (aún sin commitear).
-
----
-
-# 🧠 SESION — Buffy opencode (2026-08-10 · P0 benchmark context-selection + congelamiento levantado)
-
-> Contexto de lo implementado durante esta sesión. Corrida en **opencode**.
-
----
-
-## 📊 P0 completado: bench-context-selection.sh — el benchmark que desbloquea el congelamiento
-
-### Pedido del usuario
-"vamos con los pendientes" + activar modo autónomo → el pendiente P0 del CONTINUE era `bench-context-selection.sh`: el benchmark pendiente que justificaba el próximo cambio en el motor de selección de contexto (congelamiento vigente: benchmark primero, feature después).
-
-### Contexto que lo motivaba
-El benchmark anterior (`bench-scale.sh --adversarial`) había demostrado que FTS5 puro NO distingue la aguja cuando los irrelevantes comparten el vocabulario de la query (`scrcpy`/`ZTE` en contextos distintos) — recall 1/2. El CONTINUE decía: "la capa que lo resuelve es el router (context selection), que este benchmark no ejercita".
-
-### Lo implementado
-1. **`scripts/tests/bench-context-selection.sh` (NUEVO, ~200 líneas)** — ejercita el pipeline COMPLETO:
-   - Sandbox con repo simulado: `Knowledge/` por dominio (Android/scrcpy.md con la AGUJA, Android/ADB.md, Linux/System.md, FreeFire/GameOptimization.md, React/React.md) + manifests de skills mínimos (android-adb, scrcpy-freefire) para que el router los resuelva.
-   - Tarea real: **"el teléfono no aparece en scrcpy"**.
-   - Etapa 1: `buffy-router.sh --json` → categorías + knowledge files elegidos.
-   - Etapa 2: `buffy-search.sh` FTS5 real sobre el índice del sandbox.
-   - Métricas: `domain_precision` (¿knowledge del dominio correcto?), `domain_recall` (¿incluyó scrcpy.md + ADB.md?), `spurious_categories`, `search_recall`/`search_leaked` (límite FTS5), `context_chars`/`tokens`/`window_utilization`, `pipeline_healthy`.
-   - Flags: `--count`, `--adversarial`, `--json`, `--quick`. Easy = gate (exit 0 si pipeline sano); adversarial = medición (exit 0 si corrió).
-2. **Bug propio encontrado al validar:** el contador de `search_leaked` usaba `grep -cE "^(Nota Linux...)"` (anclado a inicio de línea), pero los hits de FTS5 empiezan con el path (`Knowledge/Linux/System.md:1: Nota Linux...`) → medía 0 cuando en realidad FTS5 estaba 100% contaminado. Corregido a grep sin `^`. Lección: los detectores deben considerar que el path antecede al contenido en la salida del search.
-3. **`scripts/tests/test-context-selection.sh` (NUEVO)** — 2 tests en la suite: `test_context_selection` (easy: exit 0 + JSON healthy + precision 1.0 + 0 spurious) y `test_context_selection_adversarial` (medición: exit 0 + pipeline_healthy true). Registrado en `run-tests.sh`.
-4. **README** — sección "Benchmark de selección de contexto con router (P0 — desbloquea el congelamiento)" + conteos actualizados: **209 full (204 functional + 5 meta) / 193 --quick (188 functional)** + árbol de tests (15 test_*.sh + 2 benchmarks).
-
-### Resultado medido (evidencia)
-| Métrica | Easy | Adversarial |
-|---|---|---|
-| categorías router | Android | Android |
-| spurious | 0 | 0 |
-| domain_precision | 1.00 | 1.00 |
-| domain_recall | 2/2 | 2/2 |
-| search_recall (FTS5 puro) | 2/2 | **0/2** |
-| search_leaked | 0 | **10/10** |
-| pipeline_healthy | true | **true** |
-
-La tesis quedó demostrada: cuando FTS5 puro se contamina por completo (adversarial), el **router resuelve** cargando el archivo del dominio correcto → `pipeline_healthy` se mantiene. Esa es la evidencia que el congelamiento pedía.
-
-### Verificación
-- `run-tests.sh --quick`: **193 OK / 0 FAIL** · `run-tests.sh` (full): **209 OK / 0 FAIL**.
-- Benchmark standalone: exit 0 en easy y adversarial.
-
-### Lecciones
-- **Un benchmark también tiene bugs** — el propio `search_leaked` medía mal (path antecede al contenido). El paso de validación contra el resultado real (¿realmente hay 0 leaked?) destapó el error.
-- **El congelamiento cumplió su función:** forzó a medir el pipeline antes de tocar el motor, y la medición confirmó la hipótesis (router resuelve). Ahora cualquier cambio futuro tiene baseline.
 
 ---
 

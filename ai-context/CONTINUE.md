@@ -1,7 +1,29 @@
 # 🔄 CONTINUE — Handoff entre sesiones
 
 > ⚡ **PRÓXIMA SESIÓN: LEE ESTO PRIMERO**
-> Generado: 2026-08-11 (opencode — **Fase 3 · Pasos 1-2 ✅; Paso 3 CERRADO (OR no adoptado); diagnóstico ✅; Paso 4 CERRADO (C/and-norm NO adoptado); Paso 5 auditoría de gold COMPLETADA; Paso 6 COMPLETADO (fixture Q04/Q06 corregido + A/B/C regenerados v3); Paso 6b COMPLETADO (auditoría Q06 → gold definitivo, A/B/C regenerados v3.1); Paso 7 DISEÑADO (experimento semántico diagnóstico, spec lista, pendiente aprobación) — siguiente: aprobar spec Paso 7 e implementar run-semantic-PC.sh**)
+> Generado: 2026-08-12 (opencode — **Fase 3 EVAL PC: Pasos 7-10B ejecutados y CERRADOS — Semantic D ❌ (0.200/0.192/0.669/48k), Hybrid E/F ❌ (0.200/0.185/0.605/10k), Passages G1/G2 ❌ gate pero hipótesis ✅ (28-46× menos tokens), Expansion H1/H2 ❌ gate pero candidate gap 6/6 ✅ (Caso D: generación resuelta, selección rota), Rerank R1/R2 ❌ gate pero R1 = 0.750 récord serie (gap_to_top10 4/6, leak 0.441) → el cuello de botella ERA el ranking; falta capa quality-aware. Ninguna variante adoptada. — siguiente: DISEÑAR el Paso 11 (reranking/passage selection quality-aware), sin implementar todavía**)
+
+---
+
+## Resumen de la sesión (2026-08-12 — opencode, EVAL PC Pasos 7→10B ejecutados y cerrados)
+
+**Tema:** ciclo completo de experimentos de Fase 3 sobre el EVAL congelado `98a0e308…` — cada uno con spec aprobada por el usuario, gates pre-fijados, determinismo G2 (2 corridas idénticas), runner nuevo por paso y runtime congelado (`buffy-search.sh`/`buffy-router.sh` intactos).
+
+1. **Paso 7 — Semantic D** (`run-semantic-PC.sh`, Ollama + `bge-m3`, embeddings por línea, coseno): D = search_recall **0.200** · pRel 0.192 · leak 0.669 · 48k tok. **Descartado.** El embedding aporta capacidad de recuperación que el léxico no tiene (Q06 resuelta por primera vez) pero no tiene precisión de buscador final.
+2. **Paso 8 — Hybrid bounded** (`run-hybrid-PC.sh`, pool L∪S, V1-RRF y V1-POOL): E/F ≈ 0.200/0.185/0.605/~10k. **Descartado.** Redujo ~4.8× el coste de D sin recuperar calidad de contexto. **G-H0**: Q03/Q08 ni siquiera estaban en el pool → fallo de generación, no de fusión. Esto justificó el Paso 10.
+3. **Paso 9 — Passage retrieval** (`run-passage-PC.sh`, G1-VENTANA ±4 / G2-SECCIÓN): G1 = **0.417**/0.072/0.606/2.6k/0.8 · G2 = 0.333/0.054/0.606/3.4k/0.7. **Gate ❌, hipótesis ✅**: archivo completo (Q04/Q06 = 14.4k tok) → pasajes de 310-505 tok = **reducción 28-46×**. Dedup corregido `(path)` → `(path,rango)`. Resta selección del pasaje correcto (Q08 en pool/top-10 pero sin el gold; Q03 out_of_pool).
+4. **Paso 10 — Query expansion** (`run-expansion-PC.sh`, rama X aditiva, H1-DICT-MIN / H2-DICT-FULL congelados con hash): H1 = 0.317/0.064/0.616/2.45k/gap **5/6** · H2 = 0.367/0.064/0.621/2.45k/gap **6/6**. **Caso D confirmado al pie de la letra**: candidate gap CERRADO (Q03 `gh pr create` entra al pool vía X `push`/`create`, diccionario genérico; solo `useState` exigió H2) pero las 6 agujas quedan `in_pool_ranked_out` rank 50-132 → generación resuelta, selección rota. Regresión 9/12: pool de 1071-1364 hits X inunda el RRF.
+5. **Paso 10B — Reranking** (`run-rerank-PC.sh`, pool H2 CONGELADO y verificado == H2, señales normalizadas [0,1] pesos 1.0, `curated` ESTRUCTURAL sin gold, ablación obligatoria): **R1-LEX = 0.750** (récord serie, 2.0× sobre H2) · pRel 0.175 · leak 0.441 · 1 903 tok · gap_to_top10 **4/6** · baseline_regression 0.167. R2-LEX+SEM = 0.700/0.131/0.502/2 169/gap 2/6/0.083. **El cuello de botella ERA el ranking** (mismo pool, solo cambió el orden: 0.367 → 0.750). **Ablación**: `x_overlap` = señal crítica (sin ella gap 0/6); `curated` aporta 2/6; `q_overlap` crudo ESTORBA (r1_no_q_overlap 5/6 > r1_full 4/6); el embedding empeora como señal incluso subordinada (r2_no_sem 4/6 > r2_full 2/6). **R1/R2 no adoptados** — fallan pRel/leakage: falta una capa de quality-aware passage selection (el "Caso 3" del usuario).
+6. Registrado en `EVAL-REGISTRY.md` (Pasos 7, 8, 9, 10, 10B) + specs a EJECUTADO con Anexo de resultados. Commits: `8677347` (Paso 8) · `7595428` (Paso 9 + diseño 10) · `0aaa46f` (Paso 10) · `a778080` (Paso 10 cerrado + diseño 10B) · `18df679` (Paso 10B).
+
+### ⏳ Pendientes para otra sesión
+- **Diseñar el Paso 11 — reranking/passage selection quality-aware** (NO implementar todavía): evidencia de R1/R2 — pRel 0.175/0.131 y leak 0.441/0.502 — indica que falta una capa que seleccione evidencia por calidad, no solo por similitud; Q03 llegó a rank 12 (cadena expansion→candidate→rerank→passage→context casi completa); Q08 resuelta solo por R2 (ambas agujas System.md) pero R2 pierde frente a R1 en global.
+- Serie completa en `scripts/tests/evals/` (runners + baselines + specs + EVAL-REGISTRY). Handoff: `/tmp/handoff-buffy-2026-08-12.md`.
+- Suite PC: 225 OK / 5 FAIL (preexistentes, fuera de alcance).
+- En el PC: tras `git pull`, `buffy-memory.sh sync pull` UNA vez.
+- P1: retorno del aprendizaje · P2: concurrencia 3+ escritores · Opcional: `Knowledge/Tools/Buffy-Memory.md`.
+
+---
 
 > 🗝️ **Palabra de cierre acordada ("cerrar día"):** el agente escribe el contexto (SESION.md/CONTINUE.md/CHANGELOG.md, máx 5 entradas en SESION.md) y luego ejecuta **`buffy-close-day.sh`** (mensaje opcional con `--message`) — hace sync push de la memoria curada, regenera SNAPSHOT, corre doctor --quick y commit + push. Si el sync conflictúa, el cierre aborta y hay que resolver.
 
