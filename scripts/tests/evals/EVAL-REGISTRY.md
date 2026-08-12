@@ -695,6 +695,84 @@ con el índice semántico de D, los ranks de las agujas gold objetivo son:
 gold están dentro del candidate pool ANTES de atribuir el resultado a la fusión/rerank.
 Q03/Q08 fallarían G-H0 por construcción → la fusión sola no los resuelve.
 
+## 🔬 Paso 8 — EJECUTADO · E y F no pasan el gate · 2026-08-12
+
+**Autorizado por el usuario (2026-08-12):** implementar runner → ejecutar G-H0 → medir
+RRF → medir POOL → registrar → detenerse. Sin tocar `buffy-search.sh`, `buffy-router.sh`
+ni convertir ninguna estrategia en default.
+
+**Runner:** `scripts/tests/evals/run-hybrid-PC.sh` — rama L (OR top-50 de `buffy-search.sh`
++ gate co-ocurrencia ≥2 tokens, N_L=50) + rama S (índice bge-m3 de D, N_S=50) → pool
+dedup por `(path, lineno)` → fusión V1 (RRF k=60 | POOL rank⁻¹) → presupuesto 10 400
+tokens → top-10 → métricas v3.1 + G-H0 por aguja. Determinismo G2: hash idéntico en 2
+corridas por variante (E `06056504…`, F `337f4ac8…`). Instrumento v3.1, EVAL `98a0e308…`.
+
+### Resultados agregados (gold definitivo, v3.1)
+
+| Estrategia | Recall | Relevance | Leakage | Tokens avg | Tokens p95 |
+|---|---:|---:|---:|---:|---:|
+| A — AND | 0.000 | **0.533** | **0.267** | **5 197** | 40 881 |
+| B — OR | 0.050 | 0.182 | 0.694 | 45 259 | 71 538 |
+| C — AND-norm | 0.100 | 0.333 | 0.522 | 38 017 | 71 163 |
+| D — Semantic | 0.200 | 0.192 | 0.669 | 47 980 | 77 651 |
+| **E — Hybrid-RRF** | **0.200** | 0.185 | 0.605 | **9 951** | **10 379** |
+| **F — Hybrid-POOL** | **0.200** | 0.179 | 0.612 | **10 039** | **10 384** |
+
+### Gate (pre-fijado, 4 criterios simultáneos) — E y F
+
+| Criterio | Umbral | E | F | ¿Pasa? |
+|---|---|---:|---:|---|
+| search_recall | > 0.100 | 0.200 | 0.200 | ✅ |
+| context_relevance | ≥ 0.600 | 0.185 | 0.179 | ❌ |
+| cross_domain_leakage | ≤ 0.267 | 0.605 | 0.612 | ❌ |
+| token_cost | ≤ ~10.4k | 9 951 | 10 039 | ✅ |
+
+→ **E y F NO pasan el gate** (relevance y leakage). La fusión bounded controla el
+**coste** (tokens 9.9-10.0k, ~4.8× menos que D, dentro del gate) pero **hereda el
+ruido de la rama semántica** en el ctx (leakage 0.6, relevance 0.18). Veredicto:
+**la fusión naive de candidatos acotada no se adopta** — misma conclusión que D/OR.
+
+### G-H0 (diagnóstico por aguja, idéntico en E y F — mismo pool)
+
+```text
+in_pool_top10=5 · in_pool_ranked_out=3 · in_pool_budget_cut=1 · out_of_pool=11 · not_in_corpus=0
+```
+
+| Query | Aguja | G-H0 | Interpretación |
+|---|---|---|---|
+| Q03 | git push origin / gh pr create | `out_of_pool` ×2 | **candidate gap confirmado**: la fusión NO puede resolver Q03 (ni L ni S generan la aguja) |
+| Q04 | xset -dpms / xset s off | `in_pool_top10` ×2 | recuperada (sRec=1.0) — pero cRel=0.0 (ver hallazgo de presupuesto) |
+| Q06 | FF_SEEN | `in_pool_top10` | **capacidad semántica conservada**: la fusión mantiene lo que D logró |
+| Q08 | picom | `in_pool_top10` (other_file_match) | **la rama L genera la aguja** (antes rank 2553 semántico) pero el gold file (`Knowledge/Linux/System.md`) no queda en el top-10 → fallo del rerank |
+| Q08 | P_TERM_OPACITY | `in_pool_budget_cut` | disponible en pool pero cortado por presupuesto |
+| Q01/Q05/Q07/Q09/Q10 | resto | `out_of_pool` | candidate gap (ninguna rama las genera) |
+
+### Hallazgos
+
+1. **El presupuesto es menor que el gold canónico**: el gold de Q04/Q06
+   (`ai-context/CHANGELOG.md`, 57.5k chars ≈ 14.4k tokens) no cabe en el presupuesto
+   de 10.4k tokens → el archivo completo entra en el ctx SOLO hasta agotar presupuesto
+   → cRel=0.0 con sRec=1.0 (la aguja está en el top-10 pero el archivo gold no entra al
+   ctx). Riesgo 3 del diseño, materializado y medido.
+2. **G-H0 separa correctamente candidate gap vs fallo de rerank**: Q03 = candidate
+   gap (nunca generada), Q08 picom = generada pero rankeada fuera (el pool la tiene,
+   el top-10 no). La atribución diagnóstica funciona.
+3. **La rama L aporta algo que la semántica no tiene**: Q08 `picom` entra al pool vía
+   OR léxico (D ni lo generaba). Pero el top-10 fusionado la pierde → el rerank no
+   compensa el ranking del pool.
+4. **Q03/Q05/Q07/Q09/Q10 siguen siendo candidate gaps** — la fusión no crea
+   capacidad de generación, solo reordena lo generado.
+
+### Conclusión
+
+La hipótesis central (candidate generation ≠ final retrieval) se confirma **parcialmente**:
+la fusión bounded produce un top-10 final con coste controlado (~10k tokens) y conserva
+la recuperación de Q04/Q06, PERO no controla la calidad del ctx (leakage 0.6). El límite
+no es el coste ni la generación: es el **ctx final por archivo completo** + el **rerank**
+que no puede separar agujas gold de ruido. La evidencia apunta a que el siguiente
+nivel es **query expansion (Q03/Q08)** y/o **granularidad del ctx distinta** (pasajes,
+no archivos enteros) — fuera del alcance de este paso. Runtime sigue congelado.
+
 ### Estado de la suite en el perfil PC (2026-08-11)
 
 > ⚠️ **La suite del perfil PC no está actualmente 100% verde** por incompatibilidades

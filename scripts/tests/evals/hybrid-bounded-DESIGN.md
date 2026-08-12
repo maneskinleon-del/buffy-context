@@ -1,10 +1,10 @@
-# Paso 8 — Hybrid bounded candidate retrieval (diseño)
+# Paso 8 — Hybrid bounded candidate retrieval (diseño + ejecución)
 
-> Estado: **DISEÑO** (2026-08-12) — pendiente de aprobación del usuario. NO implementar
-> hasta fijar candidatos, presupuesto, fórmula de fusión/reranking y gates.
+> Estado: **EJECUTADO** (2026-08-12) — E y F medidos, NO pasan el gate, nada se adopta.
+> Runner: `scripts/tests/evals/run-hybrid-PC.sh`. Resultados en `EVAL-REGISTRY.md` §Paso 8.
 > Base: EVAL con gold definitivo (hash `98a0e308…`), baselines A/B/C/D medidos.
-> Autorizado por el usuario (2026-08-12): "Paso 7 cerrado → D descartado → runtime
-> congelado → siguiente paso: diseñar el experimento Hybrid bounded, sin implementarlo".
+> Autorizado por el usuario (2026-08-12): "implementar runner → ejecutar G-H0 → medir
+> RRF → medir POOL → registrar resultados → detenerse" (sin tocar runtime ni defaults).
 
 ## 1. Objetivo e hipótesis
 
@@ -274,3 +274,52 @@ cambio al runtime) es decisión del usuario, con la evidencia sobre la mesa.
 - Cambiar el corpus, fixture, gold o métricas (anti-gaming).
 - Calibración de N_L/N_S/k/budget con el EVAL.
 - Integrar Hybrid al runtime antes del veredicto.
+
+---
+
+## Anexo A — Resultados medidos (2026-08-12, EVAL 98a0e308…, instrumento v3.1)
+
+Corridas reales con el índice bge-m3 de D (cache hit) y las ramas reales de
+`buffy-search.sh`/`buffy-router.sh` como generadores/control. Determinismo G2:
+hash idéntico en 2 corridas por variante (E `06056504…`, F `337f4ac8…`).
+
+| Estrategia | Recall | Relevance | Leakage | Tokens avg | Tokens p95 |
+|---|---:|---:|---:|---:|---:|
+| A — AND | 0.000 | **0.533** | **0.267** | **5 197** | 40 881 |
+| B — OR | 0.050 | 0.182 | 0.694 | 45 259 | 71 538 |
+| C — AND-norm | 0.100 | 0.333 | 0.522 | 38 017 | 71 163 |
+| D — Semantic | 0.200 | 0.192 | 0.669 | 47 980 | 77 651 |
+| E — Hybrid-RRF | **0.200** | 0.185 | 0.605 | **9 951** | **10 379** |
+| F — Hybrid-POOL | **0.200** | 0.179 | 0.612 | **10 039** | **10 384** |
+
+### Gate (4 criterios simultáneos) — E y F NO pasan
+
+| Criterio | Umbral | E | F |
+|---|---|---:|---:|
+| search_recall | > 0.100 | 0.200 ✅ | 0.200 ✅ |
+| context_relevance | ≥ 0.600 | 0.185 ❌ | 0.179 ❌ |
+| cross_domain_leakage | ≤ 0.267 | 0.605 ❌ | 0.612 ❌ |
+| token_cost | ≤ ~10.4k | 9 951 ✅ | 10 039 ✅ |
+
+### G-H0 (por aguja, idéntico en E y F)
+
+`in_pool_top10=5 · in_pool_ranked_out=3 · in_pool_budget_cut=1 · out_of_pool=11 · not_in_corpus=0`
+
+- **Q03** (push + PR): ambas agujas `out_of_pool` → **candidate gap confirmado** — la
+  fusión no puede resolverlo por construcción.
+- **Q04/Q06**: `in_pool_top10`, sRec=1.0 — capacidad semántica conservada. Pero cRel=0.0:
+  el gold canónico `ai-context/CHANGELOG.md` (57.5k chars ≈ 14.4k tokens) **no cabe en
+  el presupuesto de 10.4k tokens** → el ctx no lo incluye (Riesgo 3 materializado).
+- **Q08**: `picom` `in_pool_top10` vía rama L (D ni lo generaba — rank 2553), pero el
+  gold file queda fuera del top-10 → `other_file_match`; `P_TERM_OPACITY` cortado por
+  presupuesto. La fusión genera la aguja pero el rerank no la sube.
+
+### Conclusión del experimento
+
+La fusión bounded **controla el coste** (tokens 9.9-10.0k, dentro del gate, ~4.8× menos
+que D) y **conserva la recuperación de Q04/Q06**, pero **no controla la calidad del ctx**
+(leakage 0.605/0.612, relevance 0.185/0.179 — mismas fallas que D/OR). El límite está en
+dos lugares medibles: (1) el ctx por archivo completo con golds grandes que no caben en
+el presupuesto, y (2) el rerank que no separa agujas gold del ruido del pool. Evidencia
+para el siguiente nivel: **query expansion** (Q03/Q08 candidate gap) y **granularidad de
+ctx por pasajes** en lugar de archivos enteros. Runtime sigue congelado; nada se adopta.
