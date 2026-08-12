@@ -21,7 +21,7 @@ buffy-context ahora cubre Memoria + MCP + Plugins, client-agnostic (FreeBuff / O
 ### Fix posterior — el doctor no detectaba el drift de skills
 - **Causa raíz**: `buffy-doctor.sh` compara el README contra `$REPO_DIR/.agents/skills` (copia del repo = **23 skills**), no contra el entorno real `~/.agents/skills` (= **43 skills**). Como el README decía "23", el doctor veía CONSISTENTE. El drift real era la copia del repo desfasada, no el número del README.
 - **Parche** (`scripts/buffy-doctor.sh`, sección Skills): check #4 compara el conteo declarado en README vs `~/.agents/skills` (hubiera pescado el "23 vs 43"); check #5 avisa `REPO_SKILLS_STALE` cuando la copia del repo (23) está detrás del entorno real (43). Verificado: con README=23 el doctor ahora lanza `README_SKILL_COUNT_DRIFT`; con README=43 pasa y marca el repo como desfasado (warning, no error).
-- **Pendiente**: decidir si sincronizar el repo `.agents/skills` 23→43 (acción con git) o dejar el repo como subconjunto curado.
+- **Resuelto (2026-08-12)**: sincronizado el repo a 43 — se copiaron los 22 skills faltantes desde `~/.agents/skills` y se eliminaron los 2 fantasma (`code-search`, `vision-adapter`) que no existen en el entorno real. README 23→43, doctor ahora `CONSISTENTE` (0 errores). Commiteado (`6ed1bb1`) y pusheado a `main`.
 
 ---
 

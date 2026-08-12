@@ -42,8 +42,8 @@
 ### ⏳ Estado
 - buffy-context ahora cubre los 3 ejes: Memoria (CONTINUE/SESION/SNAPSHOT/facts.yaml), MCP (MCP_REGISTRY.md), Plugins (SKILLS_INDEX.md + skills/).
 - Client-agnostic: funciona en FreeBuff, OpenCode o futuro Buffy 10B local.
-- **Fix doctor**: `buffy-doctor.sh` ahora detecta drift de conteo de skills (README vs `~/.agents/skills`) y avisa si la copia del repo está desfasada (23 vs 43). Causa raíz del "por qué no lo vio antes": comparaba contra la copia del repo, no el entorno real.
-- Pendiente: decidir si sincronizar repo `.agents/skills` 23→43 (acción git) o dejarlo como subconjunto curado.
+- **Fix doctor**: `buffy-doctor.sh` ahora detecta drift de conteo de skills (README vs `~/.agents/skills`) y avisa si la copia del repo está desfasada. Causa raíz del "por qué no lo vio antes": comparaba contra la copia del repo, no el entorno real.
+- **Resuelto (2026-08-12)**: repo `.agents/skills` sincronizado a 43 (22 copiados + 2 fantasma eliminados), commiteado `6ed1bb1` y pusheado. Doctor `CONSISTENTE` (0 errores).
 - Pendiente opcional: `cp` de CONTINUE.md/SESION.md/CHANGELOG.md a `~/ai-context/` (o `buffy-close-day.sh`) para que la próxima sesión los cargue.
 
 ---
