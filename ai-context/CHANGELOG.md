@@ -14,6 +14,22 @@ system-id: mangonz-desktop
 # CHANGELOG.md — Historial de cambios del sistema
 
 
+### 2026-08-12 — EVAL PC Fase 3: Pasos 7→10B ejecutados y cerrados (opencode, PC)
+
+**Pedido del usuario:** aprobar specs e implementar/medir los experimentos de Fase 3 uno a uno, con gates pre-fijados, determinismo G2, runtime congelado y detenerse tras cada medición.
+
+**Lo hecho (commits `8677347`→`18df679`, EVAL congelado `98a0e308…`):**
+- **Paso 7 Semantic D** (`run-semantic-PC.sh`, Ollama bge-m3): 0.200/0.192/0.669/48k → ❌ descartado (embedding aporta capacidad — Q06 primera vez — pero no precisión de buscador).
+- **Paso 8 Hybrid** (`run-hybrid-PC.sh`, RRF y POOL): ≈0.200/0.185/0.605/~10k → ❌ descartado (G-H0: Q03/Q08 fuera del pool = fallo de generación).
+- **Paso 9 Passages** (`run-passage-PC.sh`, VENTANA/SECCIÓN): G1 0.417/0.072/0.606/2.6k, G2 0.333/0.054/0.606/3.4k → ❌ gate pero hipótesis ✅ (28-46× menos tokens; dedup corregido).
+- **Paso 10 Query expansion** (`run-expansion-PC.sh`, H1-DICT-MIN/H2-DICT-FULL): H1 0.317/gap 5/6, H2 0.367/gap 6/6 → ❌ gate pero candidate gap CERRADO (Caso D: generación resuelta, selección rota; regresión 9/12).
+- **Paso 10B Reranking** (`run-rerank-PC.sh`, pool H2 congelado, señales [0,1] pesos 1.0, ablación): R1 0.750/gap 4/6/leak 0.441 (récord serie) · R2 0.700/gap 2/6 → ❌ gate (pRel 0.175/0.131, leak) pero el cuello de botella ERA el ranking; ablación: x_overlap crítica, embedding empeora, q_overlap estorba.
+- **Ninguna variante adoptada** (A→R2: 0.000 → 0.750). Fase 3 sigue abierta; siguiente: diseñar Paso 11 (quality-aware passage selection), sin implementar.
+- Runtime intacto (`buffy-search.sh`/`buffy-router.sh`), determinismo G2 OK, serie documentada en `scripts/tests/evals/EVAL-REGISTRY.md` + specs a EJECUTADO.
+
+**Pendiente:** diseño del Paso 11 (reranking quality-aware). En el PC: `git pull` + `buffy-memory.sh sync pull` una vez. Handoff: `/tmp/handoff-buffy-2026-08-12.md`.
+
+
 ### 2026-08-11 — Benchmark realista: Fase 1 medida + Fase 2 diagnóstica + Fase 3 spec + cierre (opencode)
 
 **Pedido del usuario:** avanzar las fases del benchmark realista; cierre de sesión por protocolo (la sesión se cortó antes).
