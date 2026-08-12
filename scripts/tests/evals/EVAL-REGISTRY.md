@@ -1137,6 +1137,103 @@ Pero experimentalmente: **Candidate generation ✅ · Passage granularity ✅ ·
 Context-size issue ✅ identificado/resuelto · Ranking/selection 🔴 cuello de botella
 actual** — mucho mejor que probar algoritmos a ciegas.
 
+## 🔬 Paso 10B — EJECUTADO · R1 y R2 no pasan el gate (pRel/leakage) · 2026-08-12
+
+**Runner:** `scripts/tests/evals/run-rerank-PC.sh` · pool CONGELADO de H2 (verificado
+== H2, dict_hash `b0406a3368003bea`) · señales normalizadas [0,1] pesos 1.0 fijos ·
+pasajes VENTANA ±4 · presupuesto 10.4k · EVAL 98a0e308… · instrumento v3.1 ·
+`runtime_changed: false`. Determinismo G2 OK ×2 por variante (R1 `8316343e…`,
+R2 `06037bab…`). Generación congelada: **el único cambio es el orden del pool**
+(RRF → reranker R1/R2).
+
+| Estrategia | Recall | pRel | cRel(file) | Leakage | Tokens | gold_containment |
+|---|---:|---:|---:|---:|---:|---:|
+| G1 — VENTANA | 0.417 | 0.072 | 0.214 | 0.606 | 2 569 | 0.8 |
+| H1 — DICT-MIN | 0.317 | 0.064 | 0.199 | 0.616 | 2 451 | 1.0 |
+| H2 — DICT-FULL | 0.367 | 0.064 | 0.197 | 0.621 | 2 454 | 1.0 |
+| **R1 — LEX** | **0.750** | 0.175 | 0.175 | **0.441** | **1 903** | **1.0** |
+| **R2 — LEX+SEM** | 0.700 | 0.131 | 0.131 | 0.502 | 2 169 | **1.0** |
+
+### Gate (6 criterios simultáneos) — R1 y R2 NO pasan
+
+| Criterio | Umbral | R1 | R2 |
+|---|---|---:|---:|
+| search_recall | > 0.100 | **0.750** ✅ (récord serie) | 0.700 ✅ |
+| passage_relevance | ≥ 0.600 | 0.175 ❌ | 0.131 ❌ |
+| cross_domain_leakage | ≤ 0.267 | 0.441 ❌ | 0.502 ❌ |
+| token_cost | ≤ ~10.4k | 1 903 ✅ | 2 169 ✅ |
+| gold_containment | ≥ 0.80 | 1.0 ✅ | 1.0 ✅ |
+| baseline_regression | ≤ 0.167 | **0.167** ✅ (10/12) | **0.083** ✅ (11/12) |
+
+### ★ gap_to_top10 — el objetivo del paso se cumplió en R1
+
+| Variante | gap_to_top10 (H2 = 0/6) | Agujas al top-10 |
+|---|---|---|
+| **R1-LEX** | **4/6** | Q01 `adb tcpip 5555`/`adb connect` (rank 2, X: adb devices) · Q10 `dumpsys thermalservice`/`thermal_control` (**rank 1**, X: thermal) |
+| **R2-LEX+SEM** | 2/6 | solo Q10 ×2 (rank 9) |
+
+Q03 `gh pr create` quedó a **rank 12** (R1) — entró al pool por X (`create`), el
+reranker lo acercó de 58→12 pero no al top-10. Q05 `useState` a rank 42 (R1).
+
+### El cuello de botella ERA el ranking
+
+Con el MISMO pool (H2, congelado y verificado) y solo cambiando el orden: **sRec
+0.367 → 0.750 (2.0×)**, leakage **0.621 → 0.441**, gap 0/6 → 4/6. El reranker
+filtró el ruido de sesión (señal estructural `curated`) y priorizó los ítems con
+señal de expansión. Por query (R1): Q01/Q02/Q04/Q07/Q09/Q10 **1.0**, Q03/Q05/Q08
+0.5, **Q06 0.0** (FF_SEEN perdida — única regresión por aguja del reranker).
+
+### Ablación — qué señal produce la mejora (diagnóstico, no gate)
+
+| Config | sRec | gap_to_top10 |
+|---|---:|---:|
+| **r1_full** | 0.750 | 4/6 |
+| r1_no_x_overlap | 0.450 | **0/6** ← LA señal crítica |
+| r1_no_x_density | 0.750 | 4/6 (sin efecto) |
+| r1_no_proximity | 0.750 | 4/6 (sin efecto) |
+| r1_no_curated | 0.800 | 2/6 (aporta 2 de las 4) |
+| r1_no_q_overlap | 0.700 | **5/6** (¡quitar q_overlap MEJORA el gap!) |
+| r2_full | 0.750 | 2/6 |
+| **r2_no_sem** | 0.750 | **4/6** ← el embedding EMPEORA la selección |
+
+**`x_overlap` (señal de expansión) es la señal decisiva**: sin ella el gap colapsa
+a 0/6. `curated` aporta 2/6. `q_overlap` (tokens crudos de la query) incluso
+estorba para el gap (5/6 sin ella).
+
+### Respuesta a la pregunta del usuario sobre bge-m3
+
+> ¿El embedding falló porque era malo para recuperar, o porque necesitaba estar
+> subordinado a señales léxicas precisas?
+
+**Ninguna de las dos lo salva como señal de ranking.** R2 < R1 en sRec (0.700 vs
+0.750), gap (2/6 vs 4/6) y leakage (0.502 vs 0.441). La ablación lo demuestra sin
+ambigüedad: `r2_no_sem` (equivale a R1) supera a `r2_full`. El coseno bge-m3 como
+señal subordinada **empeora** la selección de las agujas del gap (los ítems S de
+alto coseno son similitud semántica, no evidencia). Curiosamente R2 SÍ mejoró Q08
+(1.0: ambas agujas gold en System.md) y Q06 (1.0) — el sem ayuda donde la señal
+léxica es débil, pero perjudica Q01/Q05 (0.0).
+
+### Hallazgos por query (R1)
+
+- **Q10 — perfecto**: ambas agujas del gap a rank 1 (X: thermal) — la señal de
+expansión x_overlap=5/5 domina.
+- **Q08 — el experimento del usuario**: `picom` gold en System.md sube al top-10
+  (`curated` + x_overlap), `P_TERM_OPACITY` aún fuera (R1). En R2, las dos entran.
+- **Q06 — coste del reranker**: FF_SEEN cae (0.0) — el top-10 de R1 pierde el
+  pasaje de CHANGELOG.md que G1/R2 mantenían.
+- **Q03 — la cadena casi completa**: `gh pr create` generado por X → rank 12 (R1),
+  sin entrar al top-10; `git push origin` sí (0.5).
+
+### Conclusión
+
+R1 y R2 **NO se adoptan** (fallan pRel/leakage — falta una capa de selección
+quality-aware, el Caso 3 del usuario). Pero el 10B demostró lo que faltaba probar:
+**Buffy ya tiene la evidencia disponible y el problema era ordenarla** — el mismo
+pool con un reranker diagnóstico sencillo (5 señales, pesos 1.0 fijos) multiplicó
+el recall por 2 (0.367 → 0.750), cerró 4/6 del gap y redujo leakage 29%. La señal
+`x_overlap` (expansión) es la pieza clave; el embedding no aporta como señal de
+ranking. Fase 3 sigue abierta; runtime congelado; nada se adopta.
+
 ### Estado de la suite en el perfil PC (2026-08-11)
 > ⚠️ **La suite del perfil PC no está actualmente 100% verde** por incompatibilidades
 > de entorno/drift documental **preexistentes** (verificadas: no fueron producidas por
