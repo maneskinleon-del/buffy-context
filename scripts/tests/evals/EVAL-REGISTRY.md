@@ -651,6 +651,50 @@ de Q03/Q08 no es de granularidad por línea: el salto ES→EN y concepto→térm
 necesita otra aproximación (¿documento completo? ¿passage reranking? ¿hybrid con
 fusión acotada de candidatos?). Siguiente decisión del usuario.
 
+## ✅ Paso 7 — CERRADO · D descartado · 2026-08-12
+
+**Veredicto del usuario (2026-08-12):** el resultado es útil aunque D haya fallado el gate.
+D demuestra que **la capacidad semántica existe** (Q06 recuperado por primera vez) pero
+que **el retrieval semántico puro no tiene precisión suficiente para ser buscador final**.
+
+**Lectura oficial del usuario (transcrita):**
+
+> | Estrategia | Recall | Relevance | Leakage | Tokens |
+> |---|---|---|---|---|
+> | AND | 0.000 | **0.533** | **0.267** | **5.2k** |
+> | OR | 0.050 | 0.182 | 0.694 | 45.3k |
+> | AND-norm | 0.100 | 0.333 | 0.522 | 38.0k |
+> | **Semantic D** | **0.200** | 0.192 | 0.669 | 48.0k |
+>
+> - Léxico: bueno en precisión/coste/leakage/terminología exacta; pierde sinónimos,
+>   traducciones, conceptos→herramientas, queries naturales.
+> - Semántico: bueno en recuperar evidencia sin vocabulario compartido (Q06 lo
+>   demuestra); malo como resultado final (leakage, relevancia, coste).
+> - **Candidate generation ≠ final retrieval**: cada mecanismo debería hacer aquello
+>   en lo que demostró ser bueno → diseño del siguiente experimento (Paso 8).
+> - Q03/Q08 ni siquiera entran al pool semántico → la unión naive de candidatos
+>   NO puede resolverlos; el Paso 8 debe incluir hipótesis de expansión/
+>   representación de consulta o granularidad distinta.
+
+**Decisión:** Paso 7 cerrado · D descartado · runtime permanece congelado · siguiente
+paso: **diseñar el experimento Hybrid bounded candidate retrieval (Paso 8), sin
+implementarlo** hasta fijar candidatos, presupuesto, fórmula de fusión/reranking y
+gates. Spec: `scripts/tests/evals/hybrid-bounded-DESIGN.md`.
+
+**Evidencia adicional para el diseño (candidate availability, medida 2026-08-12):**
+con el índice semántico de D, los ranks de las agujas gold objetivo son:
+
+| Query | Aguja | Rank semántico (de 6 880) | ¿en pool ≤ 50? |
+|---|---|---:|---|
+| Q03 | git push origin | 254 | ❌ |
+| Q03 | gh pr create | 200 | ❌ |
+| Q08 | picom | 2 553 | ❌ |
+| Q08 | P_TERM_OPACITY | 266 | ❌ |
+
+→ **G-H0 (pre-gate de candidate availability)**: por query, verificar que las agujas
+gold están dentro del candidate pool ANTES de atribuir el resultado a la fusión/rerank.
+Q03/Q08 fallarían G-H0 por construcción → la fusión sola no los resuelve.
+
 ### Estado de la suite en el perfil PC (2026-08-11)
 
 > ⚠️ **La suite del perfil PC no está actualmente 100% verde** por incompatibilidades
