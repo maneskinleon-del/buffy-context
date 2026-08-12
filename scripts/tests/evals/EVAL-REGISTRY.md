@@ -1306,3 +1306,27 @@ agujas → protegido por gold_containment y baseline_regression.
 > No tocar hasta que se decida un cleanup de portabilidad del perfil PC, con su
 > propia justificación.
 
+---
+
+## 🛡️ Apéndice — Foreign Worktree Detection (FWD) · DISEÑO · 2026-08-12
+
+**Motivo:** caso real del mismo día — dos sesiones (OpenCode + Freebuff) trabajando
+en el mismo checkout de buffy-context sin pisarse. Freebuff detectó los cambios
+ajenos por el estado del FS/Git (git status → diff → timestamps) y los **preservó
+intactos**, pidiendo decisión. El usuario validó el comportamiento y pidió
+formalizarlo como spec (roadmap Buffy 2.0), **sin implementar**.
+
+**Spec:** `FWD-DESIGN.md` (raíz del repo) — pregunta formal, clasificación
+OWN/FOREIGN/UNKNOWN/CONFLICT por señales múltiples (manifest de sesión + snapshot
+baseline + timestamps solo como apoyo + atribución de contenido + estado git 3 vías
++ procesos), política de seguridad fija ("detecta, clasifica y protege; nunca
+adopta, revierte, commitea ni descarta"), gate previo a escritura, puntos de
+enganche (pre-flight, pre-commit, doctor, close-day) y criterios de aceptación.
+
+**Estado:** DISEÑADO, pendiente de aprobación e implementación. Los cambios ajenos
+del working tree (MCP_REGISTRY.md, SKILLS_INDEX.md, README 43 skills,
+CONTINUE/SESION tooling, buffy-doctor.sh drift check) **quedan intactos y sin
+commitear** por decisión del usuario: revisarlos por separado tras el diseño.
+Pendiente: registrar la referencia en el Roadmap de CONTINUE.md cuando el archivo
+no esté bloqueado.
+
