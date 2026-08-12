@@ -378,3 +378,20 @@ latency ~4.1 s (coste de la expansión, no gate).
 
 H1/H2 no adoptados. La expansión cierra el candidate gap y mueve el cuello de
 botella al reranking → **10B justificado experimentalmente**. Runtime congelado.
+
+## Anexo B — Cierre · veredicto del usuario (2026-08-12)
+
+**H1/H2 NO adoptados.** El Paso 10 se cierra como el resultado más útil de la Fase 3:
+aisló el cuello de botella en el **ranking/context selection**. Evidencia:
+
+- candidate gap CERRADO (H1 5/6, H2 6/6) → la información está disponible.
+- las agujas quedan en rank 50-132 → el RRF no sabe elegirlas entre 1071-1364 hits.
+- pool más grande sin mejor ranking → regresión 9/12 (puede EMPEORAR el sistema).
+- recall H1/H2 (0.317/0.367) < G1 (0.417) por el ruido de X en el rerank.
+
+**Decisión:** diseñar **Paso 10B (Reranking/Passage Selection)** con: generación
+CONGELADA (pool de H2, ranking = única variable), reranker diagnóstico sencillo con
+señales gold-independent y **pesos fijos antes de medir**, dos variantes R1-LEX y
+R2-LEX+SEM (bge-m3 SOLO como señal de ranking), gate completo + métrica
+`baseline_regression` para evitar la regresión 9/12. Sin tocar runtime, sin ampliar
+diccionarios, sin otro embedding, sin aumentar presupuesto.
