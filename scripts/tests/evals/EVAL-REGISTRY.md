@@ -1065,6 +1065,78 @@ movió al reranking** — las agujas existen en el pool y el RRF no las prioriza
 **Paso 10B (selección/rerank de pasajes)** queda con una justificación experimental
 muy fuerte. Fase 3 sigue abierta; runtime congelado; nada se adopta.
 
+## ✅ Paso 10 — CERRADO · H1/H2 no adoptados · generación resuelta, ranking = cuello de botella · 2026-08-12
+
+**Veredicto del usuario (2026-08-12):** probablemente el resultado más útil de toda
+la Fase 3 — aisló casi perfectamente el cuello de botella:
+
+```text
+Query expansion → candidate gap ✅ resuelto → pool ✅ → ranking ❌ → top-10 ❌ contexto
+```
+
+Y apareció un segundo efecto: **hacer crecer el pool sin cambiar el ranking puede
+empeorar el sistema** (regresión 9/12).
+
+| Etapa | Resultado |
+|---|---:|
+| H1 candidate-gap recovery | 5/6 = 83.3% |
+| H2 candidate-gap recovery | 6/6 = 100% |
+| H1 / H2 recall global | 0.317 / 0.367 |
+| G1 recall | 0.417 |
+| Passage relevance | 0.064 |
+| Leakage | ~0.62 |
+| Tokens | ~2.45k |
+
+### El hallazgo más importante
+
+Las agujas quedan en **rank 50-132** — el problema ya NO es "¿existe una
+representación que encuentre la evidencia?" (la respuesta es sí) sino
+"**¿cómo distinguimos evidencia útil de los cientos/miles de candidatos
+adicionales?**" — un problema de **reranking/context selection**. La regresión 9/12
+es la prueba: pool pequeño → RRF → agujas sobreviven; pool expandido (1071-1364
+candidatos) → RRF → agujas enterradas.
+
+### Decisiones del usuario
+
+- **NO seguir experimentando con diccionarios** — H2 llegó a 6/6, el techo de
+  generación está demostrado.
+- **NO otro generador; se necesita un SELECTOR.** El reranker debe trabajar sobre
+  candidatos ya generados: **candidate generation = congelado, ranking = única
+  variable**.
+- Empezar con **reranker diagnóstico sencillo** (no modelo pesado), combinando
+  señales gold-independent que Buffy ya tiene: lexical evidence + expansion evidence
+  + semantic similarity + proximity/co-occurrence + calidad del documento. **Pesos
+  fijados antes de medir**, no ajustados hasta que Q03/Q08 pasen.
+- Dos variantes: **R1 — lexical evidence rerank** (tokens significativos,
+  co-ocurrencia, proximidad, términos expandidos, posición del match) y **R2 —
+  lexical + semantic** (bge-m3 SOLO como señal de ranking, no generador). Responde:
+  ¿el embedding falló por malo para recuperar o porque necesitaba estar subordinado
+  a señales léxicas más precisas?
+- **Atención especial a Q08** (picom: candidate ✅ pool ✅ top-10/pasaje ❌) — si 10B
+  sube System.md sin disparar leakage, el reranking es la pieza que falta. Y Q03
+  (gh pr create: generado por H1/H2, ranked_out) — si el reranker lo recupera, cadena
+  completa: query expansion → candidate → reranking → passage → context.
+- **Advertencia anti-sobreajuste**: el objetivo NO es "hacer subir agujas" sino el
+  gate completo + **evitar la regresión 9/12** → nueva métrica `baseline_regression`.
+
+### Decisión
+
+**Cerrar Paso 10 como experimento no adoptado y diseñar Paso 10B — Reranking /
+Passage Selection.** Sin tocar runtime. Sin ampliar diccionarios. Sin otro
+embedding. Sin aumentar presupuesto. Primero aislar ranking. H2 = 6/6 candidate-gap
+recovery da permiso experimental: **la información está disponible; ahora hay que
+aprender a elegirla.**
+
+### Estado de la Fase 3 (veredicto del usuario)
+
+| Estrategia | Estado |
+|---|---|
+| A AND · B OR · C AND-norm · D Semantic · E/F Hybrid · G1/G2 Passage · H1/H2 Expansion | ❌ todos |
+
+Pero experimentalmente: **Candidate generation ✅ · Passage granularity ✅ ·
+Context-size issue ✅ identificado/resuelto · Ranking/selection 🔴 cuello de botella
+actual** — mucho mejor que probar algoritmos a ciegas.
+
 ### Estado de la suite en el perfil PC (2026-08-11)
 > ⚠️ **La suite del perfil PC no está actualmente 100% verde** por incompatibilidades
 > de entorno/drift documental **preexistentes** (verificadas: no fueron producidas por
