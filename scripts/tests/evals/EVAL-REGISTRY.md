@@ -559,6 +559,98 @@ benchmark↑+EVAL↓ = DESCARTAR · EVAL↑+benchmark↓ = investigar.
 
 **NO adoptar todavía** — experimento diagnóstico; veredicto = usuario.
 
+---
+
+## 🔬 Paso 7 — EJECUTADO · D (bge-m3, embeddings por línea + coseno) · 2026-08-12
+
+**Aprobado por el usuario (2026-08-12):** spec aprobada tal cual, gate pre-fijado sin
+relajación, per-query obligatorio (foco Q03/Q06/Q08), UNA variable (semantic), sin
+`nomic-embed-text` salvo fallo reproducible de bge-m3 (no ocurrió). Orden autorizado:
+pull modelo → runner → verificar → corrida → determinismo → comparar → registrar →
+commit+push → detenerse.
+
+**Ejecución:** `ollama pull bge-m3` (1.2 GB) → `run-semantic-PC.sh --model bge-m3
+--limit 10`. Índice: 46 archivos / 6 880 líneas / dim 1024, construido en ~38 min en
+CPU (~3.3 líneas/s), cacheado en `~/.cache/buffy-eval-semantic/`. Runner nuevo
+(`run-semantic-PC.sh`, instrumento v3.1 idéntico al lexical). Runtime congelado
+(`runtime_changed: false`). **Gates: G1 ✅** (EVAL hash `98a0e308…` verificado),
+**G2 ✅ determinismo** (2 corridas → determinism_hash `046fc9ee…` idéntico, cache
+1ª corrida no / 2ª sí), **G3 ✅** (mismo EVAL que A/B/C).
+
+### Agregado — A vs B vs C vs D
+
+| métrica | A (and) | B (or) | C (and-norm) | **D (semantic)** |
+|---|---|---|---|---|
+| search_recall (gold) | 0.000 | 0.050 | 0.100 | **0.200** |
+| search_other_recall | 0.000 | 0.150 | 0.050 | 0.083 |
+| search_recall_raw | 0.000 | 0.200 | 0.150 | **0.283** |
+| context_relevance | **0.533** | 0.182 | 0.333 | 0.192 |
+| cross_domain_leakage | **0.267** | 0.694 | 0.522 | 0.669 |
+| token_cost avg | **5 197** | 45 259 | 38 017 | 47 980 |
+| token_cost p95 | 40 881 | 69 808 | 69 433 | 77 651 |
+| latency avg | 900 ms | 525 ms | 538 ms | 1 449 ms |
+| router_precision / recall | 0.600 / 0.600 | idéntico (Δ=0) | idéntico (Δ=0) | idéntico (Δ=0) |
+| categories_recall | 0.800 | 0.800 | 0.800 | 0.800 |
+| spurious_categories | 2 | 2 | 2 | 2 |
+| window_utilization | 2.6% | 22.6% | 19.0% | 24.0% |
+
+> ⚠️ Nota de entorno: router_* vuelve a 0.600/0.600 (Δ=0 entre estrategias en la misma
+> corrida; el router no lee el fixture — variabilidad de detección de dispositivo/CWD).
+
+### Por query — desglose gold_facts_matches (D)
+
+| ID | sRec | sOth | agujas gold | resultado |
+|---|---|---|---|---|
+| Q01 | 0.0 | 0.0 | adb tcpip 5555 / adb connect | no_match |
+| Q02 | 0.0 | 0.333 | rish -c / moe.shizuku / pm grant | `rish -c` → other (CONTINUE.md) |
+| Q03 | 0.0 | 0.0 | git push origin / gh pr create | **no_match ambas** — el puente ES→EN no lo captura |
+| Q04 | **1.0** | 0.0 | xset -dpms / xset s off | **GOLD (CHANGELOG.md)** — resuelto, igual que C |
+| Q05 | 0.0 | 0.0 | useState / adb devices -l | no_match |
+| Q06 | **1.0** | 0.0 | FF_SEEN | **GOLD (CHANGELOG.md)** — ÚNICA variante que lo resuelve |
+| Q07 | 0.0 | 0.0 | dumpsys thermalservice / force_gpu_rendering | no_match |
+| Q08 | 0.0 | 0.5 | picom / P_TERM_OPACITY | `picom` → other (AGENTS.md); P_TERM_OPACITY no_match |
+| Q09 | 0.0 | 0.0 | scaling_governor / force_gpu_rendering | no_match |
+| Q10 | 0.0 | 0.0 | dumpsys thermalservice / thermal_control | no_match |
+
+### Hallazgos
+
+1. **D mejora el recall gold (0.100 → 0.200) resolviendo Q06** — el caso que ninguna
+   variante léxica resolvía (`FF_SEEN` en CHANGELOG.md como gold_file_match). Q04 ya
+   lo resolvía C; D lo mantiene.
+2. **Q03 y Q08 NO se resuelven** — el puente semántico que motivó el experimento
+   (`crear`↔`create` en Q03; `opaca/transparente`↔`picom` en Q08) **no lo captura
+   bge-m3 por línea**: Q03 no_match ambas agujas; Q08 `picom` cae en AGENTS.md
+   (other) y `P_TERM_OPACITY` no_match. La granularidad por línea + coseno no
+   reconstruye el salto concepto → término técnico.
+3. **El coste destruye la mejora** — D se comporta como OR: leakage 0.669 (≈OR 0.694),
+   token avg 48k (≈OR 45k), context_relevance 0.192 (≈OR 0.182). El modelo semántico
+   recupera la aguja gold de Q04/Q06 pero arrastra el repositorio al top-10 igual que OR.
+4. **Latencia alta**: 1 449 ms avg (vs ~550 ms de A/B/C) — el embed de cada query
+   domina. Con cache del índice la segunda corrida fue igual de lenta en queries.
+
+### Veredicto del gate (pre-fijado, sin relajación)
+
+| Criterio | Umbral | D | ¿Pasa? |
+|---|---|---|---|
+| search_recall | **> 0.100** | 0.200 | ✅ |
+| context_relevance | **≥ 0.600** | 0.192 | ❌ |
+| cross_domain_leakage | **≤ 0.267** | 0.669 | ❌ |
+| token_cost | **≤ ~10.4k** | 47 980 | ❌ |
+| determinismo (G2) | 2 corridas idénticas | ✅ | ✅ |
+| EVAL hash | `98a0e308…` | ✅ | ✅ |
+
+**D NO pasa el gate** (3 de 4 umbrales de calidad/coste fallan). Es exactamente el
+escenario "fracaso" que el usuario anticipó en la aprobación: *"recall espectacular
+pero relevance/leakage/tokens colapsan"*. Según el criterio de lectura §7:
+**EVAL↑ (recall) + EVAL↓ (calidad/coste) → el patrón de D es el de OR: recupera más,
+no resuelve el trade-off.** El semantic naive por línea NO es la pieza que falta
+para Q03/Q08, y su coste lo descarta como reemplazo directo.
+
+**NO se adopta nada.** Runtime congelado. La evidencia de D apunta a que el problema
+de Q03/Q08 no es de granularidad por línea: el salto ES→EN y concepto→término técnico
+necesita otra aproximación (¿documento completo? ¿passage reranking? ¿hybrid con
+fusión acotada de candidatos?). Siguiente decisión del usuario.
+
 ### Estado de la suite en el perfil PC (2026-08-11)
 
 > ⚠️ **La suite del perfil PC no está actualmente 100% verde** por incompatibilidades

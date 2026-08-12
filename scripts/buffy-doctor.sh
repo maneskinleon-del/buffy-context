@@ -234,6 +234,7 @@ declare -A KNOWLEDGE_EXPECTED=(
   [Node/Node.md]="Node"
   [Shell/Shell.md]="Shell"
   [Tools/CodeGraph.md]="Tools"
+  [Tools/Benchmark-realista.md]="Tools"
   [Vision.md]="Visión"
 )
 
