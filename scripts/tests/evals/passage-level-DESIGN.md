@@ -1,11 +1,13 @@
-# Paso 9 — Passage-level context selection (diseño)
+# Paso 9 — Passage-level context selection (diseño + ejecución)
 
-> Estado: **DISEÑO** (2026-08-12) — pendiente de aprobación del usuario. NO implementar
-> hasta fijar la unidad de pasaje, presupuesto y gates.
+> Estado: **EJECUTADO** (2026-08-12) — G1 y G2 medidos, NO pasan el gate
+> (passage_relevance/leakage), nada se adopta. Runner: `scripts/tests/evals/run-passage-PC.sh`.
+> Resultados en `EVAL-REGISTRY.md` §Paso 9.
 > Base: EVAL con gold definitivo (hash `98a0e308…`), baselines A/B/C/D/E/F medidos.
-> Autorizado por el usuario (2026-08-12): "Paso 8 cerrado · E/F descartados · runtime
-> intacto · NO implementar todavía query expansion · **primero diseñar Paso 9:
-> passage-level context selection**, con un experimento aislado y un gate nuevo".
+> Autorizado por el usuario (2026-08-12): "implementar runner → G-H0 → G1 → G2 →
+> determinismo → comparar contra gates → registrar → commit → detenerse".
+> Nota metodológica: el ctx se deduplica por (path, rango) — MÚLTIPLES pasajes del
+> mismo archivo entran al ctx (corregido tras review; la v1 solo dejaba 1 por path).
 
 ## 1. Objetivo e hipótesis
 
@@ -251,3 +253,53 @@ cambio al runtime) es decisión del usuario, con la evidencia sobre la mesa.
 - Cambiar el corpus, fixture, gold o métricas (anti-gaming).
 - Calibración de N_L/N_S/k/pasaje/budget con el EVAL.
 - Integrar passage retrieval al runtime antes del veredicto.
+
+---
+
+## Anexo A — Resultados medidos (2026-08-12, EVAL 98a0e308…, instrumento v3.1)
+
+Corridas reales con el índice bge-m3 de D (cache hit), ramas L/S reales y fusión
+V1-RRF. Determinismo G2: hash idéntico en 2 corridas por variante (G1 `b7d17efd…`,
+G2 `528fe12a…`). `snippet_scope: passage`.
+
+| Estrategia | Recall | pRel | cRel(file) | Leakage | Tokens avg | gold_containment |
+|---|---:|---:|---:|---:|---:|---:|
+| A — AND | 0.000 | — | 0.533 | 0.267 | 5 197 | — |
+| C — AND-norm | 0.100 | — | 0.333 | 0.522 | 38 017 | — |
+| D — Semantic | 0.200 | — | 0.192 | 0.669 | 47 980 | — |
+| E — Hybrid-RRF | 0.200 | — | 0.185 | 0.605 | 9 951 | 0.0 (Q04/Q06) |
+| F — Hybrid-POOL | 0.200 | — | 0.179 | 0.612 | 10 039 | 0.0 (Q04/Q06) |
+| G1 — VENTANA | **0.417** | 0.072 | 0.214 | 0.606 | 2 569 | **0.8** |
+| G2 — SECCIÓN | 0.333 | 0.054 | 0.214 | 0.606 | 3 373 | 0.7 |
+
+### Gate (5 criterios simultáneos) — G1 y G2 NO pasan
+
+| Criterio | Umbral | G1 | G2 |
+|---|---|---:|---:|
+| search_recall | > 0.100 | 0.417 ✅ (mejor serie) | 0.333 ✅ |
+| passage_relevance | ≥ 0.600 | 0.072 ❌ | 0.054 ❌ |
+| cross_domain_leakage | ≤ 0.267 | 0.606 ❌ | 0.606 ❌ |
+| token_cost | ≤ ~10.4k | 2 569 ✅ | 3 373 ✅ |
+| gold_containment | ≥ 0.80 | 0.8 ✅ | 0.7 ❌ |
+
+### Hallazgos clave
+
+1. **La unidad de contexto SÍ era parte del problema**: Q04/Q06 pasan de
+   gold_containment 0.0 (E/F: archivo de 14.4k no cabía) a 1.0 (pasaje de 310-505
+   tok cabe y se entrega con sRec=1.0). Truncamiento estructural RESUELTO.
+2. **Recall 0.417 (G1) — el mejor de la serie**: matching sobre pasaje captura
+   agujas que la línea perdía (Q02 0.667, Q05/Q07/Q09 0.5).
+3. **passage_relevance 0.072/0.054 / leakage 0.606 no mejoran**: los pasajes no-gold
+   del top-10 (SESION-archive, CONTINUE…) dominan el ctx. El pasaje arregla el
+   TAMAÑO, no la SELECCIÓN.
+4. **Q08**: `picom` entra al pool y al top-10, pero el gold file (System.md) queda
+   fuera → pasajes entregados no-gold. Problema de rerank/selección.
+5. **G1 > G2** en recall (0.417 vs 0.333) y gold_containment (0.8 vs 0.7): la
+   ventana ±4 es más precisa; la sección infla pasajes con ruido interno.
+
+### Conclusión
+
+El pasaje es **NECESARIO pero NO SUFICIENTE**: elimina el truncamiento y mejora el
+recall, pero no la calidad del ctx. El límite se movió de "cómo entrego el gold" a
+"**qué pasajes selecciono**". Evidencia para el Paso 10: query expansion (candidate
+gap Q03/Q01/Q10) + selección/rerank de pasajes (Q08). Runtime sigue congelado.

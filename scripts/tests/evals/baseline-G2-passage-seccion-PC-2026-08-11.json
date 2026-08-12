@@ -1,0 +1,1448 @@
+{
+  "baseline": "G2",
+  "profile": "PC",
+  "host": "sabrewulf-a320ms2h",
+  "date": "2026-08-11",
+  "eval_id": "eval-ctx-PC-2026-08-11",
+  "eval_hash": "98a0e3082d920e71a30b1f1a759332808a251f9d02b899a7db3e2604369b34ac",
+  "strategy": "passage",
+  "variant": "seccion",
+  "fuse": "rrf",
+  "model": "bge-m3",
+  "instrument_version": "v3.1",
+  "pipeline": "buffy-router.sh (control) → L: buffy-search.sh OR top-50 + gate ≥2 tokens → S: bge-m3 coseno top-50 → pool dedup(50∪50) → fusión V1-RRF (k=60) → top-10 → pasajes (SECCIÓN markdown) → presupuesto 10400 tokens sobre pasajes → ctx",
+  "snippet_scope": "passage",
+  "runtime_changed": false,
+  "params": {
+    "N_L": 50,
+    "N_S": 50,
+    "K_RRF": 60,
+    "PAS_PAD": 4,
+    "budget_tokens": 10400,
+    "limit": 10
+  },
+  "index_stats": {
+    "files": 46,
+    "lines": 6880,
+    "dim": 1024,
+    "cache_hit": true,
+    "build_seconds": 2271.3
+  },
+  "num_queries": 10,
+  "aggregate": {
+    "router_precision_avg": 0.6,
+    "router_recall_avg": 0.6,
+    "multi_domain_precision": {
+      "avg": 0.5,
+      "n": 2
+    },
+    "multi_domain_recall": {
+      "avg": 0.5,
+      "n": 2
+    },
+    "categories_recall_avg": 0.8,
+    "search_recall_avg": 0.333,
+    "search_other_recall_avg": 0.167,
+    "search_recall_raw_avg": 0.5,
+    "passage_relevance_avg": 0.054,
+    "context_relevance_avg": 0.214,
+    "cross_domain_leakage_avg": 0.606,
+    "gold_containment_avg": 0.7,
+    "total_spurious_categories": 2,
+    "token_cost": {
+      "avg": 3372.7,
+      "p95": 5234
+    },
+    "tokens_if_fullfile_avg": 43772.9,
+    "latency_ms": {
+      "avg": 1676.48,
+      "p95": 1874.0
+    },
+    "window_utilization_avg": 0.01686,
+    "g_h0": {
+      "in_pool_top10": 10,
+      "in_pool_ranked_out": 2,
+      "in_pool_budget_cut": 0,
+      "out_of_pool": 8,
+      "not_in_corpus": 0
+    }
+  },
+  "per_query": [
+    {
+      "id": "Q01",
+      "query": "el teléfono no aparece en scrcpy",
+      "coverage": [
+        "single-domain"
+      ],
+      "strategy": "passage",
+      "variant": "seccion",
+      "fuse": "rrf",
+      "gold_domains": [
+        "Android"
+      ],
+      "router_categories": [
+        "Android"
+      ],
+      "categories_recall": 1.0,
+      "spurious_categories": [],
+      "router_precision": 1.0,
+      "router_recall": 1.0,
+      "gold_files": [
+        "Knowledge/Android/ADB.md",
+        "Knowledge/Android/scrcpy.md"
+      ],
+      "router_knowledge": [
+        "Knowledge/Android/ADB.md",
+        "Knowledge/Android/scrcpy.md"
+      ],
+      "gold_in_router": [
+        "Knowledge/Android/ADB.md",
+        "Knowledge/Android/scrcpy.md"
+      ],
+      "search_top_n": 9,
+      "search_recall": 0.0,
+      "search_other_recall": 0.0,
+      "search_recall_raw": 0.0,
+      "gold_facts_matches": [
+        {
+          "text": "adb tcpip 5555",
+          "status": "no_match",
+          "path": null
+        },
+        {
+          "text": "adb connect",
+          "status": "no_match",
+          "path": null
+        }
+      ],
+      "g_h0": {
+        "candidate_status": [
+          {
+            "text": "adb tcpip 5555",
+            "candidate_status": "out_of_pool",
+            "needle_in_corpus": true
+          },
+          {
+            "text": "adb connect",
+            "candidate_status": "out_of_pool",
+            "needle_in_corpus": true
+          }
+        ],
+        "pool_stats": {
+          "L": 4,
+          "S": 50,
+          "total": 51,
+          "passages_pool": 39,
+          "passages_top10": 9,
+          "ctx_cut": 0,
+          "section_fallbacks": 0
+        },
+        "cooccurrence_stats": {
+          "query_tokens": [
+            "aparece",
+            "scrcpy",
+            "telefono"
+          ],
+          "hits_before_gate": 50,
+          "hits_after_gate": 4
+        }
+      },
+      "passage_relevance": 0.0,
+      "context_relevance": 0.333,
+      "cross_domain_leakage": 0.667,
+      "gold_containment": 0.0,
+      "gold_containment_per_fact": [
+        null,
+        null
+      ],
+      "context_estimated_tokens": 3137,
+      "tokens_if_fullfile": 29861,
+      "latency_ms": 1647.9,
+      "search_hit_paths": [
+        "INSTALL.md",
+        "Knowledge/Android/ADB.md",
+        "Knowledge/Android/scrcpy.md",
+        "README.md",
+        "ai-context/CONTINUE.md",
+        "ai-context/SESION.md"
+      ],
+      "ctx_passage_ranges": [
+        [
+          "ai-context/SESION.md",
+          "270-281"
+        ],
+        [
+          "README.md",
+          "239-257"
+        ],
+        [
+          "INSTALL.md",
+          "18-22"
+        ],
+        [
+          "ai-context/CONTINUE.md",
+          "409-418"
+        ],
+        [
+          "ai-context/SESION.md",
+          "62-73"
+        ],
+        [
+          "ai-context/SESION.md",
+          "31-41"
+        ]
+      ]
+    },
+    {
+      "id": "Q02",
+      "query": "cómo concedo permisos a una app con shizuku sin root",
+      "coverage": [
+        "single-domain"
+      ],
+      "strategy": "passage",
+      "variant": "seccion",
+      "fuse": "rrf",
+      "gold_domains": [
+        "Android"
+      ],
+      "router_categories": [
+        "Android"
+      ],
+      "categories_recall": 1.0,
+      "spurious_categories": [],
+      "router_precision": 1.0,
+      "router_recall": 1.0,
+      "gold_files": [
+        "Knowledge/Android/ADB.md",
+        "Knowledge/Android/Shizuku.md"
+      ],
+      "router_knowledge": [
+        "Knowledge/Android/ADB.md",
+        "Knowledge/Android/Shizuku.md"
+      ],
+      "gold_in_router": [
+        "Knowledge/Android/ADB.md",
+        "Knowledge/Android/Shizuku.md"
+      ],
+      "search_top_n": 10,
+      "search_recall": 0.333,
+      "search_other_recall": 0.667,
+      "search_recall_raw": 1.0,
+      "gold_facts_matches": [
+        {
+          "text": "rish -c",
+          "status": "other_file_match",
+          "path": [
+            "ai-context/SHIZUKU-RISH-BUG.md"
+          ]
+        },
+        {
+          "text": "moe.shizuku.privileged.api",
+          "status": "other_file_match",
+          "path": [
+            "Knowledge/Android/NubiaLab.md",
+            "ai-context/SHIZUKU-RISH-BUG.md"
+          ]
+        },
+        {
+          "text": "pm grant",
+          "status": "gold_file_match",
+          "path": [
+            "Knowledge/Android/Shizuku.md",
+            "ai-context/SHIZUKU-RISH-BUG.md"
+          ]
+        }
+      ],
+      "g_h0": {
+        "candidate_status": [
+          {
+            "text": "rish -c",
+            "candidate_status": "in_pool_top10",
+            "needle_in_corpus": true
+          },
+          {
+            "text": "moe.shizuku.privileged.api",
+            "candidate_status": "in_pool_top10",
+            "needle_in_corpus": true
+          },
+          {
+            "text": "pm grant",
+            "candidate_status": "in_pool_top10",
+            "needle_in_corpus": true
+          }
+        ],
+        "pool_stats": {
+          "L": 34,
+          "S": 50,
+          "total": 60,
+          "passages_pool": 30,
+          "passages_top10": 10,
+          "ctx_cut": 0,
+          "section_fallbacks": 1
+        },
+        "cooccurrence_stats": {
+          "query_tokens": [
+            "app",
+            "concedo",
+            "permisos",
+            "root",
+            "shizuku"
+          ],
+          "hits_before_gate": 50,
+          "hits_after_gate": 34
+        }
+      },
+      "passage_relevance": 0.0,
+      "context_relevance": 0.333,
+      "cross_domain_leakage": 0.333,
+      "gold_containment": 1.0,
+      "gold_containment_per_fact": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "context_estimated_tokens": 3413,
+      "tokens_if_fullfile": 41097,
+      "latency_ms": 1737.8,
+      "search_hit_paths": [
+        "Knowledge/Android/ADB.md",
+        "Knowledge/Android/HyperOS.md",
+        "Knowledge/Android/NubiaLab.md",
+        "Knowledge/Android/Shizuku.md",
+        "ai-context/SESION-archive.md",
+        "ai-context/SHIZUKU-RISH-BUG.md"
+      ],
+      "ctx_passage_ranges": [
+        [
+          "ai-context/SESION-archive.md",
+          "299-322"
+        ],
+        [
+          "ai-context/SESION-archive.md",
+          "686-709"
+        ],
+        [
+          "ai-context/SESION-archive.md",
+          "829-852"
+        ],
+        [
+          "Knowledge/Android/HyperOS.md",
+          "50-56"
+        ],
+        [
+          "Knowledge/Android/NubiaLab.md",
+          "16-33"
+        ],
+        [
+          "ai-context/SHIZUKU-RISH-BUG.md",
+          "8-42"
+        ]
+      ]
+    },
+    {
+      "id": "Q03",
+      "query": "quiero pushear el commit y crear el pull request",
+      "coverage": [
+        "single-domain"
+      ],
+      "strategy": "passage",
+      "variant": "seccion",
+      "fuse": "rrf",
+      "gold_domains": [
+        "Git"
+      ],
+      "router_categories": [
+        "Git"
+      ],
+      "categories_recall": 1.0,
+      "spurious_categories": [],
+      "router_precision": 1.0,
+      "router_recall": 1.0,
+      "gold_files": [
+        "Knowledge/Git/Commands.md"
+      ],
+      "router_knowledge": [
+        "Knowledge/Git/Commands.md"
+      ],
+      "gold_in_router": [
+        "Knowledge/Git/Commands.md"
+      ],
+      "search_top_n": 10,
+      "search_recall": 0.0,
+      "search_other_recall": 0.0,
+      "search_recall_raw": 0.0,
+      "gold_facts_matches": [
+        {
+          "text": "git push origin",
+          "status": "no_match",
+          "path": null
+        },
+        {
+          "text": "gh pr create",
+          "status": "no_match",
+          "path": null
+        }
+      ],
+      "g_h0": {
+        "candidate_status": [
+          {
+            "text": "git push origin",
+            "candidate_status": "in_pool_ranked_out",
+            "needle_in_corpus": true
+          },
+          {
+            "text": "gh pr create",
+            "candidate_status": "out_of_pool",
+            "needle_in_corpus": true
+          }
+        ],
+        "pool_stats": {
+          "L": 6,
+          "S": 50,
+          "total": 52,
+          "passages_pool": 44,
+          "passages_top10": 10,
+          "ctx_cut": 0,
+          "section_fallbacks": 0
+        },
+        "cooccurrence_stats": {
+          "query_tokens": [
+            "commit",
+            "crear",
+            "pull",
+            "pushear",
+            "request"
+          ],
+          "hits_before_gate": 50,
+          "hits_after_gate": 6
+        }
+      },
+      "passage_relevance": 0.0,
+      "context_relevance": 0.143,
+      "cross_domain_leakage": 0.857,
+      "gold_containment": 1.0,
+      "gold_containment_per_fact": [
+        1.0,
+        null
+      ],
+      "context_estimated_tokens": 2742,
+      "tokens_if_fullfile": 43917,
+      "latency_ms": 1640.2,
+      "search_hit_paths": [
+        "CONTRIBUTING.md",
+        "ai-context/CHANGELOG.md",
+        "ai-context/CONTINUE.md",
+        "ai-context/LOAD_CONTEXT.md",
+        "ai-context/PROJECTS.md",
+        "ai-context/SESION.md"
+      ],
+      "ctx_passage_ranges": [
+        [
+          "CONTRIBUTING.md",
+          "40-48"
+        ],
+        [
+          "ai-context/CONTINUE.md",
+          "447-453"
+        ],
+        [
+          "ai-context/LOAD_CONTEXT.md",
+          "231-239"
+        ],
+        [
+          "ai-context/PROJECTS.md",
+          "31-39"
+        ],
+        [
+          "ai-context/CHANGELOG.md",
+          "42-56"
+        ],
+        [
+          "ai-context/SESION.md",
+          "251-255"
+        ],
+        [
+          "ai-context/CONTINUE.md",
+          "38-48"
+        ],
+        [
+          "ai-context/SESION.md",
+          "124-136"
+        ],
+        [
+          "ai-context/CONTINUE.md",
+          "75-88"
+        ],
+        [
+          "ai-context/SESION.md",
+          "201-206"
+        ]
+      ]
+    },
+    {
+      "id": "Q04",
+      "query": "la pantalla se apaga sola después de unos minutos",
+      "coverage": [
+        "no-lexical-signals"
+      ],
+      "strategy": "passage",
+      "variant": "seccion",
+      "fuse": "rrf",
+      "gold_domains": [
+        "Linux"
+      ],
+      "router_categories": [
+        "Android"
+      ],
+      "categories_recall": 0.0,
+      "spurious_categories": [
+        "Android"
+      ],
+      "router_precision": 0.0,
+      "router_recall": 0.0,
+      "gold_files": [
+        "ai-context/CHANGELOG.md"
+      ],
+      "router_knowledge": [
+        "Knowledge/Android/ADB.md"
+      ],
+      "gold_in_router": [],
+      "search_top_n": 9,
+      "search_recall": 1.0,
+      "search_other_recall": 0.0,
+      "search_recall_raw": 1.0,
+      "gold_facts_matches": [
+        {
+          "text": "xset -dpms",
+          "status": "gold_file_match",
+          "path": [
+            "ai-context/CHANGELOG.md",
+            "ai-context/CONTINUE.md",
+            "ai-context/SESION-archive.md"
+          ]
+        },
+        {
+          "text": "xset s off",
+          "status": "gold_file_match",
+          "path": [
+            "ai-context/CHANGELOG.md",
+            "ai-context/CONTINUE.md",
+            "ai-context/SESION-archive.md"
+          ]
+        }
+      ],
+      "g_h0": {
+        "candidate_status": [
+          {
+            "text": "xset -dpms",
+            "candidate_status": "in_pool_top10",
+            "needle_in_corpus": true
+          },
+          {
+            "text": "xset s off",
+            "candidate_status": "in_pool_top10",
+            "needle_in_corpus": true
+          }
+        ],
+        "pool_stats": {
+          "L": 8,
+          "S": 50,
+          "total": 50,
+          "passages_pool": 38,
+          "passages_top10": 9,
+          "ctx_cut": 0,
+          "section_fallbacks": 0
+        },
+        "cooccurrence_stats": {
+          "query_tokens": [
+            "apaga",
+            "despues",
+            "minutos",
+            "pantalla",
+            "sola",
+            "unos"
+          ],
+          "hits_before_gate": 50,
+          "hits_after_gate": 8
+        }
+      },
+      "passage_relevance": 0.111,
+      "context_relevance": 0.25,
+      "cross_domain_leakage": 0.75,
+      "gold_containment": 1.0,
+      "gold_containment_per_fact": [
+        1.0,
+        1.0
+      ],
+      "context_estimated_tokens": 5234,
+      "tokens_if_fullfile": 63646,
+      "latency_ms": 1585.7,
+      "search_hit_paths": [
+        "ai-context/CHANGELOG.md",
+        "ai-context/CONTINUE.md",
+        "ai-context/SESION-archive.md"
+      ],
+      "ctx_passage_ranges": [
+        [
+          "ai-context/SESION-archive.md",
+          "1961-1962"
+        ],
+        [
+          "ai-context/CHANGELOG.md",
+          "197-232"
+        ],
+        [
+          "ai-context/CONTINUE.md",
+          "510-522"
+        ],
+        [
+          "ai-context/SESION-archive.md",
+          "570-571"
+        ],
+        [
+          "ai-context/SESION-archive.md",
+          "587-591"
+        ],
+        [
+          "ai-context/CONTINUE.md",
+          "196-329"
+        ],
+        [
+          "ai-context/SESION-archive.md",
+          "1963-1965"
+        ],
+        [
+          "ai-context/SESION-archive.md",
+          "1969-1971"
+        ],
+        [
+          "ai-context/SESION-archive.md",
+          "2022-2024"
+        ]
+      ]
+    },
+    {
+      "id": "Q05",
+      "query": "el componente React de la app necesita leer el serial del teléfono por adb",
+      "coverage": [
+        "multi-domain"
+      ],
+      "strategy": "passage",
+      "variant": "seccion",
+      "fuse": "rrf",
+      "gold_domains": [
+        "Android",
+        "React"
+      ],
+      "router_categories": [
+        "Android",
+        "React"
+      ],
+      "categories_recall": 1.0,
+      "spurious_categories": [],
+      "router_precision": 1.0,
+      "router_recall": 1.0,
+      "gold_files": [
+        "Knowledge/Android/ADB.md",
+        "Knowledge/React/React.md"
+      ],
+      "router_knowledge": [
+        "Knowledge/Android/ADB.md",
+        "Knowledge/React/React.md"
+      ],
+      "gold_in_router": [
+        "Knowledge/Android/ADB.md",
+        "Knowledge/React/React.md"
+      ],
+      "search_top_n": 9,
+      "search_recall": 0.5,
+      "search_other_recall": 0.0,
+      "search_recall_raw": 0.5,
+      "gold_facts_matches": [
+        {
+          "text": "useState",
+          "status": "no_match",
+          "path": null
+        },
+        {
+          "text": "adb devices -l",
+          "status": "gold_file_match",
+          "path": [
+            "Knowledge/Android/ADB.md"
+          ]
+        }
+      ],
+      "g_h0": {
+        "candidate_status": [
+          {
+            "text": "useState",
+            "candidate_status": "out_of_pool",
+            "needle_in_corpus": true
+          },
+          {
+            "text": "adb devices -l",
+            "candidate_status": "in_pool_top10",
+            "needle_in_corpus": true
+          }
+        ],
+        "pool_stats": {
+          "L": 14,
+          "S": 50,
+          "total": 55,
+          "passages_pool": 31,
+          "passages_top10": 9,
+          "ctx_cut": 0,
+          "section_fallbacks": 0
+        },
+        "cooccurrence_stats": {
+          "query_tokens": [
+            "adb",
+            "app",
+            "componente",
+            "leer",
+            "necesita",
+            "react",
+            "serial",
+            "telefono"
+          ],
+          "hits_before_gate": 50,
+          "hits_after_gate": 14
+        }
+      },
+      "passage_relevance": 0.0,
+      "context_relevance": 0.286,
+      "cross_domain_leakage": 0.286,
+      "gold_containment": 1.0,
+      "gold_containment_per_fact": [
+        null,
+        1.0
+      ],
+      "context_estimated_tokens": 2919,
+      "tokens_if_fullfile": 21589,
+      "latency_ms": 1874.0,
+      "search_hit_paths": [
+        "Knowledge/Android/ADB.md",
+        "Knowledge/Android/HyperOS.md",
+        "Knowledge/Android/Keymappers.md",
+        "Knowledge/Android/Shizuku.md",
+        "ai-context/CONTINUE.md",
+        "ai-context/SHIZUKU-RISH-BUG.md"
+      ],
+      "ctx_passage_ranges": [
+        [
+          "ai-context/SHIZUKU-RISH-BUG.md",
+          "200-207"
+        ],
+        [
+          "ai-context/SHIZUKU-RISH-BUG.md",
+          "97-104"
+        ],
+        [
+          "ai-context/SHIZUKU-RISH-BUG.md",
+          "175-186"
+        ],
+        [
+          "ai-context/CONTINUE.md",
+          "528-561"
+        ],
+        [
+          "Knowledge/Android/HyperOS.md",
+          "35-39"
+        ],
+        [
+          "Knowledge/Android/Shizuku.md",
+          "27-39"
+        ],
+        [
+          "Knowledge/Android/Keymappers.md",
+          "26-46"
+        ]
+      ]
+    },
+    {
+      "id": "Q06",
+      "query": "el script bash de scrcpy no abre free fire, revisá el script",
+      "coverage": [
+        "multi-domain"
+      ],
+      "strategy": "passage",
+      "variant": "seccion",
+      "fuse": "rrf",
+      "gold_domains": [
+        "Android",
+        "Shell"
+      ],
+      "router_categories": [
+        "Android",
+        "Shell"
+      ],
+      "categories_recall": 1.0,
+      "spurious_categories": [],
+      "router_precision": 0.0,
+      "router_recall": 0.0,
+      "gold_files": [
+        "ai-context/CHANGELOG.md"
+      ],
+      "router_knowledge": [
+        "Knowledge/Android/ADB.md",
+        "Knowledge/Android/scrcpy.md",
+        "Knowledge/Shell/Shell.md"
+      ],
+      "gold_in_router": [],
+      "search_top_n": 9,
+      "search_recall": 1.0,
+      "search_other_recall": 0.0,
+      "search_recall_raw": 1.0,
+      "gold_facts_matches": [
+        {
+          "text": "FF_SEEN",
+          "status": "gold_file_match",
+          "path": [
+            "ai-context/CHANGELOG.md",
+            "ai-context/CONTINUE.md",
+            "ai-context/SESION-archive.md"
+          ]
+        }
+      ],
+      "g_h0": {
+        "candidate_status": [
+          {
+            "text": "FF_SEEN",
+            "candidate_status": "in_pool_top10",
+            "needle_in_corpus": true
+          }
+        ],
+        "pool_stats": {
+          "L": 46,
+          "S": 50,
+          "total": 82,
+          "passages_pool": 39,
+          "passages_top10": 9,
+          "ctx_cut": 0,
+          "section_fallbacks": 0
+        },
+        "cooccurrence_stats": {
+          "query_tokens": [
+            "abre",
+            "bash",
+            "fire",
+            "free",
+            "revisa",
+            "scrcpy",
+            "script"
+          ],
+          "hits_before_gate": 50,
+          "hits_after_gate": 46
+        }
+      },
+      "passage_relevance": 0.125,
+      "context_relevance": 0.125,
+      "cross_domain_leakage": 0.5,
+      "gold_containment": 1.0,
+      "gold_containment_per_fact": [
+        1.0
+      ],
+      "context_estimated_tokens": 4306,
+      "tokens_if_fullfile": 67526,
+      "latency_ms": 1729.1,
+      "search_hit_paths": [
+        "Knowledge/Android/scrcpy.md",
+        "Knowledge/README.md",
+        "ai-context/CHANGELOG.md",
+        "ai-context/CONTINUE.md",
+        "ai-context/SESION-archive.md",
+        "ai-context/SNAPSHOT.md"
+      ],
+      "ctx_passage_ranges": [
+        [
+          "ai-context/CONTINUE.md",
+          "497-509"
+        ],
+        [
+          "ai-context/SESION-archive.md",
+          "1380-1381"
+        ],
+        [
+          "ai-context/SESION-archive.md",
+          "1945-1949"
+        ],
+        [
+          "Knowledge/README.md",
+          "9-49"
+        ],
+        [
+          "ai-context/CHANGELOG.md",
+          "180-196"
+        ],
+        [
+          "ai-context/SNAPSHOT.md",
+          "56-75"
+        ],
+        [
+          "ai-context/SESION-archive.md",
+          "1940-1941"
+        ],
+        [
+          "ai-context/CONTINUE.md",
+          "154-180"
+        ]
+      ]
+    },
+    {
+      "id": "Q07",
+      "query": "el celular anda lento, qué puedo hacer",
+      "coverage": [
+        "no-lexical-signals"
+      ],
+      "strategy": "passage",
+      "variant": "seccion",
+      "fuse": "rrf",
+      "gold_domains": [
+        "Android"
+      ],
+      "router_categories": [
+        "Android"
+      ],
+      "categories_recall": 1.0,
+      "spurious_categories": [],
+      "router_precision": 1.0,
+      "router_recall": 0.5,
+      "gold_files": [
+        "Knowledge/Android/ADB.md",
+        "Knowledge/Android/GameOptimization.md"
+      ],
+      "router_knowledge": [
+        "Knowledge/Android/ADB.md"
+      ],
+      "gold_in_router": [
+        "Knowledge/Android/ADB.md"
+      ],
+      "search_top_n": 10,
+      "search_recall": 0.0,
+      "search_other_recall": 0.0,
+      "search_recall_raw": 0.0,
+      "gold_facts_matches": [
+        {
+          "text": "dumpsys thermalservice",
+          "status": "no_match",
+          "path": null
+        },
+        {
+          "text": "force_gpu_rendering",
+          "status": "no_match",
+          "path": null
+        }
+      ],
+      "g_h0": {
+        "candidate_status": [
+          {
+            "text": "dumpsys thermalservice",
+            "candidate_status": "out_of_pool",
+            "needle_in_corpus": true
+          },
+          {
+            "text": "force_gpu_rendering",
+            "candidate_status": "out_of_pool",
+            "needle_in_corpus": true
+          }
+        ],
+        "pool_stats": {
+          "L": 0,
+          "S": 50,
+          "total": 50,
+          "passages_pool": 39,
+          "passages_top10": 10,
+          "ctx_cut": 0,
+          "section_fallbacks": 1
+        },
+        "cooccurrence_stats": {
+          "query_tokens": [
+            "anda",
+            "celular",
+            "hacer",
+            "lento",
+            "puedo"
+          ],
+          "hits_before_gate": 13,
+          "hits_after_gate": 0
+        }
+      },
+      "passage_relevance": 0.2,
+      "context_relevance": 0.222,
+      "cross_domain_leakage": 0.667,
+      "gold_containment": 0.0,
+      "gold_containment_per_fact": [
+        null,
+        null
+      ],
+      "context_estimated_tokens": 2552,
+      "tokens_if_fullfile": 59650,
+      "latency_ms": 1597.9,
+      "search_hit_paths": [
+        "Knowledge/Android/GameOptimization.md",
+        "Knowledge/Android/scrcpy.md",
+        "Knowledge/README.md",
+        "Knowledge/Vision.md",
+        "ai-context/CHANGELOG.md",
+        "ai-context/LOAD_CONTEXT.md",
+        "ai-context/SESION-archive.md",
+        "ai-context/SHIZUKU-RISH-BUG.md"
+      ],
+      "ctx_passage_ranges": [
+        [
+          "ai-context/SHIZUKU-RISH-BUG.md",
+          "158-172"
+        ],
+        [
+          "Knowledge/Vision.md",
+          "82-87"
+        ],
+        [
+          "Knowledge/README.md",
+          "66-85"
+        ],
+        [
+          "ai-context/SESION-archive.md",
+          "1492-1502"
+        ],
+        [
+          "ai-context/CHANGELOG.md",
+          "504-523"
+        ],
+        [
+          "Knowledge/Android/GameOptimization.md",
+          "22-28"
+        ],
+        [
+          "ai-context/SHIZUKU-RISH-BUG.md",
+          "250-261"
+        ],
+        [
+          "ai-context/LOAD_CONTEXT.md",
+          "258-278"
+        ],
+        [
+          "Knowledge/Android/scrcpy.md",
+          "60-62"
+        ],
+        [
+          "Knowledge/Android/GameOptimization.md",
+          "35-39"
+        ]
+      ]
+    },
+    {
+      "id": "Q08",
+      "query": "la terminal se ve opaca y quiero que se vea transparente",
+      "coverage": [
+        "no-lexical-signals"
+      ],
+      "strategy": "passage",
+      "variant": "seccion",
+      "fuse": "rrf",
+      "gold_domains": [
+        "Linux"
+      ],
+      "router_categories": [
+        "Android"
+      ],
+      "categories_recall": 0.0,
+      "spurious_categories": [
+        "Android"
+      ],
+      "router_precision": 0.0,
+      "router_recall": 0.0,
+      "gold_files": [
+        "Knowledge/Linux/System.md"
+      ],
+      "router_knowledge": [
+        "Knowledge/Android/ADB.md"
+      ],
+      "gold_in_router": [],
+      "search_top_n": 9,
+      "search_recall": 0.0,
+      "search_other_recall": 1.0,
+      "search_recall_raw": 1.0,
+      "gold_facts_matches": [
+        {
+          "text": "picom",
+          "status": "other_file_match",
+          "path": [
+            "ai-context/AGENTS.md",
+            "ai-context/CHANGELOG-archive.md",
+            "ai-context/INFO-core.md",
+            "ai-context/SESION-archive.md"
+          ]
+        },
+        {
+          "text": "P_TERM_OPACITY",
+          "status": "other_file_match",
+          "path": [
+            "ai-context/AGENTS.md",
+            "ai-context/CHANGELOG-archive.md",
+            "ai-context/SESION-archive.md"
+          ]
+        }
+      ],
+      "g_h0": {
+        "candidate_status": [
+          {
+            "text": "picom",
+            "candidate_status": "in_pool_top10",
+            "needle_in_corpus": true
+          },
+          {
+            "text": "P_TERM_OPACITY",
+            "candidate_status": "in_pool_top10",
+            "needle_in_corpus": true
+          }
+        ],
+        "pool_stats": {
+          "L": 3,
+          "S": 50,
+          "total": 50,
+          "passages_pool": 22,
+          "passages_top10": 9,
+          "ctx_cut": 0,
+          "section_fallbacks": 0
+        },
+        "cooccurrence_stats": {
+          "query_tokens": [
+            "opaca",
+            "terminal",
+            "transparente",
+            "vea"
+          ],
+          "hits_before_gate": 42,
+          "hits_after_gate": 3
+        }
+      },
+      "passage_relevance": 0.0,
+      "context_relevance": 0.0,
+      "cross_domain_leakage": 1.0,
+      "gold_containment": 1.0,
+      "gold_containment_per_fact": [
+        1.0,
+        1.0
+      ],
+      "context_estimated_tokens": 2489,
+      "tokens_if_fullfile": 43514,
+      "latency_ms": 1749.3,
+      "search_hit_paths": [
+        "ai-context/AGENTS.md",
+        "ai-context/CHANGELOG-archive.md",
+        "ai-context/INFO-core.md",
+        "ai-context/SESION-archive.md"
+      ],
+      "ctx_passage_ranges": [
+        [
+          "ai-context/SESION-archive.md",
+          "1051-1076"
+        ],
+        [
+          "ai-context/AGENTS.md",
+          "34-38"
+        ],
+        [
+          "ai-context/SESION-archive.md",
+          "1797-1822"
+        ],
+        [
+          "ai-context/INFO-core.md",
+          "6-16"
+        ],
+        [
+          "ai-context/SESION-archive.md",
+          "1027-1029"
+        ],
+        [
+          "ai-context/SESION-archive.md",
+          "1773-1775"
+        ],
+        [
+          "ai-context/SESION-archive.md",
+          "1095-1117"
+        ],
+        [
+          "ai-context/SESION-archive.md",
+          "1841-1862"
+        ],
+        [
+          "ai-context/CHANGELOG-archive.md",
+          "60-97"
+        ]
+      ]
+    },
+    {
+      "id": "Q09",
+      "query": "quiero optimizar el rendimiento",
+      "coverage": [
+        "ambiguous"
+      ],
+      "strategy": "passage",
+      "variant": "seccion",
+      "fuse": "rrf",
+      "gold_domains": [
+        "Android"
+      ],
+      "router_categories": [
+        "Android"
+      ],
+      "categories_recall": 1.0,
+      "spurious_categories": [],
+      "router_precision": 0.5,
+      "router_recall": 1.0,
+      "gold_files": [
+        "Knowledge/Android/GameOptimization.md"
+      ],
+      "router_knowledge": [
+        "Knowledge/Android/ADB.md",
+        "Knowledge/Android/GameOptimization.md"
+      ],
+      "gold_in_router": [
+        "Knowledge/Android/GameOptimization.md"
+      ],
+      "search_top_n": 9,
+      "search_recall": 0.5,
+      "search_other_recall": 0.0,
+      "search_recall_raw": 0.5,
+      "gold_facts_matches": [
+        {
+          "text": "scaling_governor",
+          "status": "gold_file_match",
+          "path": [
+            "Knowledge/Android/GameOptimization.md"
+          ]
+        },
+        {
+          "text": "force_gpu_rendering",
+          "status": "no_match",
+          "path": null
+        }
+      ],
+      "g_h0": {
+        "candidate_status": [
+          {
+            "text": "scaling_governor",
+            "candidate_status": "in_pool_top10",
+            "needle_in_corpus": true
+          },
+          {
+            "text": "force_gpu_rendering",
+            "candidate_status": "in_pool_ranked_out",
+            "needle_in_corpus": true
+          }
+        ],
+        "pool_stats": {
+          "L": 0,
+          "S": 50,
+          "total": 50,
+          "passages_pool": 40,
+          "passages_top10": 9,
+          "ctx_cut": 0,
+          "section_fallbacks": 0
+        },
+        "cooccurrence_stats": {
+          "query_tokens": [
+            "optimizar",
+            "rendimiento"
+          ],
+          "hits_before_gate": 11,
+          "hits_after_gate": 0
+        }
+      },
+      "passage_relevance": 0.0,
+      "context_relevance": 0.111,
+      "cross_domain_leakage": 0.667,
+      "gold_containment": 1.0,
+      "gold_containment_per_fact": [
+        1.0,
+        1.0
+      ],
+      "context_estimated_tokens": 3508,
+      "tokens_if_fullfile": 15116,
+      "latency_ms": 1587.5,
+      "search_hit_paths": [
+        "CONTRIBUTING.md",
+        "Knowledge/Android/GameOptimization.md",
+        "Knowledge/Android/HyperOS.md",
+        "Knowledge/Linux/Kernel.md",
+        "Knowledge/React/React.md",
+        "README.md",
+        "ai-context/AGENTS.md",
+        "ai-context/LOAD_CONTEXT.md"
+      ],
+      "ctx_passage_ranges": [
+        [
+          "Knowledge/Android/HyperOS.md",
+          "40-42"
+        ],
+        [
+          "README.md",
+          "38-140"
+        ],
+        [
+          "CONTRIBUTING.md",
+          "35-39"
+        ],
+        [
+          "ai-context/LOAD_CONTEXT.md",
+          "159-181"
+        ],
+        [
+          "Knowledge/React/React.md",
+          "42-61"
+        ],
+        [
+          "Knowledge/Linux/Kernel.md",
+          "46-51"
+        ],
+        [
+          "ai-context/AGENTS.md",
+          "8-12"
+        ]
+      ]
+    },
+    {
+      "id": "Q10",
+      "query": "la ZTE se calienta cuando juego free fire",
+      "coverage": [
+        "leakage"
+      ],
+      "strategy": "passage",
+      "variant": "seccion",
+      "fuse": "rrf",
+      "gold_domains": [
+        "Android"
+      ],
+      "router_categories": [
+        "Android"
+      ],
+      "categories_recall": 1.0,
+      "spurious_categories": [],
+      "router_precision": 0.5,
+      "router_recall": 0.5,
+      "gold_files": [
+        "Knowledge/Android/GameOptimization.md",
+        "Knowledge/Android/NubiaLab.md"
+      ],
+      "router_knowledge": [
+        "Knowledge/Android/ADB.md",
+        "Knowledge/Android/GameOptimization.md"
+      ],
+      "gold_in_router": [
+        "Knowledge/Android/GameOptimization.md"
+      ],
+      "search_top_n": 10,
+      "search_recall": 0.0,
+      "search_other_recall": 0.0,
+      "search_recall_raw": 0.0,
+      "gold_facts_matches": [
+        {
+          "text": "dumpsys thermalservice",
+          "status": "no_match",
+          "path": null
+        },
+        {
+          "text": "thermal_control",
+          "status": "no_match",
+          "path": null
+        }
+      ],
+      "g_h0": {
+        "candidate_status": [
+          {
+            "text": "dumpsys thermalservice",
+            "candidate_status": "out_of_pool",
+            "needle_in_corpus": true
+          },
+          {
+            "text": "thermal_control",
+            "candidate_status": "out_of_pool",
+            "needle_in_corpus": true
+          }
+        ],
+        "pool_stats": {
+          "L": 43,
+          "S": 50,
+          "total": 61,
+          "passages_pool": 30,
+          "passages_top10": 10,
+          "ctx_cut": 0,
+          "section_fallbacks": 0
+        },
+        "cooccurrence_stats": {
+          "query_tokens": [
+            "calienta",
+            "fire",
+            "free",
+            "juego",
+            "zte"
+          ],
+          "hits_before_gate": 50,
+          "hits_after_gate": 43
+        }
+      },
+      "passage_relevance": 0.1,
+      "context_relevance": 0.333,
+      "cross_domain_leakage": 0.333,
+      "gold_containment": 0.0,
+      "gold_containment_per_fact": [
+        null,
+        null
+      ],
+      "context_estimated_tokens": 3427,
+      "tokens_if_fullfile": 51813,
+      "latency_ms": 1615.4,
+      "search_hit_paths": [
+        "Knowledge/Android/Keymappers.md",
+        "Knowledge/Android/NubiaLab.md",
+        "ai-context/CHANGELOG.md",
+        "ai-context/SESION-archive.md"
+      ],
+      "ctx_passage_ranges": [
+        [
+          "Knowledge/Android/Keymappers.md",
+          "26-46"
+        ],
+        [
+          "ai-context/CHANGELOG.md",
+          "180-196"
+        ],
+        [
+          "ai-context/SESION-archive.md",
+          "429-441"
+        ],
+        [
+          "Knowledge/Android/Keymappers.md",
+          "6-15"
+        ],
+        [
+          "ai-context/SESION-archive.md",
+          "299-322"
+        ],
+        [
+          "Knowledge/Android/NubiaLab.md",
+          "16-33"
+        ],
+        [
+          "ai-context/SESION-archive.md",
+          "1940-1941"
+        ],
+        [
+          "Knowledge/Android/Keymappers.md",
+          "47-55"
+        ],
+        [
+          "ai-context/SESION-archive.md",
+          "686-709"
+        ],
+        [
+          "ai-context/SESION-archive.md",
+          "829-852"
+        ]
+      ]
+    }
+  ],
+  "determinism_hash": "528fe12a6226c3c1"
+}
