@@ -773,6 +773,53 @@ que no puede separar agujas gold de ruido. La evidencia apunta a que el siguient
 nivel es **query expansion (Q03/Q08)** y/o **granularidad del ctx distinta** (pasajes,
 no archivos enteros) — fuera del alcance de este paso. Runtime sigue congelado.
 
+## ✅ Paso 8 — CERRADO · E/F descartados · 2026-08-12
+
+**Veredicto del usuario (2026-08-12, transcrito):** el Hybrid bounded V1 NO es
+adoptable. El diagnóstico es más interesante que "falló el gate":
+
+> | | AND | AND-norm | Semantic | Hybrid |
+> |---|---|---|---|---|
+> | Recall | 0.000 | 0.100 | **0.200** | **0.200** |
+> | Relevance | **0.533** | 0.333 | 0.192 | 0.185 |
+> | Leakage | **0.267** | 0.522 | 0.669 | 0.605 |
+> | Tokens | **5.2k** | 38k | 48k | **~10k** |
+>
+> **El presupuesto ya no es el problema principal**: el Hybrid redujo ~4.8× el coste de
+> D pero no recuperó la calidad del contexto → descarta "mezclar mejor las ramas".
+>
+> Hay DOS problemas distintos, medibles por G-H0:
+>
+> 1. **Candidate generation** — Q03 y varias queries más son `out_of_pool`: ni RRF ni
+>    rank⁻¹ pueden solucionarlas → se necesita **query expansion / representación
+>    alternativa de la consulta** (más adelante, no ahora).
+> 2. **Context selection** — Q08: `picom` SÍ entra al pool vía rama léxica pero queda
+>    fuera del top-10 (generación ✅ pool ✅ fusión ❌ contexto ❌) → problema real de
+>    selección. Y Q04/Q06 revelan el problema estructural:
+>
+>    ```
+>    gold encontrado → top-10 → archivo correcto → 14.4k tokens → budget=10.4k
+>    → archivo truncado → context_relevance = 0
+>    ```
+>
+> **Decisión:** Paso 8 cerrado · E/F descartados · runtime intacto · NO implementar
+> todavía query expansion. **Primero diseñar Paso 9: passage-level context selection**
+> (cambiar la unidad de contexto de archivo completo a pasajes), con gate nuevo que
+> mida: recuperación del hecho · relevancia del pasaje · leakage · tokens · capacidad
+> de contener el gold dentro del presupuesto. Spec: `scripts/tests/evals/passage-level-DESIGN.md`.
+>
+> **Evidencia de viabilidad (medida 2026-08-12):** los gold facts de Q04/Q06 viven en
+> CHANGELOG.md (14 375 tok completo) en ventanas de pocas líneas:
+>
+> | Query | Gold completo | Ventana ±4 del hecho | Sección markdown |
+> |---|---|---:|---:|
+> | Q04 | 14 375 tok | **505 tok** (líneas 199-213) | 1 266 tok |
+> | Q06 | 14 375 tok | **310 tok** (líneas 182-194) | 376 tok |
+> | Q01-Q10 Knowledge/* | 492-1 493 tok | 58-700 tok | — |
+>
+> → entregar `CHANGELOG.md:199-213` (~500 tok) en vez del archivo completo elimina
+> truncamiento, coste, ruido interno y pérdida de relevancia de golpe.
+
 ### Estado de la suite en el perfil PC (2026-08-11)
 
 > ⚠️ **La suite del perfil PC no está actualmente 100% verde** por incompatibilidades
