@@ -2,7 +2,7 @@
 
 > Base de conocimiento estructurada para consulta rápida por agentes IA.
 > Contenido extraído y resumido de skills, proyectos y experiencia acumulada.
-> Actualizado: 2026-08-06
+> Actualizado: 2026-08-12
 
 ---
 
@@ -38,7 +38,8 @@ Knowledge/
 │   └── Node.md             → Node.js, npm global, package management
 │
 ├── Tools/                  → Herramientas de desarrollo
-│   └── CodeGraph.md        → CodeGraph: grafo de código, comandos, MCP, troubleshooting
+│   ├── CodeGraph.md        → CodeGraph: grafo de código, comandos, MCP, troubleshooting
+│   └── Benchmark-realista.md → Benchmark realista de context selection (baselines, fases 1-3)
 │
 └── Shell/                  → Bash/Zsh scripting
     └── Shell.md            → Shell scripting (bash, zsh, awk, sed)
@@ -77,6 +78,8 @@ Para **mangonz**: cuando aprendas algo nuevo y quieras guardarlo:
 | `React/PWA.md` | Proyectos `pwa_securguard`, `widgetos` |
 | `Shell/Shell.md` | `.agents/skills/modo-autonomo/` |
 | `AI/Kimi-K3.md` | — (referencia, sin skill aún) |
+| `Tools/Benchmark-realista.md` | — (referencia del benchmark, sin skill aún) |
+| — (automatización web) | `.agents/skills/form-filler/` (llenado universal de formularios) · `.agents/skills/image-analyzer/` (OCR) |
 
 > Las skills son instrucciones **ejecutables** para el agente.
 > Knowledge/ es **referencia** para consulta rápida.

@@ -1,7 +1,11 @@
 # Paso 7 — Experimento semántico diagnóstico (retrieval aislado)
 
-> Estado: **DISEÑO** (2026-08-11) — pendiente de aprobación del usuario.
-> Base: EVAL con gold definitivo (hash `98a0e308…`), baselines A/B/C regenerados (v3.1).
+> Estado: **EJECUTADO** (2026-08-12) — D (bge-m3) medido sobre el EVAL, 2 corridas con
+> determinismo G2 ✅. Resultados registrados en EVAL-REGISTRY.md → Paso 7.
+> **Veredicto del gate: D NO pasa (recall 0.200 ✅, relevance 0.192 ❌, leakage 0.669 ❌,
+> tokens 47.9k ❌).** No se adopta nada. Base: EVAL con gold definitivo (hash
+> `98a0e308…`), baselines A/B/C regenerados (v3.1).
+> Runner: `run-semantic-PC.sh` (implementado y validado con mock + corrida real).
 
 ## 1. Objetivo
 
@@ -68,7 +72,14 @@ lexical retrieval (FTS5 BM25)  →  semantic retrieval (embeddings + coseno)
   `buffy-search.sh`). Embeddings por línea vía `POST /api/embed`.
 - **Retrieval**: similitud coseno(query, línea) → top-LIMIT.
 - **Runner nuevo**: `scripts/tests/evals/run-semantic-PC.sh` — NO toca el runner
-  lexical ni el runtime.
+  lexical ni el runtime. **IMPLEMENTADO (2026-08-12)**: replica el cálculo de métricas
+  v3.1 del runner lexical (search_recall por path gold_file_match, ctx = router ∪ topK,
+  leakage sin penalizar gold, token_cost chars/4, determinism_hash para el gate G2);
+  índice cacheado en `~/.cache/buffy-eval-semantic/` (hash del corpus, `--reindex` para
+  forzar rebuild); batches a `/api/embed` con fallback al endpoint deprecado; `--model`
+  para bge-m3/nomic-embed-text; compara contra A/B/C en la tabla final si los JSON
+  existen. Uso: `run-semantic-PC.sh [--model bge-m3] [--ollama URL] [--limit N]
+  [--reindex] [--json] [--quiet]`.
 
 ## 6. Gate (estricto, pre-fijado ANTES de medir)
 
@@ -105,15 +116,33 @@ runtime) es decisión del usuario, con la evidencia sobre la mesa.
 1. `ollama pull bge-m3` (o `nomic-embed-text` para sanity).
 2. `scripts/tests/evals/run-semantic-PC.sh` — indexa corpus → embeddings por línea →
    coseno → top-LIMIT → métricas v3.1 (mismo cálculo que el runner lexical).
+   **✓ Runner implementado y validado**; falta solo la corrida real con el modelo descargado.
 3. Correr **D (semantic)** sobre el MISMO EVAL → comparar contra A/B/C.
 4. Reportar tabla agregada + desglose per-query (Q03/Q06/Q08 en foco) → decisión del usuario.
 
-## 10. Riesgos / consideraciones
+## 10. Resultado medido (2026-08-12) — resumen para el lector
 
-- Descarga única del modelo (~1.2 GB bge-m3 / ~274 MB nomic) — requiere internet.
-- Python 3.14: usar la API HTTP de Ollama (sin dependencias ML nuevas).
-- Corpus pequeño (~41 archivos / ~7.3k líneas) → indexación rápida en CPU.
-- Determinismo: embeddings de Ollama son deterministas para modelo+input fijos
-  (sin sampling) → reproducible.
-- Si bge-m3 no está disponible en el registro de Ollama, fallback documentado:
-  `nomic-embed-text` como default y se anota el cambio en el registro.
+| métrica | A | B | C | **D (bge-m3)** | gate |
+|---|---|---|---|---|---|
+| search_recall | 0.000 | 0.050 | 0.100 | **0.200** | > 0.100 ✅ |
+| context_relevance | 0.533 | 0.182 | 0.333 | 0.192 | ≥ 0.600 ❌ |
+| cross_domain_leakage | 0.267 | 0.694 | 0.522 | 0.669 | ≤ 0.267 ❌ |
+| token_cost avg | 5 197 | 45 259 | 38 017 | 47 980 | ≤ ~10.4k ❌ |
+
+**Qué respondió el experimento:** D recupera Q04 y Q06 como gold (Q06 — `FF_SEEN` —
+por primera vez en cualquier variante), pero **Q03/Q08 NO se resuelven** (no_match /
+other). El coste se comporta como OR (leakage 0.669, tokens 48k, relevance 0.192):
+el modelo arrastra medio repositorio al top-10. Latencia 1 449 ms (embed por query).
+**Conclusión:** el retrieval semántico naive por línea no resuelve el puente
+ES→EN/técnico de Q03/Q08 y su coste lo descarta como reemplazo de A. No se adopta.
+
+## 11. Riesgos / consideraciones (registrados en la ejecución)
+
+- Descarga única del modelo (1.2 GB bge-m3) — hecha el 2026-08-12.
+- Python 3.14: se usó la API HTTP de Ollama (sin dependencias ML nuevas) ✓.
+- Corpus: 46 archivos / 6 880 líneas (más de lo estimado) — **indexación ~38 min en
+  CPU** (~3.3 líneas/s, bge-m3 1024-dim), NO "rápida" como se estimó; mitigado con
+  cache en `~/.cache/buffy-eval-semantic/` (2ª corrida sin rebuild).
+- Determinismo: embeddings de Ollama deterministas ✓ (2 corridas, mismo hash).
+- `bge-m3` disponible en el registro; no se necesitó el fallback `nomic-embed-text`.
+  (Pendiente futuro, si el usuario lo pide: sanity en inglés.)
