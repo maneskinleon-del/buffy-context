@@ -7,6 +7,20 @@
 
 ---
 
+## 🚀 Buffy 2.0 — Roadmap post-Fase 3 (REGISTRADO 2026-08-11, implementar DESPUÉS de los experimentos de Fase 3)
+
+> Decisión del usuario: esto es lo que viene después de Fase 3. **No tocar el CORE antes**; primero evidencia (benchmark), después arquitectura. Cuando se termine Fase 3, retomar esta sección.
+
+**Pipeline objetivo:** `Router → Domain Agent → Skills → Context Pack → agente de ejecución`
+
+1. **Router → Domain Agent → Skills**: el Domain Agent selecciona SOLO las skills necesarias (nada de cargar todo).
+2. **Buffy Android Agent** como especialista/orquestador de Android (no el genérico).
+3. **OpenCode ejecuta; NO compite con Buffy por el routing** (un solo router/dominio; el agente ejecuta, no re-enruta).
+4. **Plugins/adapters = capa de integración, NO dentro del CORE.**
+5. **Regla de hierro**: implementación SOLO con evidencia previa (mismas gates/medición que Fase 3) antes de incorporar cualquier pieza al CORE.
+
+---
+
 ## Resumen de la sesión (2026-08-11 — opencode, Fase 1 del benchmark realista)
 
 **Tema:** aprobada la spec FASE 1 con corrección del usuario (términos ≥3 chars — ADB/API/Git/SSH/CPU/DPI/VLM/APK/USB son técnicos valiosos; ≥4 los descartaba) → implementada, testeada y medida. **Luego en la misma sesión: Fase 2 diagnóstica implementada (modo `--diagnose` del router, report-only) y EJECUTADA (14 multi × 3 seeds) con veredicto del usuario 🟢 aprobado; Fase 3 spec v2 escrita con los 5 ajustes de revisión; reglas de arquitectura del proyecto registradas en `~/AGENTS.md` y spec §11.**
