@@ -8,6 +8,9 @@
 > determinismo → comparar contra gates → registrar → commit → detenerse".
 > Nota metodológica: el ctx se deduplica por (path, rango) — MÚLTIPLES pasajes del
 > mismo archivo entran al ctx (corregido tras review; la v1 solo dejaba 1 por path).
+> Cierre (2026-08-12): veredicto del usuario — G1/G2 NO adoptados, passage-level
+> VALIDADO como componente útil (Q04/Q06 resueltos); Fase 3 sigue abierta → el
+> siguiente paso es el **Paso 10 (query expansion)**, en diseño, sin implementar.
 
 ## 1. Objetivo e hipótesis
 
@@ -303,3 +306,24 @@ El pasaje es **NECESARIO pero NO SUFICIENTE**: elimina el truncamiento y mejora 
 recall, pero no la calidad del ctx. El límite se movió de "cómo entrego el gold" a
 "**qué pasajes selecciono**". Evidencia para el Paso 10: query expansion (candidate
 gap Q03/Q01/Q10) + selección/rerank de pasajes (Q08). Runtime sigue congelado.
+
+## Anexo B — Cierre · veredicto del usuario (2026-08-12)
+
+**G1/G2 NO adoptados.** El experimento cumplió su objetivo aunque ambas variantes
+fallaron el gate: passage-level es una **mejora arquitectónica real** (Q04/Q06
+resueltos: gold_containment 0.0→1.0; recall 0.417 el mejor de la serie) pero **no
+resuelve por sí solo la selección del pasaje correcto**.
+
+- **Q03 → candidate generation** (`gh pr create` `out_of_pool`): sin candidato, ningún
+  reranker lo arregla → **Paso 10 (query expansion)**, aislado, con gates pre-fijados.
+- **Q08 → ranking/selection** (`picom` en pool y top-10, gold file fuera): hipótesis
+  **separada** de rerank — NO se resuelve con la misma técnica que el gap.
+- **Q04/Q06 → context-size**: resuelto por los pasajes (ventana ±4 = 310-505 tok).
+- **passage_relevance 0.072/0.054 y leakage 0.606** son la preocupación principal
+  para el siguiente experimento: más candidatos ≠ mejor contexto.
+- El dedup corregido a **(path, rango)** (durante la implementación, tras review) fue
+  aprobado por el usuario: evitó contaminar el experimento con una violación de su
+  propia spec.
+
+Fase 3 sigue abierta. Próximo: diseño del Paso 10, **sin implementar todavía**.
+Runtime sigue congelado.

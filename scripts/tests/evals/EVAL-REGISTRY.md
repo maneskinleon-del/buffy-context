@@ -911,8 +911,76 @@ Evidencia para el siguiente nivel (Paso 10): **query expansion** para candidate 
 (Q03/Q01/Q10) y **selección/rerank de pasajes** para Q08. Runtime sigue congelado;
 nada se adopta.
 
-### Estado de la suite en el perfil PC (2026-08-11)
+## ✅ Paso 9 — CERRADO · G1/G2 no adoptados · passage-level VALIDADO como componente · 2026-08-12
 
+**Veredicto del usuario (2026-08-12):** el experimento cumplió su objetivo aunque
+ambas variantes fallaron el gate. Conclusión central:
+
+> Pasar de archivo completo a pasajes SÍ fue una mejora arquitectónica real, pero no
+> resuelve por sí solo la selección del pasaje correcto.
+
+Esto evita el error de ver Q04/Q06 funcionando y concluir que "passage retrieval está
+resuelto".
+
+### Separación de problemas (lo que el EVAL dibujó)
+
+| Problema | Evidencia | Estado |
+|---|---|---|
+| Archivo completo demasiado grande | Q04/Q06: 14.4k → pasajes de 310-505 tok | 🟢 Resuelto conceptualmente |
+| Recuperar evidencia correcta | G1 recall 0.417 | 🟢 Mejoró mucho |
+| Selección de evidencia | Q08 llega al pool/top-10, pero no el gold | 🔴 Pendiente |
+| Candidate generation | Q03 `gh pr create` sigue `out_of_pool` | 🔴 Pendiente |
+| Coste | 2.6k / 3.4k tok | 🟢 Excelente |
+| Leakage | 0.606 | 🔴 Pendiente |
+| Passage relevance | 0.072 / 0.054 | 🔴 Serio pendiente |
+
+La preocupación principal NO es el recall: es **passage_relevance 0.072/0.054** frente
+al objetivo 0.600 y **leakage 0.606** — el sistema selecciona pasajes que cumplen
+algún criterio de similitud pero no son evidencia útil.
+
+### Mapa de fallas por query (tres capas distintas)
+
+- **Q03 → generación**: `gh pr create` no aparece en el pool; ningún reranker puede
+  arreglar un candidato que no se genera.
+- **Q08 → ranking**: `picom` entra al pool y al top-10, pero System.md (gold) queda
+  fuera del top-10 → aquí SÍ existe oportunidad real de mejora de ranking.
+- **Q04/Q06 → contexto**: pasaje pequeño con gold completo dentro del presupuesto →
+  **RESUELTO** por passage-level (gold_containment 1.0).
+
+### Lo que NO se hará (listado por el usuario)
+
+No volver a: aumentar top-10 · subir top-50 · meter más embeddings · aumentar
+presupuesto · volver a OR · tocar pesos de RRF arbitrariamente · aceptar leakage alto
+a cambio de recall. Ya hay evidencia de que **más candidatos no equivalen a mejor
+contexto**.
+
+### Estado de Fase 3 (serie completa)
+
+| Estrategia | Recall | Relevance | Leakage | Tokens avg | Estado |
+|---|---:|---:|---:|---:|---|
+| A — AND | 0.000 | 0.533 | 0.267 | 5.2k | ❌ |
+| B — OR | 0.050 | 0.182 | 0.694 | 45.3k | ❌ |
+| C — AND-norm | 0.100 | 0.333 | 0.522 | 38.0k | ❌ |
+| D — Semantic | 0.200 | 0.192 | 0.669 | 48.0k | ❌ |
+| E — Hybrid-RRF | 0.200 | 0.185 | 0.605 | 9.9k | ❌ |
+| F — Hybrid-POOL | 0.200 | 0.179 | 0.612 | 10.0k | ❌ |
+| G1 — VENTANA | 0.417 | 0.072 | 0.606 | 2.6k | ❌ gate |
+| G2 — SECCIÓN | 0.333 | 0.054 | 0.606 | 3.4k | ❌ gate |
+
+Pero: **passage-level → hipótesis confirmada ✅** · Q03 → candidate-gap 🔴 · Q08 →
+ranking/selection gap 🔴 · Q04/Q06 → context-size problem 🟢.
+
+### Decisión
+
+**Fase 3 NO se cierra todavía.** El Paso 9 produce evidencia suficiente para el
+siguiente experimento: **Query Expansion (Paso 10)**, aislado y con gates pre-fijados
+— sin implementar todavía. El reranking de pasajes queda como **otra hipótesis
+separada** (Q08: existe un candidato correcto que el sistema no sabe priorizar). El
+usuario aprueba además la corrección del dedup a (path, rango) hecha durante la
+implementación: evitó que el experimento quedara contaminado por una violación de su
+propia spec.
+
+### Estado de la suite en el perfil PC (2026-08-11)
 > ⚠️ **La suite del perfil PC no está actualmente 100% verde** por incompatibilidades
 > de entorno/drift documental **preexistentes** (verificadas: no fueron producidas por
 > la Fase 3 ni por la Baseline A):
