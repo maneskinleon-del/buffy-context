@@ -5,6 +5,26 @@
 
 ---
 
+## 🗂️ buffy-context tooling (2026-08-12 · opencode / FreeBuff)
+
+### Pedido del usuario
+Complementar las limitaciones de FreeBuff (memoria, MCP, plugins) creando en buffy-context un registro MCP y un índice de skills; luego corregir el drift del README y loggear en la memoria de sesión.
+
+### Lo hecho
+1. **`MCP_REGISTRY.md`** (raíz de buffy-context): catálogo portátil de MCP — `codegraph` (AVAILABLE en OpenCode), `OpenRouter MCP` (remoto opcional), `mcp-cli` (puente shell para FreeBuff, que no expone MCP nativo en el build free). Incluye plantilla `.agents/mcp.json`.
+2. **`SKILLS_INDEX.md`** (raíz de buffy-context): índice de los **43 skills reales** (`~/.agents/skills/`) por dominio con propósito + disparador (Android 12, Frontend 7, Workflow 7, Thinking 6, Research 6, Coding rigor 3, Meta 2). Cubre la ausencia de plugins en FreeBuff.
+3. **README drift corregido**: "23 skills" → "43 skills" en 4 lugares. "19 files" de Knowledge confirmado correcto (19 contenido + Vision.md + README índice = 21).
+
+### Veredicto
+buffy-context ahora cubre Memoria + MCP + Plugins, client-agnostic (FreeBuff / OpenCode / futuro Buffy 10B local). Estos archivos son la "parte tuya" que se entrega al modelo.
+
+### Fix posterior — el doctor no detectaba el drift de skills
+- **Causa raíz**: `buffy-doctor.sh` compara el README contra `$REPO_DIR/.agents/skills` (copia del repo = **23 skills**), no contra el entorno real `~/.agents/skills` (= **43 skills**). Como el README decía "23", el doctor veía CONSISTENTE. El drift real era la copia del repo desfasada, no el número del README.
+- **Parche** (`scripts/buffy-doctor.sh`, sección Skills): check #4 compara el conteo declarado en README vs `~/.agents/skills` (hubiera pescado el "23 vs 43"); check #5 avisa `REPO_SKILLS_STALE` cuando la copia del repo (23) está detrás del entorno real (43). Verificado: con README=23 el doctor ahora lanza `README_SKILL_COUNT_DRIFT`; con README=43 pasa y marca el repo como desfasado (warning, no error).
+- **Pendiente**: decidir si sincronizar el repo `.agents/skills` 23→43 (acción con git) o dejar el repo como subconjunto curado.
+
+---
+
 ## 🔎 EVAL PC — Pasos 7→10B (Fase 3 · runner experimentales · runtime congelado)
 
 ### Pedido del usuario

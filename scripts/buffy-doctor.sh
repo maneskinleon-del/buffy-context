@@ -266,7 +266,7 @@ section "🎯 Skills (referenciadas en docs vs realidad)"
 #    (patrón skills/nombre en cualquier doc + lista "Skills a cargar" de LOAD_CONTEXT)
 #    Se excluyen *-archive.md: son historial, no promesas activas.
 mapfile -t DOCUMENTED_SKILLS < <({
-  grep -rhoE 'skills/[a-z0-9_-]+' "$REPO_DIR" --include='*.md' --exclude='*-archive.md' 2>/dev/null | sed 's|skills/||'
+  grep -rhoE 'skills/[a-z0-9_-]+' "$REPO_DIR" --include='*.md' --exclude='*-archive.md' --exclude-dir=.agents 2>/dev/null | sed 's|skills/||'
   grep -n -A1 'Skills a cargar\|Skills relacionadas\|Skills relacionada' "$REPO_DIR/ai-context/LOAD_CONTEXT.md" "$REPO_DIR/Knowledge/README.md" 2>/dev/null \
     | grep -oE '`[a-z0-9_-]+`' | tr -d '`'
 } | sort -u)
@@ -320,6 +320,34 @@ for skill in "${HOME_FLAT_SKILLS[@]}"; do
     *) warn "$skill — en ~/.agents/skills/ como .md plano, no referenciada en docs" "FLAT_SKILL_UNREFERENCED" "migrate_flat_skill" "$skill" ;;
   esac
 done
+
+# 4. Conteo declarado en README vs entorno real (~/.agents/skills) — drift del número headline
+#    El entorno real es la fuente de verdad; el repo puede tener una copia desfasada.
+LIVE_SKILL_COUNT=$(find "$HOME/.agents/skills" -maxdepth 2 -name SKILL.md 2>/dev/null | wc -l | tr -d ' ')
+if [ "$LIVE_SKILL_COUNT" -gt 0 ]; then
+  DECLARED_COUNTS=$(grep -oE '\*\*[0-9]+ skills\*\*|[0-9]+ AI agent skills|Skills \([0-9]+ en disco\)' "$REPO_DIR/README.md" 2>/dev/null \
+    | grep -oE '[0-9]+' | sort -u)
+  if [ -z "$DECLARED_COUNTS" ]; then
+    warn "No se encontró un conteo de skills declarado en README.md (esperado '**N skills**' / 'N AI agent skills' / 'Skills (N en disco)')" "README_SKILL_COUNT_UNPARSEABLE" "update_readme_count" "$LIVE_SKILL_COUNT"
+  else
+    for dc in $DECLARED_COUNTS; do
+      if [ "$dc" -ne "$LIVE_SKILL_COUNT" ]; then
+        err "README declara $dc skills pero el entorno real (~/.agents/skills) tiene $LIVE_SKILL_COUNT (drift del número headline)" "README_SKILL_COUNT_DRIFT" "update_readme_count" "$LIVE_SKILL_COUNT"
+      else
+        ok "Conteo de skills en README coincide con el entorno real: $dc == $LIVE_SKILL_COUNT"
+      fi
+    done
+  fi
+  # 5. El repo debe reflejar el entorno real (su copia de .agents/skills no debe estar desfasada)
+  REPO_SKILL_COUNT=$(find "$REPO_DIR/.agents/skills" -maxdepth 2 -name SKILL.md 2>/dev/null | wc -l | tr -d ' ')
+  if [ "$REPO_SKILL_COUNT" -ne "$LIVE_SKILL_COUNT" ]; then
+    warn "El repo tiene $REPO_SKILL_COUNT skills en .agents/skills/ pero el entorno real tiene $LIVE_SKILL_COUNT — el repo está desfasado" "REPO_SKILLS_STALE" "sync_repo_skills" "$LIVE_SKILL_COUNT"
+  else
+    ok "Copia de skills del repo sincronizada con el entorno real: $REPO_SKILL_COUNT"
+  fi
+else
+  warn "No se pudo contar skills en ~/.agents/skills (inexistente o vacío) — se omite el chequeo de conteo" "LIVE_SKILLS_UNREADABLE" "" ""
+fi
 
 # ══════════════════════════════════════════════════════════
 section "🛠️  Scripts (scripts/)"

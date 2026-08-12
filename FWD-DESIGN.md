@@ -109,7 +109,29 @@ gate. Así el gate nunca depende de heurísticas de contenido o de procesos.
 | `FOREIGN_CHANGE` en archivo que la sesión **NO** necesita tocar | **Continuar**, pero **informar** (listado al final del turno / en el reporte de sesión). |
 | `FOREIGN_CHANGE` o `UNKNOWN` en archivo que la sesión **SÍ** necesita modificar | **STOP**: no escribir, no commiteear; solicitar decisión al usuario con el detalle (path, tipo de cambio, señales). |
 | `FOREIGN_CHANGE` que **intersecta** los archivos de un `git commit`/`push` propio | **STOP** del commit: no incluir archivos ajenos; re-chequear (la otra sesión pudo escribir mientras tanto). |
-| `FOREIGN_CHANGE` en el resto del tree, con commit **selectivo** de archivos propios (`git add <mis archivos>` explícito) | **OK**: commitear solo lo propio es seguro y es exactamente el flujo real de hoy (commit `4aa663a`). Informar al final. |
+| `FOREIGN_CHANGE` en el resto del tree, con commit **selectivo** de archivos propios | **OK solo con `git commit -- <paths>`**: ver agujero S5 abajo — `git add <mis archivos>` + `git commit` NO es suficiente. Informar al final. |
+
+### 4.2 Agujero real descubierto al validar esta spec (2026-08-12, mismo día)
+
+Al commitear esta misma spec ocurrió el fallo en vivo: la otra sesión había dejado
+**4 borrados staged en el índice** (`code-search`, `vision-adapter` y otros 2 skills;
+`D` en primera columna de `git status` = staged deletion). El flujo `git add
+<mis archivos>` + `git commit` **commiteó todo el índice** — incluyó los borrados
+ajenos junto a los archivos propios (commit `ed06814`, 6 files cuando debían ser 2).
+
+**Lección incorporada al diseño:**
+
+```text
+1. El chequeo pre-commit debe inspeccionar el ÍNDICE COMPLETO (git diff --cached),
+   no solo el working tree: cualquier entrada staged ajena = FOREIGN.  ← S5 aplicado
+2. El commit selectivo seguro es `git commit -- <paths propios>` (commitea SOLO
+   esos paths, ignorando el resto del índice), no `git add + git commit`.
+3. Si hay staged ajeno en el índice → NO commitear sin decisión (aunque los paths
+   del commit sean propios).
+```
+
+Este agujero refuerza la política "detecta, clasifica, protege; nunca adopta": el
+índice es parte del estado observable y debe clasificarse como el working tree.
 
 ### 4.1 Gate previo a escritura (extensión propuesta) — con re-hash inmediato
 
