@@ -820,6 +820,97 @@ adoptable. El diagnóstico es más interesante que "falló el gate":
 > → entregar `CHANGELOG.md:199-213` (~500 tok) en vez del archivo completo elimina
 > truncamiento, coste, ruido interno y pérdida de relevancia de golpe.
 
+## 🔬 Paso 9 — EJECUTADO · G1 y G2 no pasan el gate (relevance/leakage) · 2026-08-12
+
+**Autorizado por el usuario (2026-08-12):** implementar runner → verificar G-H0 →
+ejecutar G1 → ejecutar G2 → determinismo → comparar contra gates → registrar →
+commit → detenerse. Sin query expansion, sin tocar `buffy-search.sh`/`buffy-router.sh`,
+sin pesos/calibración/modelos nuevos/EVAL modificado.
+
+**Runner:** `scripts/tests/evals/run-passage-PC.sh` — ramas L/S idénticas a E/F (misma
+fusión V1-RRF k=60), pero cada hit del top-10 se expande a un **pasaje**: G1-VENTANA
+(`[lineno-4, lineno+4]`, 9 líneas) o G2-SECCIÓN (bloque entre headings `#{1,3}`).
+ctx = router ∪ pasajes(top-10) con **dedup por (path, rango)** (permitiendo MÚLTIPLES
+pasajes del mismo archivo — corregido en review), presupuesto 10.4k sobre el
+**pasaje** (chars/4), métricas v3.1 + `passage_relevance` + `gold_containment` +
+G-H0 re-derivado sobre pasajes. Determinismo G2: hashes idénticos en 2 corridas por
+variante (G1 `b7d17efd…`, G2 `528fe12a…`). Instrumento v3.1, EVAL `98a0e308…`,
+`snippet_scope: passage`.
+
+### Resultados agregados (gold definitivo, v3.1)
+
+| Estrategia | Recall | pRel | cRel(file) | Leakage | Tokens avg | gold_containment |
+|---|---:|---:|---:|---:|---:|---:|
+| A — AND | 0.000 | — | 0.533 | 0.267 | 5 197 | — |
+| C — AND-norm | 0.100 | — | 0.333 | 0.522 | 38 017 | — |
+| D — Semantic | 0.200 | — | 0.192 | 0.669 | 47 980 | — |
+| E — Hybrid-RRF | 0.200 | — | 0.185 | 0.605 | 9 951 | 0.0 (Q04/Q06) |
+| F — Hybrid-POOL | 0.200 | — | 0.179 | 0.612 | 10 039 | 0.0 (Q04/Q06) |
+| **G1 — VENTANA** | **0.417** | 0.072 | 0.214 | 0.606 | **2 569** | **0.8** |
+| **G2 — SECCIÓN** | 0.333 | 0.054 | 0.214 | 0.606 | **3 373** | 0.7 |
+
+> ⚠️ Tokens de G1/G2 **no comparables** con A-F (unidad = pasaje, no archivo): se
+> reporta `tokens_if_fullfile` secundaria (43.8k media, misma base que A-F).
+
+### Gate (5 criterios simultáneos) — G1 y G2
+
+| Criterio | Umbral | G1 | G2 | ¿Pasa? |
+|---|---|---:|---:|---|
+| search_recall | > 0.100 | 0.417 | 0.333 | ✅ (mejor de la serie) |
+| passage_relevance | ≥ 0.600 | 0.072 | 0.054 | ❌ |
+| cross_domain_leakage | ≤ 0.267 | 0.606 | 0.606 | ❌ |
+| token_cost | ≤ ~10.4k | 2 569 | 3 373 | ✅ |
+| gold_containment | ≥ 0.80 | 0.8 | 0.7 | ✅/❌ (justo/falta) |
+
+→ **G1 y G2 NO pasan el gate** (passage_relevance y leakage fallan). El pasaje
+resuelve el problema de PRESUPUESTO (gold_containment de Q04/Q06 = 1.0, tokens ~2k)
+pero NO el de CALIDAD del ctx: los pasajes no-gold del top-10 siguen dominando.
+
+### G-H0 adaptado (por aguja, sobre pasajes)
+
+| Query | Aguja | G1 | G2 | Interpretación |
+|---|---|---|---|---|
+| Q04 | xset -dpms / xset s off | `in_pool_top10` ×2 | `in_pool_top10` ×2 | **gold entregado en pasaje CHANGELOG.md:199-207 (~505 tok)** — el truncamiento estructural del Paso 8 queda RESUELTO |
+| Q06 | FF_SEEN | `in_pool_top10` | `in_pool_top10` | gold en CHANGELOG.md:186-194 (~310 tok) — idem |
+| Q03 | git push origin | `in_pool_ranked_out` | `in_pool_ranked_out` | **cambio respecto a E/F**: con pasajes la aguja SÍ entra al pool (cerca de hits) pero queda rankeada fuera; gh pr create sigue `out_of_pool` |
+| Q08 | picom / P_TERM_OPACITY | `in_pool_top10` ×2 (other_file_match) | idem | **el pasaje no arregla la selección**: el gold file (System.md) sigue fuera del top-10; los pasajes que entran son de ai-context no-gold |
+| Q01/Q10 | resto | `out_of_pool` | `out_of_pool` | candidate gap (Paso 10) |
+
+### Hallazgos
+
+1. **La unidad de contexto SÍ era parte del problema**: Q04/Q06 pasan de
+   gold_containment 0.0 (E/F: archivo de 14.4k no cabía) a 1.0 (G1/G2: pasaje de
+   310-505 tok cabe y se entrega con sRec=1.0). La hipótesis de pasaje se confirma
+   para el problema de presupuesto.
+2. **El recall sube a 0.417 (G1) — el mejor de toda la serie**: el matching sobre
+   pasaje (no línea) captura agujas que el snippet por línea perdía (Q02 sube a
+   0.667, Q05/Q07/Q09 a 0.5).
+3. **PERO passage_relevance (0.072/0.054) y leakage (0.606) no mejoran**: el top-10
+   fusionado sigue trayendo pasajes de archivos no-gold (SESION-archive, CONTINUE,
+   etc.) que dominan el ctx. El pasaje arregla el TAMAÑO, no la SELECCIÓN.
+4. **Q08 confirma el límite del paso**: `picom` entra al pool y al top-10, pero el
+   gold file (`Knowledge/Linux/System.md`) queda fuera del top-10 → los pasajes
+   entregados son de archivos no-gold. Problema de rerank/selección, no de tamaño.
+5. **G1 > G2 en recall (0.417 vs 0.333) y gold_containment (0.8 vs 0.7)**: la
+   ventana ±4 es más precisa que la sección (que infla pasajes con ruido interno —
+   p.ej. sección 196-329 de CONTINUE.md en G2-Q04).
+6. **Corrección metodológica post-review**: la primera versión deduplicaba el ctx
+   por path (solo 1 pasaje por archivo entraba — herencia del runner híbrido); se
+   corrigió a dedup por (path, rango) permitiendo múltiples pasajes del mismo
+   archivo (Q04-G1 pasó de 3 a 10 pasajes de ctx, pRel 0.333→0.2 per-query). Las
+   conclusiones cualitativas no cambian; los números del registro son los corregidos.
+
+### Conclusión
+
+El Paso 9 demuestra que **cambiar la unidad de contexto de archivo a pasaje es
+NECESARIO pero NO SUFICIENTE**: elimina el truncamiento estructural (Q04/Q06) y
+mejora el recall (0.417), pero el gate exige además calidad del ctx (relevance ≥
+0.6, leakage ≤ 0.267) y los pasajes no-gold del top-10 la hunden igual que en D/E/F.
+El límite se movió de "cómo entrego el gold" a "**qué pasajes selecciono**".
+Evidencia para el siguiente nivel (Paso 10): **query expansion** para candidate gap
+(Q03/Q01/Q10) y **selección/rerank de pasajes** para Q08. Runtime sigue congelado;
+nada se adopta.
+
 ### Estado de la suite en el perfil PC (2026-08-11)
 
 > ⚠️ **La suite del perfil PC no está actualmente 100% verde** por incompatibilidades
