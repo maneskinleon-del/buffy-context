@@ -21,7 +21,7 @@ This repository provides the infrastructure for an AI agent to maintain persiste
 |---|---|
 | **Memory persistence** | Protocol for loading/saving session context so the AI never starts blank |
 | **Knowledge base** | 19 files of curated technical reference across 8 categories + Vision.md |
-| **23 skills** | Especializadas por dominio, cada una con `skill.yaml` machine-readable |
+| **43 skills** | Especializadas por dominio, cada una con `skill.yaml` machine-readable |
 | **Android Agent** | Dedicated skill that auto-detects Android projects and activates relevant tools |
 | **Detection scripts** | Shell scripts for system snapshots and Android diagnostics |
 | **Self-diagnostics** | doctor --json detecta drift, repair corrige lo seguro, agent orquesta el ciclo |
@@ -79,7 +79,7 @@ buffy-context/
 │   ├── Vision.md                      # VLM local (Ollama): modelos, RAM, versiones
 │   └── README.md                      # Knowledge index
 │
-├── .agents/skills/                    # 23 AI agent skills (cada una con skill.yaml)
+├── .agents/skills/                    # 43 AI agent skills (cada una con skill.yaml)
 │   ├── Android/
 │   │   ├── android-adb/               # Comandos ADB generales
 │   │   ├── android-agent/             # Detección y diagnóstico Android (logcat, dumpsys)
@@ -101,7 +101,6 @@ buffy-context/
 │   │   ├── cross_validation_v4/       # Fase 4: contrasta fuentes, confianza final
 │   │   └── search_criteria_v4/        # Genera consultas de búsqueda estructuradas
 │   ├── Code & research/
-│   │   ├── code-search/               # Búsqueda portable de código entre asistentes IA
 │   │   └── context7/                  # Docs actualizadas de librerías vía ctx7
 │   ├── Frontend/
 │   │   ├── vite/                      # Referencia Vite para React + TS
@@ -109,8 +108,7 @@ buffy-context/
 │   │   ├── typescript-advanced-types/ # Tipos avanzados de TypeScript
 │   │   └── vercel-react-best-practices/ # Buenas prácticas React + TS para Vercel
 │   ├── Operación/
-│   │   ├── modo-autonomo/             # Protocolo de operación autónoma del agente
-│   │   └── vision-adapter/            # Visión/VLM local (Ollama) para imágenes
+│   │   └── modo-autonomo/             # Protocolo de operación autónoma del agente
 │
 ├── scripts/                           # Utility scripts
 │   ├── buffy-context.sh               # System snapshot generator
@@ -118,7 +116,7 @@ buffy-context/
 │   ├── buffy-repair.sh                # Aplica fixes AUTO_SAFE y verifica
 │   ├── buffy-agent.sh                 # Orquestador: doctor → repair → verify → load
 │   ├── buffy-router.sh                # Carga condicional de contexto (--json, manifests)
-│   ├── skill-lint.sh                  # Valida los skill.yaml (gate 23/23)
+│   ├── skill-lint.sh                  # Valida los skill.yaml (gate 43/43)
 │   ├── migrate-system.sh              # Migra stubs deprecated → ai-context/deprecated/
 │   ├── set-version.sh                 # Versionado semver + tag
 │   ├── changelog-entry.sh             # Entrada de release automática en CHANGELOG
@@ -131,6 +129,8 @@ buffy-context/
 │   ├── hooks/                         # install.sh + pre-commit.sh (suite --quick)
 │   └── tests/                         # run-tests.sh + 15 test_*.sh + bench-scale.sh + bench-context-selection.sh (suite 246 checks totales, 230 --quick)
 │
+├── MCP_REGISTRY.md                    # Servidores MCP disponibles (ruta, estado, uso)
+├── SKILLS_INDEX.md                    # Índice de 43 skills por dominio (fuente de verdad)
 ├── INSTALL.md                         # Setup instructions
 ├── LICENSE                            # MIT license
 └── .gitignore
@@ -402,7 +402,7 @@ Exit codes: `0` consistente · `1` queda drift que requiere decisión humana · 
 | **Tools** | 1 | CodeGraph — grafo de código, comandos, MCP, troubleshooting |
 | **Vision** | 1 | VLM local (Ollama) — modelos, RAM, versiones |
 
-## Skills (23 en disco)
+## Skills (43 en disco)
 
 Cada skill tiene `SKILL.md` (documentación humana) + `skill.yaml` (manifest
 machine-readable validado por `scripts/skill-lint.sh` — gate activo en CI).
@@ -410,12 +410,13 @@ machine-readable validado por `scripts/skill-lint.sh` — gate activo en CI).
 
 | Grupo | Skills |
 |---|---|
-| **Android** | android-adb, android-agent, android-game-opt, android-project-setup, hyperos-hardening, scrcpy-freefire, shizuku-rikka, xiaomi-adb-tricks |
-| **Web** | form-filler, image-analyzer |
-| **Framework v4** | exploratory_validation_v4, filter_heuristics_v4, integration_templates_v4, cross_validation_v4, search_criteria_v4 |
-| **Code & research** | code-search, context7 |
-| **Frontend** | vite, tailwind-design-system, typescript-advanced-types, vercel-react-best-practices |
-| **Operación** | modo-autonomo, vision-adapter |
+| **Android / ADB / Mobile** (12) | android-adb, android-agent, android-clean-architecture, android-game-opt, android-native-dev, android-project-setup, hyperos-hardening, image-analyzer, mobile-android-design, scrcpy-freefire, shizuku-rikka, xiaomi-adb-tricks |
+| **Frontend / Web** (7) | form-filler, playwright-cli, tailwind-design-system, typescript-advanced-types, vercel-react-best-practices, vite, vitest |
+| **Workflow / Productividad** (7) | capture, changelog-generator, deep-work, fable-goal, file-organizer, handoff, weekly-review |
+| **Thinking / Strategy** (6) | clarificar-entrega, grill-with-docs, idea-a-spec, reflect, roast, senior-architect |
+| **Research / Validation** (6) | context7, cross_validation_v4, exploratory_validation_v4, filter_heuristics_v4, integration_templates_v4, search_criteria_v4 |
+| **Coding rigor** (3) | git-guardrails-claude-code, pr-review-expert, zero-hallucination-coder |
+| **Meta / Agent** (2) | modo-autonomo, skill-creator |
 
 ---
 

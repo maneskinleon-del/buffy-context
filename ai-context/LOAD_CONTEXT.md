@@ -194,11 +194,6 @@ probada en vivo con el ZTE Nubia).
 > en una llamada. Otros: `codegraph query/callers/callees/impact`.
 > Indexados actualmente: `autoscript-mobile-interface` y `ManUninstaller`.
 
-**Si se activa** → cargar `.agents/skills/code-search/SKILL.md`:
-- Define 3 modos de búsqueda: agente nativo → CLI (ripgrep/grep) → exploración manual
-- Es portable entre Freebuff, opencode, Claude Code, Codex
-- Estructura resultados en tabla: archivo, línea, contenido
-
 **Skills relacionadas**: `search_criteria_v4` (para consultas complejas que requieren
 múltiples búsquedas coordinadas).
 
@@ -265,14 +260,11 @@ múltiples búsquedas coordinadas).
 | OCR en imágenes ("¿qué dice este texto?") | En el mensaje del usuario |
 
 **Si se activa** → cargar:
-- `.agents/skills/vision-adapter/SKILL.md` — adaptador portable de visión
 - `Knowledge/Vision.md` — referencia de modelos VLM
 - `scripts/see.sh` — script helper para analizar imágenes
 
 **Modelo recomendado**: `minicpm-v` (vía Ollama).
 **Alternativa ligera**: `moondream` si hay poca RAM.
-
-**Skills relacionadas**: `code-search` (para buscar basado en texto extraído de la imagen).
 
 ---
 

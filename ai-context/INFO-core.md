@@ -40,7 +40,7 @@ freebuff · **opencode (Buffy — modelos free)** · Antigravity · Claude Code 
 |---|---|
 | **android-project-setup** | Setup Android: build gradle → install APK → permisos Shizuku/overlay/batería → launch. Scripts en `.agents/skills/android-project-setup/scripts/` (check_device, build_install, grant_permissions) + referencias. Probada en vivo con el ZTE Nubia. |
 | android-agent · android-adb · shizuku-rikka · scrcpy-freefire · xiaomi-adb-tricks · hyperos-hardening | Android: diagnóstico, ADB, Shizuku, Free Fire, permisos |
-| code-search · vision-adapter · skill-creator · changelog-generator · file-organizer | Búsqueda de código, visión, creación de skills, changelogs, organización |
+| skill-creator · changelog-generator · file-organizer | Creación de skills, changelogs, organización |
 
 Cargar la skill relevante según la tarea (ver `ai-context/LOAD_CONTEXT.md` — protocolo de carga condicional).
 

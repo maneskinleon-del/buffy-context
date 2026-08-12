@@ -29,6 +29,25 @@
 
 ---
 
+## Resumen de la sesión (2026-08-12 — opencode / FreeBuff, buffy-context tooling)
+
+**Tema:** complementar las limitaciones de FreeBuff (memoria / MCP / plugins) con buffy-context como capa client-agnostic.
+
+1. **Creado `MCP_REGISTRY.md`** (raíz de buffy-context): catálogo portátil de servidores MCP.
+   - `codegraph` (AVAILABLE en OpenCode, ya en `opencode.json`), `OpenRouter MCP` (OPTIONAL remoto), `mcp-cli` (WORKAROUND shell para FreeBuff).
+   - Nota clave: FreeBuff free build NO expone MCP nativo (SPEC.md strippea features de pago); test de confirmación documentado en el archivo.
+2. **Creado `SKILLS_INDEX.md`** (raíz de buffy-context): índice de los **43 skills reales** en `~/.agents/skills/`, mapeados por dominio con propósito + disparador. Complementa la ausencia de sistema de plugins en FreeBuff.
+3. **Corregido drift del README** de buffy-context: "23 skills" → "43 skills" en 4 lugares (líneas 24, 82, 121, 405). El "19 files" de Knowledge es correcto (19 contenido + Vision.md + README índice = 21).
+
+### ⏳ Estado
+- buffy-context ahora cubre los 3 ejes: Memoria (CONTINUE/SESION/SNAPSHOT/facts.yaml), MCP (MCP_REGISTRY.md), Plugins (SKILLS_INDEX.md + skills/).
+- Client-agnostic: funciona en FreeBuff, OpenCode o futuro Buffy 10B local.
+- **Fix doctor**: `buffy-doctor.sh` ahora detecta drift de conteo de skills (README vs `~/.agents/skills`) y avisa si la copia del repo está desfasada (23 vs 43). Causa raíz del "por qué no lo vio antes": comparaba contra la copia del repo, no el entorno real.
+- Pendiente: decidir si sincronizar repo `.agents/skills` 23→43 (acción git) o dejarlo como subconjunto curado.
+- Pendiente opcional: `cp` de CONTINUE.md/SESION.md/CHANGELOG.md a `~/ai-context/` (o `buffy-close-day.sh`) para que la próxima sesión los cargue.
+
+---
+
 ## 🚀 Buffy 2.0 — Roadmap post-Fase 3 (REGISTRADO 2026-08-11, implementar DESPUÉS de los experimentos de Fase 3)
 
 > Decisión del usuario: esto es lo que viene después de Fase 3. **No tocar el CORE antes**; primero evidencia (benchmark), después arquitectura. Cuando se termine Fase 3, retomar esta sección.
