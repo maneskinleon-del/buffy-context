@@ -1399,6 +1399,69 @@ Artefactos: `baseline-Q1-quality-PC-2026-08-12.json` (+`-r2`),
 
 ---
 
+## ✅ Paso 11 — CERRADO · Q1/Q2 no adoptados · x_density ≠ evidence_quality · 2026-08-12
+
+**Veredicto del usuario (transcrito):**
+
+> La secuencia experimental queda: Generación ✅ H2 6/6 · Ranking ✅ R1 6/6 ·
+> Deduplicación ❌ Q1/Q2 no alcanzan calidad · **Contenido 🔴 cuello de botella**.
+> Q2 consigue 6/6 agujas + 0 regresión + 1.7k tokens, pero el contexto sigue
+> siendo de mala calidad → **no se adopta**, aunque tenga el mejor recall de la
+> serie.
+
+**Hipótesis descartadas por Q1/Q2:** faltaban candidatos ❌ · faltaba expansión
+❌ · fallaba el ranking ❌ · faltaba granularidad ❌ · faltaba deduplicación ❌ ·
+falta capacidad de poda ❌. Lo que falta: **evaluar si el CONTENIDO de un pasaje
+constituye evidencia útil para la consulta** → quality-aware content scorer, no
+otra variante de retrieval.
+
+**Aprendizaje central:** `x_density` sirve para **concentración**, no para
+**relevancia** → `x_density ≠ evidence_quality`. La corrección del review evitó
+una conclusión falsa: **Q2 no perdió la evidencia de Q04** (preservada 2/2, 109
+tokens) — quedó **atribuida a un archivo no-gold**. Se separan tres conceptos:
+`evidence_found` / `evidence_selected` / `evidence_attributed`, que el próximo
+experimento debe reportar por separado.
+
+**No tocar Q1/Q2 ni ajustar sus umbrales.** Embeddings: si se reutilizan, deben
+responder una pregunta mucho más concreta y controlada (R2 ya mostró que como
+señal de ranking empeoran R1).
+
+---
+
+## 🔬 Paso 12 — DISEÑO · Evidence-aware Passage Selection · 2026-08-12
+
+Spec: `evidence-passage-DESIGN.md` (ver sección 2 — evidencia medida HOY que
+dimensiona el diseño). Pregunta: ¿una señal basada en el CONTENIDO distingue un
+pasaje que responde a la consulta de otro que solo comparte vocabulario/contexto?
+
+**Evidencia medida HOY (contexto R1, 60 pasajes, 17 con aguja):**
+
+| Señal | con | sin | ratio | selector |
+|---|---:|---:|---:|---|
+| S1 n-gram contiguo (query∪X) | 1.353 | 1.302 | 1.0× | ❌ descartada |
+| S2 idem líneas cmd | 1.176 | 1.140 | 1.0× | ❌ descartada |
+| S3 heading sección | 0.137 | 0.008 | **17.7×** | prec 1.0 @ rec 0.35 |
+| **S4 bge-m3 cosine(pasaje, query+X)** | 0.596 | 0.473 | 1.26× | **prec 0.867 @ rec 0.765 @ θ=0.55** (13 TP / 2 FP) |
+
+**Hallazgo clave:** S4 —embedding como content-scorer entre la query expandida y
+el texto del pasaje (NO como generador/ranking, que falló en D/R2)— separa
+evidencia de ruido relacionado con solo 2 falsos positivos en 43 ruidosos: la
+mejor discriminación de toda la serie. S3 (heading, gratis) tiene precisión
+perfecta pero recall bajo. S1/S2 quedan descartadas por los datos.
+
+**Tres conceptos medidos en R1:** found=20/20 (H2) · selected=14/20 (ctx
+completo) · attributed=14/20 — pero **solo 6/20 en la capa de pasajes** (las
+otras 8 en los archivos completos del router). La capa de pasajes concentra el
+ruido y aporta marginalmente evidencia: la señal de contenido se evalúa como
+selector de ESA capa.
+
+**Variantes (ablación por señal, como 10B):** E1-S3 (heading, gratis) · E2-S4
+(bge-m3 cosine, θ=0.55 a priori) · E3-S3+S4 (0.5/0.5 fijos). Congelados: EVAL,
+pool H2, orden R1, presupuesto, runtime. Tres conceptos por query obligatorios.
+Gate 6 criterios idéntico a 11. **Pendiente de aprobación para implementar.**
+
+---
+
 ## 🛡️ Apéndice — Foreign Worktree Detection (FWD) · DISEÑO · 2026-08-12
 
 **Motivo:** caso real del mismo día — dos sesiones (OpenCode + Freebuff) trabajando
@@ -1425,7 +1488,8 @@ contaminación cruzada del historial quedó documentada en la spec §4.2.
 Los cambios ajenos del working tree fueron **commiteados por la otra sesión** en
 `6ed1bb1` (MCP_REGISTRY, SKILLS_INDEX, README 43 skills, CONTINUE/SESION tooling,
 buffy-doctor.sh drift check) — no se tocaron desde esta sesión.
-**Paso 11 EJECUTADO (sección arriba) — Q1/Q2 no adoptados. Siguiente lógico:
-pendiente de decisión del usuario (la evidencia sugiere que la señal de calidad
-no vive en densidad/estructura sino en el contenido del pasaje).**
+**Paso 11 CERRADO + Paso 12 DISEÑO (secciones arriba) — Q1/Q2 no adoptados;
+Paso 12 (evidence-aware passage selection) pendiente de aprobación: la señal de
+calidad vive en el contenido del pasaje (S4 bge-m3 cosine prec 0.867 @ rec
+0.765, medido hoy).**
 
