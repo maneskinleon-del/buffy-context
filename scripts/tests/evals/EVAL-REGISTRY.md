@@ -1308,6 +1308,97 @@ agujas → protegido por gold_containment y baseline_regression.
 
 ---
 
+## 🔬 Paso 11 — EJECUTADO · Q1/Q2 no pasan el gate (pRel/leakage) · 2026-08-12
+
+**Contexto de ejecución — incidente FWD tipo CONFLICT resuelto con worktree aislado:**
+
+al lanzar el runner, la precondición falló: el índice semántico cacheado
+(`e1cf6011…`, construido al medir R1) no correspondía al corpus actual
+(`9aafac49…`). La otra sesión había modificado el corpus del EVAL entre la
+medición de R1 y ahora (+5 archivos, +7 modificados, −1 eliminado: FWD-DESIGN,
+MCP_REGISTRY, SKILLS_INDEX, SNAPSHOT, facts.yaml, README, CHANGELOG, CONTINUE,
+INFO-core, LOAD_CONTEXT, SESION-archive, SESION). Re-medir sobre el corpus actual
+habría contaminado la comparación Q1/Q2 vs R1 (corpus A vs corpus B). **Usuario
+aprobó: worktree aislado en `18df679`** — Q1/Q2 se midieron exclusivamente allí;
+el working tree compartido quedó intacto. El índice se reindexó en el worktree
+(`bge-m3-8a6fdc38…`); el de la rama principal no se tocó.
+
+**Validación del worktree:** corpus de 44 archivos (45 de `18df679` menos
+`deprecated/README.md`, excluido por diseño del runner) — contenido idéntico al
+de R1. La corrida D de control reprodujo EXACTAMENTE los valores del Paso 7
+(0.200/0.192/0.669/48.0k). EVAL `98a0e308…`, R1 determinism `8316343e…`,
+dict_hash `b0406a33…` verificados en el worktree.
+
+**Determinismo G2 CONFIRMADO (2 corridas por variante):** Q1 `f0f398c5da8d23ca`
+· Q2 `e2a1821a9720f396` — métricas idénticas en ambas corridas.
+
+| Estrategia | sRec | pRel | leak | tokAvg | gCont | gap_to_top10 | regression |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| G1 (ventana) | 0.417 | 0.072 | 0.606 | 2569 | 0.8 | — | — |
+| R1-LEX (baseline ranking) | 0.750 | 0.175 | 0.441 | 1904 | 1.0 | 0.667 (4/6) | 0.167 |
+| **Q1-DEDUP** | **0.800** | 0.118 | 0.540 | 1975 | 1.0 | **0.833 (5/6)** | 0.167 |
+| **Q2-DEDUP+DENS** | **0.850** | 0.066 | 0.478 | 1747 | 1.0 | **1.000 (6/6)** | **0.000** |
+
+Gate 6 criterios: `sRec>0.100` ✓ · `pRel≥0.600` ✗ (0.118/0.066) · `leak≤0.267`
+✗ (0.540/0.478) · `tok≤10.4k` ✓ · `gCont≥0.80` ✓ (1.0) · `regression≤0.167` ✓
+(0.167/0.000). **Ambas variantes FALLAN el gate → no adoptadas. Runtime intacto.**
+
+**Semántica de sRec (aclaración post-review):** en Q1/Q2 — igual que en
+G1→R1 (run-passage/expansion/rerank/quality, todos definen `hits` desde
+`top10_passages`) — `search_recall` mide **la aguja en el texto de los pasajes
+top10 SELECCIONADOS por la variante con path en gold_files**, NO la rama L
+congelada. Por eso Q04/Q06 cambian de sRec entre Q1 y Q2 (selección
+dependiente de variante). La comparación Q1/Q2 vs R1/G1 es válida (mismo
+instrumento pasajes); A–F usan instrumento de líneas anterior y solo valen
+como contexto histórico.
+
+**Poda (métricas nuevas):** agujas_preservadas **6/6 = 1.0** en ambas (por-gold-fact) ·
+fraccion_podada_avg −0.598 (Q1) / −0.294 (Q2) · tokens_ahorrados_avg −0.818 /
+−0.101 · tokens_evidencia_absolutos_avg 107.3 / 140.5 · dropped_overlap 64 / 61 ·
+dropped_density 0 / **388**. pRel_delta vs R1: −0.057 / −0.109 · vs G1: +0.046 / −0.006.
+
+**Per-query en foco:**
+
+- Q03 `gh pr create`: **✅ resuelto** en Q1/Q2 (sRec 1.0, in_pool_top10 vía X
+  'create', rank_r1=13 → rank_poda=6).
+- Q06 `FF_SEEN`: Q1 lo deja budget_cut (sRec 0.0); **Q2 lo recupera (sRec 1.0)**
+  — la re-selección de Q2 (dedup+densidad) coloca la aguja en un pasaje top10
+  de archivo gold.
+- Q08 `P_TERM_OPACITY`: sigue `ranked_out` en ambas (el candidato existe, el
+  ranking no lo sube).
+- Q04 `xset -dpms`: **⚠️ regresión de ATRIBUCIÓN en Q2** — la aguja NO se pierde
+  del contexto (`agujas_preservadas=2/2`, `tokens_evidencia_absolutos=109`),
+  pero el pasaje que la porta en Q2 es de un archivo NO gold (`sOth=1.0`,
+  `sRec=0.0` vs 1.0 en Q1/R1). El filtro de densidad (388 pasajes descartados)
+  reemplazó el pasaje gold por uno no-gold con la misma aguja.
+- Q10 `dumpsys thermalservice`: estable (sRec 1.0, rank_r1=1).
+
+**Lectura por capas:** (1) generación + ranking resueltos experimentalmente
+(gap 1.0, regression 0.0, out_of_pool=0); (2) la poda NO fabrica calidad — pRel
+sigue muy bajo y leakage alto; (3) la densidad es contraproducente a nivel de
+contexto (baja pRel a 0.066 y desplaza la evidencia de Q04 a archivos no-gold);
+(4) `fraccion_podada`/`tokens_ahorrados` NEGATIVOS NO indican ahorro: la poda
+re-selecciona los top10 desde una lista candidata mayor que el top10 de R1
+(`scanned`=11-22 en Q1, hasta 154 en Q2), cambiando la composición de pasajes —
+la comparación de tokens vs R1 mezcla efecto de poda con cambio de selección, y
+los contextos usan solo ~18% del presupuesto (sin presión de budget).
+**La frontera sigue en la calidad del contexto** (selección del pasaje con la
+aguja entre ruido relacionado).
+
+**Nota de reproducibilidad:** el flag `--reindex` de `run-quality-PC.sh` es un
+placeholder sin ruta de build (la construcción vive en `run-semantic-PC.sh`);
+el índice del worktree se reindexó con `run-semantic-PC.sh --reindex`. Bug de
+shadowing `rp`→`rpath` (variable de loop que rompía `round(router_precision)`)
+corregido durante validación. Invariantes: `pool_ref`/`ranking_ref`/`dict_hash`
+son auto-reportados por el runner y corroborados por determinismo ×2 + `dict_hash
+b0406a33…` idéntico al registrado en H2.
+
+Artefactos: `baseline-Q1-quality-PC-2026-08-12.json` (+`-r2`),
+`baseline-Q2-quality-PC-2026-08-12.json` (+`-r2`), `run-quality-PC.sh`,
+`quality-passage-DESIGN.md` (Anexo A). Detalle completo en la spec §8.
+
+---
+
 ## 🛡️ Apéndice — Foreign Worktree Detection (FWD) · DISEÑO · 2026-08-12
 
 **Motivo:** caso real del mismo día — dos sesiones (OpenCode + Freebuff) trabajando
@@ -1334,6 +1425,7 @@ contaminación cruzada del historial quedó documentada en la spec §4.2.
 Los cambios ajenos del working tree fueron **commiteados por la otra sesión** en
 `6ed1bb1` (MCP_REGISTRY, SKILLS_INDEX, README 43 skills, CONTINUE/SESION tooling,
 buffy-doctor.sh drift check) — no se tocaron desde esta sesión.
-**Siguiente lógico: Paso 11 (quality-passage-DESIGN.md) — pendiente de aprobación
-para implementar.**
+**Paso 11 EJECUTADO (sección arriba) — Q1/Q2 no adoptados. Siguiente lógico:
+pendiente de decisión del usuario (la evidencia sugiere que la señal de calidad
+no vive en densidad/estructura sino en el contenido del pasaje).**
 

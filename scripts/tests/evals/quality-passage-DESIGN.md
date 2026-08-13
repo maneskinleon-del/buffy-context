@@ -1,13 +1,17 @@
 # Paso 11 — Quality-aware Passage Selection (diseño)
 
-> Estado: **⏳ DISEÑO — pendiente de aprobación** (2026-08-12) — aún SIN runner.
+> Estado: **✅ EJECUTADO — Q1/Q2 no pasan el gate (pRel/leakage)** (2026-08-12).
+> Resultados medidos y registrados en `EVAL-REGISTRY.md` (Paso 11 EJECUTADO) y en
+> el Anexo A de esta spec. Medido en **worktree aislado en `18df679`** (incidente
+> FWD tipo CONFLICT: la otra sesión modificó el corpus del EVAL entre la medición
+> de R1 y el lanzamiento del runner; aprobado por el usuario "worktree aislado en
+> 18df679" para preservar la comparación limpia Q1/Q2 vs R1).
 > Base: EVAL con gold definitivo (hash `98a0e308…`), pasajes VENTANA ±4 validados,
 > serie A→R2 completa en `EVAL-REGISTRY.md`. Ranking CONGELADO: pool del Paso 10
 > con diccionario H2 (`baseline-H2-expansion-PC-2026-08-12.json`) + orden del
 > reranker R1-LEX (`baseline-R1-rerank-PC-2026-08-12.json`, hash `8316343e…`).
-> Autorizado por el usuario (2026-08-12): "diseñar `quality-aware passage
-> selection`" como Paso 11, manteniendo EVAL/runtime/pool H2/R1-LEX/presupuesto
-> congelados. Implementación pendiente de aprobación de esta spec.
+> Invariantes verificadas en ambas corridas: pool_ref=H2, ranking_ref=R1 (r1-LEX,
+> `8316343e…`), dict_hash `b0406a33…`, runtime_changed=False.
 
 ---
 
@@ -277,3 +281,90 @@ sigue abierta.
 9. revisar con code-reviewer
 10. commit + push + detenerse (runtime intacto, nada se adopta automáticamente)
 ```
+
+---
+
+## 8. Anexo A — Resultados medidos (2026-08-12, EJECUTADO)
+
+**Ejecución:** worktree aislado en `18df679` (corpus idéntico al de R1, validado
+por la corrida D que reprodujo exactamente los valores del Paso 7:
+0.200/0.192/0.669/48.0k). Índice bge-m3 reindexado en el worktree
+(`bge-m3-8a6fdc38…` en cache; el índice `e1cf6011…` del working tree principal
+quedó intacto). 2 corridas por variante → determinismo G2 CONFIRMADO:
+Q1 `f0f398c5da8d23ca`, Q2 `e2a1821a9720f396` (métricas idénticas en ambas).
+Artefactos: `baseline-Q1-quality-PC-2026-08-12.json` (+`-r2`), `baseline-Q2-…`
+(+`-r2`).
+
+### Resultados agregados vs baselines congeladas
+
+| Estrategia | sRec | pRel | leak | tokAvg | gCont | gap_to_top10 | regression |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| G1 (ventana) | 0.417 | 0.072 | 0.606 | 2569 | 0.8 | — | — |
+| R1-LEX (baseline ranking) | 0.750 | 0.175 | 0.441 | 1904 | 1.0 | 0.667 (4/6) | 0.167 |
+| **Q1-DEDUP** (overlap>4) | **0.800** | 0.118 | 0.540 | 1975 | 1.0 | **0.833 (5/6)** | 0.167 |
+| **Q2-DEDUP+DENS** (θ=0.050) | **0.850** | 0.066 | 0.478 | 1747 | 1.0 | **1.000 (6/6)** | **0.000** |
+
+Gate (6 criterios): `sRec>0.100` ✓ ambas · `pRel≥0.600` ✗ (0.118/0.066) ·
+`leak≤0.267` ✗ (0.540/0.478) · `tok≤10.4k` ✓ (1975/1747) · `gCont≥0.80` ✓ (1.0) ·
+`regression≤0.167` ✓ (0.167/0.000). **Q1 y Q2 NO pasan el gate — no adoptados.**
+
+### Poda (métricas nuevas de la spec)
+
+| Métrica | Q1 | Q2 |
+|---|---:|---:|
+| agujas_preservadas (por-gold-fact) | **6/6 = 1.0** | **6/6 = 1.0** |
+| fraccion_podada_avg | −0.598 | −0.294 |
+| tokens_ahorrados_avg | −0.818 | −0.101 |
+| tokens_evidencia_absolutos_avg | 107.3 | 140.5 |
+| dropped_overlap_total | 64 | 61 |
+| dropped_density_total | 0 | **388** |
+
+pRel_delta vs R1 (0.175): Q1 −0.057 · Q2 −0.109 · vs G1 (0.072): Q1 +0.046 · Q2 −0.006.
+
+### Per-query en foco (Q03/Q06/Q08/Q10)
+
+| Query | Aguja | Q1 | Q2 | R1 | Lectura |
+|---|---|---|---|---|---|
+| Q03 | `gh pr create` | sRec 1.0 · top10 | sRec 1.0 · top10 | 0.5 | ✅ **Resuelto** (X vía 'create', rank_r1=13→poda=6) |
+| Q06 | `FF_SEEN` | 0.0 · budget_cut | **sRec 1.0** | 0.0 | Q2 lo recupera (re-selección coloca la aguja en pasaje top10 de archivo gold); Q1 lo deja budget_cut |
+| Q08 | `P_TERM_OPACITY` | ranked_out | ranked_out | ranked_out | sigue fuera por ranking (candidato existe) |
+| Q10 | `dumpsys thermalservice` | sRec 1.0 | sRec 1.0 | 1.0 | ✅ estable (rank_r1=1) |
+| Q04 | `xset -dpms` | sRec 1.0 | **sRec 0.0** | 1.0 | ⚠️ **REGRESIÓN de ATRIBUCIÓN en Q2**: la aguja NO se pierde (preservadas 2/2, tok_evidencia 109) pero queda en pasaje de archivo NO gold (sOth 1.0) |
+
+**Nota de semántica (sRec):** igual que en G1→R1, `search_recall` en Q1/Q2
+mide la aguja en los pasajes top10 **seleccionados por la variante** (path en
+gold_files), NO la rama L congelada — por eso Q04/Q06 cambian entre variantes.
+Comparación Q vs R1/G1 válida (mismo instrumento pasajes); A–F = contexto
+histórico (instrumento de líneas).
+
+### Lectura por capas (Paso 11)
+
+1. **Generación + ranking: resueltos experimentalmente.** gap_to_top10 llega a
+   1.0 (6/6) en Q2 y 0.833 en Q1; regression 0.0/0.167; out_of_pool=0 en ambas.
+   Q03 queda cerrado (`gh pr create` entra al top10 vía expansión X).
+2. **La poda NO fabrica calidad.** pRel se mantiene muy por debajo de 0.600
+   (0.118/0.066) y leakage por encima de 0.267 (0.540/0.478). Distinguir
+   evidencia útil de ruido por densidad/estructura, sobre el orden de R1, no
+   alcanza el gate — la selección del pasaje correcto sigue siendo el problema
+   dominante.
+3. **La señal de densidad (Q2) es contraproducente a nivel de contexto:**
+   descartó 388 pasajes, bajó pRel a 0.066 y **desplazó la evidencia de Q04 a
+   archivos no-gold** (la aguja persiste en el contexto, preservadas 2/2, pero
+   el pasaje que la porta es de archivo NO gold → sOth 1.0, sRec 0.0). La
+   discriminación 2.7× medida a nivel de pasaje (0.071 vs 0.026) NO se tradujo
+   en un selector útil a nivel de contexto con θ=0.050.
+4. **`fraccion_podada`/`tokens_ahorrados` NEGATIVOS NO indican ahorro:** la
+   poda re-selecciona los top10 desde una lista candidata mayor que el top10 de
+   R1 (`scanned`=11-22 en Q1, hasta 154 en Q2), cambiando la composición de
+   pasajes — la comparación de tokens/pasajes vs R1 mezcla efecto de poda con
+   cambio de selección. Los contextos usan solo ~18% del presupuesto, así que
+   no hay presión de budget que explique crecimiento.
+
+### Qué sigue (NO adoptar automáticamente)
+
+Q1/Q2 quedan descartados como estrategia de adopción. La frontera del sistema
+sigue siendo la **calidad del contexto** (selección del pasaje con la aguja entre
+ruido relacionado). Evidencia acumulada sugiere que la señal de calidad no vive en
+densidad/estructura sobre el orden R1 sino en el **contenido del pasaje** (qué
+dice realmente). Diseñar el siguiente experimento (p. ej. selección por
+contenido/gold-matching estructural) queda pendiente de decisión del usuario.
