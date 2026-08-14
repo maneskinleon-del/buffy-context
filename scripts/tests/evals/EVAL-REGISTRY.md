@@ -1992,6 +1992,14 @@ por la regla de la serie). Ejemplo Q03: `gh pr create`, `git push origin`,
 
 ## ✅ VEREDICTO PASO 16B (2026-08-14) — granularidad uniforme DESCARTADA; puente semántico H1 = límite
 
+**Aprobado por el usuario (2026-08-14):** 16B = PASS experimental. Granularidad
+uniforme DESCARTADA (las 4 variantes fallan el gate §10.1), PAS_PAD = ±4
+CONSERVADO (mejor medido), Q01/Q05 = problema ABIERTO, siguiente frente =
+DICT_H1/expand_query sin tocarlo hasta congelar el diseño del experimento
+(spec primero, ejecución después; no implementar solución a mano). No tocar:
+PAS_PAD, ventana, selector M3, gates, EVAL, corpus, defaults. No abrir Hybrid
+ni re-tocar el selector antes del experimento del puente semántico.
+
 **Runner:** `run-granularity-PC.sh` (pool regenerado por PAS_PAD, H1 real, sin
 oráculo ni inyección de gold). Corpus congelado `bb33afa` (7644 líneas),
 `corpus_hash f36eaf1e…`, `dict_hash H1 b0406a33…`, `eval_hash 98a0e308…`.
