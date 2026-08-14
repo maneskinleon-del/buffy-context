@@ -6,12 +6,24 @@
 # Uso:
 #   buffy-search.sh "consulta"        # busca, ordenado por relevancia (bm25)
 #   buffy-search.sh -l 30 "consulta"  # más resultados
+#   buffy-search.sh --select "consulta"  # busca + selector M3 (top-K pasajes puntuados)
 #   buffy-search.sh --update          # reindexa solo archivos cambiados (se hace solo antes de buscar)
 #   buffy-search.sh --reindex         # reconstruye el índice completo
 #   buffy-search.sh --stats           # estado del índice
 #   BUFFY_REPO=/ruta/al/repo buffy-search.sh ...   # repo alternativo
+#
+# --select (integración M3, 2026-08-13): pasa los candidatos del FTS5 al selector
+# quality-aware (buffy-selector.sh → M3 S1+S2+S3+S4, gate rescue 0.545) y devuelve
+# el top-K de pasajes puntuado. Requiere Ollama + bge-m3 (si no está disponible,
+# degrada a la búsqueda cruda con aviso). El default (sin --select) queda intacto
+# byte a byte. Con --select --json emite el JSON del selector.
 set -euo pipefail
 
+SCRIPT_SRC="${BASH_SOURCE[0]}"
+if command -v readlink >/dev/null 2>&1; then
+  SCRIPT_SRC="$(readlink -f "$SCRIPT_SRC" 2>/dev/null || echo "$SCRIPT_SRC")"
+fi
+SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_SRC")" && pwd)"
 REPO="${BUFFY_REPO:-$HOME/buffy-context}"
 CACHE="${XDG_CACHE_HOME:-$HOME/.cache}/buffy-search"
 DB="$CACHE/search.db"
@@ -19,6 +31,8 @@ LIMIT=15
 CMD="search"
 SEP=$'\x1f'
 STRATEGY="${BUFFY_SEARCH_STRATEGY:-and}"
+SELECT=false
+JSON_OUT=false
 
 # Stopwords ES (normalizadas: minúsculas sin diacríticos, coherentes con el tokenizer).
 STOPWORDS_ES="a al algo aunque asi aun cada casi como con cual cuando cuanta cuantas cuanto
@@ -32,6 +46,8 @@ todo todos toda todas tu tus un una uno unas usted y ya"
 while [[ $# -gt 0 ]]; do
   case "$1" in
     -l|--limit) LIMIT="${2:?falta número}"; shift 2 ;;
+    --select)   SELECT=true ; shift ;;
+    --json)     JSON_OUT=true; shift ;;
     --update)   CMD="update" ; shift ;;
     --reindex)  CMD="reindex"; shift ;;
     --stats)    CMD="stats"  ; shift ;;
@@ -95,7 +111,11 @@ reindex_changed() {
     fi
   done < <(find_scope)
   if [[ "$CMD" == "update" || "$count" -gt 0 ]]; then
-    echo "index: $count archivo(s) actualizado(s)"
+    if [[ "$JSON_OUT" == true ]]; then
+      echo "index: $count archivo(s) actualizado(s)" >&2
+    else
+      echo "index: $count archivo(s) actualizado(s)"
+    fi
   fi
 }
 
@@ -132,8 +152,8 @@ deaccent() { tr 'áéíóúüñÁÉÍÓÚÜÑ' 'aeiouunAEIOUUN'; }
 #         chars como adb/api/dpi) → "t1" OR "t2" ... (máx 8) → fallback AND si
 #         no queda ningún término útil (para no devolver basura).
 build_query() {
-  local raw="$1" q tok
-  if [[ "$STRATEGY" != "or" ]]; then
+  local raw="$1" q tok strategy="${2:-$STRATEGY}"
+  if [[ "$strategy" != "or" ]]; then
     q="$(awk '{ for (i=1; i<=NF; i++) { gsub(/"/, "\"\"", $i); printf "\"%s\"%s", $i, (i<NF ? " AND " : "") } }' <<<"$raw")"
     printf '%s' "$q"
     return
@@ -162,13 +182,56 @@ build_query() {
 
 search() {
   local q raw="$1"
-  q="$(build_query "$raw")"
+  if [[ "$SELECT" == true && "$STRATEGY" == "and" ]]; then
+    # El default `and` no genera candidatos para queries naturales (medido en el
+    # EVAL: search_recall 0.000 — una query de N palabras exige las N en la misma
+    # línea). --select genera candidatos con `or` (como el pool F2 del EVAL) y
+    # deja que el selector M3 filtre por calidad. El default sin --select queda
+    # intacto byte a byte. El usuario puede forzar otra estrategia con
+    # BUFFY_SEARCH_STRATEGY (entonces se respeta la suya).
+    q="$(build_query "$raw" or)"
+  else
+    q="$(build_query "$raw")"
+  fi
   q="${q//\'/''}"
   [[ -n "$q" ]] || return 0
   local out n=0 path lineno snip
   out="$(search_query "$q")" || { echo "error de búsqueda: $raw" >&2; return 1; }
   if [[ -z "$out" ]]; then
-    echo "Sin resultados para: $raw"
+    if [[ "$SELECT" == true && "$JSON_OUT" == true ]]; then
+      printf '{"model":"M3","selected":[],"error":"sin_resultados","degraded":true}\n'
+    else
+      echo "Sin resultados para: $raw"
+    fi
+    return 0
+  fi
+  if [[ "$SELECT" == true ]]; then
+    # ── Modo --select: candidatos FTS5 → selector M3 → top-K de pasajes ──
+    # Los candidatos se pasan como {path, lineno} (ventana ±4 se construye en el
+    # motor, igual que en el EVAL). Degrada a búsqueda cruda si Ollama no está.
+    local cands="[" first=1 sel_out rc sel_args=()
+    while IFS="$SEP" read -r path lineno snip; do
+      [ "$first" = 1 ] && first=0 || cands+=","
+      cands+="{\"path\":\"$(printf '%s' "$path" | sed 's/\\/\\\\/g; s/"/\\"/g')\",\"lineno\":$lineno}"
+      n=$((n+1))
+    done <<<"$out"
+    cands+="]"
+    [[ "$JSON_OUT" == true ]] && sel_args+=(--json)
+    rc=0
+    sel_out="$(printf '%s' "$cands" | bash "$SCRIPT_DIR/buffy-selector.sh" \
+        --query "$raw" --limit "$LIMIT" --repo "$REPO" "${sel_args[@]}" 2>/dev/null)" || rc=$?
+    if [ "$rc" -eq 3 ]; then
+      if [[ "$JSON_OUT" == true ]]; then
+        printf '{"model":"M3","error":"ollama_unavailable","selected":[],"degraded":true}\n'
+      else
+        echo "⚠️  Ollama no disponible — selector M3 desactivado, búsqueda cruda:" >&2
+        while IFS="$SEP" read -r path lineno snip; do
+          printf '%s:%s: %s\n' "$path" "$lineno" "$snip"
+        done <<<"$out"
+      fi
+      return 0
+    fi
+    printf '%s\n' "$sel_out"
     return 0
   fi
   while IFS="$SEP" read -r path lineno snip; do

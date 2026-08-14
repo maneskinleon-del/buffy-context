@@ -1,0 +1,120 @@
+#!/usr/bin/env bash
+# buffy-selector.sh — Selección M3 (quality-aware) sobre candidatos de búsqueda.
+# Componente de selección del pipeline (Rama B adoptada 2026-08-13):
+#
+#   query → buffy-router.sh (dominio/archivos) → buffy-search.sh (candidatos)
+#         → buffy-selector.sh (M3: S1+S2+S3+S4, gate rescue 0.545) → top-K
+#
+# Toma una query + pasajes candidatos y devuelve el top-K puntuado con el
+# selector M3 (el módulo reutilizable scripts/lib/selector_m3.py, extraído del
+# runner 15A bit-a-bit). NO modifica el motor de búsqueda ni el router.
+#
+# Uso:
+#   buffy-selector.sh --query "..." --candidates <file> [--top-k 10]
+#   buffy-selector.sh --query "..." -l 15 --repo DIR
+#   echo '[{"path": "...", "lineno": 57}, ...]' | buffy-selector.sh --query "..."
+#
+# Opciones:
+#   --query "texto"       consulta del usuario (obligatoria)
+#   --candidates <file>   JSON: [{"path","s","e","text"} | {"path","lineno"}]
+#                         Si no se pasa, lee JSON de stdin.
+#   -l, --limit N         top-k a devolver (default: 10)
+#   --theta F             gate S1 de referencia (default: 0.55)
+#   --rescue-low F        piso de relevancia ventana de rescate (default: 0.545)
+#   --repo DIR            repo con el corpus (default: $BUFFY_REPO o ~/buffy-context)
+#   --json                salida JSON cruda del motor (default: humano)
+#   --help                esta ayuda
+#
+# Exit codes:
+#   0 → selección OK
+#   1 → error de uso
+#   2 → entrada inválida
+#   3 → Ollama no disponible (bge-m3) — el selector no puede computar S1
+#
+# Creado: 2026-08-13 (integración M3 al pipeline real)
+set -euo pipefail
+
+SCRIPT_SRC="${BASH_SOURCE[0]}"
+if command -v readlink >/dev/null 2>&1; then
+  SCRIPT_SRC="$(readlink -f "$SCRIPT_SRC" 2>/dev/null || echo "$SCRIPT_SRC")"
+fi
+SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_SRC")" && pwd)"
+REPO_DIR="${SCRIPT_DIR%/scripts}"
+ENGINE="$SCRIPT_DIR/lib/selector_m3.py"
+
+QUERY=""
+CANDIDATES=""
+TOP_K=10
+THETA=0.55
+RESCUE_LOW=0.545
+JSON_OUT=false
+
+usage() { sed -n '2,30p' "$SCRIPT_SRC" | sed 's/^# \{0,1\}//'; }
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --query) QUERY="${2:?falta query}"; shift 2 ;;
+    --candidates) CANDIDATES="${2:?falta archivo}"; shift 2 ;;
+    -l|--limit) TOP_K="${2:?falta número}"; shift 2 ;;
+    --theta) THETA="${2:?falta valor}"; shift 2 ;;
+    --rescue-low) RESCUE_LOW="${2:?falta valor}"; shift 2 ;;
+    --repo) REPO_DIR="${2:?falta dir}"; shift 2 ;;
+    --json) JSON_OUT=true; shift ;;
+    -h|--help) usage; exit 0 ;;
+    -*) echo "opción desconocida: $1" >&2; exit 1 ;;
+    *) echo "argumento posicional no soportado: $1" >&2; exit 1 ;;
+  esac
+done
+
+[ -n "$QUERY" ] || { echo "❌ Falta --query. Uso: buffy-selector.sh --query \"...\" [--candidates file]" >&2; exit 1; }
+[ -f "$ENGINE" ] || { echo "❌ No encuentro el motor: $ENGINE" >&2; exit 1; }
+
+# Entrada: --candidates <file> | stdin (JSON)
+if [ -n "$CANDIDATES" ]; then
+  if [ ! -f "$CANDIDATES" ]; then
+    echo "❌ No encuentro --candidates: $CANDIDATES" >&2
+    exit 2
+  fi
+  python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); assert isinstance(d,list), "esperaba lista"; print(json.dumps(d))' "$CANDIDATES" >/dev/null 2>&1 \
+    || { echo "❌ --candidates no es un JSON de lista válido" >&2; exit 2; }
+  INPUT="$(python3 -c 'import json,sys; print(json.dumps({"query": sys.argv[1], "passages": json.load(open(sys.argv[2]))}, ensure_ascii=False))' "$QUERY" "$CANDIDATES")"
+else
+  # stdin: JSON crudo (dict con query+passages, o solo lista de passages)
+  if [ -t 0 ]; then
+    echo "❌ Sin --candidates, falta stdin (JSON). Uso: ... | buffy-selector.sh --query \"...\"" >&2
+    exit 1
+  fi
+  RAW="$(cat)"
+  if echo "$RAW" | python3 -c 'import json,sys; d=json.load(sys.stdin); assert isinstance(d,list)' 2>/dev/null; then
+    INPUT="$(python3 -c 'import json,sys; print(json.dumps({"query": sys.argv[1], "passages": json.loads(sys.stdin.read())}, ensure_ascii=False))' "$QUERY" <<<"$RAW")"
+  else
+    INPUT="$RAW"  # ya es dict con query+passages (se respeta la query del dict si es consistente)
+  fi
+fi
+
+OUT="$(printf '%s' "$INPUT" | python3 "$ENGINE" --top-k "$TOP_K" --theta "$THETA" \
+      --rescue-low "$RESCUE_LOW" --repo "$REPO_DIR" 2>/tmp/buffy-selector.err)" \
+  || { RC=$?; cat /tmp/buffy-selector.err >&2; exit "$RC"; }
+
+if [ "$JSON_OUT" = true ]; then
+  # compacto en una línea (robusto para encadenar: search --select --json → router)
+  printf '%s' "$OUT" | python3 -c 'import json,sys; print(json.dumps(json.load(sys.stdin), separators=(",",":"), ensure_ascii=False))' 2>/dev/null \
+    || printf '%s\n' "$OUT"
+  exit 0
+fi
+
+# Salida humana: top-K con score + ruta + snippet
+echo "🎯 Selector M3 (S1+S2+S3+S4 · gate rescue $RESCUE_LOW · top-$TOP_K)"
+python3 - "$OUT" <<'PY'
+import json, sys
+d = json.loads(sys.argv[1])
+sel = d["selected"]
+print("   pool: %d pasajes · debajo del piso S1: %d · %s" % (
+    d["pool_size"], d["dropped_below_floor"], "%.1fs" % d["elapsed_seconds"]))
+for i, p in enumerate(sel, 1):
+    first = p["text"].splitlines()[0][:80] if p["text"].splitlines() else ""
+    print("  %2d. %s:%d-%d  [score %.3f | s1 %.3f s2 %.3f s3 %.1f s4 %.1f]  %s"
+          % (i, p["path"], p["s"], p["e"], p["score"], p["s1"], p["s2"],
+             p["s3"], p["s4"], first))
+PY
+exit 0
