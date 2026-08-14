@@ -1,7 +1,30 @@
 # 🔄 CONTINUE — Handoff entre sesiones
 
 > ⚡ **PRÓXIMA SESIÓN: LEE ESTO PRIMERO**
-> Generado: 2026-08-13 (opencode — **Fase 3 EVAL PC: Pasos 14A/15A ejecutados — phi3.5 descartado (5/11 pair test, 9/11 det, 14.3s/pasaje → Rama B, sin 14B) · M3 (S1+S2+S3+S4) + ventana de rescate 0.545 ADOPTADO: gold_over_distractor 5/11 → 9/11, leak 0.425 → 0.242, pRel 0.472 → 0.577, Q08-P_TERM_OPACITY atribuido (2/2), attr 16/20 (no-regresión vs F2), determinismo G2 ✓ (5ab74054f1d2dcde). Commit 77bf26a pusheado. Runtime congelado. — pendientes: artefactos Pasos 12/13 (autor anterior, untracked, intactos — NO commitear sin su autorización); hallazgo S3 (sobre-corrige estructuras Q02/Q07) documentado para iteración futura**)
+> Generado: 2026-08-13 (Freebuff — **Integración M3 al pipeline real COMPLETADA: `buffy-selector.sh` (motor `lib/selector_m3.py`, bit-a-bit del runner 15A) + `buffy-search.sh --select` + `buffy-router.sh --context` — fidelidad verificada (attr 16/20, leak 0.242, pRel 0.577, Q06/Q08 resueltos), defaults intactos, suite 258/242 OK, commit 39ce873 (no pusheado). — pendientes: artefactos Pasos 12/13 (autor anterior, untracked, intactos — NO commitear sin su autorización); candidate gap Q08/Q03 documentado (FTS5 no genera System.md → siguiente fase: pipeline de evidencia); hallazgo S3 (sobre-corrige estructuras Q02/Q07) para iteración futura; deshacer/avanzar según validación en vivo**)
+
+---
+
+## Resumen de la sesión (2026-08-13 — Freebuff, integración M3 al pipeline real)
+
+**Tema:** integrar el selector M3 rescue 0.545 (adoptado en 15A) con el pipeline real `router → search → selector → context pack`. Artefactos 12/13 del autor anterior quedaron INTACTOS (fuera del commit).
+
+1. **Motor M3 extraído** a `scripts/lib/selector_m3.py` — S1 bge-m3 cosine · S2 especificidad cross-pool · S3 estructura (tabla/KEY=value) · S4 canonicalidad (NOISE_FILES) · gate rescue 0.545 · pesos 1.0/1.0/0.5/0.5. **Fidelidad bit-a-bit vs 15A rescue verificado sobre el fixture congelado**: attr 16/20 · leak 0.242 · pRel 0.577 · Q06 1/1 · Q08 2/2 (System.md:74 en top-K).
+2. **`scripts/buffy-selector.sh` (NUEVO)** — wrapper CLI: `--query` + candidatos (JSON con path/lineno o texto) → top-K M3; exit 3 si Ollama no responde (degradación limpia, nunca rompe).
+3. **`buffy-search.sh --select`** — candidatos FTS5 → selector M3. `--select` usa `or` como generador (el default `and` no recupera queries naturales — gap medido search_recall 0.000); el default sin flag queda intacto byte a byte. Con `--json` emite JSON compacto (o JSON de error si Ollama cae).
+4. **`buffy-router.sh --context`** — agrega campo `context` (pasajes top-K M3) al JSON o sección humana en salida normal; default sin flag intacto.
+5. **Tests** (`test-selector.sh`, +16 checks): sintaxis, uso/entrada inválida, degradación sin Ollama, encadenamiento, determinismo, reproducción 15A (Q08 gold en top-K) y no-regresión del default. **Suite: 258 OK / 4 FAIL full · 242 OK / 4 FAIL --quick** (4 FAIL preexistentes: 3 × test-scale ruta Termux hardcodeada + 1 × skill-lint --require-all con 22 skills sin manifest = drift del teléfono). README actualizado (conteos 258/242).
+6. **Validación en vivo (queries reales, no EVAL):** Q08 → AGENTS.md (s1 0.657, el más alto) **baja al puesto 7** por S4, evidencia estructurada de opacity sube; Q06 → gold real **FF_SEEN (CHANGELOG.md:217-225) entra al top-K en vivo** (puesto 4) y distractores SESION-archive con s1 más alto quedan abajo por S4.
+7. **Commit `39ce873`** (9 archivos, path-limited, FWD-safe — NO incluye artefactos 12/13). **NO pusheado.**
+
+### ⏳ Pendientes para otra sesión
+- **Artefactos Pasos 12/13 (autor anterior):** `evidence-passage-DESIGN.md` (M), `passage-candidate-expansion-DESIGN.md`, `run-evidence-PC.sh`, baselines E1/E2/E3/F1/F2 — **untracked/intactos, NO commitear sin autorización.**
+- **Candidate gap Q08/Q03 (documentado, no resuelto):** el FTS5 `or` no genera los pasajes de `Knowledge/Linux/System.md` (puente semántico). El selector selecciona entre lo que el search genera; la generación de candidatos es del pipeline de evidencia (Pasos 12/13). Próximo paso lógico: integrar ese pipeline o resolver el hallazgo S3.
+- **Pendiente de decisión del usuario:** ¿pushear `39ce873`? ¿probar el pipeline completo en vivo (`router --context` → agente) para ajustar K/presupuesto?
+- Runtime: defaults congelados (search/router intactos sin flags). Selector: M3 rescue 0.545 operativo.
+- Suite PC: 258 OK / 4 FAIL (preexistentes, fuera de alcance).
+- En el PC: tras `git pull`, `buffy-memory.sh sync pull` UNA vez.
+- P1: retorno del aprendizaje · P2: concurrencia 3+ escritores · Opcional: `Knowledge/Tools/Buffy-Memory.md`.
 
 ---
 
