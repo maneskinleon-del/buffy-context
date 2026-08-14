@@ -431,8 +431,13 @@ m3_context_pack() {
     printf '{"error":"sqlite3_no_disponible"}'
     return 0
   fi
-  local raw
-  raw="$(BUFFY_REPO="$REPO_DIR" bash "$REPO_DIR/scripts/buffy-search.sh" --select --json "$MESSAGE" 2>/dev/null)"
+  # Expansión F2 (rama P): los archivos del router (knowledge) se pasan al
+  # selector vía BUFFY_SELECTOR_KNO → cierra el candidate gap (System.md,
+  # CHANGELOG.md entran al pool aunque el FTS5 no los genere).
+  local kno_json raw
+  kno_json="$(python3 -c 'import json,sys; print(json.dumps(sys.argv[1:]))' "${KNOWLEDGE_FILES[@]}" 2>/dev/null)"
+  raw="$(BUFFY_REPO="$REPO_DIR" BUFFY_SELECTOR_KNO="$kno_json" \
+        bash "$REPO_DIR/scripts/buffy-search.sh" --select --json "$MESSAGE" 2>/dev/null)"
   if [ -z "$raw" ]; then
     printf '{"error":"selector_sin_salida"}'
     return 0

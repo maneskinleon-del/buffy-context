@@ -12,7 +12,7 @@ ollama_up() {
 
 test_selector_sintaxis() {
   suite "selector: sintaxis"
-  for s in buffy-selector.sh buffy-search.sh buffy-router.sh; do
+  for s in buffy-selector.sh buffy-expand.sh buffy-search.sh buffy-router.sh; do
     if bash -n "$SCRIPTS_DIR/$s" 2>/dev/null; then
       ok "bash -n $s"
     else
@@ -23,6 +23,11 @@ test_selector_sintaxis() {
     ok "py_compile lib/selector_m3.py"
   else
     bad "py_compile lib/selector_m3.py"
+  fi
+  if python3 -m py_compile "$SCRIPTS_DIR/lib/expand_passages.py" 2>/dev/null; then
+    ok "py_compile lib/expand_passages.py"
+  else
+    bad "py_compile lib/expand_passages.py"
   fi
 }
 
@@ -113,6 +118,83 @@ assert "context" in d, d
     ok "router --context --json válido con campo context"
   else
     bad "router --context --json inválido: $out"
+  fi
+
+  rm -rf "$sb"
+}
+
+test_selector_expansion() {
+  suite "selector: expansión F2 (rama P — cierre del candidate gap)"
+  local sb mini out rc
+  sb="${TMPDIR:-/tmp}/buffy-tests-expand-$$"
+  rm -rf "$sb"; mkdir -p "$sb/repo/Knowledge/Android" "$sb/repo/Knowledge/Linux"
+  # archivo con 25 líneas → 3 tiles no-solapados de 9
+  printf '# Android ADB\n' > "$sb/repo/Knowledge/Android/ADB.md"
+  for i in $(seq 2 25); do printf 'linea %s\n' "$i" >> "$sb/repo/Knowledge/Android/ADB.md"; done
+  printf '# System\n## Terminal\nP_TERM_OPACITY en alacritty\n' > "$sb/repo/Knowledge/Linux/System.md"
+  for i in $(seq 4 40); do printf 'l%s\n' "$i" >> "$sb/repo/Knowledge/Linux/System.md"; done
+
+  # expansión F1: solo kno (ADB.md completo = 3 tiles)
+  out=$(printf '[{"path":"Knowledge/Android/ADB.md","lineno":5,"rank":1}]' \
+        | bash "$SCRIPTS_DIR/buffy-expand.sh" --kno '["Knowledge/Android/ADB.md"]' \
+               --repo "$sb/repo" --top-k 2 --json 2>/dev/null)
+  rc=$?
+  if [ "$rc" -eq 0 ] && printf '%s' "$out" | python3 -c '
+import json,sys
+d=json.load(sys.stdin)
+ps=[p for p in d["passages"] if p["path"]=="Knowledge/Android/ADB.md"]
+assert len(ps)==3, (len(ps), d)
+# ventanas no-solapadas: 9,9,7 (25 líneas no divisibles por 9 — último tile corto)
+sizes=[p["e"]-p["s"]+1 for p in ps]
+assert sizes==[9,9,7], sizes
+assert ps[0]["s"]==1 and ps[1]["s"]==10 and ps[2]["s"]==19, ps
+' 2>/dev/null; then
+    ok "expansión F1: tiles no-solapados 9/9/7 líneas"
+  else
+    bad "expansión F1 (rc=$rc): $out"
+  fi
+
+  # expansión F2: kno + top-K del pool (System.md entra)
+  out=$(printf '[{"path":"Knowledge/Linux/System.md","lineno":3,"rank":1}]' \
+        | bash "$SCRIPTS_DIR/buffy-expand.sh" --kno '["Knowledge/Android/ADB.md"]' \
+               --repo "$sb/repo" --top-k 2 --json 2>/dev/null)
+  if printf '%s' "$out" | python3 -c '
+import json,sys
+d=json.load(sys.stdin)
+sys_md=any(p["path"]=="Knowledge/Linux/System.md" for p in d["passages"])
+assert sys_md, d
+assert len(d["expanded_files"])==2, d  # ADB.md (kno) + System.md (pool)
+' 2>/dev/null; then
+    ok "expansión F2: kno + top-K del pool (2 archivos expandidos)"
+  else
+    bad "expansión F2: $out"
+  fi
+
+  # tope de coste: max-passages recorta archivos del pool, no los kno
+  out=$(printf '[{"path":"Knowledge/Linux/System.md","lineno":3,"rank":1}]' \
+        | bash "$SCRIPTS_DIR/buffy-expand.sh" --kno '["Knowledge/Android/ADB.md"]' \
+               --repo "$sb/repo" --top-k 2 --max-passages 4 --json 2>/dev/null)
+  if printf '%s' "$out" | python3 -c '
+import json,sys
+d=json.load(sys.stdin)
+kno_pas=[p for p in d["passages"] if p["path"]=="Knowledge/Android/ADB.md"]
+assert len(kno_pas)==3, "kno debe entrar completo: %d" % len(kno_pas)
+assert len(d["passages"])>=3 and len(d["passages"])<=4, d
+' 2>/dev/null; then
+    ok "max-passages: kno completo, pool recortado"
+  else
+    bad "max-passages: $out"
+  fi
+
+  # integración: selector con --kno genera pool expandido (sin Ollama → 3)
+  out=$(printf '[{"path":"Knowledge/Linux/System.md","lineno":3}]' \
+        | OLLAMA_URL=http://127.0.0.1:1 bash "$SCRIPTS_DIR/buffy-selector.sh" --query "terminal opaca" \
+               --kno '["Knowledge/Android/ADB.md"]' --repo "$sb/repo" --json 2>/dev/null)
+  rc=$?
+  if [ "$rc" -eq 3 ]; then
+    ok "selector --kno propaga exit 3 sin Ollama (expansión antes del scoring)"
+  else
+    bad "selector --kno sin Ollama → RC=$rc (esperado 3)"
   fi
 
   rm -rf "$sb"

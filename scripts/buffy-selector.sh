@@ -3,21 +3,26 @@
 # Componente de selección del pipeline (Rama B adoptada 2026-08-13):
 #
 #   query → buffy-router.sh (dominio/archivos) → buffy-search.sh (candidatos)
-#         → buffy-selector.sh (M3: S1+S2+S3+S4, gate rescue 0.545) → top-K
+#         → [buffy-expand.sh (rama P/F2)] → buffy-selector.sh (M3) → top-K
 #
 # Toma una query + pasajes candidatos y devuelve el top-K puntuado con el
 # selector M3 (el módulo reutilizable scripts/lib/selector_m3.py, extraído del
 # runner 15A bit-a-bit). NO modifica el motor de búsqueda ni el router.
+# Con --kno (archivos del router) se encadena la expansión F2 del Paso 13:
+# los archivos del router + top-K del pool generan pasajes ventana ±4 que
+# cierran el candidate gap (Q08/Q06: System.md/CHANGELOG.md entran al pool).
 #
 # Uso:
 #   buffy-selector.sh --query "..." --candidates <file> [--top-k 10]
-#   buffy-selector.sh --query "..." -l 15 --repo DIR
+#   buffy-selector.sh --query "..." --kno '["a.md"]' [--repo DIR]
 #   echo '[{"path": "...", "lineno": 57}, ...]' | buffy-selector.sh --query "..."
 #
 # Opciones:
 #   --query "texto"       consulta del usuario (obligatoria)
 #   --candidates <file>   JSON: [{"path","s","e","text"} | {"path","lineno"}]
 #                         Si no se pasa, lee JSON de stdin.
+#   --kno '["a.md",...]'  archivos del router_knowledge → expansión F2 (rama P)
+#                         ANTES del scoring M3. Cierra el candidate gap.
 #   -l, --limit N         top-k a devolver (default: 10)
 #   --theta F             gate S1 de referencia (default: 0.55)
 #   --rescue-low F        piso de relevancia ventana de rescate (default: 0.545)
@@ -44,17 +49,22 @@ ENGINE="$SCRIPT_DIR/lib/selector_m3.py"
 
 QUERY=""
 CANDIDATES=""
+KNO=""
 TOP_K=10
+MAX_PASSAGES=400
 THETA=0.55
 RESCUE_LOW=0.545
 JSON_OUT=false
+EXPAND_BIN="$SCRIPT_DIR/buffy-expand.sh"
 
-usage() { sed -n '2,30p' "$SCRIPT_SRC" | sed 's/^# \{0,1\}//'; }
+usage() { sed -n '2,36p' "$SCRIPT_SRC" | sed 's/^# \{0,1\}//'; }
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --query) QUERY="${2:?falta query}"; shift 2 ;;
     --candidates) CANDIDATES="${2:?falta archivo}"; shift 2 ;;
+    --kno) KNO="${2:?falta json}"; shift 2 ;;
+    --max-passages) MAX_PASSAGES="${2:?falta número}"; shift 2 ;;
     -l|--limit) TOP_K="${2:?falta número}"; shift 2 ;;
     --theta) THETA="${2:?falta valor}"; shift 2 ;;
     --rescue-low) RESCUE_LOW="${2:?falta valor}"; shift 2 ;;
@@ -89,6 +99,25 @@ else
     INPUT="$(python3 -c 'import json,sys; print(json.dumps({"query": sys.argv[1], "passages": json.loads(sys.stdin.read())}, ensure_ascii=False))' "$QUERY" <<<"$RAW")"
   else
     INPUT="$RAW"  # ya es dict con query+passages (se respeta la query del dict si es consistente)
+  fi
+fi
+
+# ── Expansión F2 (rama P) — si --kno: genera pasajes de los archivos del
+# router + top-K del pool (cierra el candidate gap Q08/Q06), los mezcla con
+# los candidatos originales y delega el scoring al motor.
+if [ -n "$KNO" ]; then
+  # candidatos base: el pool del search (si --candidates, se usa ese; si no,
+  # el stdin ya cargado en INPUT[passages])
+  BASE_PASSAGES="$(printf '%s' "$INPUT" | python3 -c 'import json,sys; d=json.load(sys.stdin); print(json.dumps(d.get("passages", d if isinstance(d,list) else []), ensure_ascii=False))' 2>/dev/null || printf '[]')"
+  EXP_OUT="$(printf '%s' "$BASE_PASSAGES" | bash "$EXPAND_BIN" --kno "$KNO" --repo "$REPO_DIR" --top-k "$TOP_K" --max-passages "${MAX_PASSAGES:-400}" --json 2>/tmp/buffy-expand.err)" \
+    || { RC=$?; echo "⚠️  expansión falló: $(cat /tmp/buffy-expand.err)" >&2; RC="$RC"; }
+  if [ "${EXP_OUT:-}" != "" ] && printf '%s' "$EXP_OUT" | python3 -c 'import json,sys; json.load(sys.stdin)' 2>/dev/null; then
+    INPUT="$(printf '%s' "$EXP_OUT" | python3 -c '
+import json, sys
+exp = json.load(sys.stdin)
+out = {"query": sys.argv[1], "passages": exp["passages"]}
+print(json.dumps(out, ensure_ascii=False))
+' "$QUERY")"
   fi
 fi
 

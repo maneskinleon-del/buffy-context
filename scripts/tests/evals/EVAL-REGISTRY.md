@@ -1747,14 +1747,54 @@ reproduce EXACTAMENTE el veredicto adoptado: **attr 16/20 · leak 0.242 · pRel
 
 ### Límites conocidos (documentados, no resueltos aquí)
 
-1. **Candidate gap de Q08/Q03** persiste: el FTS5 `or` no genera los pasajes de
-   `Knowledge/Linux/System.md` (puente semántico que el léxico no captura). El
-   selector M3 selecciona entre lo que el search genera; la generación de
-   candidatos es del pipeline de evidencia (Pasos 12/13, autor anterior,
-   congelados).
+1. **Candidate gap de Q08/Q03**: el FTS5 `or` no genera los pasajes de
+   `Knowledge/Linux/System.md` por sí solo (puente semántico). RESUELTO para
+   Q08 con la expansión F2 (rama P) agregada después de la integración base —
+   ver sección siguiente. Q03 persiste: Commands.md entra al pool vía kno pero
+   el puente `pushear`→`git push origin` es semántico (bge-m3 por línea no lo
+   captura) — ese gap lo cerraba la expansión de query (Paso 10, rama X).
 2. **Ollama + bge-m3 es requisito de runtime** para S1. Sin él, `--select`
    degrada a búsqueda cruda con aviso (exit 3 del motor → fallback JSON en
    `--json`), nunca rompe.
 3. La señal S3 sobre-corrige estructuras (hallazgo 15A, no corregido por
    regla de no-calibración).
+4. **Coste de la expansión F2 en frío**: cada tile nuevo necesita un embed
+   (fiel al Paso 13: F2 r0 ≈ 17 min, warm ≈ 1 min). El pool se acota con
+   `--max-passages` (default 400, los kno entran completos) como guard de
+   coste operativo.
+
+## ✅ EXPANSIÓN F2 (RAMA P) AL PIPELINE REAL (2026-08-13) — candidate gap de Q08 cerrado
+
+**Motivación (medida):** la integración M3 base dejó Q08/Q03 como candidate
+gap (el FTS5 no genera System.md). El Paso 13 ya demostró en el EVAL que F2
+(archivos del router + top-K del pool → tiles ±4) genera esos pasajes
+(`available` 14→18). Se implementó como componente del pipeline SIN tocar los
+artefactos del autor anterior (solo lectura del diseño).
+
+### Qué se agregó
+
+| Componente | Archivo | Rol |
+|---|---|---|
+| Motor de expansión | `scripts/lib/expand_passages.py` | tile_windows ±4 no-solapados (2·PAS_PAD+1), kno + top-K del pool, `--max-passages` |
+| Wrapper CLI | `scripts/buffy-expand.sh` | kno + pool → pasajes rama P (JSON/humano) |
+| Selector integrado | `buffy-selector.sh --kno` | expansión ANTES del scoring M3 |
+| Search/Router | `BUFFY_SELECTOR_KNO` en search · router --context la setea | pipeline completo router → F2 → M3 |
+
+### Validación en vivo (queries reales)
+
+- **Q08 (caso estrella):** con kno + expansión, `Knowledge/Linux/System.md:73-81`
+  (P_TERM_OPACITY/picom) entra al **top-1** del selector — el candidate gap que
+  motivaba el diseño quedó CERRADO en vivo. Pool 400 (tope), 387 debajo del piso.
+- **Q06:** el gold FF_SEEN (CHANGELOG.md) ya entraba al top-K vía search `or`
+  sin expansión; la expansión conserva la cobertura de los archivos del router.
+- **Q03:** persiste el gap SEMÁNTICO (Commands.md en pool vía kno, pero
+  `pushear`→`git push origin` no lo conecta bge-m3 por línea). No es cobertura
+  de pasajes — es el puente léxico→técnico que atacaba la rama X (Paso 10).
+
+### Suite
+
+**265 OK / 4 FAIL full · 249 OK / 4 FAIL --quick** — los 4 FAIL son los
+preexistentes (3 × test-scale ruta Termux + 1 × skills sin manifest). Tests de
+expansión: F1 tiles 9/9/7, F2 kno+pool, max-passages recorta pool no kno,
+selector --kno degrada sin Ollama.
 

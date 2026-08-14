@@ -14,6 +14,21 @@ system-id: mangonz-desktop
 # CHANGELOG.md — Historial de cambios del sistema
 
 
+### 2026-08-13 — Expansión F2 (rama P) al pipeline: candidate gap de Q08 cerrado en vivo (Freebuff, PC)
+
+**Pedido del usuario:** implementar la expansión F2 del Paso 13 como componente del pipeline (cierra el candidate gap que la integración M3 base dejó en Q08/Q03). Artefactos del autor anterior INTACTOS (solo lectura).
+
+**Lo hecho:**
+- **`scripts/lib/expand_passages.py` (NUEVO)** — motor de expansión de pasajes (rama P): tile_windows ±4 no-solapados (2·PAS_PAD+1 = 9 líneas), archivos kno del router + top-K del pool por orden R1 (F2), con `--max-passages` (default 400) como guard de coste (los kno entran completos, el pool se recorta). Misma lógica que `run-evidence-PC.sh` (Paso 13 F2).
+- **`scripts/buffy-expand.sh` (NUEVO)** — wrapper CLI: `--kno` + pool → pasajes rama P.
+- **`buffy-selector.sh --kno`** — expansión ANTES del scoring M3 (encadena buffy-expand.sh).
+- **`buffy-search.sh`** — pasa `BUFFY_SELECTOR_KNO` al selector; **`buffy-router.sh --context`** setea esa env con su knowledge → pipeline completo `router → F2 → M3 → context pack`.
+- **Tests de expansión** (+7 checks): F1 tiles 9/9/7, F2 kno+pool, max-passages recorta pool no kno, selector --kno degrada sin Ollama. **Suite: 265 OK / 4 FAIL full · 249 OK / 4 FAIL --quick** (4 FAIL preexistentes). README actualizado.
+- **Validación en vivo:** **Q08 CERRADO** — `System.md:73-81` (P_TERM_OPACITY/picom) al top-1 del selector con expansión (antes fuera del pool). Q06 conserva cobertura. **Q03 persiste**: Commands.md entra al pool vía kno pero el puente `pushear`→`git push origin` es semántico (bge-m3 por línea) — es la rama X del Paso 10, no cobertura de pasajes.
+- **Coste documentado:** la expansión F2 en frío paga embeds nuevos (fiel al Paso 13: r0 ≈ 17 min, warm ≈ 1 min); `--max-passages` lo acota.
+
+---
+
 ### 2026-08-13 — Integración M3 al pipeline real: buffy-selector.sh + search --select + router --context (Freebuff, PC)
 
 **Pedido del usuario:** integrar el selector M3 rescue 0.545 adoptado en 15A con el pipeline real (`router → search → selector → context pack`).
