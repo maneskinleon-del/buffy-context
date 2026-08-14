@@ -1,7 +1,37 @@
 # 🔄 CONTINUE — Handoff entre sesiones
 
 > ⚡ **PRÓXIMA SESIÓN: LEE ESTO PRIMERO**
-> Generado: 2026-08-14 (Freebuff — **Selector actualizado: veredicto 15B, V6 ADOPTADO** (`5fc0822`, sin push): S3 condicionado a query estructural + S4 por clase de memoria de sesión → attr 16→19/20, pRel 0.677, leak 0.275 (pasa gate), Q02 3/3 · Q07 2/2 · Q08/Q06 intactos. Hallazgo S3 RESUELTO. **PRÓXIMA SESIÓN: retomar Q03 con la rama X del Paso 10 (expansión de query)** — plan abajo; Q05 `useState` (s1=0.4646) se suma como miss del mismo gap semántico. Pendientes menores: push de d34b7f6/cddd5a8/5fc0822**)
+> Generado: 2026-08-14 (Freebuff — **Rama X (query expansion H1) implementada y documentada** (`210b871` + `16c626b`, locales). **Q03 ACEPTADO COMO LÍMITE DOCUMENTADO**: Commands.md:64 entra al pool (15→91) y S1 mejora 0.468→0.493 con `--expand-query`, pero la ventana ±4 diluye (línea exacta 0.613 cruza el piso) → causa raíz = granularidad del pasaje (PAS_PAD=4), NO el modelo. Bajar el piso descartado (evidencia 15A). **PRÓXIMA SESIÓN: sin deuda técnica urgente** — opciones: (a) diseño del experimento de granularidad de pasaje (línea/ventana 1/2, gate propio), (b) Q05 `useState` (misma raíz que Q03), (c) roadmap Buffy 2.0. Runtime: defaults congelados, rama X opt-in (BUFFY_EXPAND_QUERY=true).**)
+
+---
+
+## Resumen de la sesión (2026-08-14 — Freebuff, rama X del Paso 10: query expansion H1 al pipeline real)
+
+**Tema:** retomar lo pendiente del handoff — Q03 gap semántico (rama X del Paso 10). Plan: portar `expansion_terms` + `DICT_H1` del runner al pipeline real, flag opt-in `--expand-query` en `search --select`, validar en vivo si Commands.md:64 entra al top-K de M3.
+
+1. **`scripts/lib/expand_query.py` (NUEVO)** — DICT_H1 + `expansion_terms` + `tokenize_significant` + `dict_hash` portados del runner del Paso 10 (línea 138). **Fidelidad 10/10** vs baseline-H1 congelado (los términos de las 10 queries del EVAL coinciden exactamente).
+2. **`buffy-search.sh --expand-query` (opt-in, default OFF = no-regresión byte a byte)** — dos mecanismos: (1) **X-candidatos**: re-consultas FTS5 por término del diccionario → hits extra al pool (tope 100 declarado, gate ≥1 token por construcción OR); (2) **X-query**: los términos se pasan como `--terms` al selector → S1 (bge-m3) puntúa con la query expandida. Activable también con `BUFFY_EXPAND_QUERY=true` (para `router --context`).
+3. **`buffy-selector.sh --terms`** — inyecta los términos en la query del S1 (el motor ya los soportaba en su JSON de entrada).
+4. **Tests (+13 checks)** — `test-expand-query.sh`: fidelidad vs runner H1, dict_hash estable, no-regresión del default, degradación sin Ollama (exit 3 limpio), pool crece con X-candidatos (15→91), smoke Q03 (gold en pool, S1 mejora sin cruzar piso). **Suite: 283 OK / 4 FAIL full · 267 OK / 4 FAIL --quick** (4 preexistentes: 3 × test-scale ruta Termux + 1 × skills sin manifest). README actualizado (283/267).
+5. **Smoke Q03 medido:** Commands.md:64 ENTRA al pool (15→91) y S1 mejora 0.468→0.493 pero **NO cruza el piso rescue 0.545** → sigue fuera del top-K.
+
+### 🔎 Hallazgo: la granularidad del pasaje, no el modelo
+Medición fina (Commands.md:64, `gh pr create`): línea exacta **0.613** con términos relevantes (cruza piso) · ventana ±4 **0.493** (diluida por 5 comandos `gh` vecinos) · símbolo exacto 0.873. **El cuello de botella es PAS_PAD=4**, no bge-m3.
+
+### Veredicto del usuario (2026-08-14)
+- **A) Bajar el piso 0.545→0.490: DESCARTADO** — contradice 15A (soft gate colapsa attr 1/20) y la decisión 2b del piso quirúrgico.
+- **B) Otro embedding: DESCARTADO por ahora** — la línea exacta ya cruza; no arreglaría la dilución por ventana.
+- **C) Q03 como límite documentado: ADOPTADO** — rama X queda como componente opt-in (mejora generación + S1, no rompe nada).
+- **Dirección futura:** granularidad alternativa de pasaje (línea exacta o ventana 1/2) para golds de código, con gate propio (leak ≤0.308, pRel ≥0.121) — sin tocar el piso 0.545 ni el modelo.
+
+### ⏳ Pendientes para otra sesión
+- **Push:** `210b871` (rama X) + `16c626b` (veredicto Q03) — vienen con el cierre de día.
+- **Q05 `useState` (s1=0.4646):** misma raíz que Q03 (granularidad del pasaje en golds de código) — candidato para la iteración de granularidad.
+- **Próximo experimento (diseño, no implementar):** granularidad de pasaje — línea exacta o ventana 1/2 — con su propio gate. Evidencia de esta sesión: la línea exacta con términos relevantes cruza el piso (0.613).
+- Runtime: defaults congelados. Pipeline opt-in: `router --context` (M3-V6 + F2), `search --select`, rama X con `--expand-query` o `BUFFY_EXPAND_QUERY=true`. Selector: M3 V6 (19/20).
+- Suite PC: 283 OK / 4 FAIL (preexistentes, fuera de alcance).
+- En el PC: tras `git pull`, `buffy-memory.sh sync pull` UNA vez.
+- P1: retorno del aprendizaje · P2: concurrencia 3+ escritores · Opcional: `Knowledge/Tools/Buffy-Memory.md`.
 
 ---
 

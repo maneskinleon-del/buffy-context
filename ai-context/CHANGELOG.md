@@ -14,6 +14,14 @@ system-id: mangonz-desktop
 # CHANGELOG.md — Historial de cambios del sistema
 
 
+### 2026-08-14 — Rama X (query expansion H1) al pipeline real + Q03 aceptado como límite (Freebuff, PC)
+
+- **`scripts/lib/expand_query.py` (NUEVO)** — DICT_H1 + `expansion_terms` + `dict_hash` portados del runner del Paso 10. Fidelidad **10/10** vs baseline-H1 congelado (las 10 queries del EVAL producen los mismos términos).
+- **`buffy-search.sh --expand-query` (opt-in, default OFF)** — rama X al pipeline real: (1) **X-candidatos**: re-consultas FTS5 por término del diccionario → hits extra al pool (tope 100); (2) **X-query**: términos pasados como `--terms` al selector → S1 puntúa con la query expandida. `BUFFY_EXPAND_QUERY=true` para `router --context`. **`buffy-selector.sh --terms`** nuevo.
+- **Smoke Q03 medido:** Commands.md:64 entra al pool (15→91), S1 mejora 0.468→0.493 pero NO cruza el piso 0.545. **Hallazgo:** la línea exacta cruza (0.613 con términos relevantes); la ventana ±4 la diluye → causa raíz = granularidad del pasaje (PAS_PAD=4), no el modelo.
+- **Q03 aceptado como límite documentado** (decisión del usuario): bajar el piso descartado (evidencia 15A: soft gate colapsa attr 1/20), otro embedding descartado por ahora. Dirección futura: granularidad alternativa de pasaje con gate propio.
+- **Suite: 283 OK / 4 FAIL full · 267 OK / 4 FAIL --quick** (4 preexistentes). Tests +13 (`test-expand-query.sh`). Commits `210b871` + `16c626b` (locales, sin push).
+
 ### 2026-08-14 — Selector M3 → V6 (veredicto 15B) + tarea "cerrar día+1" + phi/qwen en opencode (Freebuff, PC)
 
 - **V6 adoptado como selector del pipeline** (`5fc0822`): S3 condicionado a query estructural + S4 por clase de memoria de sesión (ai-context/* salvo CHANGELOG.md curado) → **attr 16/20 → 19/20, pRel 0.577 → 0.677, leak 0.275 (pasa gate ≤0.308), reg 0.360**. Cierra el hallazgo 15A (sobre-corrección de estructuras): Q02 1/3→3/3, Q07 1/2→2/2, Q08/Q06 intactos. Cambios de mecanismo, sin calibración. V2/V3/V4 descartados con evidencia. Q05 `useState` queda como miss ortogonal → rama X.

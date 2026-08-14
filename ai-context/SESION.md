@@ -1,10 +1,44 @@
-# 🧠 SESION — Buffy Freebuff (2026-08-14 · V6 adoptado + cerrar día+1 + phi/qwen)
+# 🧠 SESION — Buffy Freebuff (2026-08-14 · Rama X: query expansion H1 al pipeline real)
 
 > Contexto de lo implementado durante esta sesión. Corrida en **Freebuff** (PC).
-> Tres frentes: iteración S3 → veredicto 15B (V6); tarea "cerrar día+1" (apagado); prueba de modelos locales (phi3.5/qwen2.5:7b) en opencode.
+> Retomada del handoff: rama X del Paso 10 (expansión de query) integrada al pipeline
+> real como opt-in; Q03 aceptado como límite documentado (granularidad, no modelo).
 
 ---
 
+## 🚀 Rama X — query expansion H1 al pipeline real · Q03 aceptado como límite (2026-08-14 · Freebuff)
+
+### Pedido del usuario
+Retomar lo pendiente del handoff: Q03 gap semántico (rama X del Paso 10). El plan
+era portar `expansion_terms` + `DICT_H1` del runner al pipeline real, flag opt-in
+`--expand-query` en `search --select`, validar en vivo si Commands.md:64 entra al top-K.
+
+### Lo hecho
+1. **`scripts/lib/expand_query.py` (NUEVO)** — DICT_H1 + `expansion_terms` + `tokenize_significant` + `dict_hash`, portados del runner del Paso 10. **Fidelidad 10/10** vs baseline-H1 congelado (los términos de las 10 queries del EVAL coinciden exactamente).
+2. **`buffy-search.sh --expand-query` (opt-in, default OFF)** — dos mecanismos: (1) **X-candidatos**: re-consultas FTS5 por término del diccionario → hits extra al pool (tope 100 declarado, gate ≥1 token por construcción OR); (2) **X-query**: los términos se pasan como `--terms` al selector → S1 (bge-m3) puntúa con la query expandida. También activable con `BUFFY_EXPAND_QUERY=true` (para `router --context`).
+3. **`buffy-selector.sh --terms`** — inyecta los términos en la query del S1 (el motor ya los soportaba en su JSON de entrada).
+4. **Tests (+13 checks)** — `test-expand-query.sh`: fidelidad vs runner H1, dict_hash estable, no-regresión del default (byte a byte), degradación sin Ollama (exit 3 limpio), pool crece con X-candidatos (15→91), smoke Q03. **Suite: 283 OK / 4 FAIL full · 267 OK / 4 FAIL --quick** (4 preexistentes: 3 × test-scale ruta Termux + 1 × skills sin manifest).
+5. **Smoke Q03 medido:** Commands.md:64 ENTRA al pool (15→91) y su S1 mejora con la expansión (**0.468 → 0.493**) pero NO cruza el piso rescue 0.545 → sigue fuera del top-K de M3.
+
+### 🔎 Hallazgo: la granularidad del pasaje, no el modelo
+Medición fina sobre el gold (Commands.md:64, `gh pr create`): la **línea exacta cruza el piso (0.613** con términos relevantes **)**, pero la **ventana ±4 la diluye (0.493)** — 5 comandos `gh` vecinos. El cuello de botella es **PAS_PAD=4** (granularidad del pasaje), no el embedding. Con el símbolo exacto: 0.873.
+
+### Veredicto del usuario (2026-08-14)
+- **A) Bajar el piso 0.545→0.490: DESCARTADO** — contradice la evidencia 15A (soft gate colapsa attr 1/20) y la decisión 2b del piso quirúrgico.
+- **B) Otro embedding: DESCARTADO por ahora** — la línea exacta ya cruza; no arreglaría la dilución por ventana.
+- **C) Q03 como límite documentado: ADOPTADO** — la rama X queda como componente opt-in (mejora generación + S1, no rompe nada).
+- **Dirección futura:** granularidad alternativa de pasaje (línea exacta o ventana 1/2) para golds de código, con su propio gate (leak ≤0.308, pRel ≥0.121) — sin tocar el piso ni el modelo.
+
+### Commits
+- `210b871` feat(selector): rama X del Paso 10 al pipeline — query expansion opt-in (`--expand-query`)
+- `16c626b` docs(evals): Q03 aceptado como límite documentado — veredicto rama X (granularidad, no modelo)
+
+### ⏳ Pendientes
+- Push de `210b871` + `16c626b` (vienen con el cierre de día).
+- **Q05 `useState` (s1=0.4646):** misma raíz que Q03 (granularidad del pasaje en golds de código) — candidato para la iteración de granularidad futura.
+- Dirección futura: experimento de granularidad de pasaje (con gate propio).
+
+---
 ## 🚀 V6 adoptado (15B) · tarea "cerrar día+1" · phi/qwen en opencode (2026-08-14 · Freebuff)
 
 ### Lo hecho
@@ -92,21 +126,3 @@ Separar el problema de **selección** del problema del **modelo**: (14A) ¿un ju
 - Suite PC: 225 OK / 5 FAIL (preexistentes, fuera de alcance).
 
 ---
-
-## 🗂️ buffy-context tooling (2026-08-12 · opencode / FreeBuff)
-
-### Pedido del usuario
-Complementar las limitaciones de FreeBuff (memoria, MCP, plugins) creando en buffy-context un registro MCP y un índice de skills; luego corregir el drift del README y loggear en la memoria de sesión.
-
-### Lo hecho
-1. **`MCP_REGISTRY.md`** (raíz de buffy-context): catálogo portátil de MCP — `codegraph` (AVAILABLE en OpenCode), `OpenRouter MCP` (remoto opcional), `mcp-cli` (puente shell para FreeBuff, que no expone MCP nativo en el build free). Incluye plantilla `.agents/mcp.json`.
-2. **`SKILLS_INDEX.md`** (raíz de buffy-context): índice de los **43 skills reales** (`~/.agents/skills/`) por dominio con propósito + disparador (Android 12, Frontend 7, Workflow 7, Thinking 6, Research 6, Coding rigor 3, Meta 2). Cubre la ausencia de plugins en FreeBuff.
-3. **README drift corregido**: "23 skills" → "43 skills" en 4 lugares. "19 files" de Knowledge confirmado correcto (19 contenido + Vision.md + README índice = 21).
-
-### Veredicto
-buffy-context ahora cubre Memoria + MCP + Plugins, client-agnostic (FreeBuff / OpenCode / futuro Buffy 10B local). Estos archivos son la "parte tuya" que se entrega al modelo.
-
-### Fix posterior — el doctor no detectaba el drift de skills
-- **Causa raíz**: `buffy-doctor.sh` compara el README contra `$REPO_DIR/.agents/skills` (copia del repo = **23 skills**), no contra el entorno real `~/.agents/skills` (= **43 skills**). Como el README decía "23", el doctor veía CONSISTENTE. El drift real era la copia del repo desfasada, no el número del README.
-- **Parche** (`scripts/buffy-doctor.sh`, sección Skills): check #4 compara el conteo declarado en README vs `~/.agents/skills` (hubiera pescado el "23 vs 43"); check #5 avisa `REPO_SKILLS_STALE` cuando la copia del repo (23) está detrás del entorno real (43). Verificado: con README=23 el doctor ahora lanza `README_SKILL_COUNT_DRIFT`; con README=43 pasa y marca el repo como desfasado (warning, no error).
-- **Resuelto (2026-08-12)**: sincronizado el repo a 43 — se copiaron los 22 skills faltantes desde `~/.agents/skills` y se eliminaron los 2 fantasma (`code-search`, `vision-adapter`) que no existen en el entorno real. README 23→43, doctor ahora `CONSISTENTE` (0 errores). Commiteado (`6ed1bb1`) y pusheado a `main`.
