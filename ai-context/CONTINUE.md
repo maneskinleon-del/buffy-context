@@ -1,7 +1,7 @@
 # 🔄 CONTINUE — Handoff entre sesiones
 
 > ⚡ **PRÓXIMA SESIÓN: LEE ESTO PRIMERO**
-> Generado: 2026-08-13 (Freebuff — **Integración M3 al pipeline real COMPLETADA: `buffy-selector.sh` (motor `lib/selector_m3.py`, bit-a-bit del runner 15A) + `buffy-search.sh --select` + `buffy-router.sh --context` — fidelidad verificada (attr 16/20, leak 0.242, pRel 0.577, Q06/Q08 resueltos), defaults intactos, suite 258/242 OK, commit 39ce873 (no pusheado). — pendientes: artefactos Pasos 12/13 (autor anterior, untracked, intactos — NO commitear sin su autorización); candidate gap Q08/Q03 documentado (FTS5 no genera System.md → siguiente fase: pipeline de evidencia); hallazgo S3 (sobre-corrige estructuras Q02/Q07) para iteración futura; deshacer/avanzar según validación en vivo**)
+> Generado: 2026-08-13 (Freebuff — **Pipeline completo router → expansión F2 → M3 → context pack OPERATIVO: `buffy-selector.sh` + `lib/selector_m3.py` (bit-a-bit 15A) + `buffy-expand.sh` + `lib/expand_passages.py` (rama P/F2 del Paso 13) + `search --select` + `router --context`. Candidate gap de Q08 CERRADO en vivo (System.md:73-81 al top-1). Commits 39ce873 + 1bb2f9c + b6c7c09 (NO pusheados). Suite 265/249 OK (4 FAIL preexistentes). — pendientes: artefactos Pasos 12/13 (autor anterior, untracked, intactos — NO commitear sin su autorización); Q03 sigue como gap SEMÁNTICO (Commands.md en pool pero `pushear`→`git push origin` no lo conecta bge-m3 por línea → rama X del Paso 10); hallazgo S3 para iteración futura; decisión de push**)
 
 ---
 
@@ -23,6 +23,33 @@
 - **Pendiente de decisión del usuario:** ¿pushear `39ce873`? ¿probar el pipeline completo en vivo (`router --context` → agente) para ajustar K/presupuesto?
 - Runtime: defaults congelados (search/router intactos sin flags). Selector: M3 rescue 0.545 operativo.
 - Suite PC: 258 OK / 4 FAIL (preexistentes, fuera de alcance).
+- En el PC: tras `git pull`, `buffy-memory.sh sync pull` UNA vez.
+- P1: retorno del aprendizaje · P2: concurrencia 3+ escritores · Opcional: `Knowledge/Tools/Buffy-Memory.md`.
+
+---
+
+## Resumen de la sesión (2026-08-13 — Freebuff, parte 2: expansión F2 / candidate gap)
+
+**Tema:** cierre del candidate gap que la integración M3 base dejó en Q08/Q03. Se leyó `passage-candidate-expansion-DESIGN.md` (Paso 13, autor anterior — solo lectura) y se implementó la variante F2 como componente nuevo del pipeline. Artefactos del autor INTACTOS.
+
+1. **`scripts/lib/expand_passages.py` (NUEVO)** — motor de expansión de pasajes (rama P): `tile_windows` no-solapados de 2·PAS_PAD+1 (9) líneas por archivo; archivos kno del router + top-K del pool por orden R1 (F2); `--max-passages` (default 400) como guard de coste (kno completos, pool recortado). Lógica idéntica a `run-evidence-PC.sh` del Paso 13.
+2. **`scripts/buffy-expand.sh` (NUEVO)** — wrapper CLI: `--kno` + pool JSON (o stdin) → pasajes rama P.
+3. **`buffy-selector.sh --kno`** — encadena la expansión ANTES del scoring M3 (el pool expandido alimenta el motor).
+4. **`buffy-search.sh --select`** — pasa `BUFFY_SELECTOR_KNO` al selector; **`buffy-router.sh --context`** setea esa env con su knowledge → pipeline completo `router → F2 → M3 → context pack`.
+5. **Tests de expansión** (+7 checks): F1 tiles 9/9/7 (25 líneas), F2 kno+pool, max-passages recorta pool no kno, selector --kno degrada sin Ollama. **Suite: 265 OK / 4 FAIL full · 249 OK / 4 FAIL --quick** (4 FAIL preexistentes: 3 × test-scale ruta Termux + 1 × skills sin manifest). README actualizado (265/249).
+6. **Validación en vivo:**
+   - **Q08 (caso estrella) CERRADO** — con kno + expansión, `Knowledge/Linux/System.md:73-81` (P_TERM_OPACITY/picom) entra al **top-1** del selector. Antes: fuera del pool. El candidate gap que motivó el Paso 13 quedó resuelto en el pipeline real.
+   - **Q06** — el gold FF_SEEN (CHANGELOG.md:217-225) ya entraba al top-K vía search `or` sin expansión; la expansión conserva cobertura.
+   - **Q03 PERSISTE (gap semántico, no cobertura)** — Commands.md entra al pool vía kno, pero el puente `pushear`→`git push origin` es semántico y bge-m3 por línea no lo captura. Ese gap lo atacaba la rama X (Paso 10, query expansion) — no es candidate gap de pasajes.
+7. **Coste documentado:** la expansión F2 en frío paga embeds nuevos (fiel al Paso 13: r0 ≈ 17 min, warm ≈ 1 min); `--max-passages` lo acota para el pipeline real.
+8. **Commits `39ce873` + `1bb2f9c` + `b6c7c09`** (path-limited, FWD-safe, sin artefactos 12/13). **NO pusheados.**
+
+### ⏳ Pendientes para otra sesión
+- **Artefactos Pasos 12/13 (autor anterior):** `evidence-passage-DESIGN.md` (M), `passage-candidate-expansion-DESIGN.md`, `run-evidence-PC.sh`, baselines E1/E2/E3/F1/F2 — **untracked/intactos, NO commitear sin autorización.**
+- **Q03 (gap semántico):** la cobertura de pasajes ya no es el problema (Commands.md en pool); el puente `pushear`→`push`/`crear`→`create` requiere expansión de query (rama X del Paso 10) — decidir si se retoma.
+- **Decisión del usuario:** ¿pushear los 3 commits? ¿ajustar `--max-passages` (400) según latencia aceptable?
+- Runtime: defaults congelados. Pipeline opt-in: `router --context` (M3 + F2), `search --select`. Selector: M3 rescue 0.545. Expansión: F2 tope 400.
+- Suite PC: 265 OK / 4 FAIL (preexistentes, fuera de alcance).
 - En el PC: tras `git pull`, `buffy-memory.sh sync pull` UNA vez.
 - P1: retorno del aprendizaje · P2: concurrencia 3+ escritores · Opcional: `Knowledge/Tools/Buffy-Memory.md`.
 
