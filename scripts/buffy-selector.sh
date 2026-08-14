@@ -23,6 +23,9 @@
 #                         Si no se pasa, lee JSON de stdin.
 #   --kno '["a.md",...]'  archivos del router_knowledge → expansión F2 (rama P)
 #                         ANTES del scoring M3. Cierra el candidate gap.
+#   --terms '["push",...]' términos de expansión (rama X, Paso 10 H1): se suman
+#                         a la query para S1 (bge-m3 puntúa query+términos).
+#                         Seteado por buffy-search.sh --expand-query.
 #   -l, --limit N         top-k a devolver (default: 10)
 #   --theta F             gate S1 de referencia (default: 0.55)
 #   --rescue-low F        piso de relevancia ventana de rescate (default: 0.545)
@@ -50,6 +53,7 @@ ENGINE="$SCRIPT_DIR/lib/selector_m3.py"
 QUERY=""
 CANDIDATES=""
 KNO=""
+TERMS=""
 TOP_K=10
 MAX_PASSAGES=400
 THETA=0.55
@@ -64,6 +68,7 @@ while [[ $# -gt 0 ]]; do
     --query) QUERY="${2:?falta query}"; shift 2 ;;
     --candidates) CANDIDATES="${2:?falta archivo}"; shift 2 ;;
     --kno) KNO="${2:?falta json}"; shift 2 ;;
+    --terms) TERMS="${2:?falta json}"; shift 2 ;;
     --max-passages) MAX_PASSAGES="${2:?falta número}"; shift 2 ;;
     -l|--limit) TOP_K="${2:?falta número}"; shift 2 ;;
     --theta) THETA="${2:?falta valor}"; shift 2 ;;
@@ -106,6 +111,7 @@ fi
 # router + top-K del pool (cierra el candidate gap Q08/Q06), los mezcla con
 # los candidatos originales y delega el scoring al motor.
 if [ -n "$KNO" ]; then
+  # (la expansión F2 reconstruye INPUT al final de este bloque)
   # candidatos base: el pool del search (si --candidates, se usa ese; si no,
   # el stdin ya cargado en INPUT[passages])
   BASE_PASSAGES="$(printf '%s' "$INPUT" | python3 -c 'import json,sys; d=json.load(sys.stdin); print(json.dumps(d.get("passages", d if isinstance(d,list) else []), ensure_ascii=False))' 2>/dev/null || printf '[]')"
@@ -118,6 +124,22 @@ exp = json.load(sys.stdin)
 out = {"query": sys.argv[1], "passages": exp["passages"]}
 print(json.dumps(out, ensure_ascii=False))
 ' "$QUERY")"
+  fi
+fi
+
+# ── Rama X (query expansion H1) — si --terms: se suman a la query para S1
+# (el motor concatena query + términos antes de embeddear). Sin efecto en el
+# default (sin --terms = comportamiento idéntico).
+if [ -n "$TERMS" ]; then
+  if printf '%s' "$TERMS" | python3 -c 'import json,sys; json.load(sys.stdin)' 2>/dev/null; then
+    INPUT="$(printf '%s' "$INPUT" | python3 -c '
+import json, sys
+d = json.load(sys.stdin)
+d["terms"] = json.loads(sys.argv[1])
+print(json.dumps(d, ensure_ascii=False))
+' "$TERMS")"
+  else
+    echo "⚠️  --terms no es JSON válido — se ignora" >&2
   fi
 fi
 
