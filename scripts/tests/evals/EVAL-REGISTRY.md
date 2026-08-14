@@ -1669,6 +1669,35 @@ congelado; la adopción es del componente de selección, no de
 
 ---
 
+## 🗜️ Regla de compresión para modo autónomo (2026-08-13, decisión del usuario)
+
+**Motivo:** el pipeline real completo (`router → search → F2 expand → M3`) es
+pesado para iteración en vivo — cada tile de la expansión paga un embed en frío
+(fiel al Paso 13: r0 ≈ 17 min, warm ≈ 1 min). Un test end-to-end con query nueva
+tardó >6 min en timeout. La disciplina de la serie ya era "smoke antes de medir";
+se formaliza como REGLA para no bloquear el desarrollo.
+
+**Regla (modo autónomo / iteración rápida):**
+
+```text
+1. Validar sintaxis de todo (bash -n, py_compile) — siempre.
+2. Validar el MÓDULO modificado con entrada de prueba chica (ej. expand con un
+   archivo de 25 líneas; selector con 2 pasajes) — sin pipeline completo.
+3. Timeout operativo por prueba: 30 s. Si una prueba en vivo tarda más → NO
+   esperar: reportar "pipeline pesado" y validar contra el EVAL congelado.
+4. La validación de fidelidad se hace contra el fixture congelado (sin Ollama,
+   reproducible): p.ej. expand vs rama-P del fixture, M3 vs veredicto 15A.
+5. El pipeline end-to-end en vivo se corre SOLO una vez al final de la iteración
+   (y con cache caliente + --max-passages acotado), no en cada ciclo.
+```
+
+**Por qué el fixture es la fuente de verdad para iterar:** el pool congelado
+contiene exactamente lo que la expansión F2 genera (verificado: 133/134 rama-P
+coinciden bit-a-bit; el único mismatch fue corpus drift — README 430→431 líneas
+por updates de la suite — no lógica del algoritmo).
+
+---
+
 ## 🛡️ Apéndice — Foreign Worktree Detection (FWD) · DISEÑO · 2026-08-12
 
 **Motivo:** caso real del mismo día — dos sesiones (OpenCode + Freebuff) trabajando

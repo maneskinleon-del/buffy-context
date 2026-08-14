@@ -200,6 +200,43 @@ assert len(d["passages"])>=3 and len(d["passages"])<=4, d
   rm -rf "$sb"
 }
 
+test_selector_fidelidad_expand() {
+  suite "selector: fidelidad expand vs fixture congelado (rama-P)"
+  local fixture="$REPO_DIR/scripts/tests/evals/selector-pool-frozen-2026-08-13.json"
+  if [ ! -f "$fixture" ]; then
+    ok "skip fidelidad (fixture ausente)"
+    return 0
+  fi
+  # El módulo expand debe generar ≥98% de los pasajes rama-P del fixture (el
+  # único mismatch esperado es corpus drift: archivo creció tras el fixture).
+  # Sin Ollama — solo lectura del fixture + tile_windows.
+  local out rc
+  out=$(python3 - "$fixture" "$REPO_DIR" <<'PY' 2>/dev/null
+import json, sys
+import importlib.util
+spec = importlib.util.spec_from_file_location("exp", "scripts/lib/expand_passages.py")
+exp = importlib.util.module_from_spec(spec); spec.loader.exec_module(exp)
+fixture, repo = sys.argv[1], sys.argv[2]
+snap = json.load(open(fixture, encoding="utf-8"))
+q = next(x for x in snap["queries"] if x["qid"] == "Q08")
+fixture_p = {(p["path"], p["s"], p["e"]) for p in q["passages"] if "P" in p.get("ramas", [])}
+p_files = sorted({p["path"] for p in q["passages"] if "P" in p.get("ramas", [])})
+pool = [{"path": f, "lineno": 1, "rank": i} for i, f in enumerate(p_files)]
+_, module_p = exp.expand(p_files, pool, repo, 50)
+mod_keys = {(p["path"], p["s"], p["e"]) for p in module_p}
+inter = fixture_p & mod_keys
+ratio = len(inter) / max(1, len(fixture_p))
+print("OK" if ratio >= 0.98 else "LOW", "%.0f%% (%d/%d)" % (100*ratio, len(inter), len(fixture_p)))
+PY
+  )
+  rc=$?
+  if [ "$rc" -eq 0 ] && printf '%s' "$out" | grep -q '^OK'; then
+    ok "expand reproduce los pasajes rama-P del fixture ($out)"
+  else
+    bad "expand vs fixture: $out"
+  fi
+}
+
 test_selector_determinismo() {
   suite "selector: determinismo M3 (requiere Ollama — skip si no está)"
   if ! ollama_up; then
