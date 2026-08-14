@@ -261,56 +261,107 @@ test_selector_determinismo() {
   fi
 }
 
-test_selector_veredicto_15a() {
-  suite "selector: reproducción del veredicto 15A (requiere Ollama — skip si no está)"
+test_selector_veredicto_15b() {
+  suite "selector: veredicto 15B V6 (attr 19/20 — requiere Ollama, skip si no está)"
   if ! ollama_up; then
-    ok "skip 15A (Ollama no disponible)"
+    ok "skip 15B (Ollama no disponible)"
     return 0
   fi
   local fixture="$REPO_DIR/scripts/tests/evals/selector-pool-frozen-2026-08-13.json"
   if [ ! -f "$fixture" ]; then
-    ok "skip 15A (fixture ausente)"
+    ok "skip 15B (fixture ausente)"
     return 0
   fi
-  # Caso estrella Q08 (pool 305 + 2 synth = 307): con gate rescue 0.545, el
-  # gold System.md:74 (P_TERM_OPACITY) y System.md:55 (picom) deben entrar al
-  # top-K — es el caso que el veredicto 15A adoptó. ~3 s con el cache de embeds.
+  # Reproduce el veredicto 15B (V6) sobre el fixture congelado: attr 19/20 con
+  # Q02 3/3 · Q07 2/2 · Q08 2/2 · Q06 1/1. El synth de Q06 se lee del corpus
+  # congelado (77bf26a) para ser drift-proof (el fixture no trae el gold de Q06).
   local out rc
   out=$(python3 - "$fixture" "$REPO_DIR" <<'PY' 2>/dev/null
-import json, sys
+import json, sys, subprocess
 import importlib.util
 spec = importlib.util.spec_from_file_location("m3", "scripts/lib/selector_m3.py")
 m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
 fixture, repo = sys.argv[1], sys.argv[2]
 snap = json.load(open(fixture, encoding="utf-8"))
-q = next(x for x in snap["queries"] if x["qid"] == "Q08")
-passages = [{"path": p["path"], "s": p["s"], "e": p["e"], "text": p["text"]} for p in q["passages"]]
-# gold sintético (misma lógica que el runner 15A)
-for gf in q["gold_facts"]:
-    nd = m.deaccent(gf.lower())
-    for gpath in sorted(q["gold_files"]):
-        try:
-            lines = open(repo + "/" + gpath, encoding="utf-8", errors="replace").read().splitlines()
-        except OSError:
-            continue
-        for i, ln in enumerate(lines, 1):
-            if nd in m.deaccent(ln.lower()):
-                s, e = max(1, i - 4), min(len(lines), i + 4)
-                txt = "\n".join(lines[s-1:e])
-                if txt.strip():
-                    passages.append({"path": gpath, "s": s, "e": e, "text": txt})
-                break
-        break
-selected, _ = m.select(" ".join([q["query"]] + list(q["terms"])), passages, repo, 0.55, 0.545, 10)
-keys = {p["path"] + ":" + str(p["s"]) for p in selected}
-print("OK" if "Knowledge/Linux/System.md:74" in keys else "MISS",
-      "gold:", sorted(k for k in keys if k.startswith("Knowledge/Linux/System.md")))
+
+def frozen_lines(path):
+    try:
+        out = subprocess.run(["git", "-C", repo, "show", "77bf26a:" + path],
+                             capture_output=True, timeout=20)
+        if out.returncode == 0:
+            return out.stdout.decode("utf-8", errors="replace").splitlines()
+    except Exception:
+        pass
+    return m.file_lines(path, repo)
+
+per_q = {}
+for q in snap["queries"]:
+    qtext = " ".join([q["query"]] + list(q.get("terms", [])))
+    gold_files = set(q["gold_files"])
+    gold_facts = [f for f in q["gold_facts"] if f.strip()]
+    synth = []
+    for gf in gold_facts:
+        nd = m.deaccent(gf.lower())
+        for gpath in sorted(gold_files):
+            lines = frozen_lines(gpath)
+            for i, ln in enumerate(lines, 1):
+                if nd in m.deaccent(ln.lower()):
+                    s, e = max(1, i - 4), min(len(lines), i + 4)
+                    txt = "\n".join(lines[s-1:e])
+                    if txt.strip():
+                        synth.append({"path": gpath, "s": s, "e": e, "text": txt})
+                    break
+            break
+    pool = [{"path": p["path"], "s": p["s"], "e": p["e"], "text": p["text"]}
+            for p in q["passages"]] + synth
+    sel, _ = m.select(qtext, pool, repo, 0.55, 0.545, 10)
+    ctx = " ".join(p["text"] for p in sel).lower()
+    gold_ctx = " ".join(p["text"] for p in sel if p["path"] in gold_files).lower()
+    attr = sum(1 for f in gold_facts if m.deaccent(f.lower()) in m.deaccent(ctx)
+               and m.deaccent(f.lower()) in m.deaccent(gold_ctx))
+    per_q[q["qid"]] = attr
+attr = sum(per_q.values())
+print("OK" if attr == 19 else "LOW",
+      "attr=%d/20 Q02=%d/3 Q07=%d/2 Q08=%d/2 Q06=%d/1" %
+      (attr, per_q.get("Q02", -1), per_q.get("Q07", -1),
+       per_q.get("Q08", -1), per_q.get("Q06", -1)))
 PY
   )
   rc=$?
   if [ "$rc" -eq 0 ] && printf '%s' "$out" | grep -q '^OK'; then
-    ok "Q08: gold System.md:74 en top-K con rescue 0.545 (veredicto 15A reproducido)"
+    ok "V6: attr 19/20 con Q02 3/3 Q07 2/2 Q08 2/2 Q06 1/1 ($out)"
   else
-    bad "Q08: gold no recuperado ($out)"
+    bad "veredicto 15B V6 no reproducido ($out)"
+  fi
+}
+
+test_selector_s3v6_mecanica() {
+  suite "selector: mecánica S3/S4 v6 (sin Ollama)"
+  local out rc
+  out=$(python3 - <<'PY' 2>/dev/null
+import importlib.util
+spec = importlib.util.spec_from_file_location("m3", "scripts/lib/selector_m3.py")
+m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+# query_structural: solo queries con patrón tabla/KEY=value son estructurales
+qs_prose = m.query_structural("cómo concedo permisos a una app con shizuku sin root")
+# el KV debe estar a inicio de línea (misma semántica que los pasajes)
+qs_kv = m.query_structural("P_TERM_OPACITY=0.9\nconfigurar el theme")
+qs_tabla = m.query_structural("| Dispositivo | Android |  \n| Shizuku | v13 |")
+# is_session_noise: memoria transitoria no-canónica; CHANGELOG.md canónico
+n_infofull = m.is_session_noise("ai-context/INFO-full.md")
+n_changelog = m.is_session_noise("ai-context/CHANGELOG.md")
+n_knowledge = m.is_session_noise("Knowledge/Android/ADB.md")
+n_sesion = m.is_session_noise("ai-context/SESION.md")
+ok = (qs_prose == 0.0 and qs_kv == 1.0 and qs_tabla == 1.0
+      and n_infofull and not n_changelog and not n_knowledge and n_sesion)
+print("OK" if ok else "FAIL", "qs=%s/%s/%s noise=%s/%s/%s/%s" %
+      (qs_prose, qs_kv, qs_tabla, n_infofull, n_changelog, n_knowledge, n_sesion))
+PY
+  )
+  rc=$?
+  if [ "$rc" -eq 0 ] && printf '%s' "$out" | grep -q '^OK'; then
+    ok "S3 condicionado a query + S4 clase sesión ($out)"
+  else
+    bad "mecánica S3/S4 v6 ($out)"
   fi
 }

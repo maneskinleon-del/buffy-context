@@ -1669,6 +1669,64 @@ congelado; la adopción es del componente de selección, no de
 
 ---
 
+## ✅ Paso 15B — EJECUTADO · ADOPTADO · Iteración S3: V6 (S3 condicionado a query + S4 por clase de memoria de sesión) · 2026-08-14
+
+**Motivo:** el hallazgo 15A documentó que S3 (estructura binaria +0.5) sobre-corrige
+pasajes estructurados no-gold (Q02 `INFO-full.md:189` tabla de perfil · Q07
+`README.md:73` tabla índice y `scrcpy.md:37` con `ENCODER="..."`), desplazando
+golds en prosa (Shizuku.md · GameOptimization.md). El usuario autorizó iterar sobre
+el hallazgo. **Hipótesis declarada antes de medir:** S3 binario confunde estructura
+*definicional* (el gold de Q08, `P_TERM_OPACITY` en tabla/KEY=value) con estructura
+*incidental* (índices/perfiles que solo mencionan). Cambios de MECANISMO (semántica
+de señales), sin calibración: pesos/θ/gate intactos, sin fitting per-query.
+
+**Harness:** reproducción fiel del runner 15A sobre `selector-pool-frozen-2026-08-13.json`
+(sanity: M3 = 16/20 · pRel 0.577 · leak 0.242 bit a bit; synth Q06 leído del corpus
+congelado `77bf26a` para ser drift-proof). Variantes medidas:
+
+| Variante | attr | pRel | leak | reg | Q02 | Q07 | Q08 | Q06 |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| M3 (2026-08-13) | 16/20 | 0.577 | 0.242 | 0.420 | 1/3 | 1/2 | 2/2 | 1/1 |
+| V1 · S3 condicionado a query estructural | 18/20 | 0.627 | **0.325** ❌ | 0.330 | 3/3 | 2/2 | **1/2** ❌ | 1/1 |
+| V2 · S3 densidad (fracción de líneas) | 16/20 | 0.577 | 0.250 | 0.390 | 0/3 | 2/2 | 2/2 | 1/1 |
+| V3 · S4 clase total `ai-context/*` | 15/20 | 0.587 | **0.217** | 0.450 | 1/3 | 1/2 | 2/2 | **0/1** ❌ |
+| V4 · S3 solo tablas (sin KEY=value) | 16/20 | 0.577 | 0.242 | 0.420 | 1/3 | 1/2 | 2/2 | 1/1 |
+| **V6 · V1 + S4 clase memoria de sesión** | **19/20** | **0.677** | **0.275** ✅ | **0.360** | **3/3** | **2/2** | **2/2** | **1/1** |
+
+**Mecanismo (confirmado con datos):**
+1. **S3 binario sobre-corrige** — cualquier tabla/KEY=value recibe +0.5 aunque sea
+   mención incidental (índice README.md, perfil INFO-full.md, asignación scrcpy.md)
+   y desplaza golds en prosa. Confirmado y cuantificado.
+2. **V1 (S3 solo si la query es estructural** — patrón tabla/KEY=value en la query,
+   mismo regex que los pasajes): queries de procedimiento (Q02/Q07 prosa) no
+   reciben boost → attr 16→18/20. **Costo aislado:** el gold Q08
+   `System.md:74` (P_TERM_OPACITY, s1=0.5478 en ventana rescue, s2=0.60) dependía
+   del boost S3 → cae al rank 14 (Q08 1/2) y la prosa de `ai-context/` (INFO-full,
+   CHANGELOG-archive) llena el top-10 → leak 0.325 (falla gate ≤0.308).
+3. **V6 cierra el costo:** S4 por CLASE de memoria de sesión (no-canónico = lista
+   original + dumps por-sesión en `ai-context/` — INFO-full, CHANGELOG-archive,
+   SHIZUKU-RISH-BUG; **CHANGELOG.md (historia curada) sigue canónico** → preserva
+   Q06 FF_SEEN). Los distractores `ai-context/` de Q08 caen → `P_TERM_OPACITY`
+   vuelve al top-4 → Q08 2/2 ✓ y Q06 1/1 ✓.
+4. **Descartadas con evidencia:** V2 (densidad — Q02 empeora a 0/3: los golds
+   `rish -c` son code-blocks de baja densidad), V3 (rompe Q06), V4 (la sugerencia
+   literal del hallazgo "solo tablas" NO arregla nada — los casos fallan por
+   tablas, no por code-blocks).
+5. **Q05 `useState` (React.md:22-30, s1=0.4646) queda fuera del piso 0.545 en
+   TODAS las variantes** — miss preexistente ortogonal a S3 (gap de símbolos
+   semánticos → rama X del Paso 10, planificada para la próxima iteración).
+
+**Veredicto del usuario (2026-08-14): ADOPTAR V6** como nuevo selector del pipeline
+(cambios de mecanismo, no calibración). Implementado en `scripts/lib/selector_m3.py`
+(default = V6: `query_structural()` + `is_session_noise()`), sin tocar pesos/θ/gate.
+Determinismo intacto (mismas funciones deterministas + cache). Suite: **267 OK / 4
+FAIL full · 251 OK / 4 FAIL --quick** (los 4 FAIL son preexistentes: 3 × test-scale
+ruta Termux + 1 × skill-lint --require-all). Test de veredicto actualizado a 15B
+(attr 19/20 con Q02 3/3 · Q07 2/2 · Q08 2/2 · Q06 1/1) + test de mecánica S3/S4
+sin Ollama.
+
+---
+
 ## 🗜️ Regla de compresión para modo autónomo (2026-08-13, decisión del usuario)
 
 **Motivo:** el pipeline real completo (`router → search → F2 expand → M3`) es
