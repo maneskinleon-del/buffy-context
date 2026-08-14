@@ -14,6 +14,21 @@ system-id: mangonz-desktop
 # CHANGELOG.md — Historial de cambios del sistema
 
 
+### 2026-08-13 — Integración M3 al pipeline real: buffy-selector.sh + search --select + router --context (Freebuff, PC)
+
+**Pedido del usuario:** integrar el selector M3 rescue 0.545 adoptado en 15A con el pipeline real (`router → search → selector → context pack`).
+
+**Lo hecho (sin commit todavía, artefactos 12/13 del autor anterior intactos):**
+- **Motor M3 extraído** a `scripts/lib/selector_m3.py` (bit-a-bit del runner 15A: S1 bge-m3 cosine · S2 especificidad cross-pool · S3 estructura · S4 canonicalidad · gate rescue 0.545 · pesos 1.0/1.0/0.5/0.5). Fidelidad verificada sobre el fixture congelado: **attr 16/20 · leak 0.242 · pRel 0.577 · Q06 1/1 · Q08 2/2** = idéntico al veredicto 15A rescue.
+- **`scripts/buffy-selector.sh` (NUEVO)** — wrapper CLI: `--query` + candidatos (JSON o stdin) → top-K M3. Exit 3 si Ollama no está (degradación limpia).
+- **`buffy-search.sh --select`** — candidatos FTS5 → selector M3 → top-K de pasajes puntuados. Default (sin flag) intacto byte a byte; `--select` usa `or` como generador (el `and` default no recupera queries naturales — gap medido, search_recall 0.000). Con `--json` degrada a JSON de error si Ollama cae.
+- **`buffy-router.sh --context`** — agrega campo `context` (pasajes top-K M3) al JSON o sección humana. Default (sin flag) intacto.
+- **Tests nuevos** (`test-selector.sh`): sintaxis, uso, degradación sin Ollama, determinismo, reproducción 15A (Q08 gold en top-K), no-regresión del default. Suite: **258 OK / 4 FAIL full · 242 OK / 4 FAIL --quick** (los 4 FAIL preexistentes: 3 × test-scale ruta Termux + 1 × skills sin manifest). README actualizado.
+- **Validación en vivo:** Q08 — AGENTS.md (s1 0.657, el más alto) baja por S4; Q06 — gold real `FF_SEEN` (CHANGELOG.md:217-225) entra al top-K en vivo.
+- **Límite documentado:** Q08/Q03 siguen con candidate gap (el FTS5 no genera System.md — puente semántico); la generación de candidatos es del pipeline de evidencia (Pasos 12/13, autor anterior, congelados).
+
+---
+
 ### 2026-08-13 — EVAL PC Fase 3: Pasos 14A/15A — selector quality-aware ADOPTADO (opencode, PC)
 
 **Pedido del usuario:** separar selección de modelo: (14A) ¿un juez LLM discrimina gold vs distractor mejor que bge-m3? (15A) ¿señales multi-señal distinguen evidencia útil de ruido?

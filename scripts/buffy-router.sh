@@ -7,10 +7,18 @@
 #   buffy-router.sh "mensaje"                → lista de archivos a cargar
 #   echo "mensaje" | buffy-router.sh         → lee de stdin
 #   buffy-router.sh --json "mensaje"         → salida JSON (para scripting)
+#   buffy-router.sh --context "mensaje"      → + Context Pack M3 (selector S1+S2+S3+S4)
 #   buffy-router.sh --quick "mensaje"        → solo rutas existentes, una por línea
 #   buffy-router.sh --list                   → tabla de categorías y señales
 #   buffy-router.sh --repo RUTA "mensaje"    → checkout específico
 #   buffy-router.sh --help                   → esta ayuda
+#
+# --context (integración M3, 2026-08-13): además de la lista de archivos, corre
+# buffy-search.sh --select --json con el mensaje y agrega los pasajes top-K del
+# selector quality-aware (componente adoptado 15A) como campo "context" en JSON,
+# o como sección extra en salida normal. Requiere Ollama + bge-m3; si no está
+# disponible, el campo context lleva {"error":"ollama_unavailable"} (no rompe).
+# El default (sin --context) queda intacto byte a byte.
 #
 # Exit codes:
 #   0  → OK (se generó la lista)
@@ -36,11 +44,13 @@ source "$SCRIPT_DIR/lib/common.sh"
 REPO_DIR="${SCRIPT_DIR%/scripts}"
 MODE="normal"   # normal | json | quick
 DIAGNOSE=false  # report-only: explica la selección sin cambiarla (requiere --json)
+CONTEXT=false   # añade el Context Pack M3 (selector) a la salida
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --json) MODE="json"; shift ;;
     --quick) MODE="quick"; shift ;;
+    --context) CONTEXT=true; shift ;;
     --diagnose) DIAGNOSE=true; shift ;;
     --list)
       cat <<'EOF'
@@ -412,6 +422,46 @@ exists() { # acepta ruta con anotación, absoluta o relativa al repo/HOME
   [ -f "$p" ] || [ -f "$REPO_DIR/$p" ] || [ -f "$HOME/$p" ]
 }
 
+# ── Context Pack M3 (integración 2026-08-13) ───────────────
+# corre buffy-search.sh --select --json con el mensaje → JSON del selector
+# (M3 S1+S2+S3+S4, gate rescue). Degrada a {"error":"ollama_unavailable"}
+# si el selector no puede computar S1 (Ollama caído). Nunca rompe la salida.
+m3_context_pack() {
+  if ! command -v sqlite3 >/dev/null 2>&1; then
+    printf '{"error":"sqlite3_no_disponible"}'
+    return 0
+  fi
+  local raw
+  raw="$(BUFFY_REPO="$REPO_DIR" bash "$REPO_DIR/scripts/buffy-search.sh" --select --json "$MESSAGE" 2>/dev/null)"
+  if [ -z "$raw" ]; then
+    printf '{"error":"selector_sin_salida"}'
+    return 0
+  fi
+  # el search imprime el JSON del selector en la última línea válida; extraerlo
+  # sin asumir nada del formato de los mensajes de índice (que van a stderr)
+  printf '%s' "$raw" | python3 -c '
+import json, sys
+raw = sys.stdin.read()
+# último objeto JSON parseable del stream (los mensajes previos no son JSON)
+best = None
+for line in raw.splitlines():
+    line = line.strip()
+    if not line:
+        continue
+    try:
+        json.loads(line)
+        best = line
+    except ValueError:
+        pass
+try:
+    json.loads(best or "")
+    print(best)
+except ValueError:
+    print(json.dumps({"error": "selector_salida_invalida", "raw": raw[:120]}))
+' 2>/dev/null \
+    || printf '{"error":"selector_falló"}'
+}
+
 # ── Salida JSON ────────────────────────────────────────────
 jesc() { # JSON-escape un string (argumento, no pipe: evita errores de argv)
   python3 -c 'import json,sys; print(json.dumps(sys.argv[1])[1:-1])' "$1" 2>/dev/null \
@@ -483,8 +533,11 @@ if [ "$MODE" = "json" ]; then
       [ "$first" = 1 ] && first=0 || printf ', '
       printf '"%s"' "$p"
     done < <(dedupe "${SCRIPT_FILES[@]}")
-    printf ']\n'
-    printf '}\n'
+    printf ']'
+    if [ "$CONTEXT" = true ]; then
+      printf ',\n  "context": %s' "$(m3_context_pack)"
+    fi
+    printf '\n}\n'
   }
   exit 0
 fi
@@ -583,5 +636,21 @@ section "📊 Resumen"
 TOTAL_FILES=$(dedupe "${BASE_FILES[@]}" "${KNOWLEDGE_FILES[@]}" "${SKILL_FILES[@]}" "${SCRIPT_FILES[@]}" | wc -l)
 echo -e "  ${CYAN}$TOTAL_FILES${NC} archivos · ~${CYAN}$TOTAL_TOKENS${NC} tokens estimados"
 echo -e "  ${GREEN}✅ Listo para cargar.${NC}"
-echo -e "  💡 Usa ${CYAN}--quick${NC} para rutas puras o ${CYAN}--json${NC} para scripting."
+if [ "$CONTEXT" = true ]; then
+  section "🧠 Context Pack M3 (selector S1+S2+S3+S4 · gate rescue)"
+  python3 - "$(m3_context_pack)" <<'PY' 2>/dev/null || echo -e "  ${YELLOW}⚠️  selector no disponible${NC}"
+import json, sys
+D = json.loads(sys.argv[1])
+if "error" in D:
+    print("  ⚠️  %s" % D["error"])
+    sys.exit(0)
+print("  pool: %d pasajes · debajo del piso S1: %d · %s" % (
+    D.get("pool_size", 0), D.get("dropped_below_floor", 0),
+    "%.1fs" % D.get("elapsed_seconds", 0)))
+for i, p in enumerate(D.get("selected", [])[:5], 1):
+    first = (p["text"].splitlines() or [""])[0][:70]
+    print("  %2d. %s:%d-%d  [%.3f]  %s" % (i, p["path"], p["s"], p["e"], p["score"], first))
+PY
+fi
+echo -e "  💡 Usa ${CYAN}--quick${NC} para rutas puras, ${CYAN}--json${NC} para scripting o ${CYAN}--context${NC} para el pack M3."
 exit 0

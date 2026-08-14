@@ -1702,3 +1702,59 @@ ninguna variante pasa el gate; cuello de botella = candidate/context coverage
 (solo 6/20 agujas en la capa de pasajes de R1) → Paso 13 en DISEÑO
 (passage-candidate-expansion-DESIGN.md).**
 
+---
+
+## ✅ INTEGRACIÓN M3 AL PIPELINE REAL (2026-08-13) — selector operativo, runtime congelado por default
+
+**Autorización del usuario (2026-08-13):** Opción 1 de CONTINUE.md — integrar el
+selector M3 rescue 0.545 con el pipeline real (`router → search → selector →
+context pack`). Los artefactos de los Pasos 12/13 (autor anterior, untracked)
+quedan INTACTOS, sin commitear.
+
+### Qué se agregó (componente de selección, opt-in)
+
+| Componente | Archivo | Rol |
+|---|---|---|
+| Motor M3 reutilizable | `scripts/lib/selector_m3.py` | S1-S4 + gate rescue, extraído bit-a-bit del runner 15A |
+| Wrapper CLI | `scripts/buffy-selector.sh` | `--query` + candidatos (JSON o stdin) → top-K M3 |
+| Search integrado | `scripts/buffy-search.sh --select` | candidatos FTS5 (`or` para queries naturales) → selector M3 |
+| Router integrado | `scripts/buffy-router.sh --context` | lista de archivos + campo `context` (pasajes top-K) |
+| Tests | `scripts/tests/test-selector.sh` | sintaxis, uso, degradación sin Ollama, determinismo, 15A, no-regresión |
+
+### Fidelidad verificada (bit-a-bit vs 15A rescue)
+
+El módulo, sobre el fixture congelado con el mismo gold sintético del runner,
+reproduce EXACTAMENTE el veredicto adoptado: **attr 16/20 · leak 0.242 · pRel
+0.577 · Q06 1/1 · Q08 2/2** (System.md:74 `P_TERM_OPACITY` en top-K).
+
+### Default intacto (no-regresión)
+
+- `buffy-search.sh` sin `--select`: comportamiento histórico byte a byte (la
+  búsqueda `and` default no cambia; `--select` es opt-in y usa `or` como
+  generador de candidatos porque `and` no recupera queries naturales — gap
+  medido en el EVAL, search_recall 0.000).
+- `buffy-router.sh` sin `--context`: salida idéntica (verificado en tests).
+- Suite: **258 OK / 4 FAIL (full) · 242 OK / 4 FAIL (--quick)** — los 4 FAIL son
+  preexistentes y fuera de alcance (3 × test-scale con ruta Termux hardcodeada;
+  1 × skill-lint --require-all, 22 skills sin manifest = drift del teléfono).
+
+### Validación en vivo (queries reales, no EVAL)
+
+| Query | Resultado |
+|---|---|
+| Q08 "terminal opaca/transparente" | AGENTS.md (s1 más alto 0.657) **baja al puesto 7** por S4; evidencia estructurada de opacity sube; System.md fuera del pool (candidate gap léxico conocido, no del selector) |
+| Q06 "scrcpy no abre free fire" | gold real **FF_SEEN en CHANGELOG.md:217-225 entra al top-K (puesto 4)**; distractores SESION-archive con s1 más alto quedan abajo por S4 |
+
+### Límites conocidos (documentados, no resueltos aquí)
+
+1. **Candidate gap de Q08/Q03** persiste: el FTS5 `or` no genera los pasajes de
+   `Knowledge/Linux/System.md` (puente semántico que el léxico no captura). El
+   selector M3 selecciona entre lo que el search genera; la generación de
+   candidatos es del pipeline de evidencia (Pasos 12/13, autor anterior,
+   congelados).
+2. **Ollama + bge-m3 es requisito de runtime** para S1. Sin él, `--select`
+   degrada a búsqueda cruda con aviso (exit 3 del motor → fallback JSON en
+   `--json`), nunca rompe.
+3. La señal S3 sobre-corrige estructuras (hallazgo 15A, no corregido por
+   regla de no-calibración).
+

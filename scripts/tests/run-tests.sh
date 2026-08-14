@@ -58,6 +58,8 @@ source "$SCRIPT_DIR/test-documentation.sh"
 source "$SCRIPT_DIR/test-scale.sh"
 # shellcheck source=test-context-selection.sh
 source "$SCRIPT_DIR/test-context-selection.sh"
+# shellcheck source=test-selector.sh
+source "$SCRIPT_DIR/test-selector.sh"
 
 trap teardown_sandbox EXIT
 
@@ -69,7 +71,7 @@ echo "   bash puro (bats no requerido) · python3 para asserts JSON"
 
 # ── 0. Sintaxis previa (todos los scripts) ─────────────────
 suite "Sintaxis (bash -n)"
-for s in buffy-doctor.sh buffy-repair.sh buffy-agent.sh buffy-router.sh buffy-context.sh buffy-verify.sh buffy-source.sh buffy-memory.sh buffy-close-day.sh set-version.sh migrate-system.sh changelog-entry.sh skill-lint.sh ai-context-lint.sh; do
+for s in buffy-doctor.sh buffy-repair.sh buffy-agent.sh buffy-router.sh buffy-context.sh buffy-verify.sh buffy-source.sh buffy-memory.sh buffy-close-day.sh set-version.sh migrate-system.sh changelog-entry.sh skill-lint.sh ai-context-lint.sh buffy-selector.sh; do
   if bash -n "$SCRIPTS_DIR/$s" 2>/dev/null; then
     ok "bash -n $s"
   else
