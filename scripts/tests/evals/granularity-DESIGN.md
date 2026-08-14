@@ -289,3 +289,48 @@ sobre el mismo pool. Implicaciones:
 - PADS default incluye 4; flags --pads y --repeat presentes; determinism_hash
 - MAX_PASSAGES=400, RESCUE_LOW=0.545, selector_m3.W (M3 V6 real)
 - el bloque de construcción del pool no referencia gold_files/gold_facts
+
+---
+
+## 11. RESULTADOS y VEREDICTO (2026-08-14) — medido, no inferido
+
+### 11.1 Ejecución
+
+- Runner: `run-granularity-PC.sh`, corpus congelado `bb33afa` (7644 líneas,
+  `corpus_hash f36eaf1e…`), `dict_hash H1 b0406a33…`, `eval_hash 98a0e308…`.
+- G2: dos corridas completas. run1 = 7181 s (índice + pasajes en frío);
+  run2 = 252 s (cache). **JSONs idénticos per-query en los 4 pads** → el único
+  diff es `elapsed_seconds`/`index_build_seconds` (determinismo G2 ✅).
+
+### 11.2 Tabla de resultados (run1 = run2, G2 verificado)
+
+| pad | attr | pRel | leak | contain | Q01 Q02 Q03 Q04 Q05 Q06 Q07 Q08 Q09 Q10 |
+|---|---|---|---|---|---|
+| 0 | 5/20 | 0.310 | 0.619 | 1.0 | . 1 . 1 . 1 . . . . |
+| 1 | 8/20 | 0.385 | 0.589 | 1.0 | . 1 1 1 . 1 . 1 1 . |
+| 2 | 8/20 | 0.357 | 0.625 | 1.0 | . 1 1 . . 1 1 1 1 . |
+| **4 (baseline)** | **12/20** | **0.415** | **0.442** | 1.0 | . 1 . 1 . 1 1 1 1 **1** |
+
+### 11.3 Evaluación contra el gate §10.1 (baseline = pad 4 del mismo runner)
+
+| Criterio | Resultado |
+|---|---|
+| mejora ≥1 gold Q01/Q03/Q05 | PARCIAL: Q03 en pads 1/2; **Q01 y Q05 = 0 en las 4** |
+| sin regresión Q02/Q06/Q08/Q09 | pad 0 regresa Q08/Q09; Q02/Q06 intactos |
+| leakage ≤ 0.308 | **FALLA en las 4** (0.442 es el menor) |
+| pRel ≥ 0.121 | ✅ |
+| containment ≥ 0.80 | ✅ 1.0 |
+
+### 11.4 Veredicto (H16)
+
+1. **El gate NO se cruza en ninguna variante**: leakage falla en las 4 y
+   Q01/Q05 nunca se rescatan.
+2. **La granularidad fina empeora el sistema** (attr 12→8→8→5, leak sube,
+   prosa se pierde). El pad ±4 ya usado por el pipeline es el mejor medido.
+3. **Q03: efecto real no-monótono** (1/2 sí, 0/4 no) a costo de Q10 → no es
+   palanca uniforme y no sobrevive al gate.
+4. **H16 CONFIRMADA → granularidad uniforme DESCARTADA.** Q01/Q05 = límite del
+   puente semántico query natural ↔ comando/símbolo (DICT_H1), inalcanzable por
+   la ventana de pasaje.
+5. **Adopción: NINGUNA.** PAS_PAD queda en ±4 (default). Próximo frente: el
+   puente semántico (DICT_H1 / expand_query), no la granularidad.

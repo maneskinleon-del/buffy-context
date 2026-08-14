@@ -62,6 +62,8 @@ source "$SCRIPT_DIR/test-context-selection.sh"
 source "$SCRIPT_DIR/test-selector.sh"
 # shellcheck source=test-expand-query.sh
 source "$SCRIPT_DIR/test-expand-query.sh"
+# shellcheck source=test-granularity-16B.sh
+source "$SCRIPT_DIR/test-granularity-16B.sh"
 
 trap teardown_sandbox EXIT
 
