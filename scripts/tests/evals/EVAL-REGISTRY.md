@@ -1987,3 +1987,49 @@ por la regla de la serie). Ejemplo Q03: `gh pr create`, `git push origin`,
    congelado fija la granularidad en ±4 → 16A no puede medir la granularidad
    real. La medición que sella o descarta es **16B** (pool regenerado por
    PAS_PAD, H1 real) — decisión del usuario 2026-08-14.
+
+---
+
+## ✅ VEREDICTO PASO 16B (2026-08-14) — granularidad uniforme DESCARTADA; puente semántico H1 = límite
+
+**Runner:** `run-granularity-PC.sh` (pool regenerado por PAS_PAD, H1 real, sin
+oráculo ni inyección de gold). Corpus congelado `bb33afa` (7644 líneas),
+`corpus_hash f36eaf1e…`, `dict_hash H1 b0406a33…`, `eval_hash 98a0e308…`.
+G2: 2 corridas (`-r2.json`, 252 s con cache vs 7181 s frío) — **JSONs idénticos
+per-query en los 4 pads** (determinismo confirmado; difieren solo duración).
+
+### Resultados por PAS_PAD
+
+| pad | attr | pRel | leak | contain | Q01 | Q02 | Q03 | Q04 | Q05 | Q06 | Q07 | Q08 | Q09 | Q10 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| **0** | **5/20** | 0.310 | **0.619** | 1.0 | . | 1 | . | 1 | . | 1 | . | . | . | . |
+| **1** | **8/20** | 0.385 | 0.589 | 1.0 | . | 1 | **1** | 1 | . | 1 | . | 1 | 1 | . |
+| **2** | **8/20** | 0.357 | 0.625 | 1.0 | . | 1 | **1** | . | . | 1 | 1 | 1 | 1 | . |
+| **4 (baseline)** | **12/20** | **0.415** | **0.442** | 1.0 | . | 1 | . | 1 | . | 1 | 1 | 1 | 1 | **1** |
+
+### Evaluación contra el gate §10.1 (baseline = pad 4 del mismo runner)
+
+| Criterio | Resultado |
+|---|---|
+| mejora ≥1 gold de Q01/Q03/Q05 | **PARCIAL**: Q03 rescatado por pads 1 y 2 (no por 0 ni 4); **Q01 y Q05 = 0 en las 4 variantes** |
+| sin regresión en Q02/Q06/Q08/Q09 | pad 0 **regresa Q08 y Q09**; pads 1/2 OK; Q02/Q06 intactos en todas |
+| leakage ≤ 0.308 | **FALLA en las 4 variantes** (0.442 es el menor, en pad 4; afinar empeora: 0.619/0.589/0.625) |
+| pRel ≥ 0.121 | ✅ 0.310–0.415 en todas |
+| containment ≥ 0.80 | ✅ 1.0 en todas |
+
+### Veredicto
+
+1. **El gate NO se cruza en ninguna variante.** La condición que falla en las 4
+   es leakage (≤0.308); además Q01/Q05 nunca se rescatan.
+2. **La granularidad fina empeora el sistema**: attr cae 12→8→8→5, el leak
+   sube 0.442→0.589–0.625, y pierde prosa (Q10 solo en pad 4; Q08/Q09 caen en
+   pad 0). El pad ±4 (el que ya usaba el pipeline) es el mejor en attr, leak y
+   prosa.
+3. **Q03 es un efecto real pero no-monótono** (rescatado por 1/2, no por 0/4) y
+   a costo de perder Q10 → no es una palanca uniforme, y no sobrevive al gate.
+4. **H16 CONFIRMADA**: ninguna granularidad uniforme cruza el gate H1.
+   **Q01/Q05 quedan como límite del puente semántico** query natural ↔
+   comando/símbolo — inalcanzables por la ventana de pasaje.
+5. **Conclusión de adopción: NO hay cambio que adoptar en PAS_PAD.** El default
+   ±4 del pipeline queda como el mejor medido. Cerrar el gap Q01/Q05 requiere
+   trabajar el puente semántico (DICT_H1 / query), no la granularidad.
