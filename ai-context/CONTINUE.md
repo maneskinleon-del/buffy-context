@@ -1,7 +1,27 @@
 # 🔄 CONTINUE — Handoff entre sesiones
 
 > ⚡ **PRÓXIMA SESIÓN: LEE ESTO PRIMERO**
-> Generado: 2026-08-12 (opencode — **Fase 3 EVAL PC: Pasos 7-10B ejecutados y CERRADOS — Semantic D ❌ (0.200/0.192/0.669/48k), Hybrid E/F ❌ (0.200/0.185/0.605/10k), Passages G1/G2 ❌ gate pero hipótesis ✅ (28-46× menos tokens), Expansion H1/H2 ❌ gate pero candidate gap 6/6 ✅ (Caso D: generación resuelta, selección rota), Rerank R1/R2 ❌ gate pero R1 = 0.750 récord serie (gap_to_top10 4/6, leak 0.441) → el cuello de botella ERA el ranking; falta capa quality-aware. Ninguna variante adoptada. — siguiente: DISEÑAR el Paso 11 (reranking/passage selection quality-aware), sin implementar todavía**)
+> Generado: 2026-08-13 (opencode — **Fase 3 EVAL PC: Pasos 14A/15A ejecutados — phi3.5 descartado (5/11 pair test, 9/11 det, 14.3s/pasaje → Rama B, sin 14B) · M3 (S1+S2+S3+S4) + ventana de rescate 0.545 ADOPTADO: gold_over_distractor 5/11 → 9/11, leak 0.425 → 0.242, pRel 0.472 → 0.577, Q08-P_TERM_OPACITY atribuido (2/2), attr 16/20 (no-regresión vs F2), determinismo G2 ✓ (5ab74054f1d2dcde). Commit 77bf26a pusheado. Runtime congelado. — pendientes: artefactos Pasos 12/13 (autor anterior, untracked, intactos — NO commitear sin su autorización); hallazgo S3 (sobre-corrige estructuras Q02/Q07) documentado para iteración futura**)
+
+---
+
+## Resumen de la sesión (2026-08-13 — opencode, EVAL PC Pasos 14A/15A: selector quality-aware ADOPTADO)
+
+**Tema:** mini-fase de modelo (14A) + selector multi-señal (15A) sobre el pool F2 congelado. Veredicto: **M3 rescue 0.545 = nuevo selector del pipeline** (componente de selección; `buffy-search.sh`/`buffy-router.sh` siguen congelados).
+
+1. **Paso 14A — juez LLM** (`run-selector-model-PC.sh`, phi3.5 vs bge-m3, 11 pares gold-vs-distractor, pool F2): phi = **5/11** pair test (= bge), determinismo pares **9/11**, 14.3 s/pasaje. phi recupera 13/97 gold vs bge 74/97. **phi no supera a bge en ningún query → Rama B, sin 14B.** Fix OOM verificado: unload + `keep_alive=0` entre queries (PID cambió, memoria 11→8.6 GB, corrida completa sin errores).
+2. **Paso 15 — selector multi-señal** (`run-selector-quality-PC.sh`, S1 bge-m3 θ=0.55 · S2 especificidad · S3 estructura · S4 canonicalidad · S5 mtime · S7 concisión · MMR λ=0.7; pesos a priori w1=1.0 w2=1.0 w3=0.5 w4=0.5 w5=0.25 w7=0.25; ablación M1→M4; gates hard/soft/rescue): **M3 = 9/11 gold_over_distractor** (target ✓, regla de parada) · leak 0.325 · pRel 0.482 · attr 16/20. Gate soft (sin piso S1) colapsa (attr 1/20) → el piso de relevancia es esencial.
+3. **Ventana de rescate (decisión 2b del usuario):** θ=0.55 corta el gold de Q08 (cos 0.5478) por 0.002 → contradicción del diseño confirmada con datos. `--rescue-low 0.545` = punto quirúrgico: **Q08-P_TERM_OPACITY atribuido (2/2)**, leak **0.242** (pasa gate ≤0.308), pRel **0.577**, gold_over 9/11. Costo: Q07-2 (`force_gpu_rendering`) perdido (colateral S3).
+4. **Hallazgos documentados (no corregidos — calibración post-hoc prohibida):** S3 sobre-corrige estructuras (Q02 INFO-full.md:189 desplaza Shizuku.md; Q07 scrcpy.md:37/README.md:73 desplazan GameOptimization.md:54 — lista de ruido S4 incompleta); piso S1 esencial; θ=0.55 corta golds reales.
+5. Registrado en `EVAL-REGISTRY.md` (§14A, §15A) + specs a EJECUTADO. Commit **`77bf26a`** (9 archivos, path-limited, FWD-safe) + push a origin/main. Fix línea 396 de `run-selector-model-PC.sh` (bash + python OK).
+
+### ⏳ Pendientes para otra sesión
+- **Artefactos Pasos 12/13 (autor anterior, NO de esta sesión):** `evidence-passage-DESIGN.md` (modificado, Anexos), `passage-candidate-expansion-DESIGN.md`, `run-evidence-PC.sh`, `baseline-E1/E2/E3-evidence-PC-2026-08-12*.json`, `baseline-F1/F2-expansion-PC-2026-08-13*.json` — **untracked, intactos. NO commitear sin autorización de su autor.**
+- **Próximo paso lógico (cuando se retome):** integrar el selector M3 rescue 0.545 con el pipeline real, o resolver el hallazgo S3 (refinar estructura vs prosa), o avanzar a la siguiente fase.
+- Runtime congelado. EVAL `98a0e308…`. Pool F2 congelado. Selector adoptado: M3 rescue 0.545.
+- Suite PC: 225 OK / 5 FAIL (preexistentes, fuera de alcance).
+- En el PC: tras `git pull`, `buffy-memory.sh sync pull` UNA vez.
+- P1: retorno del aprendizaje · P2: concurrencia 3+ escritores · Opcional: `Knowledge/Tools/Buffy-Memory.md`.
 
 ---
 

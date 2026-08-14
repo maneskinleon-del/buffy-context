@@ -1,7 +1,31 @@
-# 🧠 SESION — Buffy opencode (2026-08-12 · EVAL PC Fase 3 — Pasos 7→10B ejecutados y cerrados: Semantic ❌ · Hybrid ❌ · Passages ✅hipótesis · Expansion ✅gap · Rerank R1 récord 0.750 → cuello de botella = ranking)
+# 🧠 SESION — Buffy opencode (2026-08-13 · EVAL PC Fase 3 — Pasos 14A/15A: phi3.5 descartado → Rama B · M3 rescue 0.545 ADOPTADO)
 
 > Contexto de lo implementado durante esta sesión. Corrida en **opencode** (PC).
-> Compactación 2026-08-12: entrada de hoy + handoff; sesiones 2026-08-10 y anteriores archivadas.
+> Compactación 2026-08-13: entrada de hoy + 2 de 2026-08-12; Fases 1-2-3, Pasos 5/6/6b/7 y sesiones anteriores archivadas en SESION-archive.md.
+
+---
+
+## 🔎 EVAL PC — Pasos 14A/15A (Fase 3 · selector quality-aware ADOPTADO · runtime congelado)
+
+### Pedido del usuario
+Separar el problema de **selección** del problema del **modelo**: (14A) ¿un juez LLM (phi3.5) discrimina gold vs distractor mejor que bge-m3? (15A) ¿señales de calidad multi-señal distinguen evidencia útil de pasajes ruidosos?
+
+### Lo hecho
+1. **Paso 14A** (`run-selector-model-PC.sh`, pool F2 congelado, 11 pares gold-vs-distractor): phi3.5 = **5/11** pair test (= bge), determinismo pares **9/11**, **14.3 s/pasaje**. phi recupera 13/97 gold vs bge 74/97 — **phi no supera a bge en ningún query → Rama B, sin 14B**. Fix OOM verificado: unload + `keep_alive=0` entre queries (memoria 11→8.6 GB, corrida completa sin errores).
+2. **Paso 15** (`run-selector-quality-PC.sh`, S1 bge-m3 θ=0.55 · S2 especificidad · S3 estructura · S4 canonicalidad · S5 mtime · S7 concisión · MMR λ=0.7; pesos a priori; ablación M1→M4; gates hard/soft/rescue): **M3 (S1+S2+S3+S4) = 9/11 gold_over_distractor** (target ✓) · leak 0.325 · pRel 0.482 · attr 16/20. Gate soft colapsa (attr 1/20) → piso S1 esencial.
+3. **Ventana de rescate (2b del usuario):** θ=0.55 cortaba el gold de Q08 (cos 0.5478) por 0.002 → `--rescue-low 0.545` = punto quirúrgico: **Q08-P_TERM_OPACITY atribuido (2/2)**, leak **0.242** (pasa gate ≤0.308), pRel **0.577**. Costo: Q07-2 perdido (colateral S3).
+4. **Hallazgos** (documentados, no corregidos): S3 sobre-corrige estructuras (Q02 INFO-full.md:189 → Shizuku.md; Q07 scrcpy.md:37/README.md:73 → GameOptimization.md:54); lista de ruido S4 incompleta; piso S1 esencial.
+5. Registrado en `EVAL-REGISTRY.md` (§14A, §15A) + specs a EJECUTADO. Commit **`77bf26a`** (9 archivos, path-limited FWD-safe) + push. Fix línea 396 (`run-selector-model-PC.sh`) verificado.
+
+### Veredicto y estado
+- **Selector adoptado: M3 rescue 0.545** — gold_over_distractor **5/11 → 9/11** · leak **0.425 → 0.242** · pRel **0.472 → 0.577** · attr 16/20 (no-regresión vs F2) · tokens ~5k. Determinismo G2 ✓ (`5ab74054f1d2dcde`).
+- **Funnel F2 cerrado en los 2 casos target**: Q06 `FF_SEEN` ✓ (1/1) · Q08 `P_TERM_OPACITY` ✓ (2/2).
+- Runtime intacto (`buffy-search.sh`/`buffy-router.sh`), EVAL `98a0e308…`, pool F2 congelado.
+
+### ⏳ Pendientes
+- **Artefactos Pasos 12/13 (autor anterior, NO de esta sesión):** `evidence-passage-DESIGN.md` (modificado), `passage-candidate-expansion-DESIGN.md`, `run-evidence-PC.sh`, `baseline-E1/E2/E3-evidence-PC-2026-08-12*.json`, `baseline-F1/F2-expansion-PC-2026-08-13*.json` — **untracked, intactos. NO commitear sin autorización.**
+- **Próximo lógico:** integrar M3 rescue 0.545 con el pipeline real · o resolver hallazgo S3 · o siguiente fase.
+- Suite PC: 225 OK / 5 FAIL (preexistentes, fuera de alcance).
 
 ---
 
@@ -46,89 +70,4 @@ Aprobar/implementar/medir los experimentos de Fase 3 del EVAL PC uno a uno, con 
 ### ⏳ Pendientes
 - **Diseñar el Paso 11 — reranking quality-aware / passage selection** (próximo experimento, sin implementar todavía): la evidencia de R1/R2 (pRel 0.175/0.131, leak 0.441/0.502) indica que falta una capa que seleccione por calidad de evidencia, no solo por similitud; Q03 llegó a rank 12 (casi completa la cadena expansion→candidate→rerank→passage→context).
 - Handoff completo en `/tmp/handoff-buffy-2026-08-12.md`.
-
-## 🔬 Fases 1-2-3 del benchmark realista (buffy-context)
-
-### Pedido del usuario
-Aprobar/avanzar las fases del benchmark realista contra el hallazgo `search_recall = 0.000` (FTS5 AND) y el router débil (`router_recall ~0.225`).
-
-### Lo hecho
-1. **Fase 1 — Search mejorada** (`buffy-search.sh`): `BUFFY_SEARCH_STRATEGY` (default `and` = baseline byte a byte) con `or` = deacent + lowercase → términos ≥3 chars sin stopwords ES (~70) → máx 8 → `"t1" OR ...` + BM25 → top-K. Corrección del usuario: términos ≥3 chars (ADB/API/Git/SSH/CPU/DPI/VLM/APK/USB son valiosos; ≥4 los descartaba).
-2. **Medición Fase 1 (3 seeds × and vs or)**: search_recall **0.000 → 0.736** · context_relevance → 0.505 · leakage +0.031 · token ×4.4 · latencia +52 ms · **controles router/multi EXACTOS** → aislamiento demostrado (el 0.000 era el AND absoluto, FTS5 exonerado) → **Fase 2 habilitada**.
-3. **3 fixes de exactitud del benchmark**: router miraba CWD no repo (contaminaba Node espurio) → `$REPO_DIR`; corpus de visión path plano vs anidado → `knowledge_dir: ""` + fallback basename; `search_recall` contaba no-gold → `|recov ∩ gold| / |gold|`.
-4. **Fase 2 — diagnóstico del router** (modo `--diagnose`, report-only): ejecutado 14 multi × 3 seeds = **42/42 invariante**, matriz por query (23/42 sin señales · react 0/22, code-search 0/13, git 0/6, vision 0/4 = cero detecciones · rom 9ok/4bad). **Veredicto usuario 🟢 aprobado.**
-5. **Fase 3 — spec v2 APROBADA** (selector híbrido router léxico + evidencia de Search): gates G-R1..R6 con δ pre-fijado, regla de descarte §4.4, promoción score_d ≥ θ_c, barrido presupuesto, `BUFFY_SELECTOR=lexical` default. **Paso 1 HECHO: EVAL congelado** (`eval-set.json` 10 queries sha256 180e14a0… + `dev-set.json` 12 sha256 0cd8d5a6…). **Siguiente: paso 2 (baseline re-congelada 3 seeds × {and,or}) → paso 3 (V1).**
-6. **Reglas de arquitectura registradas** (CORE/ADAPTATION/TEST/RESEARCH + aislamiento dispositivo↔usuario) en `~/AGENTS.md` y spec §11.
-7. Suite: **246/246 full (241 functional + 5 meta) · 230 --quick**. Informes: `/sdcard/Download/informe-benchmark-realista.txt`, `/sdcard/Download/diagnostico-router-fase2.txt`.
-
-### ⏳ Pendientes para otra sesión
-- **Fase 3 paso 2**: baseline re-congelada 3 seeds × {and,or} → paso 3: V1 del cap-selector híbrido.
-- En el PC: tras `git pull`, `buffy-memory.sh sync pull` UNA vez.
-- P1: retorno del aprendizaje · P2: concurrencia 3+ escritores · Opcional: `Knowledge/Tools/Buffy-Memory.md` · Revisar `~/gscript-audit/sin_titulo_1/`.
-
----
-
-## 🔎 EVAL PC — Pasos 5 y 6 (auditoría de gold + fixture corregido)
-
-### Paso 5 — Auditoría de gold/cobertura de evidencia (COMPLETADO)
-- **Q04 — gold DEFECTUOSO (crítico):** `gold_files=[System.md]` pero `xset -dpms`/`xset s off`
-  NO existen en System.md (viven en CONTINUE.md:405, CHANGELOG.md:203, SESION-archive.md:1970).
-  search_recall de Q04 = 0 por construcción del fixture, no por fallo del buscador.
-- **Q06 — gold PARCIALMENTE defectuoso:** `FF_SEEN` no está en ningún gold file declarado;
-  vive en CONTINUE/CHANGELOG/SESION. `com.dts.freefireth` sí está en scrcpy.md:57.
-- **Q03/Q08 — gold CORRECTO pero puente léxico roto:** agujas SÍ en archivo gold pero la línea
-  gold comparte 0-1 tokens con la query (`git push origin` overlap NINGUNO; `picom` NINGUNO).
-- **Q01/Q02/Q05/Q07/Q09/Q10 — gold correcto.** Conclusión: problema MIXTO (2/10 fixture,
-  Q03/Q08 puente semántico/técnico). Detalle en EVAL-REGISTRY.md → Paso 5.
-
-### Paso 6 — Fixture gold corregido + A/B/C regenerados (COMPLETADO, instrumento v3)
-- **Fixture:** Q04 → gold `ai-context/CHANGELOG.md` (fuente real, línea 203); Q06 → `CHANGELOG.md`
-  añadido (FF_SEEN, línea 186). Nuevo hash `00852568…`. Solo `evidencia real → gold correcto`.
-- **Instrumento v3:** `EVAL_HASH` actualizado + leakage ya no penaliza archivos gold.
-- **Resultados (gold corregido):** search_recall **A=0.000 / B=0.050 / C=0.100** · other
-  0.000/0.200/0.100 · context_relevance 0.600/0.202/0.355 · leakage 0.267/0.694/0.522 ·
-  token 5 069/44 846/37 547 · router Δ=0.
-- **Hallazgo clave:** **Q04 era 100 % fixture, no retrieval.** and-norm SÍ recupera
-  `xset -dpms`+`xset s off` como gold con el fixture corregido → invalida parcialmente la
-  conclusión del Paso 4 ("and-norm no captura el puente léxico").
-- **Retrieval restante (con gold correcto):** Q03/Q08 puente semántico/técnico real; Q06
-  ranking trae CONTINUE.md y no scrcpy.md, FF_SEEN no se recupera ni siendo gold.
-- **No se adoptó ninguna variante.** Runtime congelado. Artefactos v3:
-  `baseline-and/or/and-norm-PC-2026-08-11.json`. Detalle en EVAL-REGISTRY.md → Paso 6.
-- **Siguiente:** decisión del usuario sobre el próximo experimento (¿Hybrid?) con gold corregido.
-
----
-
-## 🔎 EVAL PC — Paso 6b (auditoría Q06 + gold definitivo) y Paso 7 (diseño)
-
-### Paso 6b — Auditoría específica de Q06 (COMPLETADO)
-- **Veredicto:** `scrcpy.md` NO contiene evidencia equivalente de `FF_SEEN` (solo
-  `com.dts.freefireth:57` en diagnóstico de lag — paquete tangencial, no el hecho
-  evaluado). La evidencia real vive en CHANGELOG.md:186, CONTINUE.md:448 y el script
-  real `~/scripts/scrcpy-freefire.sh:272-276` (fuera del corpus).
-- **Gold definitivo Q06:** `gold_files=[ai-context/CHANGELOG.md]`,
-  `gold_facts=[FF_SEEN]`. `com.dts.freefireth` quitado del gold.
-- **Fixture actualizado** (hash `98a0e308…`) + runner v3.1 + **A/B/C regenerados**:
-  search_recall 0.000/0.050/0.100 · other 0.000/0.150/0.050 · context_relevance
-  0.533/0.182/0.333 · leakage 0.267/0.694/0.522 · token 5 197/45 259/38 017.
-  Nota: router_precision 0.667→0.600 por variabilidad de entorno (router no lee fixture).
-
-### Paso 7 — Experimento semántico diagnóstico (DISEÑADO, pendiente aprobación)
-- **Spec:** `scripts/tests/evals/semantic-retrieval-DESIGN.md`.
-- **Pregunta:** ¿un retrieval semántico recupera Q03/Q06/Q08 sin el leakage/coste de OR?
-- **Invariantes:** MISMO EVAL/gold/limit/métricas. UNA variable: lexical → semantic.
-- **Enfoque:** Ollama local (ya instalado) + `bge-m3` (multilingüe, default) o
-  `nomic-embed-text` (sanity). Embeddings por línea → coseno → top-LIMIT. Runner nuevo
-  `run-semantic-PC.sh` — NO toca runtime.
-- **Gate pre-fijado:** search_recall > 0.100 · context_relevance ≥ 0.600 · leakage
-  ≤ 0.267 · token ≤ ~2× A · determinismo · mismo EVAL hash.
-- **NO adoptar todavía** — experimento diagnóstico; veredicto = usuario.
-
----
-
-# 🧠 SESION — Buffy opencode (2026-08-10 · revisión: sync sin ruido git + pendientes router multi-dominio)
-
-> Contexto de lo implementado durante esta sesión. Corrida en **opencode** (teléfono).
-
----
 
