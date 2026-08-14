@@ -13,6 +13,16 @@
 > porcentaje; solo triggers explícitos/implícitos con confirmación (línea 41). OpenCode
 > NO tiene hooks SessionStart/SessionEnd configurados (verificado).
 
+> 📊 **17B CERRADO (2026-08-14, Buffy): PASS experimental / NO ADOPTED.**
+> Ver `EVAL-REGISTRY.md` (sección 17B). Tratamiento B (DICT_H1_B `f534283f`)
+> mejora 12→13/20 (Q05 rescatado, pRel 0.415→0.531) sin regresiones, pero el
+> gate formal NO se cruza: leak 0.442 > 0.308 — **invariante entre A y B**
+> (estructural del pool, no del tratamiento). **No se modifica el umbral. No se
+> adopta B.** B = candidato positivo/no adoptado. **Próximo frente: 17C —
+> reducción del leak estructural del pool (0.442 → ≤0.308)**, con diseño y gate
+> propios. Después, volver a Q01 con puente conceptual/relacional (ADB
+> discovery/transport/authorization), no más sinónimos.
+
 ---
 
 ## Resumen de la sesión (2026-08-14 — Freebuff, rama X del Paso 10: query expansion H1 al pipeline real)
