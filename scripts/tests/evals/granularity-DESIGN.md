@@ -1,8 +1,15 @@
 # Paso 16 — Granularidad del pasaje (diseño)
 
-> Estado: **⏳ DISEÑO (2026-08-14)** — NO implementar todavía. Aprobación del
-> usuario pendiente. Esta spec declara hipótesis, variantes, gates e invariantes
-> ANTES de medir, con la evidencia preliminar ya medida.
+> Estado: **🛠 EN EJECUCIÓN (2026-08-14)** — 16B aprobado por el usuario y en
+> medición. Ver sección 10 para el diseño congelado del runner 16B y la
+> decisión de baseline.
+> ⚠️ Las secciones 1-9 quedan como historial de diseño; la sección 10 es la
+> especificación vigente que se ejecuta.
+>
+> Origen: veredicto de la sesión 2026-08-14 — Q03 aceptado como límite; la
+> causa raíz se atribuyó a la granularidad del pasaje (PAS_PAD=4). Esta spec
+> formaliza esa hipótesis para MEDIRLA con su propio gate (regla de la serie:
+> toda atribución sin medir es sospechosa).
 >
 > Base: EVAL `98a0e308…` · pool congelado `selector-pool-frozen-2026-08-13.json`
 > (F2 + rama X, generado 2026-08-13) · selector M3 V6 (S1+S2+S3+S4, gate rescue
@@ -224,3 +231,61 @@ sobre el mismo pool. Implicaciones:
 - Corrección de lectura: el "límite Q03" de la sesión 2026-08-14 es un caso del
   gap H1-vs-oráculo, no de granularidad. La documentación de esa sesión queda
   corregida por esta spec (§1.1B).
+
+---
+
+## 10. Especificación congelada del runner 16B (decisión del usuario 2026-08-14)
+
+> Esta sección es la especificación VIGENTE que se ejecuta. Reemplaza los
+> supuestos de las secciones 4-5 donde difieran.
+
+### 10.1 Decisión del usuario (2026-08-14, mensaje con la instrucción de 16B)
+
+- **Se ejecuta 16B** (pool REGENERADO por PAS_PAD ∈ {0,1,2,4} sobre el corpus
+  real). 16A queda descartado como decisión (solo prueba de cableado rápida).
+- **Baseline de 16B = PAS_PAD=4 del MISMO runner.** El 11/20 (y el 19/20) se
+  midieron sobre el pool CONGELADO ±4 (selector-pool-frozen-2026-08-13.json),
+  que tiene otra granularidad y otra generación (X con H2). Al cambiar a 16B
+  cambia el pool → **NO usar 11/20 como baseline numérico comparable**. El
+  baseline válido es lo que el propio runner produce con PAS_PAD=4 sobre el
+  corpus congelado actual.
+- **Gate de 16B** (comparación contra su baseline PAS_PAD=4):
+  - mejora en ≥1 gold de Q01/Q03/Q05 (comandos/símbolos), y
+  - sin regresión en Q02/Q06/Q08/Q09 (golds de prosa), y
+  - cross_domain_leakage ≤ 0.308, y
+  - passage_relevance ≥ 0.121, y
+  - gold_containment ≥ 0.80.
+  - (Determinismo G2: --repeat 2, dos corridas por pad, JSONs idénticos
+    excluyendo solo duración/cache.)
+
+### 10.2 Reglas del runner (congeladas, en código)
+
+1. **Generación** = L ∪ X(H1 real) ∪ S ∪ P-F2, regenerada por PAS_PAD:
+   - L: buffy-search.sh OR top-50 + gate co-ocurrencia ≥2 tokens (N_L=50)
+   - X: buffy-search.sh OR top-50 por término de **expand_query.py (DICT_H1
+     real, dict_hash b0406a33…)** — NUNCA H2 ni los terms del fixture
+   - S: bge-m3 coseno top-50 (índice de líneas de D, cache por corpus hash)
+   - P: rama P-F2 conservando su mecánica — archivos = kno (router_knowledge)
+     + top-K del pool por orden R1 (P_EXPAND_TOP_K=10), tiles no-solapados de
+     2·PAS_PAD+1 líneas, **guard max-passages=400** (kno entran completos, el
+     pool se recorta)
+2. **Selección** = M3 V6 (selector_m3.py importado, NO reimplementado):
+   S1+S2+S3+S4, gate rescue 0.545, top-K=10. Query del S1 = query natural +
+   términos H1 reales.
+3. **NO se inyecta gold al pool.** gold_files/gold_facts NO son señal de
+   generación ni de ranking; se usan SOLO al final para medir (attr/pRel/leak/
+   containment). Esto difiere del harness 15B (que agregaba synth para Q06).
+4. **Congelación registrada en el JSON**: eval_hash (98a0e308…), corpus_hash,
+   dict_hash H1, params (N_L/N_X/N_S/P_EXPAND_TOP_K/MAX_PASSAGES/BUDGET/top-K),
+   commit_sha del repo, determinism_hash por corrida.
+5. **Sin calibración post-hoc**: PAS_PAD se barre {0,1,2,4} a priori; piso 0.545
+   y modelo bge-m3 no se tocan.
+
+### 10.3 Test sin Ollama (regresión estructural)
+
+`test-granularity-16B.sh` (sintaxis + verificaciones estáticas sin Ollama):
+- el runner importa expand_query y NO referencia DICT_H2 (H1 real, no oráculo)
+- no usa los terms del fixture como query
+- PADS default incluye 4; flags --pads y --repeat presentes; determinism_hash
+- MAX_PASSAGES=400, RESCUE_LOW=0.545, selector_m3.W (M3 V6 real)
+- el bloque de construcción del pool no referencia gold_files/gold_facts
