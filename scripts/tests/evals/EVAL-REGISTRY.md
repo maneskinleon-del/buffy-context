@@ -1885,3 +1885,69 @@ preexistentes (3 × test-scale ruta Termux + 1 × skills sin manifest). Tests de
 expansión: F1 tiles 9/9/7, F2 kno+pool, max-passages recorta pool no kno,
 selector --kno degrada sin Ollama.
 
+
+## ✅ RAMA X (QUERY EXPANSION H1) AL PIPELINE REAL (2026-08-14) — opt-in, gap semántico Q03 aceptado como límite
+
+**Motivación (medida):** la integración M3 + F2 dejó Q03 como gap SEMÁNTICO:
+`Commands.md` entra al pool vía kno, pero el puente `pushear`→`push` /
+`crear`→`create` falla en el SCORING (S1 bge-m3 por pasaje), no en la
+generación. El Paso 10 ya demostró en el EVAL que la rama X (diccionario
+ES→EN genérico H1) cierra el candidate gap (5/6 agujas, incl. Q03 vía
+`push`/`create`); en 2026-08-12 la selección (RRF) fallaba, pero HOY la
+selección es M3 → el cuello de botella de entonces ya no existe.
+
+### Qué se agregó (opto-in, default OFF — no-regresión byte a byte)
+
+| Componente | Archivo | Rol |
+|---|---|---|
+| Motor de expansión | `scripts/lib/expand_query.py` | DICT_H1 + `expansion_terms` portados del runner del Paso 10 (fidelidad 10/10 vs baseline-H1 congelado, dict_hash `8294f200…`) |
+| Search | `buffy-search.sh --expand-query` | (1) **X-candidatos**: re-consultas FTS5 por término → hits extra al pool (tope 100 declarado, gate ≥1 token por construcción OR); (2) **X-query**: términos → selector como `--terms` |
+| Selector | `buffy-selector.sh --terms` | la query expandida (original + términos X) alimenta S1 (bge-m3) |
+| Env | `BUFFY_EXPAND_QUERY=true` | activable desde `router --context` |
+
+### Validación en vivo (Q03 — foco del plan)
+
+| Métrica | Sin expansión | Con `--expand-query` |
+|---|---|---|
+| Pool | 15 candidatos | **91** (X-candidatos activos) |
+| Commands.md:64 en pool | ✅ | ✅ (generación resuelta) |
+| S1 del gold (ventana ±4) | 0.468 | 0.493 (+0.025) |
+| piso rescue M3 | 0.545 | 0.545 → **fuera del top-K** |
+
+### 🔎 Hallazgo: la granularidad del pasaje, no el modelo
+
+Medición fina sobre el gold (Commands.md:64, `gh pr create`):
+
+| Query | Línea exacta | Ventana ±4 (60-68) | Tile F2 (64-72) |
+|---|---|---|---|
+| natural | 0.515 | 0.468 | — |
+| + todos los términos X | 0.539 | 0.493 | 0.487 |
+| + solo términos relevantes | **0.613** ✅ | 0.519 | 0.523 |
+| símbolo exacto `gh pr create` | 0.873 | — | — |
+
+**La línea exacta CRUZA el piso (0.613 con términos relevantes); la ventana ±4
+la diluye** (5 comandos `gh` vecinos). El cuello de botella es la granularidad
+del pasaje (PAS_PAD=4, congelada en G1-VENTANA) combinada con bge-m3 — no el
+embedding per se.
+
+### Veredicto del usuario (2026-08-14)
+
+- **A) Bajar el piso 0.545 → 0.490: DESCARTADO** — contradice la evidencia 15A
+  (el soft gate colapsó attr 1/20: "el piso de relevancia es esencial") y la
+  decisión 2b del piso quirúrgico (Q08 gold a 0.5478, leak gate 0.308).
+- **B) Otro embedding (e5-mistral…): DESCARTADO por ahora** — la línea exacta
+  ya cruza el piso; cambiar de modelo no arreglaría la dilución por ventana.
+- **C) Aceptar Q03 como límite documentado: ADOPTADO** — la rama X queda como
+  componente opt-in (mejora generación + S1, no rompe nada); Q03 es el límite
+  conocido de bge-m3 + PAS_PAD=4 para golds de código.
+- **Dirección futura (misma raíz):** evaluar granularidad alternativa de pasaje
+  (línea exacta o ventana 1/2) para golds de código, con su propio gate
+  (leak ≤0.308, pRel ≥0.121) — sin tocar el piso 0.545 ni el modelo.
+
+### Suite
+
+**283 OK / 4 FAIL full · 267 OK / 4 FAIL --quick** — los 4 FAIL son los
+preexistentes (3 × test-scale ruta Termux + 1 × skills sin manifest). Tests de
+rama X (+13 checks): fidelidad vs runner H1 (10/10), dict_hash estable,
+no-regresión del default, degradación sin Ollama (exit 3 limpio), pool crece
+con X-candidatos (15→91), smoke Q03 (gold en pool, S1 mejora sin cruzar piso).
