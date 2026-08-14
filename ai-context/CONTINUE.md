@@ -3,6 +3,16 @@
 > ⚡ **PRÓXIMA SESIÓN: LEE ESTO PRIMERO**
 > Generado: 2026-08-14 (Freebuff — **Rama X (query expansion H1) implementada y documentada** (`210b871` + `16c626b`, locales). **Q03 ACEPTADO COMO LÍMITE DOCUMENTADO**: Commands.md:64 entra al pool (15→91) y S1 mejora 0.468→0.493 con `--expand-query`, pero la ventana ±4 diluye (línea exacta 0.613 cruza el piso) → causa raíz = granularidad del pasaje (PAS_PAD=4), NO el modelo. Bajar el piso descartado (evidencia 15A). **PRÓXIMA SESIÓN: sin deuda técnica urgente** — opciones: (a) diseño del experimento de granularidad de pasaje (línea/ventana 1/2, gate propio), (b) Q05 `useState` (misma raíz que Q03), (c) roadmap Buffy 2.0. Runtime: defaults congelados, rama X opt-in (BUFFY_EXPAND_QUERY=true).**)
 
+> 🎯 **AUDITORÍA PENDIENTE (2026-08-14, Buffy):** ver `AUDITORIA-HANDOFF-FREEBUFF.md` en este repo.
+> El usuario observó que OpenCode compacta contexto automáticamente pero Freebuff no.
+> **Antes de tocar la skill `handoff`, auditar la integración real de Freebuff**:
+> (1) ¿compaction nativa? (2) ¿eventos SessionStart/SessionEnd? (3) ¿puede ejecutar
+> una skill/script al alcanzar un umbral de contexto? (4) ¿implementa los hooks que
+> la skill declara? (5) ¿qué parte de la skill queda sin ejecutar? **No modificar código
+> todavía — solo auditar y reportar.** La skill `handoff` NO define compactación por
+> porcentaje; solo triggers explícitos/implícitos con confirmación (línea 41). OpenCode
+> NO tiene hooks SessionStart/SessionEnd configurados (verificado).
+
 ---
 
 ## Resumen de la sesión (2026-08-14 — Freebuff, rama X del Paso 10: query expansion H1 al pipeline real)
