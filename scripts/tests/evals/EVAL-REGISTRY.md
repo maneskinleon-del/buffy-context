@@ -1951,3 +1951,39 @@ preexistentes (3 × test-scale ruta Termux + 1 × skills sin manifest). Tests de
 rama X (+13 checks): fidelidad vs runner H1 (10/10), dict_hash estable,
 no-regresión del default, degradación sin Ollama (exit 3 limpio), pool crece
 con X-candidatos (15→91), smoke Q03 (gold en pool, S1 mejora sin cruzar piso).
+
+## 🛑 CORRECCIÓN DE LECTURA (2026-08-14) — 15B midió con oráculo H2 en la query; baseline válido = H1 11/20
+
+**Dato medido (diagnóstico previo al Paso 16):** el harness del veredicto 15B
+puntúa `qtext = query + terms_del_fixture`. Los `terms` del fixture congelado
+incluyen, para varias queries, **términos H2 = oráculo por query** (prohibido
+por la regla de la serie). Ejemplo Q03: `gh pr create`, `git push origin`,
+`pr create`, `crear pr`. Sobre el MISMO pool congelado:
+
+| Mecanismo de query | attr | Q01 | Q02 | Q03 | Q04 | Q05 | Q06 | Q07 | Q08 | Q09 | Q10 |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| fixture-terms (H1+H2, como midió 15B) | **19/20** | 2 | 3 | 2 | 2 | 1 | 1 | 2 | 2 | 2 | 2 |
+| **H1 real** (query + DICT_H1, pipeline 2026-08-14) | **11/20** | 0 | 3 | 0 | 2 | 0 | 1 | 1 | 1 | 2 | 1 |
+
+**Consecuencias (registradas ANTES de correr el Paso 16):**
+
+1. **El attr 19/20 del veredicto 15B pasa a ser DIAGNÓSTICO con oráculo H2, NO
+   evidencia de adopción.** La mejora V6 (16→19) es real dentro de ese harness,
+   pero el harness mezcla oráculo en la query → no es el rendimiento del
+   pipeline real.
+2. **El baseline válido para runtime es H1: 11/20.** El pipeline real (rama X
+   H1, `expand_query.py`) atribuye 11/20 sobre el pool congelado; Q01/Q03/Q05
+   (comandos/símbolos puros) caen a 0.
+3. **RETRACCIÓN: la conclusión "Q03 es granularidad, no modelo" (sesión
+   2026-08-14) queda RETRACTADA.** La medición S1 por granularidad (query
+   natural) mostró que la línea exacta NO cruza el piso para Q03 (0.515) ni
+   Q05 (0.411) — el S1 es bajo por el puente semántico símbolo↔query, no por
+   la ventana. El "0.613 que cruzaba" fue con un subconjunto de términos
+   seleccionado a mano (= calibración post-hoc, prohibida).
+4. **Hipótesis H16 (declarada antes de medir):** ninguna granularidad uniforme
+   (PAS_PAD ∈ {0,1,2,4}) supera el gate H1 ni rescata Q01/Q03/Q05 sin dañar
+   los golds de prosa (Q02/Q06/Q08/Q09). Ver `granularity-DESIGN.md` (Paso 16).
+5. **16A descartado como decisión** (solo prueba de cableado rápida): el pool
+   congelado fija la granularidad en ±4 → 16A no puede medir la granularidad
+   real. La medición que sella o descarta es **16B** (pool regenerado por
+   PAS_PAD, H1 real) — decisión del usuario 2026-08-14.
