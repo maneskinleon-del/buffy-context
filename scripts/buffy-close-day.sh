@@ -8,6 +8,7 @@
 #   2. Regenerar SNAPSHOT              → buffy-context.sh (queda local)
 #   3. Doctor --quick                  → valida que el cierre esté consistente
 #   4. Commit + push del repo          → "docs(sesion): cerrar día — <fecha>"
+#   5. Apagar el PC (solo con --poweroff) → "cerrar día+1"
 #
 # Uso:
 #   buffy-close-day.sh                     → protocolo completo
@@ -16,12 +17,16 @@
 #   buffy-close-day.sh --skip-doctor       → no corre el doctor (solo pruebas)
 #   buffy-close-day.sh --extra-repo RUTA   → commit+push adicional de otro repo
 #   buffy-close-day.sh --repo RUTA         → cierre sobre otro checkout
+#   buffy-close-day.sh --poweroff          → tras el cierre exitoso, APAGA el PC
+#                                            ("cerrar día+1"). Env: BUFFY_POWEROFF_CMD
+#                                            (default poweroff) y BUFFY_POWEROFF_DELAY
+#                                            (default 5s) para pruebas/override.
 #   buffy-close-day.sh --help              → esta ayuda
 #
 # Exit: 0 cierre completo · 1 algo bloquea el cierre (memoria en conflicto,
-# doctor con fallos) · 2 uso inválido.
+# doctor con fallos, apagado imposible) · 2 uso inválido.
 #
-# Creado: 2026-08-10
+# Creado: 2026-08-10 · --poweroff: 2026-08-14
 
 set -euo pipefail
 
@@ -38,6 +43,9 @@ SNAPSHOT_CMD="$SCRIPT_DIR/buffy-context.sh"
 MESSAGE=""
 NO_PUSH=false
 SKIP_DOCTOR=false
+POWEROFF=false
+POWEROFF_CMD="${BUFFY_POWEROFF_CMD:-poweroff}"
+POWEROFF_DELAY="${BUFFY_POWEROFF_DELAY:-5}"
 EXTRA_REPOS=()
 
 while [[ $# -gt 0 ]]; do
@@ -45,10 +53,11 @@ while [[ $# -gt 0 ]]; do
     --message) MESSAGE="$2"; shift 2 ;;
     --no-push) NO_PUSH=true; shift ;;
     --skip-doctor) SKIP_DOCTOR=true; shift ;;
+    --poweroff) POWEROFF=true; shift ;;
     --extra-repo) EXTRA_REPOS+=("$2"); shift 2 ;;
     --repo) REPO_DIR="$2"; shift 2 ;;
     -h|--help)
-      sed -n '2,22p' "$SCRIPT_SRC" | sed 's/^# \{0,1\}//'
+      sed -n '2,24p' "$SCRIPT_SRC" | sed 's/^# \{0,1\}//'
       exit 0 ;;
     *) echo "❌ opción desconocida: $1" >&2; exit 2 ;;
   esac
@@ -137,3 +146,14 @@ for repo in "${EXTRA_REPOS[@]}"; do
 done
 
 log "✅ día cerrado: memoria sincronizada, SNAPSHOT fresco, repo al día."
+
+# ── 5. Apagado ("cerrar día+1") — SOLO si el cierre llegó acá sin error ──
+if [ "$POWEROFF" = true ]; then
+  log "5/5 · apagando el PC (cerrar día+1)"
+  if ! command -v "${POWEROFF_CMD%% *}" >/dev/null 2>&1; then
+    echo "❌ no encuentro el comando de apagado: $POWEROFF_CMD" >&2
+    exit 1
+  fi
+  sleep "$POWEROFF_DELAY"
+  $POWEROFF_CMD || { echo "❌ el apagado falló: $POWEROFF_CMD" >&2; exit 1; }
+fi
