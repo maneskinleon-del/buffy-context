@@ -1462,6 +1462,213 @@ Gate 6 criterios idéntico a 11. **Pendiente de aprobación para implementar.**
 
 ---
 
+## ✅ Paso 12 — EJECUTADO · CERRADO sin adopción · Evidence-aware Passage Selection · 2026-08-13
+
+Serie E1×2 / E2×2 / E3×2 completa en worktree aislado `18df679` (patrón FWD).
+G2 determinismo ✅ (pares idénticos; E2 `4ab293dacef1c914`). Artefactos:
+`baseline-E1/E2/E3-evidence-PC-2026-08-12.json` (+`-r2`). Anexo completo en
+`evidence-passage-DESIGN.md` (Anexo A).
+
+### Resultados agregados (v3.1, gold definitivo)
+
+| Variante | sRec | pRel | leak | gCont | tokAvg | gap→top10 | regresión | poda | tok_evidencia |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| R1 (ref) | 0.750 | 0.175 | 0.441 | 1.0 | 1903 | 0.667 | 0.167 | — | — |
+| E1 — S3 heading | 0.600 | **0.230** | 0.382 | 1.0 | 1904 | 0.333 | 0.167 | 25% | 289 |
+| E2 — S4 bge-m3 (θ=0.55) | 0.700 | 0.093 | **0.325** | 1.0 | **1789** | **0.833** | **0.0** | 38% | 297 |
+| E3 — S4+0.5·S3 | 0.700 | 0.103 | 0.342 | 1.0 | 1887 | 0.833 | 0.0 | 18% | 294 |
+
+**Gate:** ninguna variante pasa (pRel ≥ 0.600 → E1 0.230 / E2 0.093 / E3 0.103;
+leakage ≤ 0.267 → 0.325-0.382). **No se adopta E1/E2/E3** — regla pre-registrada.
+
+**Veredicto del usuario (transcrito, 2026-08-13):**
+
+> La hipótesis de una señal de contenido útil queda parcialmente confirmada, pero
+> no alcanza para resolver la selección de contexto.
+> 1. **El embedding encontró su lugar: content-scorer** (D generador ❌ · R2 ranking
+>    ❌ · E2 filtro de calidad ✅: leak 0.441→0.325, regresión eliminada, gap
+>    0.833). bge-m3 no decide qué recuperar ni qué rankear, pero sí qué pasajes
+>    son evidencia relevante — distinción arquitectónica.
+> 2. **El cuello de botella real es candidate/context coverage:** solo 6/20 agujas
+>    estaban en la capa de pasajes de R1 → el selector perfecto no puede elegir
+>    evidencia que nunca llegó a esa capa (found 20/20 → selected 14/20 →
+>    attributed 14/20 → **pasaje 6/20**).
+> 3. **No calibrar más θ** (0.50/0.45/por query/combos): sería optimizar la capa
+>    equivocada. E2 ≈ E3 (heading apenas aporta).
+
+**`tok_evidencia=0`** en 5/10 queries no es un bug del contador: es el dato
+(Q02/Q09 podan el 100% → ctx sin pasajes; Q01/Q03/Q05 tienen la aguja en la capa
+de archivos, no en pasajes del ctx final). Es la señal que motiva el Paso 13.
+
+**Infra:** cache de embeddings de pasajes implementado en `run-evidence-PC.sh`
+(float64) y **validado bit-a-bit ✅ (2026-08-13)**: cold vs warm → embeddings
+1024/1024 idénticos + determinism_hash idéntico; ambos vs congelado →
+`4ab293dacef1c914` + dump completo idéntico. E2/E3 pasan de ~40 min a ~2 min.
+Infra congelada como transparente (ni a favor ni en contra del Paso 13). No toca
+el esquema JSON → determinism_hash comparable.
+
+**Siguiente: Paso 13 — Passage Candidate Expansion** — atacar el salto
+archivo→pasaje (coverage) antes de re-aplicar el scorer E2 congelado. Spec:
+`passage-candidate-expansion-DESIGN.md`.
+
+---
+
+## 🔬 Paso 13 — EJECUTADO · CERRADO sin adopción · Passage Candidate Expansion · 2026-08-13
+
+Serie F1×2 / F2×2 en worktree `18df679` (G2 ✅: F1 `23bc7460c9d07211` · F2
+`7fc28c377482e2c5`), reutilizando E2/θ=0.55/R1/H2/cache. Runner con `--expand
+none|f1|f2` (rama P: ventanas ±4 no-solapadas de archivos; F2 = +top-10 del pool).
+Artefactos: `baseline-F1/F2-expansion-PC-2026-08-13.json` (+`-r2`). Anexo A en
+`passage-candidate-expansion-DESIGN.md`.
+
+### Resultados agregados
+
+| Variante | sRec | pRel | leak | tokAvg | gap | regr | available | attr |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| R1 | 0.750 | 0.175 | 0.441 | 1903 | 0.667 | 0.167 | — | 14 |
+| E2 | 0.700 | 0.093 | 0.325 | 1789 | 0.833 | 0.0 | 6 | 16 |
+| **F1** (router) | 0.700 | 0.093 | **0.275** | 1749 | 0.833 | 0.0 | **14** | 16 |
+| **F2** (router+pool) | 0.700 | **0.121** | 0.308 | 1740 | 0.833 | 0.0 | **18** | 16 |
+
+**Gate: ninguna pasa** (pRel ≥ 0.600 → máx 0.121; leak ≤ 0.267 → F1 0.275, cerca
+pero no). **No se adopta F1/F2** (regla de la serie).
+
+**Veredicto del usuario (transcrito, 2026-08-13):** implementar F1/F2 exactamente
+según el diseño, sin modificar θ/presupuesto/scorer/runtime/gates; ejecutar
+determinismo ×2; registrar y detenerse sin adoptar.
+
+**Lectura del experimento (responde su pregunta):**
+1. **F1 mejora leakage** (0.325 → 0.275) sin tocar pRel — Q03 leak 0.5 → 0.0 (el
+   gate ahora elige pasajes del archivo gold Commands.md). Los archivos del router
+   son la fuente de pasajes correcta.
+2. **F2 añade cobertura y pRel pero devuelve leakage** (0.275 → 0.308; Q09 0.0 →
+   0.33): `available` 14 → 18 (Q08 picom/P_TERM_OPACITY desde System.md; Q06
+   FF_SEEN) y pRel 0.093 → 0.121, pero **la atribución no mejora (16/20)** →
+   ampliar el universo de archivos del pool NO convierte disponibilidad en
+   atribución.
+3. **Q04 roto por construcción:** su gold (CHANGELOG.md) no está en kno ni en el
+   top-K del pool → `available=0` en F1 y F2.
+4. **El cuello de botella se desplaza: disponibilidad → atribución** (18
+   available vs 16 attributed): el pasaje con la aguja existe en el pool pero no
+   llega al ctx final como pasaje gold.
+
+**Nota de integridad (lección FWD aplicada):** el refactor se validó con E2
+`--expand none` bit-idéntico al congelado (`4ab293dacef1c914`). La primera
+verificación falló por drift de corpus FTS5 (el cierre de sesión editó
+`ai-context/CONTINUE.md`/`SESION.md`, que buffy-search indexa del repo real);
+restaurados + reindex → bit-idéntico. **No tocar archivos del corpus mientras se
+mide.**
+
+**Estado:** runtime intacto. Fase 3 sigue abierta; siguiente decisión del usuario
+con la evidencia (posible hipótesis: atribución/presupuesto, no más cobertura).
+
+---
+
+## 🔬 Paso 14A — EJECUTADO · phi3.5 NO pasa el gate → Rama B, sin 14B · 2026-08-13
+
+**Autorizado por el usuario (2026-08-13):** mini-fase de modelo ANTES del selector:
+¿un juez LLM (phi3.5) discrimina gold vs distractor mejor que bge-m3? Si 14A pasa
+(pair test ≥7/11, determinismo ≥10/11, tiempo <60 s/pasaje) → Rama A (Phi juez con
+rúbrica) → 14B. Si no → Rama B (scorer multi-señal) → Paso 15.
+
+**Runner:** `scripts/tests/evals/run-selector-model-PC.sh` — pool F2 congelado
+(fixture `selector-pool-frozen-2026-08-13.json`, eval_hash `98a0e308…`), 11 pares
+gold-vs-distractor, bge-m3 como scorer de referencia + phi3.5 como juez
+(`num_ctx=2048` obligatorio, `keep_alive=0` top-level entre queries + unload para
+evitar OOM por prompt cache — fix verificado: PID cambió entre queries, memoria
+liberada 11 GB → 8.6 GB, corrida completa sin errores).
+
+**Resultado** (`selector-benchmark-14A.json`, 3738 s, sin OOM):
+
+| Métrica | Gate | phi3.5 | ¿Pasa? |
+|---|---:|---:|---|
+| pair test (gold vs distractor) | ≥7/11 | **5/11** (= bge) | ❌ |
+| determinismo (pares) | ≥10/11 | **9/11** | ❌ |
+| determinismo (pasajes) | — | 220/226 (97.3%) | — |
+| tiempo | <60 s/pasaje | **14.3 s** | ✅ |
+
+**Discriminación cruda (pool, θ=0.55):** phi recupera 13/97 gold (pRel 0.134, leak
+0.705) vs bge 74/97 (pRel 0.763, leak 0.549). **phi no supera a bge en ningún
+query.** (Estas métricas miden discriminación sobre el pool, NO el pRel/leak del
+pipeline F2 — no comparables 1:1.)
+
+**Veredicto:** phi3.5 falla 2/3 gates de primer nivel → **Rama B, sin 14B**. El
+juez LLM no discrimina mejor que el scorer de embeddings; el problema de Q06/Q08
+no es de modelo sino de señales. Anomalía menor: journal reporta `temp = 0.800`
+vs `temperature: 0.0` del runner — sin resolver, irrelevante para el veredicto.
+
+**Esquema del JSON (aclaración):** no hay `pair_test`/`discrimination`/`metrics`
+top-level; todo vive en `per_query[]` + `aggregate`. `phi_pick=="A"` ⟺ gold
+(A=gold, B=distractor). `tokens`/`num_ctx`/`seed` no están en el JSON.
+
+---
+
+## ✅ Paso 15 — EJECUTADO · M3 (S1+S2+S3+S4) + ventana de rescate 0.545 ADOPTADO · 2026-08-13
+
+**Decisión de rama (de 14A):** Rama B — scorer multi-señal, sin juez LLM.
+
+**Runner:** `scripts/tests/evals/run-selector-quality-PC.sh` — señales S1 (bge-m3
+cosine, gate θ=0.55) · S2 (especificidad: tokens salientes menos tokens de query,
+rareza cross-pool) · S3 (evidencia estructurada: tabla `^\s*\|.*\|.*\|` o
+KEY=value `^\s*[\w.-]+\s*=`) · S4 (canonicalidad: NOISE_FILES =
+SESION-archive/AGENTS/CONTINUE/SESION) · S5 (mtime) · S7 (concisión) · MMR λ=0.7.
+Pesos declarados a priori: w1=1.0, w2=1.0, w3=0.5, w4=0.5, w5=0.25, w7=0.25.
+Ablación M1 (+S2) → M2 (+S3) → M3 (+S4) → M4 (MMR) → FULL (+S5+S7). Gates
+hard/soft/rescue. Gold sintético Q06 (ventana ±4, ramas SYNTH) añadido al pool.
+Determinismo G2 ✅ (hash `5ab74054f1d2dcde` idéntico ×2).
+
+### Resultados (gate hard, 15A)
+
+| Modelo | pRel | leak | attr | gold_over_dist | tokens |
+|---|---:|---:|---:|---:|---:|
+| S1 (baseline) | 0.472 | 0.425 | 17/20 | 5/11 | 5766 |
+| M1 (+S2) | 0.522 | 0.425 | 17/20 | 7/11 | 4610 |
+| M2 (+S3) | 0.442 | 0.367 | 14/20 | 7/11 | 4818 |
+| **M3 (+S4)** | 0.482 | 0.325 | 16/20 | **9/11** | 4933 |
+| M4 (MMR) | 0.432 | 0.403 | 15/20 | 9/11 | — |
+| FULL (+S5+S7) | 0.432 | 0.400 | 14/20 | 8/11 | — |
+
+**Regla de parada:** M1 7/11 → M2 7/11 → **M3 9/11 (target ✓)** → M4 9/11 (MMR no
+aporta). **M3 = S1+S2+S3+S4 es el punto de parada.** Gate soft (sin piso S1)
+colapsa (M3 attr 1/20) → el piso de relevancia es esencial.
+
+### Ventana de rescate (decisión 2b del usuario)
+
+θ=0.55 corta el gold de Q08 (System.md:74, cos 0.5478) por 0.002 → contradicción
+del diseño confirmada con datos. Ventana `rescue` (piso `--rescue-low`, top-K por
+score): 0.50-0.53 catastrófico (attr 7-12/20), **0.545 = punto quirúrgico**:
+
+| Config | Q06 | Q08 | Q07 | attr | leak | pRel | gold_over |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| S1 (selector actual) | 1/1 | 0/2 | 2/2 | 17/20 | 0.425 | 0.472 | 5/11 |
+| M3 hard | 1/1 | 1/2 | 2/2 | 16/20 | 0.325 | 0.482 | 9/11 |
+| **M3 rescue 0.545** | 1/1 | **2/2** | 1/2 | 16/20 | **0.242** | **0.577** | 9/11 |
+
+**M3 rescue 0.545 ADOPTADO** (decisión del usuario): arregla el caso estrella del
+diseño (Q08-P_TERM_OPACITY atribuido), leak 0.242 (pasa gate ≤0.308), pRel 0.577
+(mejor de la serie), gold_over 9/11. Costo: Q07-2 (`force_gpu_rendering`) perdido
+— colateral de la misma familia S3 (ver hallazgos).
+
+### Hallazgos (documentados, no corregidos — calibración post-hoc prohibida)
+
+1. **S3 sobre-corrige estructuras:** Q02 (INFO-full.md:189, reference de
+   `ai-context/` con tablas, desplaza a Shizuku.md:53/85) y Q07 (scrcpy.md:37 con
+   `ENCODER="..."`, README.md:73 tabla, desplazan a GameOptimization.md:54). La
+   lista de ruido declarada (S4) no cubre INFO-full.md. Refinar S3 (solo tablas,
+   no code-blocks) es candidato para iteración futura.
+2. **θ=0.55 corta golds reales** (Q08 a 0.5478) → ventana de rescate 0.545
+   implementada como solución quirúrgica (no recalibración global).
+3. **El piso S1 es esencial:** sin él (gate soft) las señales de calidad se ahogan
+   en pasajes irrelevantes-pero-bonitos (attr 1/20).
+
+**Estado:** M3 rescue 0.545 = nuevo selector del pipeline (runtime sigue
+congelado; la adopción es del componente de selección, no de
+`buffy-search.sh`/`buffy-router.sh`). Artefactos: `selector-quality-15A.json`
+(+`-r2`), `selector-benchmark-14A.json`, `run-selector-quality-PC.sh`,
+`run-selector-model-PC.sh`, `selector-pool-frozen-2026-08-13.json`.
+
+---
+
 ## 🛡️ Apéndice — Foreign Worktree Detection (FWD) · DISEÑO · 2026-08-12
 
 **Motivo:** caso real del mismo día — dos sesiones (OpenCode + Freebuff) trabajando
@@ -1488,8 +1695,10 @@ contaminación cruzada del historial quedó documentada en la spec §4.2.
 Los cambios ajenos del working tree fueron **commiteados por la otra sesión** en
 `6ed1bb1` (MCP_REGISTRY, SKILLS_INDEX, README 43 skills, CONTINUE/SESION tooling,
 buffy-doctor.sh drift check) — no se tocaron desde esta sesión.
-**Paso 11 CERRADO + Paso 12 DISEÑO (secciones arriba) — Q1/Q2 no adoptados;
-Paso 12 (evidence-aware passage selection) pendiente de aprobación: la señal de
-calidad vive en el contenido del pasaje (S4 bge-m3 cosine prec 0.867 @ rec
-0.765, medido hoy).**
+**Pasos 11-12 CERRADOS (secciones arriba) — Q1/Q2 y E1/E2/E3 no adoptados;
+Paso 12 (evidence-aware passage selection) EJECUTADO sin adopción: el
+content-scorer (S4) confirma señal útil (leak 0.441→0.325, sin regresión) pero
+ninguna variante pasa el gate; cuello de botella = candidate/context coverage
+(solo 6/20 agujas en la capa de pasajes de R1) → Paso 13 en DISEÑO
+(passage-candidate-expansion-DESIGN.md).**
 
