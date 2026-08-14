@@ -57,8 +57,8 @@ mkdir -p "$CACHE_DIR"
 
 REPO="$REPO" OLLAMA_URL="$OLLAMA_URL" EVAL="$EVAL" EVAL_HASH="$EVAL_HASH" \
 OUT_FILE="$OUT_FILE" PADS="$PADS" LIMIT="$LIMIT" CACHE_DIR="$CACHE_DIR" \
-REINDEX="$REINDEX" \
-python3 - "$REPO" "$EVAL" "$EVAL_HASH" "$OUT_FILE" "$PADS" "$LIMIT" "$CACHE_DIR" "$REINDEX" <<'PY'
+REINDEX="$REINDEX" DICT_PATH="${DICT_PATH:-}" \
+python3 - "$REPO" "$EVAL" "$EVAL_HASH" "$OUT_FILE" "$PADS" "$LIMIT" "$CACHE_DIR" "$REINDEX" "$DICT_PATH" <<'PY'
 import json, os, re, subprocess, sys, time, urllib.request, urllib.error, hashlib, math, unicodedata, array
 
 repo, eval_path, eval_hash, out_file, pads_s, limit_s, cache_dir, reindex, dict_path = (
