@@ -1,7 +1,39 @@
-# 🧠 SESION — Buffy opencode (2026-08-13 · EVAL PC Fase 3 — Pasos 14A/15A: phi3.5 descartado → Rama B · M3 rescue 0.545 ADOPTADO)
+# 🧠 SESION — Buffy Freebuff (2026-08-13 · Integración M3 + Expansión F2 al pipeline real)
 
-> Contexto de lo implementado durante esta sesión. Corrida en **opencode** (PC).
-> Compactación 2026-08-13: entrada de hoy + 2 de 2026-08-12; Fases 1-2-3, Pasos 5/6/6b/7 y sesiones anteriores archivadas en SESION-archive.md.
+> Contexto de lo implementado durante esta sesión. Corrida en **Freebuff** (PC).
+> Continuación de la sesión opencode de hoy (14A/15A, entrada abajo): el selector M3 rescue 0.545 adoptado se integró al pipeline real y se le cerró el candidate gap de Q08.
+
+---
+
+## 🚀 Integración M3 + Expansión F2 — pipeline real operativo (2026-08-13 · Freebuff)
+
+### Pedido del usuario
+1. Integrar el selector M3 rescue 0.545 (adoptado en 15A) con el pipeline real (`router → search → selector → context pack`).
+2. Cerrar el candidate gap de Q08/Q03 (el FTS5 no genera `System.md`) con la expansión F2 del Paso 13, sin tocar los artefactos del autor anterior.
+
+### Lo hecho
+1. **Motor M3 extraído** a `scripts/lib/selector_m3.py` (bit-a-bit del runner 15A: S1-S4, gate rescue 0.545, pesos 1.0/1.0/0.5/0.5). Fidelidad verificada sobre el fixture congelado: **attr 16/20 · leak 0.242 · pRel 0.577 · Q06 1/1 · Q08 2/2** = idéntico al veredicto 15A.
+2. **`scripts/buffy-selector.sh`** — wrapper CLI (--query + candidatos → top-K M3; exit 3 sin Ollama).
+3. **`scripts/buffy-expand.sh` + `lib/expand_passages.py`** — expansión F2 (rama P): tile_windows ±4 no-solapados (9 líneas), kno del router + top-K del pool, `--max-passages 400` como guard de coste.
+4. **`buffy-search.sh --select`** — candidatos FTS5 (`or` para queries naturales) → expansión → M3. **`buffy-router.sh --context`** — lista de archivos + campo `context` (pasajes top-K). Defaults intactos byte a byte (verificado).
+5. **Regla de compresión** (EVAL-REGISTRY §): iteración rápida valida contra el fixture congelado (sin Ollama, segundos) — el pipeline completo en frío paga embeds (Paso 13: r0 ≈ 17 min) y no es apto para ciclos.
+6. **Tests** (`test-selector.sh` +24 checks): sintaxis, uso, degradación, determinismo, 15A, expansión F1/F2, fidelidad expand vs fixture (99%), no-regresión del default. **Suite: 266 OK / 4 FAIL full · 250 OK / 4 FAIL --quick** (4 FAIL preexistentes). README actualizado.
+
+### Validación en vivo
+- **Q08 CERRADO** — con kno + expansión, `Knowledge/Linux/System.md:73-81` (P_TERM_OPACITY/picom) entra al **top-1** del selector (antes: fuera del pool).
+- **Q06** — gold FF_SEEN (CHANGELOG.md:217-225) entra al top-K vía search `or` (puesto 4).
+- **Q03 PERSISTE (gap semántico)** — Commands.md en pool vía kno, pero `pushear`→`git push origin` no lo conecta bge-m3 por línea → requiere rama X del Paso 10.
+
+### Veredicto y estado
+- Pipeline completo operativo: `query → router → search → expand (F2) → selector (M3) → context pack`.
+- Commits **`39ce873` → `6f6be74` (5, path-limited, FWD-safe)** — **PUSHEADOS a origin/main** (`4443629..6f6be74`).
+- Suite 266 OK / 4 FAIL (preexistentes). Working tree limpio salvo artefactos 12/13.
+
+### ⏳ Pendientes
+- **Q03 (gap semántico):** rama X del Paso 10 (expansión de query) — Commands.md ya está en el pool; falta el puente `pushear`→`push`. Retomar en sesión fresca.
+- **Artefactos Pasos 12/13 (autor anterior):** `evidence-passage-DESIGN.md` (M), `passage-candidate-expansion-DESIGN.md`, `run-evidence-PC.sh`, baselines E1/E2/E3/F1/F2 — **untracked, intactos. NO commitear sin autorización.**
+- **Hallazgo S3** (sobre-corrige estructuras Q02/Q07) — candidato para iteración futura.
+- Suite PC: 266 OK / 4 FAIL (preexistentes, fuera de alcance).
 
 ---
 
