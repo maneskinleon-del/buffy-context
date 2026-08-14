@@ -218,8 +218,12 @@ search() {
     cands+="]"
     [[ "$JSON_OUT" == true ]] && sel_args+=(--json)
     rc=0
+    kno_arg=()
+    if [ -n "${BUFFY_SELECTOR_KNO:-}" ]; then
+      kno_arg=(--kno "$BUFFY_SELECTOR_KNO")
+    fi
     sel_out="$(printf '%s' "$cands" | bash "$SCRIPT_DIR/buffy-selector.sh" \
-        --query "$raw" --limit "$LIMIT" --repo "$REPO" "${sel_args[@]}" 2>/dev/null)" || rc=$?
+        --query "$raw" --limit "$LIMIT" --repo "$REPO" "${kno_arg[@]}" "${sel_args[@]}" 2>/dev/null)" || rc=$?
     if [ "$rc" -eq 3 ]; then
       if [[ "$JSON_OUT" == true ]]; then
         printf '{"model":"M3","error":"ollama_unavailable","selected":[],"degraded":true}\n'
