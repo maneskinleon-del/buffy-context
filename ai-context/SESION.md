@@ -6,6 +6,37 @@
 
 ---
 
+## ✅ Shizuku activado por ADB + protocolo de diagnóstico global (2026-08-14 · PC)
+
+### Pedido del usuario
+Activar Shizuku en el Mi 10 (HyperOS) tras reinstalar la app; luego documentar el
+caso como ejemplo de mejora continua del sistema.
+
+### Qué pasó
+1. El agente perdió ~45 min intentando activar por UI (scroll, botones, buscar
+   `start.sh`) sin diagnosticar. El usuario corrigió: el problema era batería/whitelist
+   de HyperOS, NO el método de activación.
+2. Aplicado el método oficial 13.6.0: fix de batería (whitelist + appops + standby)
+   → copiar `libshizuku.so` a `/data/local/tmp/shizuku` → ejecutar → verificar con
+   logcat `✅ Shizuku OK` (NO con `rish id`, que devuelve `uid=2000(shell)` normal).
+3. Shizuku activo (servidor 22501, 12 apps, logcat OK).
+
+### Mejoras de sistema (ciclo completo)
+- **Skill `shizuku-rikka`**: sección "🧭 ANTES DE ACTUAR" al inicio + protocolo en
+  `shizuku-activation-protocol.md`.
+- **Regla global `~/.AGENTS.md` §43**: "Diagnóstico antes de actuar (Android)" para
+  todas las skills de Android.
+- **Caso de éxito** en `SHIZUKU-RISH-BUG.md` (Actualización 5).
+- **Verificación en vivo**: simulación "teléfono no responde tras reiniciar" → el
+  agente aplicó el protocolo sin tocar la UI (diagnóstico 10s, todo OK).
+
+### Pendientes
+- Si el teléfono se reinicia, re-ejecutar `/data/local/tmp/shizuku` (el servidor no
+  sobrevive reinicios sin root).
+- ChatGPT Desktop v42.3.0: prueba funcional de Codex en la UI (dropdown no OCR-able).
+
+---
+
 ## 🚀 Rama X — query expansion H1 al pipeline real · Q03 aceptado como límite (2026-08-14 · Freebuff)
 
 ### Pedido del usuario

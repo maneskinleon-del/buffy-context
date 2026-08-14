@@ -4,6 +4,60 @@
 > El fork Shizuku+ no exprime el attach de sesión shell desde Termux en este
 > dispositivo; la versión clásica conecta sin más.**
 > · Siguiente paso: ver «Actualización 4 — RESOLUCIÓN».
+> · **Actualización 5 (2026-08-14): activación ADB clásica 13.6.0 documentada
+> como caso de éxito + protocolo de diagnóstico global (ver abajo).**
+
+## Actualización 5 — 2026-08-14 — CASO DE ÉXITO: activación ADB clásica 13.6.0 + protocolo global
+
+### Contexto
+El usuario pidió activar Shizuku en el Mi 10 (HyperOS, Android 13) tras reinstalar
+la app. El agente (Buffy) cometió errores de principiante que el usuario corrigió
+activamente: 45 min intentando activar por UI sin diagnosticar, obsesión con
+`rish -c "id"` como prueba de éxito, y no preguntar el contexto (HyperOS/batería
+agresiva/watchdog) que el usuario ya tenía.
+
+### Lección raíz
+**El error más caro no fue técnico — fue no preguntar el contexto que el usuario
+ya tenía.** El 80% de los problemas de Shizuku en capas chinas son batería/whitelist
+o conexión, NO método de activación.
+
+### Lo que SÍ funcionó (método oficial 13.6.0, 3 minutos)
+1. **Fix de batería primero** (whitelist + appops + standby):
+   ```bash
+   adb shell 'dumpsys deviceidle whitelist +moe.shizuku.privileged.api'
+   adb shell 'cmd appops set moe.shizuku.privileged.api RUN_ANY_IN_BACKGROUND allow'
+   adb shell 'am set-standby-bucket moe.shizuku.privileged.api active'
+   ```
+2. **Copiar `libshizuku.so` a `/data/local/tmp/shizuku`** (el método real de 13.6.0;
+   `start.sh` ya no existe):
+   ```bash
+   APK_DIR=$(adb shell 'pm path moe.shizuku.privileged.api' | sed 's/package://; s|/base.apk||')
+   adb shell "cp $APK_DIR/lib/arm64/libshizuku.so /data/local/tmp/shizuku && chmod 755 /data/local/tmp/shizuku"
+   adb shell '/data/local/tmp/shizuku'
+   ```
+3. **Verificar con logcat, NO con `rish id`**:
+   ```bash
+   adb logcat -d -t 20 | grep ShizukuExecutor   # → ✅ Shizuku OK = éxito
+   ```
+   `rish -c "id"` devolviendo `uid=2000(shell)` es NORMAL en activación ADB sin root.
+
+### Mejoras de sistema aplicadas (ciclo completo de mejora continua)
+1. **Skill `shizuku-rikka`** (212→239 líneas): sección prioritaria "🧭 ANTES DE ACTUAR:
+   diagnóstico por síntomas (LEER PRIMERO)" al inicio + protocolo completo en
+   `shizuku-activation-protocol.md` (70 líneas) referenciado en "Archivos relacionados".
+2. **Regla global en `~/.AGENTS.md`** (§43): "🔍 Diagnóstico antes de actuar (Android)"
+   — aplica a `shizuku-rikka`, `android-adb`, `xiaomi-adb-tricks`, `hyperos-hardening`
+   y cualquier skill futura de Android. Preguntar contexto → diagnóstico 10s →
+   prueba de éxito real (logcat) → documentar fallos mientras se trabaja.
+3. **Verificación en vivo**: el usuario simuló "teléfono no responde tras reiniciar";
+   el agente aplicó el protocolo sin tocar la UI → diagnóstico en 10s mostró todo OK
+   (whitelist ✓, standby 5 ✓, logcat `✅ Shizuku OK` hace 1 min ✓).
+
+### Estado final
+- Shizuku v13.6.0.r1086 activo, servidor pid 22501, 12 apps autorizadas.
+- Whitelist de batería vigente (sobrevive reinicios del servicio; el servidor
+  muere al reiniciar el teléfono y hay que re-ejecutar `/data/local/tmp/shizuku`).
+- APK reinstalado desde GitHub oficial (sha256 `6e273ab0e991c4e79bc8b1bbb9b9dd739ccac1a8712a541a214078886b7b790f`).
 
 ## Actualización 4 — 2026-08-08 (noche) — RESOLUCIÓN: revert a clásico FUNCIONA
 

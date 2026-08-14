@@ -14,6 +14,14 @@ system-id: mangonz-desktop
 # CHANGELOG.md — Historial de cambios del sistema
 
 
+### 2026-08-14 — Shizuku activado por ADB (13.6.0) + protocolo de diagnóstico global (Buffy, PC)
+
+- **Shizuku v13.6.0.r1086 activado en Mi 10 (HyperOS)**: reinstalado desde GitHub oficial (sha256 `6e273ab0e991c4e79bc8b1bbb9b9dd739ccac1a8712a541a214078886b7b790f`), fix de batería (whitelist deviceidle + appops `RUN_ANY_IN_BACKGROUND` + standby active), método oficial 13.6.0 (`libshizuku.so` → `/data/local/tmp/shizuku`). Servidor pid 22501, 12 apps autorizadas, logcat `✅ Shizuku OK`.
+- **Skill `shizuku-rikka` mejorada** (212→239 líneas): sección prioritaria "🧭 ANTES DE ACTUAR: diagnóstico por síntomas (LEER PRIMERO)" + `shizuku-activation-protocol.md` (70 líneas) referenciado. Documenta 6 fallos reales (start.sh inexistente, UI engañosa, `rish id` trampa, etc.) y el método que SÍ funcionó.
+- **Regla global en `~/.AGENTS.md`** (§43): "🔍 Diagnóstico antes de actuar (Android)" — aplica a todas las skills de Android. Preguntar contexto → diagnóstico 10s → prueba de éxito real (logcat, no `id`) → documentar fallos mientras se trabaja.
+- **Caso de éxito documentado** en `SHIZUKU-RISH-BUG.md` (Actualización 5): ciclo completo error → diagnóstico → solución local → solución global → verificación en vivo.
+- **Lección raíz**: el error más caro no fue técnico — fue no preguntar el contexto que el usuario ya tenía (HyperOS, batería agresiva, watchdog). El protocolo fuerza esa pregunta en el paso 1.
+
 ### 2026-08-14 — Rama X (query expansion H1) al pipeline real + Q03 aceptado como límite (Freebuff, PC)
 
 - **`scripts/lib/expand_query.py` (NUEVO)** — DICT_H1 + `expansion_terms` + `dict_hash` portados del runner del Paso 10. Fidelidad **10/10** vs baseline-H1 congelado (las 10 queries del EVAL producen los mismos términos).
