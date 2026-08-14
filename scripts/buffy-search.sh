@@ -7,6 +7,7 @@
 #   buffy-search.sh "consulta"        # busca, ordenado por relevancia (bm25)
 #   buffy-search.sh -l 30 "consulta"  # más resultados
 #   buffy-search.sh --select "consulta"  # busca + selector M3 (top-K pasajes puntuados)
+#   buffy-search.sh --expand-query "consulta"  # (con --select) rama X del Paso 10
 #   buffy-search.sh --update          # reindexa solo archivos cambiados (se hace solo antes de buscar)
 #   buffy-search.sh --reindex         # reconstruye el índice completo
 #   buffy-search.sh --stats           # estado del índice
@@ -17,6 +18,16 @@
 # el top-K de pasajes puntuado. Requiere Ollama + bge-m3 (si no está disponible,
 # degrada a la búsqueda cruda con aviso). El default (sin --select) queda intacto
 # byte a byte. Con --select --json emite el JSON del selector.
+#
+# --expand-query (rama X, 2026-08-14): SOLO afecta a --select. Expande la query
+# con el diccionario genérico ES→EN H1 (scripts/lib/expand_query.py, portado del
+# runner del Paso 10) en dos mecanismos: (1) X-candidatos — re-consultas FTS5 por
+# cada término del diccionario, hits extra al pool antes del selector (gate ≥1
+# token significativo por construcción de la query OR, tope 100 declarado); (2)
+# X-query — la query expandida (original + términos X) se pasa como --terms al
+# selector para que S1 (bge-m3) puntúe con el vocabulario expandido (fix del gap
+# semántico Q03: `pushear`→`push`, `crear`→`create`). Default OFF (no-regresión
+# byte a byte); también activable con BUFFY_EXPAND_QUERY=true. Sin --select es no-op.
 set -euo pipefail
 
 SCRIPT_SRC="${BASH_SOURCE[0]}"
@@ -33,6 +44,8 @@ SEP=$'\x1f'
 STRATEGY="${BUFFY_SEARCH_STRATEGY:-and}"
 SELECT=false
 JSON_OUT=false
+EXPAND_QUERY=false
+[ "${BUFFY_EXPAND_QUERY:-}" = "true" ] && EXPAND_QUERY=true
 
 # Stopwords ES (normalizadas: minúsculas sin diacríticos, coherentes con el tokenizer).
 STOPWORDS_ES="a al algo aunque asi aun cada casi como con cual cuando cuanta cuantas cuanto
@@ -47,6 +60,7 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     -l|--limit) LIMIT="${2:?falta número}"; shift 2 ;;
     --select)   SELECT=true ; shift ;;
+    --expand-query) EXPAND_QUERY=true ; shift ;;
     --json)     JSON_OUT=true; shift ;;
     --update)   CMD="update" ; shift ;;
     --reindex)  CMD="reindex"; shift ;;
@@ -209,14 +223,55 @@ search() {
     # ── Modo --select: candidatos FTS5 → selector M3 → top-K de pasajes ──
     # Los candidatos se pasan como {path, lineno} (ventana ±4 se construye en el
     # motor, igual que en el EVAL). Degrada a búsqueda cruda si Ollama no está.
-    local cands="[" first=1 sel_out rc sel_args=()
-    while IFS="$SEP" read -r path lineno snip; do
+    local cands="[" first=1 sel_out rc sel_args=() seen_keys=" "
+    # Rama X (opt-in --expand-query): términos del diccionario H1 para la query.
+    local x_terms=() term tq tout terms_json=""
+    if [[ "$EXPAND_QUERY" == true ]]; then
+      while IFS= read -r term; do
+        [ -n "$term" ] && x_terms+=("$term")
+      done < <(python3 "$SCRIPT_DIR/lib/expand_query.py" --query "$raw" --json 2>/dev/null \
+               | python3 -c 'import json,sys; print("\n".join(json.load(sys.stdin).get("terms",[])))' 2>/dev/null || true)
+    fi
+    # add_cand: agrega {path,lineno} al JSON de candidatos con dedup por path|lineno.
+    add_cand() {
+      local cpath="$1" cline="$2" key="$1|$2"
+      case " $seen_keys " in
+        *" $key "*) return ;;
+      esac
+      seen_keys+="$key "
       [ "$first" = 1 ] && first=0 || cands+=","
-      cands+="{\"path\":\"$(printf '%s' "$path" | sed 's/\\/\\\\/g; s/"/\\"/g')\",\"lineno\":$lineno}"
+      cands+="{\"path\":\"$(printf '%s' "$cpath" | sed 's/\\/\\\\/g; s/"/\\"/g')\",\"lineno\":$cline}"
       n=$((n+1))
+    }
+    while IFS="$SEP" read -r path lineno snip; do
+      add_cand "$path" "$lineno"
     done <<<"$out"
+    # X-candidatos: re-consulta FTS5 por cada término del diccionario. El gate
+    # ≥1 token significativo se garantiza por construcción (la query OR usa los
+    # tokens del término, igual que el runner del Paso 10); tope X_CAP declarado
+    # (no calibrado) para que una re-consulta no domine el pool.
+    if [ ${#x_terms[@]} -gt 0 ]; then
+      local x_cap=100 x_hits=0
+      for term in "${x_terms[@]}"; do
+        tq="$(build_query "$term" or)"
+        tq="${tq//\'/''}"
+        [[ -n "$tq" ]] || continue
+        tout="$(search_query "$tq" 2>/dev/null || true)"
+        while IFS="$SEP" read -r path lineno snip; do
+          [ -n "$path" ] || continue
+          [ "$x_hits" -ge "$x_cap" ] && break 2
+          add_cand "$path" "$lineno"
+          x_hits=$((x_hits+1))
+        done <<<"$tout"
+      done
+    fi
     cands+="]"
     [[ "$JSON_OUT" == true ]] && sel_args+=(--json)
+    # X-query: la query expandida (original + términos X) alimenta S1 del selector.
+    if [[ "$EXPAND_QUERY" == true && ${#x_terms[@]} -gt 0 ]]; then
+      terms_json="$(python3 -c 'import json,sys; print(json.dumps(sys.argv[1:], ensure_ascii=False))' "${x_terms[@]}" 2>/dev/null || true)"
+      [ -n "$terms_json" ] && sel_args+=(--terms "$terms_json")
+    fi
     rc=0
     kno_arg=()
     if [ -n "${BUFFY_SELECTOR_KNO:-}" ]; then

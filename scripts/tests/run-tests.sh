@@ -60,6 +60,8 @@ source "$SCRIPT_DIR/test-scale.sh"
 source "$SCRIPT_DIR/test-context-selection.sh"
 # shellcheck source=test-selector.sh
 source "$SCRIPT_DIR/test-selector.sh"
+# shellcheck source=test-expand-query.sh
+source "$SCRIPT_DIR/test-expand-query.sh"
 
 trap teardown_sandbox EXIT
 
