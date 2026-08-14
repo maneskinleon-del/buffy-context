@@ -5,6 +5,12 @@
 # Veredicto adoptado (2026-08-13): M3 = S1+S2+S3+S4 con gate rescue (piso
 # rescue_low=0.545) y pesos a priori w1=1.0 w2=1.0 w3=0.5 w4=0.5, top-K por score.
 #
+# Iteración S3 (2026-08-14, veredicto 15B): V6 = M3 con S3 condicionado a
+# query estructural + S4 por clase de memoria de sesión. Medido sobre el fixture
+# congelado (harness fiel: M3 reproduce 15A bit a bit): attr 16/20 → 19/20,
+# pRel 0.577 → 0.677, reg 0.420 → 0.360, leak 0.242 → 0.275 (pasa gate ≤0.308).
+# Q02 1/3 → 3/3 · Q07 1/2 → 2/2 · Q08/Q06 intactos (2/2 · 1/1).
+#
 # Señales:
 #   S1  relevancia semántica: bge-m3 cosine(query+terms, pasaje) — gate rescue:
 #       pasajes con S1 >= rescue_low entran al pool de selección (la franja
@@ -14,8 +20,14 @@
 #       tokens de la query; rareza cruzada en el pool de la query (IDF-like):
 #       especificidad(p) = 1 − |{p'≠p : toks(p) ∩ toks(p') ≠ ∅}| / |pool|
 #   S3  definición-vs-mención: pasaje con evidencia ESTRUCTURADA (fila de tabla
-#       `|...|...|` o KEY=value al inicio de línea) → 1, prosa → 0.
-#   S4  canonicalidad: path en archivos de ruido de sesión → 0, resto → 1.
+#       `|...|...|` o KEY=value al inicio de línea) → 1, prosa → 0. V6:
+#       condicionado a query estructural (patrón tabla/KEY=value en la query) —
+#       para queries de procedimiento (prosa) la estructura es "bonita pero
+#       irrelevante" (sobre-corrección Q02/Q07, hallazgo 15A).
+#   S4  canonicalidad: path en archivos de ruido de sesión → 0, resto → 1. V6:
+#       por CLASE — memoria transitoria por-sesión (ai-context/* salvo
+#       CHANGELOG.md, historia curada) → 0; CHANGELOG.md queda canónico (gold
+#       de Q06).
 #
 # score(p) = w1·S1 + w2·S2 + w3·S3 + w4·S4  (S6 MMR = post-poda, no usado en M3)
 #
@@ -59,6 +71,21 @@ W = {"s1": 1.0, "s2": 1.0, "s3": 0.5, "s4": 0.5}
 # ── archivos de ruido de sesión (S4 — el diseño §3 los penaliza) ──
 NOISE_FILES = {"ai-context/SESION-archive.md", "ai-context/AGENTS.md",
                "ai-context/CONTINUE.md", "ai-context/SESION.md"}
+
+
+def is_session_noise(path):
+    """S4 v6 (2026-08-14): canonicalidad por CLASE de memoria de sesión.
+    No-canónico = memoria transitoria por-sesión: la lista original (SESION·
+    CONTINUE·AGENTS·SESION-archive) + los dumps de perfil/sesión en ai-context/
+    (INFO-full, CHANGELOG-archive, SHIZUKU-RISH-BUG, ...). CHANGELOG.md (historia
+    curada) sigue siendo canónico — es el gold de Q06 (FF_SEEN).
+    Cierra la sobre-corrección de S3 (Q02 INFO-full.md:189 · Q07 README.md:73)
+    sin romper Q06/Q08 (veredicto 15B)."""
+    if path in NOISE_FILES:
+        return True
+    if path.startswith("ai-context/") and not path.startswith("ai-context/CHANGELOG.md"):
+        return True
+    return False
 
 # ── stopwords (es + en + comandos comunes de la serie) ──
 STOP = set("""de la que el en y a los del se las por un para con no una su al lo como más pero sus le ya o este sí porque esta entre cuando muy sin sobre también me hasta hay donde quien desde todo nos durante todos uno les ni contra otros ese eso ante ellos e esto mí antes algunos qué unos yo otro otras otra él tanto esa estos mucho quienes nada muchos cual poco ella estar estas algunas algo nosotros mi mis tú te ti tu tus ellas nosotras vosotros vosotras os mío mía míos mías tuyo tuya tuyos tuyas suyo suya suyos suyas nuestro nuestra nuestros nuestras vuestro vuestra vuestros vuestras esos esas esos esas esto eso aquel aquella aquellos aquellas para por con sin sobre tras mediante según hacia desde entre hasta bajo contra
@@ -177,6 +204,14 @@ def structured(text):
     return 1.0 if (TABLE_RE.search(text) or KV_RE.search(text)) else 0.0
 
 
+def query_structural(query):
+    """V6 (2026-08-14): la query pide estructura (patrón tabla/KEY=value) → 1.0.
+    S3 (definición-vs-mención) solo aplica para queries estructurales; en
+    queries de procedimiento (prosa) la estructura del pasaje es "bonita pero
+    irrelevante" (sobre-corrección Q02/Q07, hallazgo 15A)."""
+    return 1.0 if (TABLE_RE.search(query) or KV_RE.search(query)) else 0.0
+
+
 def dom_of(path):
     if path.startswith("Knowledge/"):
         parts = path.split("/")
@@ -238,13 +273,17 @@ def select(query, passages, repo, theta, rescue_low, top_k):
         shared = sum(1 for j in range(n) if j != i and (pool_toks[i] & pool_toks[j]))
         p["_s2"] = 1.0 - shared / max(1, n - 1)
 
-    # S3: estructura (pool completo)
+    # S3: estructura — condicionada a query estructural (V6, veredicto 15B):
+    # la señal definición-vs-mención solo aplica si la QUERY pide estructura
+    # (patrón tabla/KEY=value); para queries de procedimiento (prosa) la
+    # estructura es "bonita pero irrelevante" (sobre-corrección Q02/Q07).
+    q_structural = query_structural(query)
     for p in passages:
-        p["_s3"] = structured(p["text"])
+        p["_s3"] = structured(p["text"]) * q_structural
 
-    # S4: canonicalidad (pool completo)
+    # S4: canonicalidad (pool completo) — por CLASE de memoria de sesión (V6)
     for p in passages:
-        p["_s4"] = 0.0 if p["path"] in NOISE_FILES else 1.0
+        p["_s4"] = 0.0 if is_session_noise(p["path"]) else 1.0
 
     # gate rescue: piso de relevancia (no rompe el piso — abre franja estrecha)
     gated = [p for p in passages if p["_s1"] >= rescue_low]
@@ -320,6 +359,7 @@ def main(argv):
 
     out = {
         "model": "M3",
+        "signal_version": "V6 (2026-08-14, veredicto 15B)",
         "weights": W,
         "theta": args.theta,
         "rescue_low": args.rescue_low,
