@@ -1,0 +1,244 @@
+{
+  "h1": {
+    "abre": [
+      "launch",
+      "open",
+      "start"
+    ],
+    "abrir": [
+      "launch",
+      "open",
+      "start"
+    ],
+    "anda": [
+      "slow",
+      "performance"
+    ],
+    "apaga": [
+      "off",
+      "disable",
+      "dpms"
+    ],
+    "apagar": [
+      "off",
+      "disable",
+      "dpms"
+    ],
+    "aparece": [
+      "list",
+      "show",
+      "device",
+      "adb devices"
+    ],
+    "aparecer": [
+      "list",
+      "show",
+      "device",
+      "adb devices"
+    ],
+    "aplicacion": [
+      "application",
+      "package"
+    ],
+    "app": [
+      "application",
+      "package"
+    ],
+    "calienta": [
+      "thermal",
+      "temperature"
+    ],
+    "caliente": [
+      "thermal",
+      "temperature"
+    ],
+    "celular": [
+      "phone",
+      "device",
+      "adb"
+    ],
+    "commit": [
+      "commit"
+    ],
+    "componente": [
+      "component"
+    ],
+    "concedo": [
+      "grant",
+      "pm grant"
+    ],
+    "conecta": [
+      "connect",
+      "adb connect"
+    ],
+    "conectar": [
+      "connect",
+      "adb connect"
+    ],
+    "conecte": [
+      "connect",
+      "adb connect"
+    ],
+    "crear": [
+      "create",
+      "make",
+      "new",
+      "add"
+    ],
+    "de": [],
+    "despues": [],
+    "estado": [
+      "state",
+      "hooks"
+    ],
+    "fire": [
+      "free fire"
+    ],
+    "free": [
+      "free fire"
+    ],
+    "hacer": [],
+    "hook": [
+      "hook",
+      "hooks",
+      "state"
+    ],
+    "hooks": [
+      "hook",
+      "hooks",
+      "state"
+    ],
+    "juega": [
+      "game",
+      "free fire"
+    ],
+    "juego": [
+      "game",
+      "free fire"
+    ],
+    "le": [],
+    "leer": [
+      "read",
+      "get",
+      "serial"
+    ],
+    "lento": [
+      "slow",
+      "performance"
+    ],
+    "minutos": [],
+    "necesita": [],
+    "necesito": [],
+    "opaca": [
+      "transparent",
+      "opacity"
+    ],
+    "opaco": [
+      "transparent",
+      "opacity"
+    ],
+    "optimizar": [
+      "optimize",
+      "performance",
+      "governor"
+    ],
+    "pantalla": [
+      "screen",
+      "display"
+    ],
+    "permiso": [
+      "permission",
+      "grant",
+      "pm grant"
+    ],
+    "permisos": [
+      "permission",
+      "grant",
+      "pm grant"
+    ],
+    "por": [],
+    "pr": [
+      "pull request",
+      "pr"
+    ],
+    "puedo": [],
+    "pull": [
+      "pull",
+      "pull request"
+    ],
+    "pushear": [
+      "push"
+    ],
+    "quiere": [],
+    "quiero": [],
+    "raiz": [
+      "root"
+    ],
+    "react": [
+      "react",
+      "component",
+      "hooks"
+    ],
+    "rendimiento": [
+      "performance",
+      "governor"
+    ],
+    "request": [
+      "request",
+      "pull request"
+    ],
+    "revisa": [
+      "check",
+      "log",
+      "status"
+    ],
+    "revisar": [
+      "check",
+      "log",
+      "status"
+    ],
+    "root": [
+      "root"
+    ],
+    "script": [
+      "script",
+      "sh"
+    ],
+    "serial": [
+      "serial",
+      "devices",
+      "device"
+    ],
+    "shizuku": [
+      "shizuku",
+      "rish"
+    ],
+    "sin": [],
+    "sola": [],
+    "tcpip": [
+      "tcpip",
+      "adb tcpip"
+    ],
+    "telefono": [
+      "phone",
+      "device",
+      "adb"
+    ],
+    "terminal": [
+      "terminal"
+    ],
+    "transparente": [
+      "transparent",
+      "opacity"
+    ],
+    "unos": [],
+    "ve": [
+      "view",
+      "show"
+    ],
+    "vea": [
+      "view",
+      "show"
+    ]
+  }
+}

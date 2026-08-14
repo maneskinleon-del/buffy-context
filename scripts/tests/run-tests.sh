@@ -64,6 +64,8 @@ source "$SCRIPT_DIR/test-selector.sh"
 source "$SCRIPT_DIR/test-expand-query.sh"
 # shellcheck source=test-granularity-16B.sh
 source "$SCRIPT_DIR/test-granularity-16B.sh"
+# shellcheck source=test-bridge-17B.sh
+source "$SCRIPT_DIR/test-bridge-17B.sh"
 
 trap teardown_sandbox EXIT
 
