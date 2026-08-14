@@ -1,7 +1,22 @@
-# 🧠 SESION — Buffy Freebuff (2026-08-14 · Revisión y preservación Pasos 12/13)
+# 🧠 SESION — Buffy Freebuff (2026-08-14 · V6 adoptado + cerrar día+1 + phi/qwen)
 
 > Contexto de lo implementado durante esta sesión. Corrida en **Freebuff** (PC).
-> Cierra el último pendiente abierto de la sesión 2026-08-13: el destino de los artefactos del autor anterior (Pasos 12/13).
+> Tres frentes: iteración S3 → veredicto 15B (V6); tarea "cerrar día+1" (apagado); prueba de modelos locales (phi3.5/qwen2.5:7b) en opencode.
+
+---
+
+## 🚀 V6 adoptado (15B) · tarea "cerrar día+1" · phi/qwen en opencode (2026-08-14 · Freebuff)
+
+### Lo hecho
+1. **Iteración S3 → veredicto 15B (V6 ADOPTADO, commit `5fc0822`):** harnees fiel al runner 15A (M3 reproduce 16/20 bit a bit). V6 = S3 condicionado a query estructural + S4 por clase de memoria de sesión (ai-context/* salvo CHANGELOG.md curado) → **attr 16/20 → 19/20, pRel 0.577 → 0.677, leak 0.275 (pasa gate ≤0.308), reg 0.420 → 0.360**; Q02 1/3→3/3, Q07 1/2→2/2, Q08/Q06 intactos. V2/V3/V4 descartados con evidencia (densidad rompe Q02; S4 clase total rompe Q06; solo-tablas no arregla nada). Cambios de mecanismo, sin calibración. Q05 `useState` (s1=0.4646) = miss ortogonal → rama X.
+2. **Tarea "cerrar día+1" (commit `5fc2fa0`):** `buffy-close-day.sh --poweroff` — cierre completo + apagado SOLO si terminó sin error. Env override `BUFFY_POWEROFF_CMD`/`BUFFY_POWEROFF_DELAY` (stub en tests, nunca apaga de verdad). Tests +3. Suite 270 OK / 4 FAIL full · 254 OK / 4 FAIL --quick (solo preexistentes).
+3. **phi3.5 en opencode: BLOQUEADO** (no soporta tool calling — capabilities solo `completion`; error `does not support tools`). Coherente con el EVAL 14A. **qwen2.5:7b FUNCIONA** (respondió OK, exit 0) — agregado al provider `ollama` de `~/.config/opencode/opencode.json` junto con phi3.5. Nota: qwen 32K contexto (opencode recomienda 64k+) → repos chicos; alternativa robusta: `ollama pull llama3.1:8b`/`qwen3:8b`.
+4. **12/13 preservados (commit `d34b7f6`, pusheado):** registro E/F completo (13 archivos) — veredictos "CERRADO sin adopción" intactos.
+5. **Push de la sesión:** `5bf37d6..904e0fa` → origin/main (5 commits: 12/13 + V6 + handoffs). El trabajo de "cerrar día+1" queda por pushear en este cierre.
+
+### ⏳ Pendientes
+- **Q03 + Q05 (gap semántico, rama X del Paso 10):** expansión de query con diccionario H1 (plan en CONTINUE.md).
+- Próximo cierre: push de `5fc2fa0` + docs de sesión (este archivo + CHANGELOG).
 
 ---
 
@@ -95,28 +110,3 @@ buffy-context ahora cubre Memoria + MCP + Plugins, client-agnostic (FreeBuff / O
 - **Causa raíz**: `buffy-doctor.sh` compara el README contra `$REPO_DIR/.agents/skills` (copia del repo = **23 skills**), no contra el entorno real `~/.agents/skills` (= **43 skills**). Como el README decía "23", el doctor veía CONSISTENTE. El drift real era la copia del repo desfasada, no el número del README.
 - **Parche** (`scripts/buffy-doctor.sh`, sección Skills): check #4 compara el conteo declarado en README vs `~/.agents/skills` (hubiera pescado el "23 vs 43"); check #5 avisa `REPO_SKILLS_STALE` cuando la copia del repo (23) está detrás del entorno real (43). Verificado: con README=23 el doctor ahora lanza `README_SKILL_COUNT_DRIFT`; con README=43 pasa y marca el repo como desfasado (warning, no error).
 - **Resuelto (2026-08-12)**: sincronizado el repo a 43 — se copiaron los 22 skills faltantes desde `~/.agents/skills` y se eliminaron los 2 fantasma (`code-search`, `vision-adapter`) que no existen en el entorno real. README 23→43, doctor ahora `CONSISTENTE` (0 errores). Commiteado (`6ed1bb1`) y pusheado a `main`.
-
----
-
-## 🔎 EVAL PC — Pasos 7→10B (Fase 3 · runner experimentales · runtime congelado)
-
-### Pedido del usuario
-Aprobar/implementar/medir los experimentos de Fase 3 del EVAL PC uno a uno, con gates pre-fijados, determinismo G2 y sin tocar runtime; detenerse tras cada medición.
-
-### Lo hecho (serie completa A→R2 en `scripts/tests/evals/EVAL-REGISTRY.md`)
-1. **Paso 7 — Semantic D** (`run-semantic-PC.sh` + `bge-m3` vía Ollama): D = 0.200/0.192/0.669/48k. **Descartado**: el embedding aporta capacidad de recuperación que el léxico no tiene (Q06 resuelta por primera vez) pero sin precisión de buscador final; Q03/Q08 siguen sin resolver.
-2. **Paso 8 — Hybrid bounded** (`run-hybrid-PC.sh`, pool L∪S, RRF y POOL): E/F ≈ 0.200/0.185/0.605/~10k. **Descartado**: redujo 4.8× el coste de D pero no recuperó calidad de contexto; G-H0 demostró que Q03/Q08 ni siquiera entraban al pool (fallo de generación, no de fusión).
-3. **Paso 9 — Passage retrieval** (`run-passage-PC.sh`, G1-VENTANA ±4 / G2-SECCIÓN): G1 = 0.417/0.072/0.606/2.6k/0.8 · G2 = 0.333/0.054/0.606/3.4k/0.7. **Gate ❌ pero hipótesis ✅**: archivo completo (Q04/Q06 = 14.4k tok) → pasajes (310-505 tok) = reducción 28-46×. Dedup corregido de (path) a (path,rango). Problema restante: selección del pasaje correcto (Q08 llega al pool/top-10 pero no el gold; Q03 out_of_pool).
-4. **Paso 10 — Query expansion** (`run-expansion-PC.sh`, rama X aditiva H1-DICT-MIN/H2-DICT-FULL congelados con hash): H1 = 0.317/0.064/0.616/2.45k/gap 5/6 · H2 = 0.367/0.064/0.621/2.45k/gap 6/6. **Caso D confirmado**: candidate gap CERRADO (Q03 `gh pr create` entra al pool vía X `push`/`create` — diccionario genérico) pero todas las agujas quedan `in_pool_ranked_out` rank 50-132 → generación resuelta, selección rota. Regresión 9/12 (pool 1071-1364 hits X inunda el RRF). **H1/H2 no adoptados.**
-5. **Paso 10B — Reranking** (`run-rerank-PC.sh`, pool H2 CONGELADO y verificado == H2, señales normalizadas [0,1] pesos 1.0, `curated` estructural sin gold, ablación obligatoria): **R1-LEX = 0.750** (récord serie, 2.0× sobre H2) / pRel 0.175 / leak 0.441 / 1 903 tok / gap_to_top10 4/6 / regresión 0.167. R2-LEX+SEM = 0.700 / 0.131 / 0.502 / 2 169 / gap 2/6 / 0.083. **El cuello de botella ERA el ranking** (mismo pool, solo cambió el orden). Ablación: `x_overlap` = señal crítica (sin ella gap 0/6); `curated` aporta 2/6; `q_overlap` crudo ESTORBA (r1_no_q_overlap 5/6); el embedding empeora incluso como señal subordinada (r2_no_sem 4/6 > r2_full 2/6). **R1/R2 no adoptados** (fallan pRel/leakage → falta capa quality-aware).
-
-### Veredicto y estado
-- Serie: A 0.000/0.533/0.267/5.2k · G1 0.417 · H2 0.367 · **R1 0.750**. Ninguna variante pasa el gate completo. Fase 3 sigue abierta.
-- **Mapa de capas**: candidate generation ✅ (expansion 6/6 techo) · passage granularity ✅ (28-46×) · context-size ✅ · **ranking/selection 🔴 = cuello de botella actual**.
-- Commits: `8677347` (Paso 8) · `7595428` (Paso 9 cerrado + diseño 10) · `0aaa46f` (Paso 10 ejecutado) · `a778080` (Paso 10 cerrado + diseño 10B) · `18df679` (Paso 10B ejecutado).
-- Runtime intacto (`buffy-search.sh`/`buffy-router.sh` intactos), EVAL congelado `98a0e308…`, determinismo G2 OK en todas las variantes.
-
-### ⏳ Pendientes
-- **Diseñar el Paso 11 — reranking quality-aware / passage selection** (próximo experimento, sin implementar todavía): la evidencia de R1/R2 (pRel 0.175/0.131, leak 0.441/0.502) indica que falta una capa que seleccione por calidad de evidencia, no solo por similitud; Q03 llegó a rank 12 (casi completa la cadena expansion→candidate→rerank→passage→context).
-- Handoff completo en `/tmp/handoff-buffy-2026-08-12.md`.
-

@@ -14,6 +14,14 @@ system-id: mangonz-desktop
 # CHANGELOG.md — Historial de cambios del sistema
 
 
+### 2026-08-14 — Selector M3 → V6 (veredicto 15B) + tarea "cerrar día+1" + phi/qwen en opencode (Freebuff, PC)
+
+- **V6 adoptado como selector del pipeline** (`5fc0822`): S3 condicionado a query estructural + S4 por clase de memoria de sesión (ai-context/* salvo CHANGELOG.md curado) → **attr 16/20 → 19/20, pRel 0.577 → 0.677, leak 0.275 (pasa gate ≤0.308), reg 0.360**. Cierra el hallazgo 15A (sobre-corrección de estructuras): Q02 1/3→3/3, Q07 1/2→2/2, Q08/Q06 intactos. Cambios de mecanismo, sin calibración. V2/V3/V4 descartados con evidencia. Q05 `useState` queda como miss ortogonal → rama X.
+- **Tarea "cerrar día+1"** (`5fc2fa0`): `buffy-close-day.sh --poweroff` — tras el cierre completo (memoria + SNAPSHOT + doctor + commit/push), **apaga el PC** solo si terminó sin error. Override por env para pruebas. Tests +3.
+- **phi3.5 en opencode: bloqueado** (sin tool calling; coincide con el EVAL 14A). **qwen2.5:7b funciona** — ambos agregados al provider `ollama` de `~/.config/opencode/opencode.json`.
+- **Registro Pasos 12/13 preservado** (`d34b7f6`, pusheado): serie E/F completa (13 archivos), veredictos intactos.
+- Suite: 270 OK / 4 FAIL full · 254 OK / 4 FAIL --quick (solo preexistentes).
+
 ### 2026-08-13 — Expansión F2 (rama P) al pipeline: candidate gap de Q08 cerrado en vivo (Freebuff, PC)
 
 **Pedido del usuario:** implementar la expansión F2 del Paso 13 como componente del pipeline (cierra el candidate gap que la integración M3 base dejó en Q08/Q03). Artefactos del autor anterior INTACTOS (solo lectura).
