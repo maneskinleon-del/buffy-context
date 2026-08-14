@@ -1,6 +1,10 @@
 # Paso 12 — Evidence-aware Passage Selection (diseño)
 
-> Estado: **⏳ DISEÑO — pendiente de aprobación** (2026-08-12) — aún SIN runner.
+> Estado: **✅ EJECUTADO — CERRADO sin adopción** (2026-08-13). Serie E1×2/E2×2/E3×2
+> completa en worktree aislado `18df679` (determinismo G2 ✅). **Ninguna variante pasa
+> el gate de calidad → no se adopta E1/E2/E3.** Resultados y veredicto en el
+> **Anexo A**. Siguiente: **Paso 13 — Passage Candidate Expansion**
+> (spec `passage-candidate-expansion-DESIGN.md`).
 > Base: EVAL con gold definitivo (hash `98a0e308…`), pasajes VENTANA ±4 validados,
 > serie A→Q2 completa en `EVAL-REGISTRY.md`. Congelados: pool del Paso 10 con
 > diccionario H2 (`baseline-H2-expansion-PC-2026-08-12.json`, dict_hash
@@ -199,13 +203,105 @@ NO se adopta automáticamente: se diseña el siguiente paso con la evidencia.
    worktree aislado en 18df679 (patrón aprobado del Paso 11); medir solo allí
 1. implementar run-evidence-PC.sh (E1/E2/E3 sobre pool+R1 congelados)
 2. validar sintaxis + smoke E2E (E2 sobre 1-2 queries)
-3. E1 ×2 corridas → determinismo G2
-4. E2 ×2 corridas → determinismo G2
-5. E3 ×2 corridas → determinismo G2
-6. verificar pool == H2 y orden == R1 (congelados intactos) + θ/weights en el JSON
-7. comparar E1/E2/E3 vs R1 y Q1/Q2 + per-query (Q03/Q04/Q06/Q08 en foco)
-8. three concepts por query + agujas_preservadas + pRel_delta + coste de E2 (latencia embeds)
-9. registrar en EVAL-REGISTRY.md + spec a EJECUTADO con Anexo
+3. E1 ×2 corridas → determinismo G2  ✅
+4. E2 ×2 corridas → determinismo G2  ✅ (hash 4ab293dacef1c914)
+5. E3 ×2 corridas → determinismo G2  ✅
+6. verificar pool == H2 y orden == R1 (congelados intactos) + θ/weights en el JSON ✅
+7. comparar E1/E2/E3 vs R1 y Q1/Q2 + per-query (Q03/Q04/Q06/Q08 en foco)  ✅
+8. three concepts por query + agujas_preservadas + pRel_delta + coste de E2  ✅
+9. registrar en EVAL-REGISTRY.md + spec a EJECUTADO con Anexo  ✅ (Anexo A)
 10. revisar con code-reviewer
 11. commit + push (git commit -- paths) + detener(se) (runtime intacto)
 ```
+
+---
+
+## Anexo A — Resultados y veredicto (2026-08-13)
+
+### A.1 Ejecución
+
+Serie E1×2 / E2×2 / E3×2 en el worktree aislado `18df679` (patrón FWD aprobado).
+Gates: **G1 ✅** (EVAL `98a0e308…`), **G2 ✅** determinismo (pares idénticos; E2
+`4ab293dacef1c914`). Instrumento v3.1, pool H2 / orden R1 / dict `b0406a33…`
+congelados, índice semántico de D reutilizado (`cache_hit: true`, `build_seconds
+1997` ≈ 33 min, construido una sola vez). Artefactos:
+`baseline-E1/E2/E3-evidence-PC-2026-08-12.json` (+`-r2`) — 6 JSON idénticos en pares.
+
+### A.2 Resultados agregados (v3.1, gold definitivo, 10 queries)
+
+| Variante | sRec | pRel | leak | gCont | tokAvg | gap→top10 | regresión | poda media | tok_evidencia_avg |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| R1 (ref) | 0.750 | 0.175 | 0.441 | 1.00 | 1903 | 0.667 | 0.167 | — | — |
+| **E1** — S3 heading | 0.600 | **0.230** | 0.382 | 1.00 | 1904 | 0.333 | 0.167 | 25.4% | 289 |
+| **E2** — S4 bge-m3 (θ=0.55) | 0.700 | 0.093 | **0.325** | 1.00 | **1789** | **0.833** | **0.0** | 37.9% | 297 |
+| **E3** — S4+0.5·S3 | 0.700 | 0.103 | 0.342 | 1.00 | 1887 | 0.833 | 0.0 | 17.7% | 294 |
+
+### A.3 Gate (6 criterios pre-fijados del §4, sin relajación)
+
+| Criterio | Umbral | E1 | E2 | E3 | ¿Pasa? |
+|---|---|---:|---:|---:|---|
+| search_recall | > 0.100 | 0.600 | 0.700 | 0.700 | ✅ las 3 |
+| passage_relevance | ≥ 0.600 | 0.230 | 0.093 | 0.103 | ❌ las 3 |
+| leakage | ≤ 0.267 | 0.382 | 0.325 | 0.342 | ❌ las 3 |
+| tokens | ≤ 10.4k | 1904 | 1789 | 1887 | ✅ las 3 |
+| gold_containment | ≥ 0.80 | 1.0 | 1.0 | 1.0 | ✅ las 3 |
+| baseline_regression | ≤ 0.167 | 0.167 | 0.0 | 0.0 | ✅ E2/E3 · ❌ E1 (empata) |
+
+→ **Ninguna variante pasa el gate** (pRel y leakage). Se cierra **sin adopción**, como
+estaba pre-registrado ("Si E2-S4 pasa → NO se adopta automáticamente").
+
+### A.4 Veredicto (lectura del usuario, 2026-08-13)
+
+> La hipótesis de que existe una señal de contenido útil queda **parcialmente
+> confirmada, pero no alcanza** para resolver la selección de contexto.
+
+1. **El embedding encontró su lugar: content-scorer, no generador ni ranker.**
+   D (generador) ❌ · R2 (señal de ranking) ❌ · E2 (filtro de calidad del pasaje)
+   ✅: reduce leakage 0.441→0.325 y elimina la regresión (0.0) recuperando más
+   agujas del gap (0.833 vs 0.667). bge-m3 no decide qué recuperar ni qué rankear,
+   pero sí distingue qué pasajes son evidencia relevante — distinción arquitectónica.
+2. **El cuello de botella real es candidate/context coverage:** solo **6/20 agujas**
+   estaban presentes como pasajes en R1. El selector de pasajes perfecto no puede
+   seleccionar evidencia que nunca llegó a la capa de pasajes (found 20/20 →
+   selected 14/20 → attributed 14/20 → **pasaje 6/20**). Ese salto
+   archivo→pasaje es la frontera.
+3. **No calibrar más θ** (0.50 / 0.45 / por query / más pesos / más combinaciones):
+   sería optimizar la capa equivocada. E2 ≈ E3 (el heading apenas aporta).
+
+### A.5 `tok_evidencia=0` — no es un bug del contador, es el dato
+
+La métrica es fiel a su definición (tokens de pasajes con aguja en el contexto
+final; solo pasajes, no archivos completos `kno`). Los 0 son resultados reales:
+
+- **Q02/Q09**: el gate podó el 100% → ctx sin pasajes → 0.
+- **Q01/Q03/Q05**: las agujas viven en la capa de archivos (`found/selected`
+  20/20) pero el pasaje con aguja no llegó como rango al ctx final (gate o
+  presupuesto; p.ej. Q01: la aguja está en ADB.md — presente en `search_hit_paths`
+  pero ausente de `ctx_passage_ranges`).
+- En **5/10 queries la capa de pasajes aporta 0 tokens de evidencia** — esa es la
+  señal que motiva el Paso 13 (coverage), no un fallo de instrumentación.
+
+### A.6 Nota de infraestructura — cache de embeddings de pasajes
+
+Implementado en `run-evidence-PC.sh` (`embed_all`): cache por pasaje en
+`~/.cache/buffy-eval-semantic/passages/<sha1(texto ≤2000)>-<dim>.emb`.
+
+- **float64, no float32**: el round-trip float32 pierde ~4e-10 (0/1024 valores
+  idénticos en el test) y podría voltear un pasaje borderline en el gate; float64
+  es exacto (1024/1024). bge-m3 es determinista entre llamadas (verificado).
+
+**Validación completada ✅ (2026-08-13, E2 sobre el worktree `18df679`):**
+
+| Verificación | Resultado |
+|---|---|
+| Embeddings cold vs warm | ✅ **1024/1024 idénticos** (24 pasajes reales de Q04/Q06/Q07: cache-leído == re-embed fresco) |
+| `determinism_hash` cold vs warm | ✅ **idéntico** (`4ab293dacef1c914`) |
+| Resultado vs E2 congelado (sin cache) | ✅ `4ab293dacef1c914` + **dump completo idéntico** (salvo latency/build/cache) |
+
+Tiempos: cold ≈ **40 min** (construye 1 000 embeddings) · warm ≈ **1.5-2 min**.
+El cache queda **congelado como infraestructura transparente**: no es evidencia
+ni a favor ni en contra del Paso 13, solo optimización del runner. **No toca el
+esquema JSON** (sin campos nuevos → el determinism_hash de las corridas
+congeladas sigue siendo comparable). Artefactos de la validación:
+`baseline-E2-evidence-PC-2026-08-13-cache-cold.json` / `-cache-warm.json`
+(solo en el worktree; idénticos al congelado).
