@@ -1,7 +1,27 @@
 # 🔄 CONTINUE — Handoff entre sesiones
 
 > ⚡ **PRÓXIMA SESIÓN: LEE ESTO PRIMERO**
-> Generado: 2026-08-13 (Freebuff — **Pipeline completo router → expansión F2 → M3 → context pack OPERATIVO: `buffy-selector.sh` + `lib/selector_m3.py` (bit-a-bit 15A) + `buffy-expand.sh` + `lib/expand_passages.py` (rama P/F2 del Paso 13) + `search --select` + `router --context`. Candidate gap de Q08 CERRADO en vivo (System.md:73-81 al top-1). Commits 39ce873 + 1bb2f9c + b6c7c09 (NO pusheados). Suite 265/249 OK (4 FAIL preexistentes). — pendientes: artefactos Pasos 12/13 (autor anterior, untracked, intactos — NO commitear sin su autorización); Q03 sigue como gap SEMÁNTICO (Commands.md en pool pero `pushear`→`git push origin` no lo conecta bge-m3 por línea → rama X del Paso 10); hallazgo S3 para iteración futura; decisión de push**)
+> Generado: 2026-08-14 (Freebuff — **Paso 12/13 CERRADO: registro del autor anterior preservado y commiteado** (`d34b7f6`, 13 archivos: 2 diseños con Anexos A + baselines E1/E2/E3/F1/F2 ×2 + `run-evidence-PC.sh`). **Sin push** aún. La integración funcional ya estaba completa y pusheada (2026-08-13: F2 como generador → Q08 cerrado; E2 como insight de S4). Pendientes: push de `d34b7f6`; Q03 gap semántico (rama X del Paso 10); hallazgo S3**)
+
+---
+
+## Resumen de la sesión (2026-08-14 — Freebuff, revisión y destino de los artefactos Pasos 12/13)
+
+**Tema:** revisar los artefactos del autor anterior (Pasos 12/13: evidence-passage y candidate-expansion) para integrarlos o decidir su destino. Veredicto de la revisión: la integración funcional YA estaba completa (sesión anterior, pusheada) — F2 como generador de pasajes (`expand_passages.py`/`buffy-expand.sh`, Q08 cerrado) y E2 como insight de S4 (bge-m3 = content-scorer). Los artefactos pendientes son el **REGISTRO** de experimentos cerrados sin adopción, no funcionalidad nueva.
+
+1. **Integridad verificada:** los baselines E1/E2/E3/F1/F2 (×2) parsean OK y sus determinism hashes coinciden con el EVAL-REGISTRY commiteado (E2 `4ab293dacef1c914` · F2 `7fc28c377482e2c5`); `run-evidence-PC.sh` con sintaxis válida; los diffs de los diseños son solo Anexos A (resultados + veredictos), sin sorpresas.
+2. **Convención de la serie:** los 20 baselines históricos están trackeados — dejar E/F untracked era la anomalía; además el EVAL-REGISTRY commiteado los referencia por nombre (registro roto sin ellos).
+3. **Decisión del usuario:** commitear el registro completo — preservación de evidencia, no adopción (los veredictos "CERRADO sin adopción" ya viven en el registro).
+4. **Commit `d34b7f6`** (13 archivos: 2 diseños + 10 baselines + `run-evidence-PC.sh`, path-limited). **Sin push** (decisión del usuario). Working tree limpio.
+
+### ⏳ Pendientes para otra sesión
+- **Push de `d34b7f6`** cuando se decida (todo lo demás ya está en origin/main).
+- **Q03 (gap semántico):** Commands.md en pool; el puente `pushear`→`git push origin` requiere rama X del Paso 10 (query expansion) — decidir si se retoma.
+- **Hallazgo S3:** sobre-corrección de estructuras (Q02/Q07) — candidato para iteración futura del selector.
+- Runtime: defaults congelados. Pipeline opt-in: `router --context` (M3 + F2), `search --select`. Selector: M3 rescue 0.545.
+- Suite PC: 266 OK / 4 FAIL (preexistentes, fuera de alcance).
+- En el PC: tras `git pull`, `buffy-memory.sh sync pull` UNA vez.
+- P1: retorno del aprendizaje · P2: concurrencia 3+ escritores · Opcional: `Knowledge/Tools/Buffy-Memory.md`.
 
 ---
 

@@ -1,7 +1,24 @@
-# 🧠 SESION — Buffy Freebuff (2026-08-13 · Integración M3 + Expansión F2 al pipeline real)
+# 🧠 SESION — Buffy Freebuff (2026-08-14 · Revisión y preservación Pasos 12/13)
 
 > Contexto de lo implementado durante esta sesión. Corrida en **Freebuff** (PC).
-> Continuación de la sesión opencode de hoy (14A/15A, entrada abajo): el selector M3 rescue 0.545 adoptado se integró al pipeline real y se le cerró el candidate gap de Q08.
+> Cierra el último pendiente abierto de la sesión 2026-08-13: el destino de los artefactos del autor anterior (Pasos 12/13).
+
+---
+
+## 🔖 Revisión y destino de los artefactos Pasos 12/13 (2026-08-14 · Freebuff)
+
+### Pedido del usuario
+Revisar los artefactos de los Pasos 12/13 (evidence-passage E1/E2/E3 · candidate-expansion F1/F2) para integrarlos o decidir su destino.
+
+### Lo hecho
+1. **Dictamen de revisión:** la integración funcional ya estaba completa y pusheada (2026-08-13): F2 como generador de pasajes (`expand_passages.py` + `buffy-expand.sh`, Q08 cerrado en vivo) y E2 como insight de S4 (bge-m3 = content-scorer). Los artefactos pendientes son el **registro** de experimentos cerrados sin adopción, no funcionalidad nueva.
+2. **Integridad verificada:** baselines E1/E2/E3/F1/F2 (×2) parsean OK y sus determinism hashes coinciden con el EVAL-REGISTRY commiteado (E2 `4ab293dacef1c914` · F2 `7fc28c377482e2c5`); `run-evidence-PC.sh` sintaxis válida; diffs de diseños = solo Anexos A.
+3. **Decisión del usuario:** commitear el registro completo (preservación de evidencia; los veredictos "CERRADO sin adopción" ya están en el registro).
+4. **Commit `d34b7f6`** — 13 archivos (2 diseños + 10 baselines + `run-evidence-PC.sh`), path-limited, **sin push**. Working tree limpio.
+
+### Pendientes
+- Push de `d34b7f6` (decisión del usuario).
+- Q03 gap semántico (rama X del Paso 10) · hallazgo S3.
 
 ---
 
