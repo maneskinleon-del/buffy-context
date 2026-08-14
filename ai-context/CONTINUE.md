@@ -5,6 +5,24 @@
 
 ---
 
+## Resumen de la sesión (2026-08-14 — Freebuff, tarea "cerrar día+1" + phi/qwen en opencode)
+
+**Tema:** crear la tarea "cerrar día+1" (cierre de día + documentación + apagado del PC) y probar modelos locales (phi3.5/qwen2.5) en opencode.
+
+1. **`buffy-close-day.sh --poweroff` (NUEVO)** — "cerrar día+1": el cierre completo (memoria + SNAPSHOT + doctor + commit/push) y, SOLO si terminó sin error, apaga el PC (`poweroff`, delay 5s, override por env `BUFFY_POWEROFF_CMD`/`BUFFY_POWEROFF_DELAY` para pruebas). Tests: +3 (stub que toca marcador — nunca apaga de verdad, comando inexistente → exit 1, --help documenta el flag). **Suite: 270 OK / 4 FAIL full · 254 OK / 4 FAIL --quick** (solo preexistentes). README actualizado (270/254).
+2. **phi3.5 en opencode: BLOQUEADO** — el modelo no soporta tool calling (capabilities: solo `completion`); opencode lo carga pero el agente falla (`Error: ... does not support tools`). Coherente con el EVAL (Paso 14A: phi3.5 débil).
+3. **qwen2.5:7b en opencode: FUNCIONA** — agregado al provider `ollama` en `~/.config/opencode/opencode.json` (phi3.5 + qwen2.5:7b); responde OK (exit 0). Nota: contexto 32K (opencode recomienda 64k+) → ok para repos chicos; para algo robusto conviene `ollama pull llama3.1:8b` o `qwen3:8b` (tools + 128K).
+
+### ⏳ Pendientes para otra sesión
+- **Q03 y Q05 (gap semántico, rama X del Paso 10):** plan detallado abajo — expansión de query con diccionario H1.
+- Push: origin/main ya está en `904e0fa` (el push de la sesión subió los 5: 12/13 + V6 + handoffs). El trabajo de "cerrar día+1" queda por commitear/pushear.
+- Runtime: defaults congelados. Pipeline opt-in: `router --context` (M3-V6 + F2). Selector: M3 V6 (19/20).
+- Suite PC: 270 OK / 4 FAIL (preexistentes, fuera de alcance).
+- En el PC: tras `git pull`, `buffy-memory.sh sync pull` UNA vez.
+- P1: retorno del aprendizaje · P2: concurrencia 3+ escritores · Opcional: `Knowledge/Tools/Buffy-Memory.md`.
+
+---
+
 ## Resumen de la sesión (2026-08-14 — Freebuff, iteración S3: veredicto 15B V6 adoptado)
 
 **Tema:** iterar sobre el hallazgo 15A (S3 sobre-corrige estructuras: Q02 INFO-full.md:189, Q07 README.md:73/scrcpy.md:37 desplazan golds en prosa). Harness fiel al runner 15A (sanity: M3 = 16/20 bit a bit) sobre el fixture congelado.
@@ -139,7 +157,10 @@
 
 ---
 
-> 🗝️ **Palabra de cierre acordada ("cerrar día"):** el agente escribe el contexto (SESION.md/CONTINUE.md/CHANGELOG.md, máx 5 entradas en SESION.md) y luego ejecuta **`buffy-close-day.sh`** (mensaje opcional con `--message`) — hace sync push de la memoria curada, regenera SNAPSHOT, corre doctor --quick y commit + push. Si el sync conflictúa, el cierre aborta y hay que resolver.
+> 🗝️ **Palabras de cierre acordadas:**
+> - **"cerrar día"** → `buffy-close-day.sh`: el agente escribe el contexto (SESION.md/CONTINUE.md/CHANGELOG.md, máx 5 entradas en SESION.md) y el script hace sync push de la memoria curada, regenera SNAPSHOT, corre doctor --quick y commit + push. Si el sync conflictúa, el cierre aborta y hay que resolver.
+> - **"cerrar día+1"** (2026-08-14) → `buffy-close-day.sh --poweroff`: TODO lo anterior + **apaga el PC** al final, SOLO si el cierre terminó sin error (memoria sync + doctor OK + commit). Env override para pruebas: `BUFFY_POWEROFF_CMD` (default `poweroff`) y `BUFFY_POWEROFF_DELAY` (default 5s).
+> - Precedencia: si ambos dispositivos cierran el mismo día, el segundo sync conflictúa → aborta y se resuelve antes de apagar.
 
 ---
 

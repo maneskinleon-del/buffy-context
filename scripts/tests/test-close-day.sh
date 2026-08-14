@@ -72,5 +72,43 @@ test_close_day_ayuda() {
   else
     bad "--help documenta el protocolo"
   fi
+  if bash "$SCRIPTS_DIR/buffy-close-day.sh" --help | grep -q -- "--poweroff"; then
+    ok "--help documenta --poweroff (cerrar día+1)"
+  else
+    bad "--help documenta --poweroff"
+  fi
   expect_exit 2 "opción desconocida → exit 2" run_close --bogus
+}
+
+test_close_day_poweroff() {
+  suite "close-day: --poweroff apaga solo tras cierre exitoso (stub, nunca real)"
+  close_setup
+  trap 'rm -rf "$CLOSE_T"' RETURN
+  # stub de apagado: toca un marcador en vez de apagar el PC
+  cat > "$CLOSE_T/fake-poweroff" <<'EOF'
+#!/usr/bin/env bash
+touch "$FAKE_POWEROFF_MARKER"
+EOF
+  chmod +x "$CLOSE_T/fake-poweroff"
+  echo "cambio de contexto" >> "$CLOSE_T/repo/ai-context/SESION.md"
+
+  # --poweroff con stub → cierre exit 0 + marcador presente
+  if FAKE_POWEROFF_MARKER="$CLOSE_T/powered-off" \
+     BUFFY_POWEROFF_CMD="$CLOSE_T/fake-poweroff" \
+     BUFFY_POWEROFF_DELAY=0 \
+     run_close --no-push --skip-doctor --poweroff \
+     && [ -f "$CLOSE_T/powered-off" ]; then
+    ok "--poweroff apagó tras cierre exitoso (stub tocó marcador)"
+  else
+    bad "--poweroff tras cierre exitoso (marcador=$([ -f "$CLOSE_T/powered-off" ] && echo sí || echo no))"
+  fi
+
+  # --poweroff con comando inexistente → exit 1 (día cerrado pero sin apagado)
+  if BUFFY_POWEROFF_CMD="/no/existe/poweroff" \
+     BUFFY_POWEROFF_DELAY=0 \
+     run_close --no-push --skip-doctor --poweroff >/dev/null 2>&1; then
+    bad "--poweroff con comando inexistente debería ser exit 1"
+  else
+    ok "--poweroff con comando inexistente → exit 1 (no apaga)"
+  fi
 }
