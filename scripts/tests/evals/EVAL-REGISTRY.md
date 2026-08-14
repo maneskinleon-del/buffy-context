@@ -2041,3 +2041,66 @@ per-query en los 4 pads** (determinismo confirmado; difieren solo duración).
 5. **Conclusión de adopción: NO hay cambio que adoptar en PAS_PAD.** El default
    ±4 del pipeline queda como el mejor medido. Cerrar el gap Q01/Q05 requiere
    trabajar el puente semántico (DICT_H1 / query), no la granularidad.
+
+---
+
+## ✅ VEREDICTO PASO 17B (2026-08-14) — puente semántico DICT_H1_B: PASS experimental / NO ADOPTED
+
+**Aprobado por el usuario (2026-08-14):** 17B = PASS experimental, **NO ADOPTED
+en producción**. El tratamiento B (DICT_H1_B, hash `f534283f`) mejora el sistema
+(12→13/20, Q05 rescatado, pRel +0.116) **sin regresiones**, pero el gate formal
+§17.4 NO se cruza completo: leak 0.442 > 0.308. El leak es **invariante entre
+A y B** (0.442 en ambos) → no es atribuible al tratamiento; se ataca en un
+experimento independiente (17C). **No se modifica el umbral de leak.**
+**No se hace commit de adopción de B.** B queda registrado como candidato
+positivo/no adoptado.
+
+**Runner:** `run-bridge-17B.sh` (pool L∪X∪S∪P-F2, M3 V6, PAS_PAD=4 fijo, piso
+0.545, sin oráculo ni inyección de gold). Corpus congelado `bb33afa` (7644
+líneas), `corpus_hash f36eaf1e…`, `eval_hash 98a0e308…`, `commit_sha
+1eea1d86…`. G2: 2 corridas por variante — **JSONs idénticos per-query**
+(determinismo confirmado; `determinism_hash` A=`eba82567`, B=`cfd02b25`).
+
+### Resultados (pad 4, A vs B)
+
+| Métrica | A (control, `8294f200`) | B (tratamiento, `f534283f`) | Gate §17.4 |
+|---|---|---|---|
+| attr total | **12/20** | **13/20** | ✅ ≥12 |
+| Q01 | 0 | 0 | ❌ (objetivo: ≥1) |
+| Q05 | 0 | **1** | ✅ rescatado |
+| Q02/Q06/Q08/Q09 | 3/1/1/2 | 3/1/1/2 | ✅ sin regresión |
+| Q03/Q04/Q07/Q10 | 0/2/2/1 | 0/2/2/1 | ✅ sin regresión |
+| pRel | 0.415 | **0.531** | ✅ ≥0.121 |
+| leak | 0.442 | 0.442 | ❌ ≤0.308 |
+| containment | 1.0 | 1.0 | ✅ ≥0.80 |
+| determinismo G2 | — | B1=B2 idénticos | ✅ |
+
+### Análisis por gold
+
+- **Q05 rescatado (0→1):** `adb devices -l` ahora entra al contexto — el pasaje
+  ADB.md:1-9 cruza el piso con `phone/adb/device` en el qtext. pRel sube
+  0.415→0.531.
+- **Q01 sigue en 0:** el pasaje con los needles (`adb tcpip 5555` / `adb
+  connect`, líneas 12/14) no cruza el piso; el que cruza (ADB.md:1-9) contiene
+  `adb devices -l`, no los needles Q01. El tramo `telefono→phone/device/adb`
+  no alcanza para `tcpip`/`connect` — necesita un puente **conceptual/
+  relacional** (ADB discovery → transport → authorization), no solo léxico.
+- **Cero regresiones** en los 8 golds restantes; leak y containment idénticos.
+
+### Veredicto
+
+1. **B funciona como tratamiento**: rescata Q05, sube pRel, cero regresiones,
+   determinista. Evidencia limpia de señal positiva del puente léxico.
+2. **B NO está aprobado para producción**: el contrato de evaluación exige
+   leak ≤ 0.308 y no se modifica retrospectivamente el criterio tras ver el
+   resultado (regla metodológica conservada).
+3. **El leak 0.442 es estructural del pool**, no del tratamiento: idéntico en
+   A y B, y era el mínimo de las 4 variantes de 16B. Se ataca en una línea
+   experimental separada.
+4. **Q01 no se rescata con más sinónimos**: el siguiente salto es una relación
+   semántica operacional entre conceptos ADB (discovery/transport/
+   authorization), no ampliar DICT_H1 a ciegas.
+5. **Conclusión de adopción: NO adoptar B todavía.** Congelar 17B como
+   evidencia válida; B = candidato positivo/no adoptado. Próximo frente:
+   **17C — reducción del leak estructural del pool** (0.442 → ≤0.308), con su
+   propio diseño y gate. Después, volver a Q01 con el conocimiento obtenido.
