@@ -1,0 +1,411 @@
+{
+  "benchmark": "14A selector model",
+  "fixture": "selector-pool-frozen-2026-08-13.json",
+  "fixture_eval_hash": "98a0e3082d920e71a30b1f1a759332808a251f9d02b899a7db3e2604369b34ac",
+  "phi_model": "phi3.5",
+  "theta": 0.55,
+  "runtime_changed": false,
+  "elapsed_seconds": 3738,
+  "ollama_mem": [
+    {
+      "model": "phi3.5:latest",
+      "size": 3859588054,
+      "vram": 0
+    }
+  ],
+  "aggregate": {
+    "gold_passages": 97,
+    "distractor_passages": 129,
+    "bge_gold_sel": 74,
+    "bge_dist_sel": 90,
+    "bge_ms_per_passage": 4,
+    "phi_gold_sel": 13,
+    "phi_dist_sel": 31,
+    "phi_det_consistent": 220,
+    "phi_det_n": 226,
+    "phi_ms_per_passage": 14295,
+    "pairs_total": 11,
+    "bge_pick_gold": 5,
+    "phi_pick_gold": 5,
+    "phi_det_pairs": 9,
+    "phi_det_pairs_n": 11
+  },
+  "per_query": [
+    {
+      "qid": "Q01",
+      "query": "el teléfono no aparece en scrcpy",
+      "gold_files": [
+        "Knowledge/Android/ADB.md",
+        "Knowledge/Android/scrcpy.md"
+      ],
+      "gold_passages": 7,
+      "distractor_passages": 0,
+      "pairs": [],
+      "discrimination": {
+        "gold": 7,
+        "dist": 0,
+        "bge_gold_selected": 1,
+        "bge_dist_selected": 0,
+        "bge_ms_per_passage": 0,
+        "phi_gold_selected": 0,
+        "phi_dist_selected": 0,
+        "phi_det_consistent": 7,
+        "phi_det_n": 7,
+        "phi_ms_per_passage": 14127
+      }
+    },
+    {
+      "qid": "Q02",
+      "query": "cómo concedo permisos a una app con shizuku sin root",
+      "gold_files": [
+        "Knowledge/Android/ADB.md",
+        "Knowledge/Android/Shizuku.md"
+      ],
+      "gold_passages": 29,
+      "distractor_passages": 48,
+      "pairs": [
+        {
+          "needle": "rish -c",
+          "gold": "Knowledge/Android/Shizuku.md:53",
+          "dist": "ai-context/INFO-full.md:189",
+          "bge_cos_gold": 0.7816,
+          "bge_cos_dist": 0.7141,
+          "bge_pick": "gold",
+          "bge_ms": 2,
+          "phi_pick": "A",
+          "phi_pick2": "A",
+          "phi_det": true,
+          "phi_ms": 14495
+        },
+        {
+          "needle": "pm grant",
+          "gold": "Knowledge/Android/Shizuku.md:56",
+          "dist": "ai-context/SHIZUKU-RISH-BUG.md:216",
+          "bge_cos_gold": 0.7225,
+          "bge_cos_dist": 0.6602,
+          "bge_pick": "gold",
+          "bge_ms": 1,
+          "phi_pick": "B",
+          "phi_pick2": "B",
+          "phi_det": true,
+          "phi_ms": 14410
+        },
+        {
+          "needle": "moe.shizuku.privileged.api",
+          "gold": "Knowledge/Android/Shizuku.md:85",
+          "dist": "ai-context/INFO-full.md:189",
+          "bge_cos_gold": 0.6495,
+          "bge_cos_dist": 0.7141,
+          "bge_pick": "dist",
+          "bge_ms": 0,
+          "phi_pick": "B",
+          "phi_pick2": "B",
+          "phi_det": true,
+          "phi_ms": 13503
+        }
+      ],
+      "discrimination": {
+        "gold": 29,
+        "dist": 48,
+        "bge_gold_selected": 29,
+        "bge_dist_selected": 40,
+        "bge_ms_per_passage": 41,
+        "phi_gold_selected": 2,
+        "phi_dist_selected": 8,
+        "phi_det_consistent": 76,
+        "phi_det_n": 77,
+        "phi_ms_per_passage": 19476
+      }
+    },
+    {
+      "qid": "Q03",
+      "query": "quiero pushear el commit y crear el pull request",
+      "gold_files": [
+        "Knowledge/Git/Commands.md"
+      ],
+      "gold_passages": 9,
+      "distractor_passages": 0,
+      "pairs": [],
+      "discrimination": {
+        "gold": 9,
+        "dist": 0,
+        "bge_gold_selected": 9,
+        "bge_dist_selected": 0,
+        "bge_ms_per_passage": 0,
+        "phi_gold_selected": 0,
+        "phi_dist_selected": 0,
+        "phi_det_consistent": 9,
+        "phi_det_n": 9,
+        "phi_ms_per_passage": 8957
+      }
+    },
+    {
+      "qid": "Q04",
+      "query": "la pantalla se apaga sola después de unos minutos",
+      "gold_files": [
+        "ai-context/CHANGELOG.md"
+      ],
+      "gold_passages": 2,
+      "distractor_passages": 3,
+      "pairs": [
+        {
+          "needle": "xset -dpms",
+          "gold": "ai-context/CHANGELOG.md:215",
+          "dist": "ai-context/SESION-archive.md:1966",
+          "bge_cos_gold": 0.5773,
+          "bge_cos_dist": 0.5295,
+          "bge_pick": "gold",
+          "bge_ms": 10687,
+          "phi_pick": "A",
+          "phi_pick2": "B",
+          "phi_det": false,
+          "phi_ms": 34960
+        },
+        {
+          "needle": "xset s off",
+          "gold": "ai-context/CHANGELOG.md:215",
+          "dist": "ai-context/SESION-archive.md:1966",
+          "bge_cos_gold": 0.5773,
+          "bge_cos_dist": 0.5295,
+          "bge_pick": "gold",
+          "bge_ms": 0,
+          "phi_pick": "A",
+          "phi_pick2": "A",
+          "phi_det": true,
+          "phi_ms": 444
+        }
+      ],
+      "discrimination": {
+        "gold": 2,
+        "dist": 3,
+        "bge_gold_selected": 2,
+        "bge_dist_selected": 1,
+        "bge_ms_per_passage": 0,
+        "phi_gold_selected": 2,
+        "phi_dist_selected": 1,
+        "phi_det_consistent": 5,
+        "phi_det_n": 5,
+        "phi_ms_per_passage": 23295
+      }
+    },
+    {
+      "qid": "Q05",
+      "query": "el componente React de la app necesita leer el serial del teléfono por adb",
+      "gold_files": [
+        "Knowledge/Android/ADB.md",
+        "Knowledge/React/React.md"
+      ],
+      "gold_passages": 10,
+      "distractor_passages": 0,
+      "pairs": [],
+      "discrimination": {
+        "gold": 10,
+        "dist": 0,
+        "bge_gold_selected": 3,
+        "bge_dist_selected": 0,
+        "bge_ms_per_passage": 0,
+        "phi_gold_selected": 3,
+        "phi_dist_selected": 0,
+        "phi_det_consistent": 9,
+        "phi_det_n": 10,
+        "phi_ms_per_passage": 10137
+      }
+    },
+    {
+      "qid": "Q06",
+      "query": "el script bash de scrcpy no abre free fire, revisá el script",
+      "gold_files": [
+        "ai-context/CHANGELOG.md"
+      ],
+      "gold_passages": 1,
+      "distractor_passages": 5,
+      "pairs": [
+        {
+          "needle": "FF_SEEN",
+          "gold": "ai-context/CHANGELOG.md:198",
+          "dist": "ai-context/SESION-archive.md:1941",
+          "bge_cos_gold": 0.6706,
+          "bge_cos_dist": 0.6777,
+          "bge_pick": "dist",
+          "bge_ms": 5551,
+          "phi_pick": "B",
+          "phi_pick2": "A",
+          "phi_det": false,
+          "phi_ms": 24101
+        }
+      ],
+      "discrimination": {
+        "gold": 1,
+        "dist": 5,
+        "bge_gold_selected": 1,
+        "bge_dist_selected": 4,
+        "bge_ms_per_passage": 0,
+        "phi_gold_selected": 1,
+        "phi_dist_selected": 1,
+        "phi_det_consistent": 5,
+        "phi_det_n": 6,
+        "phi_ms_per_passage": 27370
+      }
+    },
+    {
+      "qid": "Q07",
+      "query": "el celular anda lento, qué puedo hacer",
+      "gold_files": [
+        "Knowledge/Android/ADB.md",
+        "Knowledge/Android/GameOptimization.md"
+      ],
+      "gold_passages": 13,
+      "distractor_passages": 3,
+      "pairs": [
+        {
+          "needle": "dumpsys thermalservice",
+          "gold": "Knowledge/Android/GameOptimization.md:58",
+          "dist": "Knowledge/Android/scrcpy.md:57",
+          "bge_cos_gold": 0.6294,
+          "bge_cos_dist": 0.6941,
+          "bge_pick": "dist",
+          "bge_ms": 1,
+          "phi_pick": "A",
+          "phi_pick2": "A",
+          "phi_det": true,
+          "phi_ms": 10930
+        }
+      ],
+      "discrimination": {
+        "gold": 13,
+        "dist": 3,
+        "bge_gold_selected": 13,
+        "bge_dist_selected": 3,
+        "bge_ms_per_passage": 0,
+        "phi_gold_selected": 0,
+        "phi_dist_selected": 0,
+        "phi_det_consistent": 16,
+        "phi_det_n": 16,
+        "phi_ms_per_passage": 9084
+      }
+    },
+    {
+      "qid": "Q08",
+      "query": "la terminal se ve opaca y quiero que se vea transparente",
+      "gold_files": [
+        "Knowledge/Linux/System.md"
+      ],
+      "gold_passages": 11,
+      "distractor_passages": 65,
+      "pairs": [
+        {
+          "needle": "P_TERM_OPACITY",
+          "gold": "Knowledge/Linux/System.md:74",
+          "dist": "ai-context/AGENTS.md:32",
+          "bge_cos_gold": 0.5478,
+          "bge_cos_dist": 0.6631,
+          "bge_pick": "dist",
+          "bge_ms": 1,
+          "phi_pick": "B",
+          "phi_pick2": "B",
+          "phi_det": true,
+          "phi_ms": 13003
+        },
+        {
+          "needle": "picom",
+          "gold": "Knowledge/Linux/System.md:55",
+          "dist": "ai-context/AGENTS.md:32",
+          "bge_cos_gold": 0.5491,
+          "bge_cos_dist": 0.6631,
+          "bge_pick": "dist",
+          "bge_ms": 0,
+          "phi_pick": "B",
+          "phi_pick2": "B",
+          "phi_det": true,
+          "phi_ms": 8430
+        }
+      ],
+      "discrimination": {
+        "gold": 11,
+        "dist": 65,
+        "bge_gold_selected": 1,
+        "bge_dist_selected": 37,
+        "bge_ms_per_passage": 0,
+        "phi_gold_selected": 0,
+        "phi_dist_selected": 20,
+        "phi_det_consistent": 73,
+        "phi_det_n": 76,
+        "phi_ms_per_passage": 12898
+      }
+    },
+    {
+      "qid": "Q09",
+      "query": "quiero optimizar el rendimiento",
+      "gold_files": [
+        "Knowledge/Android/GameOptimization.md"
+      ],
+      "gold_passages": 7,
+      "distractor_passages": 2,
+      "pairs": [
+        {
+          "needle": "force_gpu_rendering",
+          "gold": "Knowledge/Android/GameOptimization.md:29",
+          "dist": "Knowledge/Android/ADB.md:50",
+          "bge_cos_gold": 0.6442,
+          "bge_cos_dist": 0.6141,
+          "bge_pick": "gold",
+          "bge_ms": 0,
+          "phi_pick": "A",
+          "phi_pick2": "A",
+          "phi_det": true,
+          "phi_ms": 7843
+        }
+      ],
+      "discrimination": {
+        "gold": 7,
+        "dist": 2,
+        "bge_gold_selected": 7,
+        "bge_dist_selected": 2,
+        "bge_ms_per_passage": 0,
+        "phi_gold_selected": 5,
+        "phi_dist_selected": 1,
+        "phi_det_consistent": 9,
+        "phi_det_n": 9,
+        "phi_ms_per_passage": 9144
+      }
+    },
+    {
+      "qid": "Q10",
+      "query": "la ZTE se calienta cuando juego free fire",
+      "gold_files": [
+        "Knowledge/Android/GameOptimization.md",
+        "Knowledge/Android/NubiaLab.md"
+      ],
+      "gold_passages": 8,
+      "distractor_passages": 3,
+      "pairs": [
+        {
+          "needle": "dumpsys thermalservice",
+          "gold": "Knowledge/Android/GameOptimization.md:54",
+          "dist": "Knowledge/Android/scrcpy.md:59",
+          "bge_cos_gold": 0.5997,
+          "bge_cos_dist": 0.607,
+          "bge_pick": "dist",
+          "bge_ms": 0,
+          "phi_pick": "B",
+          "phi_pick2": "B",
+          "phi_det": true,
+          "phi_ms": 7206
+        }
+      ],
+      "discrimination": {
+        "gold": 8,
+        "dist": 3,
+        "bge_gold_selected": 8,
+        "bge_dist_selected": 3,
+        "bge_ms_per_passage": 0,
+        "phi_gold_selected": 0,
+        "phi_dist_selected": 0,
+        "phi_det_consistent": 11,
+        "phi_det_n": 11,
+        "phi_ms_per_passage": 8469
+      }
+    }
+  ],
+  "determinism_hash": "57b673550a5a4d72"
+}
