@@ -1,7 +1,7 @@
 # 🔄 CONTINUE — Handoff entre sesiones
 
 > ⚡ **PRÓXIMA SESIÓN: LEE ESTO PRIMERO**
-> Generado: 2026-08-14 (Freebuff — **Paso 12/13 CERRADO: registro del autor anterior preservado y commiteado** (`d34b7f6`, 13 archivos: 2 diseños con Anexos A + baselines E1/E2/E3/F1/F2 ×2 + `run-evidence-PC.sh`). **Sin push** aún. La integración funcional ya estaba completa y pusheada (2026-08-13: F2 como generador → Q08 cerrado; E2 como insight de S4). Pendientes: push de `d34b7f6`; Q03 gap semántico (rama X del Paso 10); hallazgo S3**)
+> Generado: 2026-08-14 (Freebuff — **Paso 12/13 CERRADO: registro del autor anterior preservado y commiteado** (`d34b7f6` + `cddd5a8`, sin push). **PRÓXIMA SESIÓN: retomar Q03 con la rama X del Paso 10 (expansión de query)** — plan detallado abajo; pendientes menores: push de `d34b7f6`/`cddd5a8`; hallazgo S3**)
 
 ---
 
@@ -16,7 +16,12 @@
 
 ### ⏳ Pendientes para otra sesión
 - **Push de `d34b7f6`** cuando se decida (todo lo demás ya está en origin/main).
-- **Q03 (gap semántico):** Commands.md en pool; el puente `pushear`→`git push origin` requiere rama X del Paso 10 (query expansion) — decidir si se retoma.
+- **Q03 (gap semántico) — TAREA DE LA PRÓXIMA SESIÓN, plan listo:**
+  - **Diagnóstico live (2026-08-13):** Commands.md entra al pool vía kno+F2, pero el gold `gh pr create` (Commands.md:64) no sube al top-K de M3 — el puente `pushear`→`git push origin` / `crear`→`gh pr create` falla en el SCORING (S1 bge-m3 por línea), no en la generación (diferente de Q08, que era generación y F2 lo resolvió).
+  - **Evidencia EVAL (Paso 10, `query-expansion-DESIGN.md`):** H1 (diccionario genérico ES→EN, `DICT_H1` en `run-expansion-PC.sh:138`) recuperó 5/6 agujas del gap incl. `gh pr create` vía `push` (de `pushear`) + `create` (de `crear`); H2 (oráculo por query, `:203`) 6/6 — **NUNCA se adopta** (regla de la serie). Entonces la selección (RRF) falló → no adoptado; HOY la selección es M3 (attr 16/20) → el cuello de botella de 2026-08-12 ya no existe.
+  - **Mecanismos a evaluar (2):** (1) **X-candidatos** — re-consultas FTS5 con términos del diccionario, hits extra al pool antes de F2/M3 (rama X original del Paso 10); (2) **X-query** — la query expandida (original + términos X) alimenta el S1 del selector, mejora el coseno de pasajes YA en pool (probable fix directo para Q03 live).
+  - **Implementación sugerida:** portar `expansion_terms` + `DICT_H1` a `scripts/lib/expand_query.py` (hash del diccionario incluido, como el runner) → flag opt-in `--expand-query` en `search --select` (default OFF = no-regresión byte a byte) → smoke en vivo Q03 (¿Commands.md:64 entra al top-K?) → tests de fidelidad vs runner H1 + no-regresión + degradación.
+  - **Reglas de la serie:** diccionario realista H1-style (nunca H2/oráculo); validar contra fixture congelado antes del pipeline completo (regla de compresión); máx 8 tokens significativos + gate ≥1 token por término (igual que el runner).
 - **Hallazgo S3:** sobre-corrección de estructuras (Q02/Q07) — candidato para iteración futura del selector.
 - Runtime: defaults congelados. Pipeline opt-in: `router --context` (M3 + F2), `search --select`. Selector: M3 rescue 0.545.
 - Suite PC: 266 OK / 4 FAIL (preexistentes, fuera de alcance).
