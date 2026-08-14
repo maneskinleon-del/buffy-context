@@ -14,6 +14,21 @@ system-id: mangonz-desktop
 # CHANGELOG.md — Historial de cambios del sistema
 
 
+### 2026-08-13 — EVAL PC Fase 3: Pasos 14A/15A — selector quality-aware ADOPTADO (opencode, PC)
+
+**Pedido del usuario:** separar selección de modelo: (14A) ¿un juez LLM discrimina gold vs distractor mejor que bge-m3? (15A) ¿señales multi-señal distinguen evidencia útil de ruido?
+
+**Lo hecho (commit `77bf26a`, EVAL `98a0e308…`, pool F2 congelado):**
+- **Paso 14A** (`run-selector-model-PC.sh`, phi3.5 vs bge-m3, 11 pares): phi **5/11** pair test (= bge), determinismo pares **9/11**, 14.3 s/pasaje; phi 13/97 gold vs bge 74/97 → **phi no supera a bge en ningún query → Rama B, sin 14B**. Fix OOM verificado (unload + `keep_alive=0` entre queries).
+- **Paso 15** (`run-selector-quality-PC.sh`, S1 bge-m3 θ=0.55 · S2 especificidad · S3 estructura · S4 canonicalidad · S5 mtime · S7 concisión · MMR; pesos a priori; ablación M1→M4; gates hard/soft/rescue): **M3 (S1+S2+S3+S4) = 9/11 gold_over_distractor** (target ✓) · leak 0.325 · pRel 0.482 · attr 16/20. Gate soft colapsa (attr 1/20) → piso S1 esencial.
+- **Ventana de rescate 0.545 (decisión 2b del usuario):** θ=0.55 cortaba el gold de Q08 (cos 0.5478) por 0.002 → `--rescue-low 0.545` = punto quirúrgico: **Q08-P_TERM_OPACITY atribuido (2/2)**, leak **0.242** (pasa gate ≤0.308), pRel **0.577**.
+- **ADOPTADO: M3 rescue 0.545** — gold_over_distractor **5/11 → 9/11** · leak **0.425 → 0.242** · pRel **0.472 → 0.577** · attr 16/20 (no-regresión vs F2) · determinismo G2 ✓ (`5ab74054f1d2dcde`). **Primera adopción de la serie Fase 3.**
+- **Hallazgos** (documentados, no corregidos — calibración post-hoc prohibida): S3 sobre-corrige estructuras (Q02 INFO-full.md:189 → Shizuku.md; Q07 scrcpy.md:37/README.md:73 → GameOptimization.md:54); lista de ruido S4 incompleta; piso S1 esencial.
+- Registrado en `scripts/tests/evals/EVAL-REGISTRY.md` (§14A, §15A) + specs a EJECUTADO. Runtime `buffy-search.sh`/`buffy-router.sh` sigue congelado (la adopción es del componente de selección).
+
+**Pendiente:** artefactos Pasos 12/13 (autor anterior, untracked, intactos — NO commitear sin autorización); integrar M3 con el pipeline real o resolver hallazgo S3. En el PC: `git pull` + `buffy-memory.sh sync pull` una vez.
+
+
 ### 2026-08-12 — EVAL PC Fase 3: Pasos 7→10B ejecutados y cerrados (opencode, PC)
 
 **Pedido del usuario:** aprobar specs e implementar/medir los experimentos de Fase 3 uno a uno, con gates pre-fijados, determinismo G2, runtime congelado y detenerse tras cada medición.
