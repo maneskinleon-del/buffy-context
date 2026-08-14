@@ -1,7 +1,26 @@
 # 🔄 CONTINUE — Handoff entre sesiones
 
 > ⚡ **PRÓXIMA SESIÓN: LEE ESTO PRIMERO**
-> Generado: 2026-08-14 (Freebuff — **Paso 12/13 CERRADO: registro del autor anterior preservado y commiteado** (`d34b7f6` + `cddd5a8`, sin push). **PRÓXIMA SESIÓN: retomar Q03 con la rama X del Paso 10 (expansión de query)** — plan detallado abajo; pendientes menores: push de `d34b7f6`/`cddd5a8`; hallazgo S3**)
+> Generado: 2026-08-14 (Freebuff — **Selector actualizado: veredicto 15B, V6 ADOPTADO** (`5fc0822`, sin push): S3 condicionado a query estructural + S4 por clase de memoria de sesión → attr 16→19/20, pRel 0.677, leak 0.275 (pasa gate), Q02 3/3 · Q07 2/2 · Q08/Q06 intactos. Hallazgo S3 RESUELTO. **PRÓXIMA SESIÓN: retomar Q03 con la rama X del Paso 10 (expansión de query)** — plan abajo; Q05 `useState` (s1=0.4646) se suma como miss del mismo gap semántico. Pendientes menores: push de d34b7f6/cddd5a8/5fc0822**)
+
+---
+
+## Resumen de la sesión (2026-08-14 — Freebuff, iteración S3: veredicto 15B V6 adoptado)
+
+**Tema:** iterar sobre el hallazgo 15A (S3 sobre-corrige estructuras: Q02 INFO-full.md:189, Q07 README.md:73/scrcpy.md:37 desplazan golds en prosa). Harness fiel al runner 15A (sanity: M3 = 16/20 bit a bit) sobre el fixture congelado.
+
+1. **Variantes medidas (hipótesis declarada antes de medir):** V1 (S3 solo si la query es estructural), V2 (densidad), V3 (S4 clase total ai-context), V4 (solo tablas), V6 (V1 + S4 por clase de memoria de sesión). **V6 = attr 19/20 · pRel 0.677 · leak 0.275 (pasa ≤0.308) · reg 0.360** — Q02 3/3, Q07 2/2, Q08/Q06 intactos.
+2. **Mecanismo:** S3 binario confunde estructura *definicional* (gold Q08 P_TERM_OPACITY) con *incidental* (índices/perfiles). V1 la separa por tipo de query; V6 además demuele los distractores `ai-context/` (S4 por clase, CHANGELOG.md queda canónico → Q06 preservado). V2/V3/V4 descartados con evidencia.
+3. **Q05 `useState` (s1=0.4646 < piso 0.545):** miss en TODAS las variantes — ortogonal a S3, es el gap de símbolos semánticos → rama X del Paso 10.
+4. **Commit `5fc0822`** (4 archivos, path-limited, sin push): módulo V6 (default), test veredicto 15B + mecánica S3/S4 sin Ollama, README (267/251), EVAL-REGISTRY §15B.
+
+### ⏳ Pendientes para otra sesión
+- **Push** de `d34b7f6` (12/13) + `cddd5a8` + `d397595` (plan X) + `5fc0822` (V6) — 4 commits locales.
+- **Q03 y Q05 (gap semántico, rama X del Paso 10):** plan detallado abajo; Q05 `useState` (s1=0.4646, gated por el piso) se suma como objetivo — la expansión de query aporta el término exacto para ambos.
+- Runtime: defaults congelados. Pipeline opt-in: `router --context` (M3-V6 + F2), `search --select`. Selector: M3 V6 (19/20).
+- Suite PC: 267 OK / 4 FAIL (preexistentes, fuera de alcance).
+- En el PC: tras `git pull`, `buffy-memory.sh sync pull` UNA vez.
+- P1: retorno del aprendizaje · P2: concurrencia 3+ escritores · Opcional: `Knowledge/Tools/Buffy-Memory.md`.
 
 ---
 
