@@ -24,6 +24,10 @@
 #     --repeat    corridas para determinismo G2 (default: 1; 2 = G2)
 #     --out       archivo JSON de resultados
 #     --repo      repo con el corpus (default: $HOME/buffy-context)
+#     --fixture   dir de un fixture congelado (Fase D3): el corpus sale del fixture,
+#                 el pipeline (scripts/lib, router) del árbol vivo. Valida
+#                 corpus_hash por contenido vs manifest → mutación = STOP.
+#     --allow-fixture-mutation   continuar aunque el fixture esté mutado (junto a --reindex)
 #     --reindex   forzar rebuild del índice semántico
 #     --limit     presupuesto de pasajes por query (default: 10)
 set -euo pipefail
@@ -40,6 +44,8 @@ REPEAT="1"
 LIMIT="10"
 REINDEX="false"
 VARIANT="A"
+FIXTURE_DIR=""
+ALLOW_MUTATION="false"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -47,6 +53,8 @@ while [[ $# -gt 0 ]]; do
     --repeat) REPEAT="${2:?falta número}"; shift 2 ;;
     --out) OUT_FILE="${2:?falta archivo}"; shift 2 ;;
     --repo) REPO="${2:?falta dir}"; shift 2 ;;
+    --fixture) FIXTURE_DIR="${2:?falta dir del fixture}"; shift 2 ;;
+    --allow-fixture-mutation) ALLOW_MUTATION="true"; shift ;;
     --dict) DICT_PATH="${2:?falta json}"; shift 2 ;;
     --variant) VARIANT="${2:?falta variante}"; shift 2 ;;
     --reindex) REINDEX="true"; shift ;;
@@ -63,12 +71,24 @@ esac
 
 [[ -f "$EVAL" ]] || { echo "falta fixture: $EVAL" >&2; exit 2; }
 
+# ── modo fixture (Fase D3): el CORPUS es el fixture congelado, el PIPELINE
+#    (scripts/lib, router) sigue viniendo del árbol vivo ──
+PIPELINE_ROOT="$REPO"
+if [[ -n "$FIXTURE_DIR" ]]; then
+  [[ -f "$FIXTURE_DIR/manifest.json" ]] || { echo "fixture inválido: falta $FIXTURE_DIR/manifest.json" >&2; exit 2; }
+  [[ -d "$FIXTURE_DIR/corpus" ]] || { echo "fixture inválido: falta $FIXTURE_DIR/corpus" >&2; exit 2; }
+  PIPELINE_ROOT="$REPO"   # árbol vivo original (libs + router)
+  REPO="$FIXTURE_DIR/corpus"  # corpus congelado
+  echo "▸ fixture: $FIXTURE_DIR (corpus congelado, pipeline del árbol vivo)" >&2
+fi
+
 CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/buffy-eval-semantic"
 mkdir -p "$CACHE_DIR"
 
 REPO="$REPO" OLLAMA_URL="$OLLAMA_URL" EVAL="$EVAL" EVAL_HASH="$EVAL_HASH" \
 OUT_FILE="$OUT_FILE" PADS="$PADS" LIMIT="$LIMIT" CACHE_DIR="$CACHE_DIR" \
 REINDEX="$REINDEX" DICT_PATH="${DICT_PATH:-}" VARIANT="$VARIANT" \
+FIXTURE_DIR="$FIXTURE_DIR" PIPELINE_ROOT="$PIPELINE_ROOT" ALLOW_MUTATION="$ALLOW_MUTATION" \
 python3 - "$REPO" "$EVAL" "$EVAL_HASH" "$OUT_FILE" "$PADS" "$LIMIT" "$CACHE_DIR" "$REINDEX" "$DICT_PATH" "$VARIANT" <<'PY'
 import json, os, re, subprocess, sys, time, urllib.request, urllib.error, hashlib, math, unicodedata, array
 
@@ -82,8 +102,19 @@ LIMIT = limit_s
 MODEL = "bge-m3"
 OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://localhost:11434")
 
+# ── modo fixture (Fase D3) ──
+FIXTURE_DIR = os.environ.get("FIXTURE_DIR", "")
+FIXTURE_MODE = bool(FIXTURE_DIR)
+PIPELINE_ROOT = os.environ.get("PIPELINE_ROOT", repo)
+ALLOW_MUTATION = os.environ.get("ALLOW_MUTATION", "false") == "true"
+if FIXTURE_MODE:
+    manifest = json.load(open(os.path.join(FIXTURE_DIR, "manifest.json"), encoding="utf-8"))
+else:
+    manifest = None
+
 # ── libs del pipeline (M3 V6 real + H1 real) — NO reimplementar ──
-sys.path.insert(0, os.path.join(repo, "scripts", "lib"))
+#    PIPELINE_ROOT = árbol vivo (scripts/lib) — el fixture congelado es SOLO datos
+sys.path.insert(0, os.path.join(PIPELINE_ROOT, "scripts", "lib"))
 try:
     import expand_query          # H1 real (DICT_H1 del pipeline)
     import selector_m3           # M3 V6: select() + señales exactas
@@ -140,7 +171,7 @@ if dict_path:
 H1_TERMS_FN = expand_query.expansion_terms
 H1_DICT_HASH = expand_query.dict_hash()  # hash del dict USADO (drift-detector)
 
-router = os.path.join(repo, "scripts/buffy-router.sh")
+router = os.path.join(PIPELINE_ROOT, "scripts/buffy-router.sh")
 search = os.path.join(repo, "scripts/buffy-search.sh")
 
 # ── parámetros fijados ANTES de medir (idénticos a run-evidence-PC.sh) ──
@@ -178,6 +209,17 @@ def discover_corpus(repo):
     return sorted(set(files))
 
 def corpus_hash(repo, files):
+    # modo fixture (Fase D3): hash POR CONTENIDO (determinista, no mtime) —
+    # debe coincidir con manifest.corpus.corpus_hash del fixture congelado.
+    # modo --repo: mtime-based (histórico, sin cambios).
+    if FIXTURE_MODE:
+        h = hashlib.sha1()
+        for f in sorted(files):
+            with open(os.path.join(repo, f), 'rb') as fh:
+                h.update(b"%s:" % f.encode())
+                h.update(fh.read())
+                h.update(b"\x00")
+        return h.hexdigest()[:16]
     h = hashlib.sha1()
     for f in files:
         try:
@@ -482,15 +524,46 @@ def run_router(query):
 # ── runner ──
 fixture = json.load(open(eval_path, encoding='utf-8'))
 files = discover_corpus(repo)
+
+# ── validación de inmutabilidad del fixture (Fase D3): si el corpus congelado
+#    difiere del manifest → STOP, nunca reindexar en silencio ──
+if FIXTURE_MODE:
+    expected = manifest["corpus"]["corpus_hash"]
+    actual = corpus_hash(repo, files)
+    if actual != expected:
+        msg = "✗ FIXTURE MUTADO: esperado %s, real %s — no reindexar en silencio (STOP)" % (expected, actual)
+        if ALLOW_MUTATION:
+            sys.stderr.write(msg + " — pero --allow-fixture-mutation: continúo con el corpus mutado\n")
+        else:
+            sys.stderr.write(msg + "\n")
+            sys.exit(2)
+    else:
+        sys.stderr.write("✓ fixture íntegro: corpus_hash %s == manifest\n" % actual)
+
 entries = read_entries(repo, files)
 meta, embs, cache_hit = load_or_build_index(files, entries)
 dim = meta['dim']
 
+# commit_sha = identidad del CORPUS (modo fixture: commit de origen del corpus
+# congelado; modo --repo: commit del árbol vivo, que es corpus Y pipeline).
+# pipeline_commit = commit del PIPELINE que ejecuta esta corrida (runtime) —
+# en modo fixture es el árbol vivo (PIPELINE_ROOT), NO el fixture (que es solo
+# datos). Distinción conceptual: corpus/source vs pipeline/runtime.
+if FIXTURE_MODE:
+    commit_sha = manifest["source"]["commit_sha"]
+else:
+    try:
+        commit_sha = subprocess.run(["git", "-C", repo, "rev-parse", "HEAD"],
+                                    capture_output=True, text=True, timeout=10).stdout.strip()
+    except Exception:
+        commit_sha = "?"
 try:
-    commit_sha = subprocess.run(["git", "-C", repo, "rev-parse", "HEAD"],
-                                capture_output=True, text=True, timeout=10).stdout.strip()
+    pipeline_commit = subprocess.run(["git", "-C", PIPELINE_ROOT, "rev-parse", "HEAD"],
+                                     capture_output=True, text=True, timeout=10).stdout.strip()
+    if not pipeline_commit:
+        pipeline_commit = "?"
 except Exception:
-    commit_sha = "?"
+    pipeline_commit = "?"
 
 t0_all = time.time()
 results = {"benchmark": "17C reducción del leak estructural del pool (A/V1/V2/V3)",
@@ -502,6 +575,7 @@ results = {"benchmark": "17C reducción del leak estructural del pool (A/V1/V2/V
            "host": fixture.get("host", "?"),
            "model": MODEL,
            "commit_sha": commit_sha,
+           "pipeline_commit": pipeline_commit,
            "h1_dict_hash": H1_DICT_HASH,
            "query_source": "query natural + términos H1 reales (expand_query.py) — SIN oráculo H2",
            "pool_generation": "L ∪ X(H1 real) ∪ S ∪ P-F2, regenerado por PAS_PAD; max-passages=400; sin inyección de gold",
@@ -511,6 +585,10 @@ results = {"benchmark": "17C reducción del leak estructural del pool (A/V1/V2/V
                       "P_EXPAND_TOP_K": P_EXPAND_TOP_K, "MAX_PASSAGES": MAX_PASSAGES,
                       "BUDGET_TOKENS": BUDGET_TOKENS, "PADS": PADS},
            "corpus_hash": corpus_hash(repo, files),
+           "fixture_id": manifest.get("fixture_id") if FIXTURE_MODE else None,
+           "fixture_corpus_hash": manifest["corpus"]["corpus_hash"] if FIXTURE_MODE else None,
+           "config_hash": manifest.get("config_hash") if FIXTURE_MODE else None,
+           "runner_version": manifest.get("runner", {}).get("version") if FIXTURE_MODE else None,
            "index_cache_hit": cache_hit,
            "index_build_seconds": meta.get('build_seconds'),
            "per_pad": {}}

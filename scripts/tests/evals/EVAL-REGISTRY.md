@@ -2279,3 +2279,35 @@ Pool L∪X∪S∪P-F2, M3 V6, PAS_PAD=4 fijo, piso 0.545, LIMIT=10. Sin runner n
 **Pendiente (NO abierto):** D2 (build + commit del primer fixture real), D3
 (runner `--fixture` + validación de mutación + campos nuevos en el JSON), D4
 (gate §6 completo), D5 (registro formal). **Ningún EVAL nuevo.**
+
+### D3 — runner `--fixture` (2026-08-15) — implementado y verificado
+
+**Cambio:** `run-leak-17C.sh` acepta `--fixture <dir>` (+ `--allow-fixture-mutation`).
+
+- **Separación CORPUS/PIPELINE:** con `--fixture`, `REPO` = `<dir>/corpus` (congelado),
+  `PIPELINE_ROOT` = árbol vivo (scripts/lib + router). El fixture es SOLO datos.
+- **Hash por contenido en modo fixture** (no mtime); `--repo` intacto (mtime histórico).
+- **Validación de inmutabilidad:** `corpus_hash` real vs `manifest.corpus.corpus_hash`
+  → mismatch = **STOP (exit 2), sin reindex silencioso**; solo `--allow-fixture-mutation` + `--reindex` continúan.
+- **JSON de salida:** `fixture_id`, `fixture_corpus_hash`, `config_hash`, `runner_version`
+  (del manifest); `commit_sha` = `manifest.source.commit_sha` (identidad del **CORPUS**
+  de origen) y `pipeline_commit` = commit del **PIPELINE/runtime** (árbol vivo que
+  ejecuta la corrida). Distinción explícita corpus/source vs pipeline/runtime:
+  el fixture solo sustituye DATOS, nunca la lógica (router, scripts/lib, runner).
+  En modo `--repo` ambos coinciden (mismo árbol) — comportamiento histórico intacto.
+- **Garantía de separación verificada:** el fixture congelado contiene 0 archivos
+  `.sh`/`.py`/`.js` — es solo datos; el pipeline siempre viene de `PIPELINE_ROOT` (árbol vivo).
+
+**Verificado (copia en /tmp, congelado intacto):**
+
+| Caso | Resultado |
+|---|---|
+| `--repo` (histórico) | ✅ flags y ruta intactos |
+| `--fixture` inválido (sin manifest) | ✅ exit 2 |
+| `--fixture` íntegro | ✅ `✓ fixture íntegro: corpus_hash 0af49cc666d872a6 == manifest` |
+| **Mutación** (editar README.md del corpus copiado) | ✅ `✗ FIXTURE MUTADO: esperado 0af49cc…, real 05cf29a…` → **exit 2, sin JSON** |
+| Restauración | ✅ íntegro de nuevo |
+| Congelado original | ✅ hash real == manifest (`0af49cc666d872a6`) |
+
+**Pendiente (NO abierto):** D4 (validación multi-PC), D5 (gate final §6 completo).
+**Sin EVAL nuevo; sin benchmark comparativo.**
