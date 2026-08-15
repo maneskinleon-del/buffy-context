@@ -27,7 +27,7 @@ This repository provides the infrastructure for an AI agent to maintain persiste
 | **Self-diagnostics** | doctor --json detecta drift, repair corrige lo seguro, agent orquesta el ciclo |
 | **Conditional loading** | Token-aware protocol: carga solo lo necesario según el tema |
 | **Auto-pruning** | SESION.md mantiene máximo 5 entradas, el resto se archiva |
-| **CI verde** | Suite 313 checks totales (308 functional + 5 meta · 297 `--quick` con 292 functional) + doctor baseline 0 + verify factual en cada push/PR. El check **documental-truth** (meta) rompe el CI si el README declara un número distinto al real — functional y total se validan por separado (anti-drift de documentación) |
+| **CI verde** | Suite 315 checks totales (310 functional + 5 meta · 299 `--quick` con 294 functional) + doctor baseline 0 + verify factual en cada push/PR. El check **documental-truth** (meta) rompe el CI si el README declara un número distinto al real — functional y total se validan por separado (anti-drift de documentación) |
 | **Provenance de hechos** | `facts.yaml` con source/confidence/scope/fecha/ttl por hecho (genera `buffy-verify.sh --update-facts`); TTL enforzado (`expired` si vence) |
 | **Jerarquía de fuentes** | `buffy-source.sh --resolve <fact>`: real-time → facts → SNAPSHOT → CONTINUE → INFO-core → inferred, con reporte de conflictos |
 | **Reglas declarativas** | `ai-context/facts_rules.yaml` + `scripts/lib/facts_engine.py` — agregar un hecho NO requiere tocar el motor; comandos en lista, ejecución sin shell (hardening) |
@@ -41,11 +41,11 @@ This repository provides the infrastructure for an AI agent to maintain persiste
 buffy-context/
 ├── ai-context/                        # Session memory & protocol
 │   ├── LOAD_CONTEXT.md                # Load/save protocol for AI agents
-│   ├── CONTINUE.md                    # Session handoff (what was last done)
+│   ├── CONTINUE.md                    # Session handoff — LOCAL (no versionado)¹
 │   ├── INFO-core.md                   # User profile, stack, preferences (SIEMPRE)
 │   ├── INFO-full.md                   # Detailed user profile (bajo demanda)
-│   ├── SESION.md                      # Últimas 5 sesiones (archivado automático)
-│   ├── SESION-archive.md              # Histórico completo de sesiones
+│   ├── SESION.md                      # Últimas 5 sesiones — LOCAL (no versionado)¹
+│   ├── SESION-archive.md              # Histórico completo — LOCAL (no versionado)¹
 │   ├── PROJECTS.md                    # Active projects
 │   ├── deprecated/                    # Stubs SYSTEM.md/SYSTEM_FULL.md (migrados 2026-08-03)
 │   └── CHANGELOG.md                   # Change history
@@ -127,7 +127,7 @@ buffy-context/
 │   ├── kimi_vision.js                 # Detección de permisos con visión IA (Kimi K3)
 │   ├── lib/                           # yaml.sh (parsing compartido) + logger/utils.js
 │   ├── hooks/                         # install.sh + pre-commit.sh (suite --quick)
-│   └── tests/                         # run-tests.sh + 19 test_*.sh + bench-scale.sh + bench-context-selection.sh (suite 313 checks totales, 297 --quick)
+│   └── tests/                         # run-tests.sh + 19 test_*.sh + bench-scale.sh + bench-context-selection.sh (suite 315 checks totales, 299 --quick)
 │
 ├── MCP_REGISTRY.md                    # Servidores MCP disponibles (ruta, estado, uso)
 ├── SKILLS_INDEX.md                    # Índice de 43 skills por dominio (fuente de verdad)
@@ -135,6 +135,11 @@ buffy-context/
 ├── LICENSE                            # MIT license
 └── .gitignore
 ```
+¹ `CONTINUE.md`, `SESION.md` y `SESION-archive.md` son **estado de instancia local**
+   (no versionados — contrato `INSTANCE-STATE-DESIGN.md` §3): cada dispositivo
+   (PC, teléfono, Freebuff…) tiene los suyos. El conocimiento permanente se
+   promueve a `CHANGELOG.md`, `MEMORY/`, `Knowledge/` o docs.
+
 
 ---
 
@@ -218,10 +223,10 @@ La suite es **determinística y segura**: todo lo que escribe (repair `--auto`, 
 
 La suite termina con `doc_truth_check`, que valida **dos números por separado**:
 
-- **Functional** (los checks que prueban Buffy: 308 full / 292 `--quick`) — el README debe declarar exactamente el conteo real derivado del runner.
-- **Total** (functional + meta: 313 full / 297 `--quick`) — los meta-checks son los que validan la representación documental; el check de total se calcula al final contra el PASS completo, así que si la fase meta crece y nadie actualiza el README, el CI rompe.
+- **Functional** (los checks que prueban Buffy: 310 full / 294 `--quick`) — el README debe declarar exactamente el conteo real derivado del runner.
+- **Total** (functional + meta: 315 full / 299 `--quick`) — los meta-checks son los que validan la representación documental; el check de total se calcula al final contra el PASS completo, así que si la fase meta crece y nadie actualiza el README, el CI rompe.
 
-El resumen de la suite los muestra por separado: `Functional: 308 OK · Meta: 5 OK · Total: 313 OK`. También verifica que la regla de poda de `SESION.md` siga unificada ("5 entradas o ~30KB") y que no reaparezcan residuos viejos.
+El resumen de la suite los muestra por separado: `Functional: 310 OK · Meta: 5 OK · Total: 315 OK`. También verifica que la regla de poda de `SESION.md` siga unificada ("5 entradas o ~30KB") y que no reaparezcan residuos viejos.
 
 ### Benchmark de escala y contaminación (P0)
 
@@ -314,7 +319,7 @@ Buffy runs on multiple CLI agents — **Freebuff** (default) and **opencode** (t
 2. `ai-context/INFO-core.md` — user profile and stack
 3. `~/ai-context/SNAPSHOT.md` — system state (regenerated each session, outside the repo; con `BUFFY_HOME` definida vive en `$BUFFY_HOME/ai-context/SNAPSHOT.md` — ver INSTALL.md)
 
-At session end, Buffy updates `CONTINUE.md` and `SESION.md`.
+At session end, Buffy updates `CONTINUE.md` and `SESION.md` — ambos son **estado de instancia local** (no se versionan en Git; cada dispositivo tiene los suyos, ver `INSTANCE-STATE-DESIGN.md` §3). El conocimiento permanente se promociona a `CHANGELOG.md`, `MEMORY/`, `Knowledge/` o docs.
 
 ### For other AI agents (Claude Code, Codex, etc.)
 

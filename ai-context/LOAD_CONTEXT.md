@@ -63,6 +63,12 @@ ai-context/CONTINUE.md
 ```
 Qué se hizo, en qué quedó, qué pendientes hay. **Es el archivo más importante.**
 
+> ℹ️ **CONTINUE.md es LOCAL de instancia** (contrato `INSTANCE-STATE-DESIGN.md` §3-4):
+> no se versiona en Git — cada dispositivo (PC, teléfono, Freebuff…) tiene el suyo.
+> Por eso un repo recién clonado NO lo trae, y es normal que cada instancia parta
+> de su propio handoff. Las decisiones permanentes se promocionan a docs / MEMORY /
+> Knowledge / registry, no al handoff.
+
 > **🔰 Primera sesión**: Si `CONTINUE.md` no existe (repo recién clonado, primera vez):
 > - Lee `INFO-core.md` para conocer el stack del usuario
 > - Regenera `SNAPSHOT.md` con `buffy-context.sh`
@@ -114,6 +120,10 @@ ai-context/SESION.md     → SOLO las últimas 5 entradas (cabeceras visibles)
                            a menos que la tarea requiera buscar algo específico.
                            Histórico completo en ai-context/SESION-archive.md.
 ```
+
+> ℹ️ **SESION.md / SESION-archive.md son LOCALES de instancia** (contrato
+> `INSTANCE-STATE-DESIGN.md` §3, §5): no se versionan en Git. Cada dispositivo
+> mantiene su propia bitácora sin conflicto con otros.
 ```markdown
 ai-context/PROJECTS.md   → Solo si menciona un proyecto específico
 ai-context/CHANGELOG.md  → Solo si pregunta "¿qué cambió?" o busca un cambio anterior

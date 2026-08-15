@@ -1,7 +1,10 @@
 # Estado de instancia local vs compartido — diseño
 
-> Estado: **⏳ DISEÑO — pendiente de aprobación** (2026-08-15) — aún SIN implementación.
-> Motivo: evidencia empírica del experimento **17D** (2026-08-15): los controles de
+> Estado: **✅ APROBADO — Fase A (diseño) y Fase B (cambio mínimo) implementadas**
+> (2026-08-15). Fase A congelada en commit `51a5631`; Fase B en el commit inmediato
+> posterior a `51a5631` en `main` (ver `git log`).
+> Fase D (fixture experimental) sigue como frente separado, NO abierta.
+> Motivo original: evidencia empírica del experimento **17D** (2026-08-15): los controles de
 > sanity (A/B-solo/V1-solo) NO reprodujeron sus esperados históricos por **drift real
 > del corpus** — `README.md`, `ai-context/CHANGELOG.md`, `ai-context/CONTINUE.md` y
 > `ai-context/SESION.md` crecieron entre 17C y 17D y alteraron posiciones de pasajes,
@@ -268,11 +271,21 @@ como está** — punto de compatibilidad, no cambio de arquitectura.
 ## 11. Orden de implementación (aprobado por el usuario, 2026-08-15)
 
 ```text
-Fase A — diseño (ESTE documento)          ← estamos aquí
+Fase A — diseño (ESTE documento)          ← ✅ congelada (51a5631)
 Fase B — separar SESION/CONTINUE (gitignore + git rm --cached + scripts)
-Fase C — verificar (suite + multi-instancia)
-Fase D — fixture experimental (frente separado, después)
+                                            ← ✅ implementada (gitignore + rm --cached + test + docs)
+Fase C — verificar (suite + multi-instancia) ← ✅ verificación abajo
+Fase D — fixture experimental (frente separado, después) ← ⏳ NO abierta
 ```
 
-**Regla de la serie:** el cambio mínimo se ejecuta SOLO tras aprobación explícita
-de este contrato. No se abre Fase D ni se toca el runtime.
+**Regla de la serie:** el cambio mínimo se ejecutó tras aprobación explícita de
+este contrato (usuario, 2026-08-15). No se abre Fase D ni se toca el runtime.
+
+### Verificación Fase C (2026-08-15)
+
+- [x] `.gitignore` + `git rm --cached` de `SESION.md`, `SESION-archive.md`, `CONTINUE.md` (siguen en disco).
+- [x] `buffy-close-day.sh` sin cambios (su `git add -A` respeta `.gitignore`).
+- [x] `test-close-day.sh` adaptado: sandbox copia `.gitignore` real + aserciones de no-versionado.
+- [x] Documentación: README (árbol + nota ¹ + sección de agentes), LOAD_CONTEXT (pasos 3 y 4).
+- [x] Suite completa full `313 OK` / `--quick` `297 OK`.
+- [x] Simulación multi-instancia PC-A/PC-B sin conflictos (archivos ni trackeados → no hay merge).

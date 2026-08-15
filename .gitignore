@@ -4,6 +4,12 @@ ai-context/SNAPSHOT.md
 # Provenance de hechos — regenerado por buffy-verify.sh --update-facts (machine-specific)
 ai-context/facts.yaml
 
+# Estado de instancia — local por dispositivo (contrato INSTANCE-STATE-DESIGN.md §3)
+# Handoff y bitácora NO viajan por Git: cada instancia tiene los suyos (PC, teléfono, Freebuff...)
+ai-context/SESION.md
+ai-context/SESION-archive.md
+ai-context/CONTINUE.md
+
 # Archivos generados
 *.log
 *.swp
