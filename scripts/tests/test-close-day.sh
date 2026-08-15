@@ -13,6 +13,13 @@ close_setup() {
   git -C "$CLOSE_T/repo" config user.email test@test
   git -C "$CLOSE_T/repo" config user.name test
   git -C "$CLOSE_T/repo" commit -q --allow-empty -m init
+  # Replicar la realidad del repo real: los archivos de estado de instancia
+  # (SESION.md/SESION-archive.md/CONTINUE.md) son LOCALES y no se versionan
+  # (contrato INSTANCE-STATE-DESIGN.md §8.1). El sandbox copia el .gitignore
+  # real para que el flujo de cierre los trate igual que en producción.
+  if [ -f "$REPO_DIR/.gitignore" ]; then
+    cp "$REPO_DIR/.gitignore" "$CLOSE_T/repo/.gitignore"
+  fi
   # NO poner trap aquí: el trap RETURN se dispara al retornar ESTA función
   # y borraría el sandbox antes de usarlo. El trap va en cada test_*.
 }
@@ -41,6 +48,16 @@ test_close_day_flujo_completo() {
     ok "memoria curada versionada en el repo"
   else
     bad "memoria curada versionada en el repo"
+  fi
+  if git -C "$CLOSE_T/repo" ls-tree -r --name-only HEAD | grep -q "ai-context/SESION.md"; then
+    bad "SESION.md local NO debe versionarse en el commit de cierre"
+  else
+    ok "SESION.md local no versionado en el commit de cierre"
+  fi
+  if git -C "$CLOSE_T/repo" ls-tree -r --name-only HEAD | grep -q "ai-context/CONTINUE.md"; then
+    bad "CONTINUE.md local NO debe versionarse en el commit de cierre"
+  else
+    ok "CONTINUE.md local no versionado en el commit de cierre"
   fi
   if [ -s "$CLOSE_T/home/ai-context/SNAPSHOT.md" ]; then ok "SNAPSHOT regenerado en BUFFY_HOME"; else bad "SNAPSHOT regenerado en BUFFY_HOME"; fi
   if git -C "$CLOSE_T/repo" status --porcelain | grep -q .; then bad "repo limpio tras cierre"; else ok "repo limpio tras cierre"; fi
