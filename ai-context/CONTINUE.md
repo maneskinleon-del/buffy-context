@@ -23,6 +23,17 @@
 > propios. Después, volver a Q01 con puente conceptual/relacional (ADB
 > discovery/transport/authorization), no más sinónimos.
 
+> 📐 **17C SPEC CONGELADA (2026-08-14, Buffy):** ver `leak-17C-DESIGN.md` en
+> `scripts/tests/evals/`. **NO ejecutar todavía — esperar aprobación del
+> usuario.** Caracterización causal del leak (31 paths): A=noise de sesión 17
+> (55%), B=ai-context canónico CHANGELOG 6 (19%), C=Knowledge/ dominio NO gold
+> 5 (16%), D=raíz no-Knowledge 3 (10%). Variantes (1 factor c/u): V1=exclusión
+> dura de noise en ctx final (ataca A), V2=refuerzo S4 en ensamblado (ataca A
+> vía ranking), V3=exclusión raíz no-Knowledge (ataca D). Gate: leak ≤ 0.308
+> PRIMARIO, attr ≥ 13, sin regresiones, pRel ≥ 0.121, contain ≥ 0.80, G2. Si
+> ninguna cruza → fallo del frente, NO relajar umbral. Golds Q04/Q06 viven en
+> CHANGELOG.md (no noise) → no se rompen.
+
 ---
 
 ## Resumen de la sesión (2026-08-14 — Freebuff, rama X del Paso 10: query expansion H1 al pipeline real)
