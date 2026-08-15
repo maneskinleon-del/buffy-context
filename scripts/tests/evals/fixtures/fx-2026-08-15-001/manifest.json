@@ -1,0 +1,247 @@
+{
+  "fixture_id": "fx-2026-08-15-001",
+  "fixture_version": 1,
+  "created_at": "2026-08-15T17:01:28",
+  "source": {
+    "repo": "buffy-context",
+    "commit_sha": "881af3f7bdefba248c8806bf38b5225df2c468ce"
+  },
+  "corpus": {
+    "n_files": 45,
+    "n_entries": 5338,
+    "size_bytes": 366358,
+    "corpus_hash": "0af49cc666d872a6",
+    "files": [
+      {
+        "path": "BUFFY-PC-CONTEXT.md",
+        "sha256": "e2593073fdada0e97d3dbf8a07f60c35adecc1933a7bcea8a466129be78a2595"
+      },
+      {
+        "path": "CHANGELOG.md",
+        "sha256": "9aefa3105273240c40ef394c10b769af8358ba5628b60544637fa1d04c7f45d3"
+      },
+      {
+        "path": "CONTRIBUTING.md",
+        "sha256": "8357e9bf055027327e1cea6916b8efe7184f7469db318120d6ae0f65acf56dbc"
+      },
+      {
+        "path": "FIXTURE-EXPERIMENTAL-DESIGN.md",
+        "sha256": "a0052698ef48ec145e3519364a696686b68ff20266b4784952fb8bad3cd01d57"
+      },
+      {
+        "path": "FWD-DESIGN.md",
+        "sha256": "d9ea63a9951f2275a1fa9a6488b2e800f35b337e1fedc4602fa25b77645116bf"
+      },
+      {
+        "path": "INSTALL.md",
+        "sha256": "55272ec698e2380a89df87aa736bcdc9727c4a365aa2e8b408a4b723ca2516e4"
+      },
+      {
+        "path": "INSTANCE-STATE-DESIGN.md",
+        "sha256": "302beeb9f5c2a2cab89330d1cb80343e3ddee9c48eb5709b34ac17aef4a23075"
+      },
+      {
+        "path": "Knowledge/AI/Kimi-K3.md",
+        "sha256": "18b3cdc46f4eb9a33f012922e16eb91f28770c54d557da4a622a2fb126012d51"
+      },
+      {
+        "path": "Knowledge/Android/ADB.md",
+        "sha256": "43c1a17857be5984c4e3f98216cbfd20a61d3010e8f84d0aa7dff140a87c4199"
+      },
+      {
+        "path": "Knowledge/Android/GameOptimization.md",
+        "sha256": "24373edd125beab6946ef9c2e3353e21ba90f33cb9a1048de80fcad64c3f6d7a"
+      },
+      {
+        "path": "Knowledge/Android/HyperOS.md",
+        "sha256": "e2193aa802d2a09acb0ad3e695f9d035b98c691bdaeb86be0cf9720e757794f4"
+      },
+      {
+        "path": "Knowledge/Android/Keymappers.md",
+        "sha256": "214a740655f74838b40074b3db8ff3eae06bbd0ed3389fc66994c7fe3df3f6b9"
+      },
+      {
+        "path": "Knowledge/Android/NubiaLab.md",
+        "sha256": "7b5858b9be0bc6c8bc293a46b5c090e35427d5e2b932a253a4bc3fab446a2af7"
+      },
+      {
+        "path": "Knowledge/Android/Shizuku.md",
+        "sha256": "385a2e84e7ffa3e31981241d796205ea17bcb81317c34df7866cce50c84c26d8"
+      },
+      {
+        "path": "Knowledge/Android/scrcpy.md",
+        "sha256": "eb357beb70e5d2d1b0174c07bd353de16bea117db36d9136056c48e26a1c2a45"
+      },
+      {
+        "path": "Knowledge/Git/Commands.md",
+        "sha256": "ae57e33938e9b549d323e5b3e9a2ce87be4f6fc75dc6849cecb3b5d147515195"
+      },
+      {
+        "path": "Knowledge/Linux/Kernel.md",
+        "sha256": "662d939c9ce7f118371fec703aee40c987ddd86335132c1dd3831973d48ba885"
+      },
+      {
+        "path": "Knowledge/Linux/System.md",
+        "sha256": "78ba636f9a837918267141662e861cd4687ab73135469ac55e500c68dc2be978"
+      },
+      {
+        "path": "Knowledge/Node/Node.md",
+        "sha256": "c88dd47c1784d63a23c74db64dd224d172cb0721e1fecd329e40cf7c98702adf"
+      },
+      {
+        "path": "Knowledge/README.md",
+        "sha256": "1ff3ecdd9d5ee5dd9ac1b4df5c185bc036121df9f066ee076af5c7f44ed781fb"
+      },
+      {
+        "path": "Knowledge/React/PWA.md",
+        "sha256": "47cd62ebc514d41628ec4ec6aeef23e6fc56124f43ac98207d66093688a35aad"
+      },
+      {
+        "path": "Knowledge/React/React.md",
+        "sha256": "6e76f73b13a218ba625ca5c066ea10fdd01f4fad87c834ad4db0537ee0360420"
+      },
+      {
+        "path": "Knowledge/React/Tailwind.md",
+        "sha256": "3ec4616c7f3970326b92b41707e599e8e1bf96fe66a6eb4c64b2eec6dfd272d2"
+      },
+      {
+        "path": "Knowledge/React/Vite.md",
+        "sha256": "40e3c5116c2e537ee2d161877b1b07adf234f6d1a12268022555348bd16cfcc6"
+      },
+      {
+        "path": "Knowledge/Shell/Shell.md",
+        "sha256": "29fa9fc5f9c730b2643affbe4b423eebfc044eb2a27d52db516639be1aa50127"
+      },
+      {
+        "path": "Knowledge/Tools/Benchmark-realista.md",
+        "sha256": "528ed2da618f3453c9a2d37d88cba859570f477ced183ef6d239d3b9e54cda05"
+      },
+      {
+        "path": "Knowledge/Tools/CodeGraph.md",
+        "sha256": "8e5894a2ad824813511a93a87855603c85f849715a04f5e5f2646e80ada7bf9e"
+      },
+      {
+        "path": "Knowledge/Vision.md",
+        "sha256": "575a95c9b44f3f93c7caffa71ba3f4bdc86e79cd1e2286864cf7fa43d914981a"
+      },
+      {
+        "path": "MCP_REGISTRY.md",
+        "sha256": "fa9da9bc05dc7a7928421a8fb46a50253973d9bd53e5e74426f3122bf1b7bbb4"
+      },
+      {
+        "path": "README.md",
+        "sha256": "a5c05864f5e0980333ffc2fdc3c629160874ccc3ff824bcd119817dd7eb0cc9b"
+      },
+      {
+        "path": "REVIEW-BASELINE.md",
+        "sha256": "bb747dded498f15044dc9c919dbff69a4bb7e0b770e5cb76616792b6c97405b0"
+      },
+      {
+        "path": "SKILLS_INDEX.md",
+        "sha256": "59abe3f458d39145debfe139bc539f29498256e3daf91aa101dc442543f667f8"
+      },
+      {
+        "path": "USER-MANU.md",
+        "sha256": "9a9c333f86e3ec5818369fc26ef6a7a29da6f44d0f0f427f9b7a13e152c378e0"
+      },
+      {
+        "path": "ai-context/AGENTS.md",
+        "sha256": "472a697a5c382dbf50094ba4f7f57fe648aa5cea42b1004ffe006e851316c98f"
+      },
+      {
+        "path": "ai-context/AUDITORIA-HANDOFF-FREEBUFF.md",
+        "sha256": "7078132ec2ea5416857599eb26bec9342b6a1bef7fd6b1282c63dc7260bdb39e"
+      },
+      {
+        "path": "ai-context/CHANGELOG-archive.md",
+        "sha256": "2bb47ab85ed03cad8f88e353e1a00ebe33ad169eab0272acf5ea4eb35273b885"
+      },
+      {
+        "path": "ai-context/CHANGELOG.md",
+        "sha256": "5010c25bc20601d447b5fee303b3facf8583bc1bfb4fadb7e4923f5814313744"
+      },
+      {
+        "path": "ai-context/INFO-core.md",
+        "sha256": "230e41790033842dfba6017ba4e1fc99b6bc77955288543d5736d8f189484535"
+      },
+      {
+        "path": "ai-context/INFO-full.md",
+        "sha256": "89e2c2e13f7886436eb0fe5f62b9116dee1d6be0c3d2c047feee3cfbbc7c70a2"
+      },
+      {
+        "path": "ai-context/LOAD_CONTEXT.md",
+        "sha256": "d2cd61f68b4dea60ba56337bd126b9b0254bf2b3b2cd1c29d317e9f465607a9d"
+      },
+      {
+        "path": "ai-context/PROJECTS.md",
+        "sha256": "a83c5b13812da4fc0143361a72fbfce0be351ce41dd65effd31c822eb9366ca0"
+      },
+      {
+        "path": "ai-context/README.md",
+        "sha256": "20fa4bb68eea5d3ccaef2c581eb0adb8932fde66de75a55d20f85628bb7b18fd"
+      },
+      {
+        "path": "ai-context/SHIZUKU-RISH-BUG.md",
+        "sha256": "3c4e3b9a6c6f5cc3916bb03a7b3cbd11ca03abfb5976e809e381d621fe811ccd"
+      },
+      {
+        "path": "ai-context/facts_rules.yaml",
+        "sha256": "3e1e8052b852cd6e8f4cfe4f1f8e756da35a6dd553642dc311776f29cfeabe06"
+      },
+      {
+        "path": "ai-context/v4_MANIFIESTO.md",
+        "sha256": "78c8fa91475bda42db3794f12e49f27d381704ee417efc10d81ad935ea683d7d"
+      }
+    ]
+  },
+  "exclusions": [
+    "ai-context/.sync-state",
+    "ai-context/CONTINUE.md",
+    "ai-context/SESION-archive.md",
+    "ai-context/SESION.md",
+    "ai-context/SNAPSHOT.md",
+    "ai-context/facts.yaml"
+  ],
+  "include_by_default_off": [
+    "ai-context/memories/MEMORY.md",
+    "ai-context/memories/USER.md"
+  ],
+  "eval": {
+    "eval_id": "eval-ctx-PC-2026-08-11",
+    "eval_hash": "98a0e3082d920e71a30b1f1a759332808a251f9d02b899a7db3e2604369b34ac"
+  },
+  "config": {
+    "model": "bge-m3",
+    "params": {
+      "N_L": 50,
+      "N_X": 50,
+      "N_S": 50,
+      "P_EXPAND_TOP_K": 10,
+      "MAX_PASSAGES": 400,
+      "BUDGET_TOKENS": 10400,
+      "RESCUE_LOW": 0.545,
+      "PADS": [
+        4
+      ],
+      "LIMIT": 10
+    },
+    "variant": "A",
+    "dict": {
+      "path": null,
+      "h1_dict_hash": null
+    },
+    "eval": {
+      "eval_id": "eval-ctx-PC-2026-08-11",
+      "eval_hash": "98a0e3082d920e71a30b1f1a759332808a251f9d02b899a7db3e2604369b34ac"
+    },
+    "runner": {
+      "name": "run-leak-17C.sh",
+      "version": "8732a44d91d66b0527517fea99d36bebd7a0d2fb8929e9a25e1b792a34c2d5e4"
+    }
+  },
+  "config_hash": "b2b8b3570736990eb45ad48584e1f1e168632264cea3de7185e085121abb858e",
+  "runner": {
+    "name": "run-leak-17C.sh",
+    "version": "8732a44d91d66b0527517fea99d36bebd7a0d2fb8929e9a25e1b792a34c2d5e4"
+  }
+}

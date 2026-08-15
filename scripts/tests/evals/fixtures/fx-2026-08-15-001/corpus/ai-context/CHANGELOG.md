@@ -1,0 +1,685 @@
+> ⚠️ **Poda automática**: Cuando este archivo supere ~30KB o ~5 entradas
+> recientes (sin contar archive), las entradas más viejas se mueven a
+> `CHANGELOG-archive.md`. Última poda: 2026-08-03 (entradas 2026-07-31 y
+> anteriores archivadas; front-matter duplicado eliminado).
+
+---
+
+version: 1.8
+updated: 2026-08-08
+schema: system-profile
+system-id: mangonz-desktop
+---
+
+# CHANGELOG.md — Historial de cambios del sistema
+
+
+
+### 2026-08-15 — Cierre serie 17B→17C→17D: Commit A de infraestructura + 17D STOP metodológico / NO EVALUADO (Freebuff, PC)
+
+- **Commit A `abbee6d` (PUSHEADO)** — los 22 `skill.yaml` untracked eran manifests legítimos (B2, exigidos por `skill-lint.sh --require-all`); 2 fixes de `SKILL.md` (frontmatter `name` sin comillas) + `test-scale.sh` (ruta Termux → `${TMPDIR:-/tmp}`). Suite: **313 OK / 0 FAIL full · 297 OK / 0 FAIL --quick** (los 4 preexistentes documentados en CONTINUE.md quedaron resueltos). Ninguno tocó runtime.
+- **Spec 17D congelada `ad04631`** (`combine-17D-DESIGN.md`) — T = V1 + DICT_H1_B como único tratamiento; controles A/B-solo/V1-solo con **sanity de igualdad EXACTA per-query** (ajuste del usuario: todas las métricas contractuales); gate por contrato §17.4; ceguera metodológica (no nace como "V1+B dará 13/20 y 0.250").
+- **Sanity ×2 G2 (6 corridas) bajo corpus `029ed669` (7803 líneas)** vs histórico `236a87fa` (7653): A attr 12/20 ✅ pero **leak 0.425 ≠ 0.442** ❌; B-solo attr 13/20 ✅ pero **leak 0.425 ≠ 0.442** ❌; V1-solo leak 0.250 ✅ pero **pRel 0.581 ≠ 0.584** ❌. G2 interno ✅ en los 3.
+- **STOP por regla §3.1 — T = V1+DICT_H1_B NUNCA se ejecutó.** Causa: drift real del corpus — README/CHANGELOG/CONTINUE/SESION crecieron entre 17C y 17D y alteraron Q10 (leak 0.5→0.333, pRel 0.333→0.300) y Q03 (ctx_size 2→3).
+- **Cierre `932f146`** — veredicto en `EVAL-REGISTRY.md` §17D: **STOP metodológico / NO EVALUADO** + 6 JSONs de sanity como evidencia. No se re-congela `029ed669` ni se actualizan esperados retrospectivamente (decisión del usuario: cambiar la referencia tras observar el drift debilitaría la disciplina).
+- **Hallazgo estructural:** el corpus de Buffy NO está aislado de su propio estado operativo (CHANGELOG/CONTINUE/SESION participan del fenómeno medido). Continuar exige diseñar un **fixture/corpus experimental congelado e INMUTABLE** (trabajo de diseño nuevo, no 17D). Conecta con el frente arquitectónico SESION/CONTINUE local.
+- Registro completo en `EVAL-REGISTRY.md` → sección 17D. Suite: sin cambios de runtime (313/297).
+
+### 2026-08-14 — EVAL 17C ejecutado y cerrado: reducción del leak estructural del pool (opencode, PC)
+
+- **Runner `run-leak-17C.sh` (NUEVO)** — copia del mecanismo 17B + `--variant {A,V1,V2,V3}`. Pool L∪X∪S∪P-F2, M3 V6, PAS_PAD=4 fijo, piso 0.545, LIMIT=10, sin oráculo. Corpus congelado `236a87fa` (7653 líneas), `eval_hash 98a0e308…`, `commit_sha 51b8079…`, `h1_dict_hash 8294f200…`.
+- **7 corridas completas** (control-A + V1×2 + V2×2 + V3×2, ~45-49s c/u con índice cacheado). **G2 confirmado en las 3 variantes** (determinism_hash A=`0d44653e`, V1=`289f8470`, V2=`0c471a33`, V3=`48888238`).
+- **V1 (exclusión dura de noise en ctx final) CRUZA el gate PRIMARIO:** leak 0.442 → **0.250** (-43%), pRel 0.415 → **0.584** (+41%), contain 1.0, cero regresiones en los 8 golds, G2 determinista. La fuente A (noise de sesión, 55% del leak) era la causa dominante. **PERO attr = 12/20 < 13/20** (gate #2): V1 no incluye DICT_H1_B → Q05 sigue en 0. **NO ADOPTADO** (no se modifica el gate retrospectivamente). V1 = candidato positivo/no adoptado.
+- **V2 (S4×3) SIN EFECTO** — idéntica a A (leak 0.442): el peso S4 no cambia el ranking cuando s1/s2/s3 dominan (la fuente A entra por el gate S1 ≥ 0.545, no por el score final). **V3 (excl. raíz no-Knowledge) EFECTO MÍNIMO** (leak 0.433; fuente D solo 10%). Ambas descartadas.
+- **Hallazgo de instrumento:** `--repeat` es vestigial (se parsea pero no se usa en loop) — G2 = invocar el runner 2 veces con distinto `--out`.
+- **Veredicto:** el leak estructural SÍ es reducible (hipótesis H17C confirmada); V1 no aprobado para producción. **Próximo frente: 17D = V1 + DICT_H1_B combinados** (ortogonales) — requiere diseño y gate propios + aprobación del usuario.
+- **Revisión de arquitectura (separación proyecto/instancia):** `buffy-memory-sync.sh` sincroniza SOLO MEMORY/USER (`.sync-state` perfil-local, nunca versionado) ✅; `SNAPSHOT.md`/`facts.yaml` ya gitignored ✅; **problema real = `SESION.md`/`CONTINUE.md` versionados** → con N dispositivos, contaminación + conflictos. Propuesta: hacerlos locales (decisión de diseño, requiere aprobación).
+- **Principio rector agregado al README:** "La complejidad debe ser proporcional a la tarea".
+- Registro completo en `EVAL-REGISTRY.md` → sección 17C. Suite: sin cambios (no se tocó runtime).
+
+### 2026-08-14 — Shizuku activado por ADB (13.6.0) + protocolo de diagnóstico global (Buffy, PC)
+
+- **Shizuku v13.6.0.r1086 activado en Mi 10 (HyperOS)**: reinstalado desde GitHub oficial (sha256 `6e273ab0e991c4e79bc8b1bbb9b9dd739ccac1a8712a541a214078886b7b790f`), fix de batería (whitelist deviceidle + appops `RUN_ANY_IN_BACKGROUND` + standby active), método oficial 13.6.0 (`libshizuku.so` → `/data/local/tmp/shizuku`). Servidor pid 22501, 12 apps autorizadas, logcat `✅ Shizuku OK`.
+- **Skill `shizuku-rikka` mejorada** (212→239 líneas): sección prioritaria "🧭 ANTES DE ACTUAR: diagnóstico por síntomas (LEER PRIMERO)" + `shizuku-activation-protocol.md` (70 líneas) referenciado. Documenta 6 fallos reales (start.sh inexistente, UI engañosa, `rish id` trampa, etc.) y el método que SÍ funcionó.
+- **Regla global en `~/.AGENTS.md`** (§43): "🔍 Diagnóstico antes de actuar (Android)" — aplica a todas las skills de Android. Preguntar contexto → diagnóstico 10s → prueba de éxito real (logcat, no `id`) → documentar fallos mientras se trabaja.
+- **Caso de éxito documentado** en `SHIZUKU-RISH-BUG.md` (Actualización 5): ciclo completo error → diagnóstico → solución local → solución global → verificación en vivo.
+- **Lección raíz**: el error más caro no fue técnico — fue no preguntar el contexto que el usuario ya tenía (HyperOS, batería agresiva, watchdog). El protocolo fuerza esa pregunta en el paso 1.
+
+### 2026-08-14 — Rama X (query expansion H1) al pipeline real + Q03 aceptado como límite (Freebuff, PC)
+
+- **`scripts/lib/expand_query.py` (NUEVO)** — DICT_H1 + `expansion_terms` + `dict_hash` portados del runner del Paso 10. Fidelidad **10/10** vs baseline-H1 congelado (las 10 queries del EVAL producen los mismos términos).
+- **`buffy-search.sh --expand-query` (opt-in, default OFF)** — rama X al pipeline real: (1) **X-candidatos**: re-consultas FTS5 por término del diccionario → hits extra al pool (tope 100); (2) **X-query**: términos pasados como `--terms` al selector → S1 puntúa con la query expandida. `BUFFY_EXPAND_QUERY=true` para `router --context`. **`buffy-selector.sh --terms`** nuevo.
+- **Smoke Q03 medido:** Commands.md:64 entra al pool (15→91), S1 mejora 0.468→0.493 pero NO cruza el piso 0.545. **Hallazgo:** la línea exacta cruza (0.613 con términos relevantes); la ventana ±4 la diluye → causa raíz = granularidad del pasaje (PAS_PAD=4), no el modelo.
+- **Q03 aceptado como límite documentado** (decisión del usuario): bajar el piso descartado (evidencia 15A: soft gate colapsa attr 1/20), otro embedding descartado por ahora. Dirección futura: granularidad alternativa de pasaje con gate propio.
+- **Suite: 283 OK / 4 FAIL full · 267 OK / 4 FAIL --quick** (4 preexistentes). Tests +13 (`test-expand-query.sh`). Commits `210b871` + `16c626b` (locales, sin push).
+
+### 2026-08-14 — Selector M3 → V6 (veredicto 15B) + tarea "cerrar día+1" + phi/qwen en opencode (Freebuff, PC)
+
+- **V6 adoptado como selector del pipeline** (`5fc0822`): S3 condicionado a query estructural + S4 por clase de memoria de sesión (ai-context/* salvo CHANGELOG.md curado) → **attr 16/20 → 19/20, pRel 0.577 → 0.677, leak 0.275 (pasa gate ≤0.308), reg 0.360**. Cierra el hallazgo 15A (sobre-corrección de estructuras): Q02 1/3→3/3, Q07 1/2→2/2, Q08/Q06 intactos. Cambios de mecanismo, sin calibración. V2/V3/V4 descartados con evidencia. Q05 `useState` queda como miss ortogonal → rama X.
+- **Tarea "cerrar día+1"** (`5fc2fa0`): `buffy-close-day.sh --poweroff` — tras el cierre completo (memoria + SNAPSHOT + doctor + commit/push), **apaga el PC** solo si terminó sin error. Override por env para pruebas. Tests +3.
+- **phi3.5 en opencode: bloqueado** (sin tool calling; coincide con el EVAL 14A). **qwen2.5:7b funciona** — ambos agregados al provider `ollama` de `~/.config/opencode/opencode.json`.
+- **Registro Pasos 12/13 preservado** (`d34b7f6`, pusheado): serie E/F completa (13 archivos), veredictos intactos.
+- Suite: 270 OK / 4 FAIL full · 254 OK / 4 FAIL --quick (solo preexistentes).
+
+### 2026-08-13 — Expansión F2 (rama P) al pipeline: candidate gap de Q08 cerrado en vivo (Freebuff, PC)
+
+**Pedido del usuario:** implementar la expansión F2 del Paso 13 como componente del pipeline (cierra el candidate gap que la integración M3 base dejó en Q08/Q03). Artefactos del autor anterior INTACTOS (solo lectura).
+
+**Lo hecho:**
+- **`scripts/lib/expand_passages.py` (NUEVO)** — motor de expansión de pasajes (rama P): tile_windows ±4 no-solapados (2·PAS_PAD+1 = 9 líneas), archivos kno del router + top-K del pool por orden R1 (F2), con `--max-passages` (default 400) como guard de coste (los kno entran completos, el pool se recorta). Misma lógica que `run-evidence-PC.sh` (Paso 13 F2).
+- **`scripts/buffy-expand.sh` (NUEVO)** — wrapper CLI: `--kno` + pool → pasajes rama P.
+- **`buffy-selector.sh --kno`** — expansión ANTES del scoring M3 (encadena buffy-expand.sh).
+- **`buffy-search.sh`** — pasa `BUFFY_SELECTOR_KNO` al selector; **`buffy-router.sh --context`** setea esa env con su knowledge → pipeline completo `router → F2 → M3 → context pack`.
+- **Tests de expansión** (+7 checks): F1 tiles 9/9/7, F2 kno+pool, max-passages recorta pool no kno, selector --kno degrada sin Ollama. **Suite: 265 OK / 4 FAIL full · 249 OK / 4 FAIL --quick** (4 FAIL preexistentes). README actualizado.
+- **Validación en vivo:** **Q08 CERRADO** — `System.md:73-81` (P_TERM_OPACITY/picom) al top-1 del selector con expansión (antes fuera del pool). Q06 conserva cobertura. **Q03 persiste**: Commands.md entra al pool vía kno pero el puente `pushear`→`git push origin` es semántico (bge-m3 por línea) — es la rama X del Paso 10, no cobertura de pasajes.
+- **Coste documentado:** la expansión F2 en frío paga embeds nuevos (fiel al Paso 13: r0 ≈ 17 min, warm ≈ 1 min); `--max-passages` lo acota.
+
+---
+
+### 2026-08-13 — Integración M3 al pipeline real: buffy-selector.sh + search --select + router --context (Freebuff, PC)
+
+**Pedido del usuario:** integrar el selector M3 rescue 0.545 adoptado en 15A con el pipeline real (`router → search → selector → context pack`).
+
+**Lo hecho (sin commit todavía, artefactos 12/13 del autor anterior intactos):**
+- **Motor M3 extraído** a `scripts/lib/selector_m3.py` (bit-a-bit del runner 15A: S1 bge-m3 cosine · S2 especificidad cross-pool · S3 estructura · S4 canonicalidad · gate rescue 0.545 · pesos 1.0/1.0/0.5/0.5). Fidelidad verificada sobre el fixture congelado: **attr 16/20 · leak 0.242 · pRel 0.577 · Q06 1/1 · Q08 2/2** = idéntico al veredicto 15A rescue.
+- **`scripts/buffy-selector.sh` (NUEVO)** — wrapper CLI: `--query` + candidatos (JSON o stdin) → top-K M3. Exit 3 si Ollama no está (degradación limpia).
+- **`buffy-search.sh --select`** — candidatos FTS5 → selector M3 → top-K de pasajes puntuados. Default (sin flag) intacto byte a byte; `--select` usa `or` como generador (el `and` default no recupera queries naturales — gap medido, search_recall 0.000). Con `--json` degrada a JSON de error si Ollama cae.
+- **`buffy-router.sh --context`** — agrega campo `context` (pasajes top-K M3) al JSON o sección humana. Default (sin flag) intacto.
+- **Tests nuevos** (`test-selector.sh`): sintaxis, uso, degradación sin Ollama, determinismo, reproducción 15A (Q08 gold en top-K), no-regresión del default. Suite: **258 OK / 4 FAIL full · 242 OK / 4 FAIL --quick** (los 4 FAIL preexistentes: 3 × test-scale ruta Termux + 1 × skills sin manifest). README actualizado.
+- **Validación en vivo:** Q08 — AGENTS.md (s1 0.657, el más alto) baja por S4; Q06 — gold real `FF_SEEN` (CHANGELOG.md:217-225) entra al top-K en vivo.
+- **Límite documentado:** Q08/Q03 siguen con candidate gap (el FTS5 no genera System.md — puente semántico); la generación de candidatos es del pipeline de evidencia (Pasos 12/13, autor anterior, congelados).
+
+---
+
+### 2026-08-13 — EVAL PC Fase 3: Pasos 14A/15A — selector quality-aware ADOPTADO (opencode, PC)
+
+**Pedido del usuario:** separar selección de modelo: (14A) ¿un juez LLM discrimina gold vs distractor mejor que bge-m3? (15A) ¿señales multi-señal distinguen evidencia útil de ruido?
+
+**Lo hecho (commit `77bf26a`, EVAL `98a0e308…`, pool F2 congelado):**
+- **Paso 14A** (`run-selector-model-PC.sh`, phi3.5 vs bge-m3, 11 pares): phi **5/11** pair test (= bge), determinismo pares **9/11**, 14.3 s/pasaje; phi 13/97 gold vs bge 74/97 → **phi no supera a bge en ningún query → Rama B, sin 14B**. Fix OOM verificado (unload + `keep_alive=0` entre queries).
+- **Paso 15** (`run-selector-quality-PC.sh`, S1 bge-m3 θ=0.55 · S2 especificidad · S3 estructura · S4 canonicalidad · S5 mtime · S7 concisión · MMR; pesos a priori; ablación M1→M4; gates hard/soft/rescue): **M3 (S1+S2+S3+S4) = 9/11 gold_over_distractor** (target ✓) · leak 0.325 · pRel 0.482 · attr 16/20. Gate soft colapsa (attr 1/20) → piso S1 esencial.
+- **Ventana de rescate 0.545 (decisión 2b del usuario):** θ=0.55 cortaba el gold de Q08 (cos 0.5478) por 0.002 → `--rescue-low 0.545` = punto quirúrgico: **Q08-P_TERM_OPACITY atribuido (2/2)**, leak **0.242** (pasa gate ≤0.308), pRel **0.577**.
+- **ADOPTADO: M3 rescue 0.545** — gold_over_distractor **5/11 → 9/11** · leak **0.425 → 0.242** · pRel **0.472 → 0.577** · attr 16/20 (no-regresión vs F2) · determinismo G2 ✓ (`5ab74054f1d2dcde`). **Primera adopción de la serie Fase 3.**
+- **Hallazgos** (documentados, no corregidos — calibración post-hoc prohibida): S3 sobre-corrige estructuras (Q02 INFO-full.md:189 → Shizuku.md; Q07 scrcpy.md:37/README.md:73 → GameOptimization.md:54); lista de ruido S4 incompleta; piso S1 esencial.
+- Registrado en `scripts/tests/evals/EVAL-REGISTRY.md` (§14A, §15A) + specs a EJECUTADO. Runtime `buffy-search.sh`/`buffy-router.sh` sigue congelado (la adopción es del componente de selección).
+
+**Pendiente:** artefactos Pasos 12/13 (autor anterior, untracked, intactos — NO commitear sin autorización); integrar M3 con el pipeline real o resolver hallazgo S3. En el PC: `git pull` + `buffy-memory.sh sync pull` una vez.
+
+
+### 2026-08-12 — EVAL PC Fase 3: Pasos 7→10B ejecutados y cerrados (opencode, PC)
+
+**Pedido del usuario:** aprobar specs e implementar/medir los experimentos de Fase 3 uno a uno, con gates pre-fijados, determinismo G2, runtime congelado y detenerse tras cada medición.
+
+**Lo hecho (commits `8677347`→`18df679`, EVAL congelado `98a0e308…`):**
+- **Paso 7 Semantic D** (`run-semantic-PC.sh`, Ollama bge-m3): 0.200/0.192/0.669/48k → ❌ descartado (embedding aporta capacidad — Q06 primera vez — pero no precisión de buscador).
+- **Paso 8 Hybrid** (`run-hybrid-PC.sh`, RRF y POOL): ≈0.200/0.185/0.605/~10k → ❌ descartado (G-H0: Q03/Q08 fuera del pool = fallo de generación).
+- **Paso 9 Passages** (`run-passage-PC.sh`, VENTANA/SECCIÓN): G1 0.417/0.072/0.606/2.6k, G2 0.333/0.054/0.606/3.4k → ❌ gate pero hipótesis ✅ (28-46× menos tokens; dedup corregido).
+- **Paso 10 Query expansion** (`run-expansion-PC.sh`, H1-DICT-MIN/H2-DICT-FULL): H1 0.317/gap 5/6, H2 0.367/gap 6/6 → ❌ gate pero candidate gap CERRADO (Caso D: generación resuelta, selección rota; regresión 9/12).
+- **Paso 10B Reranking** (`run-rerank-PC.sh`, pool H2 congelado, señales [0,1] pesos 1.0, ablación): R1 0.750/gap 4/6/leak 0.441 (récord serie) · R2 0.700/gap 2/6 → ❌ gate (pRel 0.175/0.131, leak) pero el cuello de botella ERA el ranking; ablación: x_overlap crítica, embedding empeora, q_overlap estorba.
+- **Ninguna variante adoptada** (A→R2: 0.000 → 0.750). Fase 3 sigue abierta; siguiente: diseñar Paso 11 (quality-aware passage selection), sin implementar.
+- Runtime intacto (`buffy-search.sh`/`buffy-router.sh`), determinismo G2 OK, serie documentada en `scripts/tests/evals/EVAL-REGISTRY.md` + specs a EJECUTADO.
+
+**Pendiente:** diseño del Paso 11 (reranking quality-aware). En el PC: `git pull` + `buffy-memory.sh sync pull` una vez. Handoff: `/tmp/handoff-buffy-2026-08-12.md`.
+
+
+### 2026-08-11 — Benchmark realista: Fase 1 medida + Fase 2 diagnóstica + Fase 3 spec + cierre (opencode)
+
+**Pedido del usuario:** avanzar las fases del benchmark realista; cierre de sesión por protocolo (la sesión se cortó antes).
+
+**Lo hecho (buffy-context, sin commit previo):**
+- **Fase 1 Search** (`buffy-search.sh`): `BUFFY_SEARCH_STRATEGY=or` (default `and` = baseline byte a byte) — deacent + lowercase → términos ≥3 chars sin stopwords ES → máx 8 → `OR`/BM25 → top-K. Medida: search_recall **0.000 → 0.736**, context_relevance → 0.505, controles router/multi exactos → aislamiento demostrado, FTS5 exonerado.
+- **3 fixes de exactitud**: router CWD→`$REPO_DIR` (Node espurio), corpus visión path plano (`knowledge_dir: ""`), `search_recall` = `|recov ∩ gold| / |gold|`.
+- **Fase 2 diagnóstica** (router `--diagnose`, report-only): 14 multi × 3 seeds = 42/42 invariante; matriz por query (23/42 sin señales, react/code-search/git/vision = cero detecciones). Veredicto usuario 🟢.
+- **Fase 3 spec v2 APROBADA** (selector híbrido): gates G-R1..R6 con δ pre-fijado, regla de descarte §4.4, barrido presupuesto 700/900/1400. Paso 1: EVAL/dev congelados con sha256.
+- **Reglas de arquitectura** CORE/ADAPTATION/TEST/RESEARCH en `~/AGENTS.md` y spec §11.
+- Suite: **246/246 full · 230 --quick**. SESION.md podada a 5 entradas (Gmail/Drive → archive).
+
+**Pendiente:** Fase 3 paso 2 (baseline re-congelada 3 seeds) → paso 3 (V1 híbrido). En el PC: `git pull` + `buffy-memory.sh sync pull` una vez.
+
+---
+
+**Cierre del día (protocolo fin de sesión):**
+- **data_car commit `aea4e15` + push** — precios de la IA en Mi compra (P1 completado).
+- **buffy-context commit `74fa060` + push** — registro de sesión P1 data_car.
+- **SESION.md podada a 3 entradas** (las de 2026-08-09 y anteriores → `SESION-archive.md`).
+- **SNAPSHOT regenerado** + `buffy-doctor.sh --quick`: **CONSISTENTE** (64 OK, 1 warning preexistente form-filler).
+- **Acuerdo registrado en CONTINUE.md**: la palabra **"cerrar día"** dispara el protocolo de cierre de sesión (actualizar contexto, podar, SNAPSHOT, doctor, commit + push).
+
+---
+
+### 2026-08-10 — data_car P1: precios de la IA en la lista de compra + total CLP (opencode)
+
+**Pedido del usuario:** pendiente P1 heredado — "elegir pack → agregar a compra → compartir con IA → pegar respuesta → precios asignados + total". `parseAIResponse` + `formatCLP` ya existían en `src/lib/aiShare.ts`.
+
+**Lo hecho (`src/components/MaintenancePacks.tsx`, +118 líneas):**
+- Sección "💸 Precios desde la IA" en el panel Mi compra: textarea para pegar el JSON de la respuesta + botón "Asignar precios" + contador `N/M con precio` + fila Total (CLP).
+- `handleAssignPrices` (parsea con `parseAIResponse`, asigna `price` unitario por item), `findPrice` + `normalizeName` (match tolerante: minúsculas/sin acentos/sin refs en paréntesis/includes bidireccional), `computeTotal` (suma `precio × cantidad` → `formatCLP`).
+- Precios persistidos en `mg350_shopping_list` → sobreviven recarga. Precio unitario visible por item.
+
+**Verificado:** typecheck + build OK (hash `index-D4lIbUUa.js`); flujo Playwright completo — JSON realista → total $90.195 ✓, caso límite de nombres parciales → $75.000 ✓, JSON inválido → no rompe (0 errores consola), recarga → total persiste ✓.
+
+**Pendiente:** commit + push de data_car.
+
+---
+
+### 2026-08-10 — Scripts Google Apps Script (Gmail Organizer V3 + Drive Organizer Pro) documentados + opencode 1.18.16 (opencode)
+
+**Pedido del usuario:** "estábamos viendo los scripts de gmail y drive, creo que no guardaste esos últimos datos" → la sesión anterior (desde el teléfono) no había quedado registrada en buffy-context. Reconstruida desde `~/.local/state/opencode/prompt-history.jsonl` y disco.
+
+**Hallazgos:**
+- **Gmail Organizer V3** (`~/proyectos/gmail-scripts/`, scriptId `1yqqZXC4k...`): clasifica bandeja en etiquetas por categoría + empresa (BancoEstado, Tenpo, Fonasa, Mercado Libre, AliExpress, WOM...), rate limiting + reintentos + reanudación, fix de paginación (snapshot único con `search()` en vez de `getInboxThreads(pos)`), `cleanup_tmp.js` one-shot (borra etiquetas de usuario una sola vez vía `cleanupEtiquetasDone` en ScriptProperties).
+- **Drive Organizer Pro v5.0** (`~/proyectos/gmail-scripts-otro/`, scriptId `1TW8pIdyQ...`): modos MAESTRO/ESPECÍFICO × PRUEBA/REAL, motor de reglas con prioridad (MIME > nombre), carpetas administradas (Scripts, Documentación, Android, Configuraciones, Multimedia, Backups, Web, Recursos, Sin clasificar, Comprimidos, Chats) y excluidas (Google Fotos, Trash), rate limiting + triggers 10 min + reanudación por cola.
+- Ambos sincronizados con la web vía `clasp pull` (source of truth = nube de Google; repos locales sin remote = backup). Commits `a207071` y `610a040`.
+- **opencode actualizado a 1.18.16** (la actualización que "no se realizó" ayer se completó hoy 15:19; verificado contra última de npm).
+
+**Lección de proceso:** una sesión que toca proyectos nuevos debe registrarse en SESION.md/PROJECTS.md aunque no haya "cierre programado" — el historial de prompts de opencode permite reconstruir, pero es frágil.
+
+---
+
+### 2026-08-10 — P0: bench-context-selection.sh + congelamiento levantado (opencode)
+
+**Pedido del usuario:** "vamos con los pendientes" + modo autónomo → el P0 pendiente era el benchmark de selección de contexto con router que justificaba el próximo cambio (congelamiento vigente: benchmark primero, feature después).
+
+**Lo hecho:**
+- **`scripts/tests/bench-context-selection.sh` (NUEVO)**: pipeline completo USER REQUEST → router → categoría → search FTS5 → ranking. Sandbox con Knowledge por dominio (Android/Linux/FreeFire/React) + manifests de skills; tarea real "el teléfono no aparece en scrcpy". Métricas: `domain_precision`, `domain_recall`, `spurious_categories`, `search_recall`/`search_leaked`, `context_chars/tokens`, `window_utilization`, `pipeline_healthy`. Flags: `--count/--adversarial/--json/--quick`.
+- **Tesis confirmada (adversarial)**: FTS5 puro se contamina 100% (recall 0/2, leaked 10/10) pero el router carga el archivo del dominio correcto → `pipeline_healthy=true`. El router SÍ es la capa que resuelve lo que FTS5 aislado no puede.
+- **Bug propio corregido**: `search_leaked` usaba grep anclado a `^` pero los hits del search empiezan con el path → medía 0 cuando había 10 contaminados. Corregido sin anclar.
+- **`test-context-selection.sh` (NUEVO)** integra el benchmark a la suite (easy=gate, adversarial=medición). `run-tests.sh` sourceado.
+- **README**: sección nueva + conteos → **209 full (204 functional + 5 meta) / 193 --quick (188 functional)**, árbol con 15 test_*.sh + 2 benchmarks.
+- **Congelamiento LEVANTADO** en CONTINUE.md — el benchmark que lo justificaba existe y dio la evidencia esperada.
+
+**Verificación:** suite full **209 OK / 0 FAIL** · --quick **193 OK / 0 FAIL** · benchmark standalone exit 0 en easy y adversarial.
+
+---
+
+### 2026-08-09 — Lección: retroalimentación activa antes de instalar herramientas + evaluación Lyxel/Mantis (opencode)
+
+**Pedido del usuario:** "Quiero usar Mantis para scrcpy" → tras instalarlo y activarlo, resultó ser mapper de **gamepad**, no de teclado — no sirve para jugar con teclado+mouse desde PC. Lección de proceso: **preguntar el caso de uso exacto y verificar que la herramienta lo cubre ANTES de instalar/probar** (¿teclado/mouse o gamepad? ¿Linux? ¿login Google?).
+
+**Hallazgos consolidados:**
+- **Lyxel Linux** (GUI scrcpy v1.0.3): no incluye el Mapeador (solo Windows, WPF propietario). La GUI duplica funcionalidad del `scrcpy-freefire.sh` (perfiles, optimizaciones ADB) sin el mapeador ni el cleanup — no aporta. Cerrado.
+- **Mantis Gamepad Pro** (oficial v3.4.8 Play Store): mapper de **gamepad físico**, no escucha teclado. Activado vía script interno `buddyNew.sh` (ADB shell — método más confiable que el flujo on-device Wireless Debugging, que está en loop porque el diálogo del sistema es modal).
+- **APK parchado de Appteka** (`YOUAREFINISHED`): Google Sign-In falla siempre (SHA-1 no coincide con Firebase → `ApiException: 10` → loop). Inutilizable para apps con login de Google.
+- **GG Mouse Pro 2 sigue siendo el keymapper de teclado correcto** para este setup.
+
+**Cambios aplicados:**
+- `~/.agents/skills/scrcpy-freefire/SKILL.md`: nueva sección "Regla de oro: retroalimentación activa ANTES de instalar/probar herramientas" con la lección completa.
+- `Knowledge/Android/Keymappers.md`: aclarado que Mantis es de gamepad (no teclado).
+
+### 2026-08-09 — Corrección: Mantis vs Octopus (keymappers) (opencode)
+
+**Pedido del usuario:** confirmar conjetura "Mantis ya nadie lo usa, es baneable" → **a medias**: Mantis sigue activo (v3.4.8+, 54K reviews) pero v3.x introdujo suscripción Pro (~$9.99) e inestabilidad reportada; el **baneable por clonación es Octopus** (sandbox), no Mantis (NMC sin clonar, riesgo bajo comparable a GG Mouse Pro 2). El usuario confundió Octopus con Mantis.
+
+**Cambios aplicados:**
+- **`~/.agents/skills/scrcpy-freefire/SKILL.md`**: paquete corregido a `app.mantispro.gamepad`; activación actualizada (Android 11+: on-device Wireless Debugging); nota 2026 sobre suscripción v3.x + inestabilidad; aclarado el matiz Octopus (clonación) vs Mantis (NMC).
+- **`Knowledge/Android/Keymappers.md`**: mismas correcciones (paquete, activación, nota de confusión Octopus/Mantis).
+- **Implicación práctica**: GG Mouse Pro 2 (setup actual) tiene el mismo riesgo de ban que Mantis — cambiar no reduce riesgo; la única vía 100% segura según Garena son los simuladores de DPI (permitidos), no los mappers de overlay.
+
+### 2026-08-09 — Adquisición de capacidades nuevas + fixes de integración (opencode)
+
+**Pedido del usuario:** "hicimos cambios importantes en el repo de buffy-context, ¿puedes adquirir esas nuevas habilidades?" → pull con 2 features nuevas.
+
+- **Adquiridas**: `buffy-memory.sh` (memoria curada estilo Hermes, `memory_engine.py`) y `buffy-search.sh` (índice FTS5). Suite **196 OK / 0 FAIL**.
+- **Symlinks**: creados `buffy-memory.sh`, `buffy-search.sh`, `buffy-source.sh`, `buffy-verify.sh` en `~/.local/bin/`.
+- **Fix de symlinks (commit `849ac96`)**: `buffy-memory.sh`, `buffy-context.sh`, `buffy-router.sh` no resolvían `readlink -f` → al invocarse por symlink, `SCRIPT_DIR` apuntaba a `~/.local/bin/` y el `source lib/...` fallaba. Aplicado patrón existente en `buffy-source.sh`.
+- **Versiones sincronizadas (commit `5431ecf`)**: `buffy-source.sh --resolve` detectó stale real (kernel 6.18.39→6.18.42, node 26.4.0→26.7.0, npm 12.0.1→12.0.2) → INFO-core + CONTINUE corregidos → trust **100%**.
+- **Memoria real inicializada** en `~/.buffy/memories/` (MEMORY 18% · USER 26%).
+- **SESION.md podado** a 5 entradas / 26KB (2 viejas → `SESION-archive.md`). Doctor CONSISTENTE.
+
+
+### 2026-08-09 — 🧠 Memoria curada estilo Hermes (brecha 2) — buffy-memory.sh
+
+**Pedido del usuario:** "seguimos con la implementación para tener lo que tiene Hermes" — cerrar la brecha 2: memoria curada persistente (`MEMORY.md` + `USER.md`).
+
+**Cambios aplicados:**
+- **`scripts/buffy-memory.sh` (NUEVO)** — CLI de memoria curada: `list`, `render` (snapshot congelado para el prompt), `stats`, `add`, `replace`, `remove`, `batch` + flag `--json`. Respeta `BUFFY_MEM_DIR` (default `~/.buffy/memories`).
+- **`scripts/lib/memory_engine.py` (NUEVO)** — réplica fiel de `memory_tool.py` de Hermes (Nous Research) sin dependencias:
+  - Stores: `MEMORY.md` (2.200 chars) · `USER.md` (1.375 chars), entradas separadas por `\n§\n`, multiline.
+  - Dedupe (preserva orden), replace/remove por **substring único** (`old_text`); ambigüedad → error con previews.
+  - **Límites duros**: el add/replace que exceda el char limit se rechaza con instrucciones de consolidación.
+  - **File lock** exclusivo (fcntl, `<archivo>.lock`) + escritura **atómica** (tmp + rename 0600).
+  - **Guard de drift**: contenido en disco que no hace round-trip (edición manual, append, otra sesión) ABORTA la mutación y guarda `.bak.<ts>` — nunca sobrescribe lo que no entiende (issue #26045 de Hermes).
+  - **Guard de lectura fallida**: archivo ilegible (UTF-8 corrupto, permiso) ≠ store vacío → se rechaza la escritura.
+  - **Batch atómico** all-or-nothing contra el presupuesto FINAL (consolidar en un solo turno).
+  - **Escaneo de inyección** mínimo antes de escribir (la memoria se congela en el system prompt).
+- **`buffy-doctor.sh`**: nueva sección "🧠 Memoria curada" (directorio, presencia de MEMORY.md/USER.md, límites por store) — clean cuando la memoria está inicializada.
+- **Protocolo**: `LOAD_CONTEXT.md` (Paso 1.5 — snapshot congelado + semántica de escritura proactiva), `~/AGENTS.md` del dispositivo (misma sección), `README.md` (feature + scripts).
+- **Tests**: `scripts/tests/test-memory.sh` (8 suites: add/replace/remove, substring único, límites, drift+backup, batch atómico, inyección, render vacío/lleno, help) + `buffy-memory.sh` en el gate de sintaxis.
+- Memoria REAL inicializada en este dispositivo (`~/.buffy/memories`: MEMORY 3 entradas 12% · USER 2 entradas 15%).
+
+**Suite:** 196 OK / 0 FAIL (antes 168). Doctor: 63 OK / 2 warns / 0 err — healthy.
+
+**Lecciones:** el matching por substring único (no IDs) obliga a entradas cortas y distintas; el `.bak` ante drift es la única protección real contra perdida de memoria editada a mano (Hermes documentó la misma lección en su issue #26045).
+
+**Pendientes:** nada pendiente de la brecha 2. Futuras brechas Hermes ya revisadas: skills / self-improvement loop / external memory providers (no aplican o duplican lo existente).
+
+
+### 2026-08-09 — buffy-search.sh: búsqueda FTS5 de sesiones (brecha vs Hermes)
+
+**Pedido del usuario:** cerrar brechas de buffy-context frente a Hermes Agent (Nous Research) — arrancó por la búsqueda de sesiones (FTS5/SQLite, ~20ms, sin gastar tokens).
+
+**Cambios aplicados:**
+- **`scripts/buffy-search.sh` (NUEVO)**: índice FTS5 de `buffy-context` (raíz + `ai-context/` + `Knowledge/`, *.md y *.yaml) en `~/.cache/buffy-search/search.db` — una fila por línea, resultados `archivo:línea` con resaltado «término» (`snippet()`) y orden por relevancia (`bm25`).
+- Tokenizer `unicode61 remove_diacritics 2` (búsqueda sin acentos). Indexado incremental por mtime+size (auto antes de cada búsqueda). Flags: `-l N`, `--update`, `--reindex`, `--stats`; `BUFFY_REPO` para otros sistemas.
+- Índice 41 archivos / 7.347 líneas (~1.1MB). Búsqueda ~1s en el Mi 10.
+- `sqlite` (3.53.4) instalado vía `pkg` en Termux.
+
+**Lecciones registradas:** FTS5 no tiene `offsets()`/`matchinfo()` (son de FTS3/4); las aux functions (`snippet`/`bm25`) no funcionan con parámetros enlazados — query literal con tokens citados.
+
+**Pendiente (brecha 2):** memoria curada estilo Hermes — `MEMORY.md` (~2.200 chars) + `USER.md` (~1.375) con límites duros, snapshot congelado al inicio de sesión y reglas de escritura en AGENTS.md.
+
+
+**Pedido del usuario:** el botón "Agregar pack a compra" en data_car no mostraba nada (solo un toast de 2,5s, sin persistencia) — quería que los packs agregados quedaran visibles y conectados con el botón "Compartir con IA" para precios CLP. Además: buffy-context solo referenciaba Freebuff y quería que apunte también a opencode.
+
+**Cambios aplicados (data_car — commit `c345d16`):**
+- **Lista de compra persistente** en `localStorage` (`mg350_shopping_list`): "Agregar pack a compra" acumula el pack con items + referencias ya resueltas.
+- **Botón "Mi compra"** en el header del panel de packs, con badge contador de packs (entero). Panel desplegable: cada pack con items/referencias, botón ✕ por pack y "Vaciar".
+- **"Compartir compra con IA (precios CLP)"**: arma prompt con TODA la lista vía `buildAISharePrompt` y lo copia al portapapeles.
+- Botón del pack cambia a "✓ En tu compra" cuando ya está agregado.
+- Bug corregido: sumar cantidades daba "11.5 items" (aceite ×4.5 litros) → el badge cuenta packs, no unidades.
+
+**Cambios aplicados (buffy-context — commit `12433bf`):** README, USER-MANU, INFO-core, LOAD_CONTEXT, code-search y vision-adapter actualizados para reflejar que Buffy corre en Freebuff **y** opencode (modelos free: DeepSeek).
+
+**Verificado:** typecheck + build OK; flujo validado con playwright en local y producción (`scuderia-data.vercel.app`) — agregar pack → badge → panel → sobrevive recarga.
+
+**Pendiente:** asignar precios de la respuesta de la IA a la lista + total CLP (reusa `parseAIResponse`).
+
+
+### 2026-08-07 — scrcpy-freefire: sin auto-open de Free Fire + purga de 16 apps en el ZTE
+
+**Pedido del usuario:** que el script de Free Fire no abra el juego automáticamente (solo GG Mouse, y el usuario abre Free Fire manual) + ver y desinstalar apps del ZTE.
+
+**Cambios aplicados:**
+- **`~/scripts/scrcpy-freefire.sh`**: eliminado `am start` de `com.dts.freefireth` (corría 0.8s después de GG Mouse). El script ahora solo lanza GG Mouse con sus permisos; Free Fire se abre manualmente desde el teléfono (comando manual comentado en el script).
+- **Watchdog `FF_SEEN`**: antes mataba scrcpy cuando Free Fire "dejaba de correr"; como el juego ya no se abre desde el script, al arrancar no está corriendo → el watchdog viejo lo habría matado en 3s. Ahora espera a que Free Fire aparezca y recién ahí vigila su cierre desde el teléfono.
+- **Purga de apps en ZTE Nubia (69 → 53)** con `pm uninstall --user 0` (todas Success): Film+, Drivify, KDE Connect, KLWP, KWGT, Firefox, Canta, Telegram+, Coddy, GitHub Store, AR Core, Excel, xm.csee, ES File Explorer, Downloader, tema oscuro de ES (huérfano).
+
+**Archivos modificados:**
+- `~/scripts/scrcpy-freefire.sh` — sin auto-open de Free Fire + watchdog FF_SEEN
+- `buffy-context/ai-context/CONTINUE.md` — resumen de sesión agregado
+- `buffy-context/ai-context/SESION.md` — bitácora de sesión agregada
+
+**Verificado:** `bash -n` OK en el script; GG Mouse corriendo (PID 10067); 15 apps + 1 huérfana desinstaladas con Success; sin restos en `pm list packages`.
+
+
+### 2026-08-07 — Fixes de teclado/pantalla/monitor-alert (super+Escape, DPMS, cálculo de CPU)
+
+**Pedido del usuario:** eliminar la combinación `super + Escape` (bloqueaba el teclado y a veces congelaba la PC), evitar que la pantalla se apague sola, y verificar que la carga de CPU de la barra inferior de polybar concuerde con el script de alerta de CPU alta.
+
+**Cambios aplicados:**
+- **`super + Escape` eliminado del sxhkdrc** (`~/.config/bspwm/config/sxhkdrc`): ejecutaba `bspc wm -r` (reinicio del WM en caliente) — eso mataba el teclado y colgaba el sistema. Era un duplicado mal escrito del reload que ya existe en `super + r` (línea 59, mismo comando). Se dejó `super + ctrl + Escape` (recarga solo sxhkd, sin reiniciar bspwm) y un comentario NOTA en el archivo. sxhkd recargado con `pkill -USR1 -x sxhkd` (sin reiniciar bspwm), verificado vivo.
+- **Pantalla ya no se apaga**: DPMS estaba habilitado (Standby/Suspend/Off a 600s) + screensaver X con blanking a 600s → la pantalla se apagaba a los 10 min. Fix: `xset -dpms` + `xset s off` aplicados en vivo **y agregados al `~/.config/bspwm/bspwmrc`** (después de SetSysVars) para persistir en reinicios.
+- **`monitor-alert` calculaba mal el % de CPU** (`~/.local/bin/monitor-alert`, timer systemd cada 45s): la función `get_cpu()` usaba `u=$2+$4` (user+system) y `t=$2+$4+$5` (user+system+idle) sobre `/proc/stat` — campos incompletos que ignoraban `nice`/`iowait`/`irq`/`softirq`/`steal` en el denominador, más una ventana de 0.1s ruidosa. Fix: método estándar `(total − idle − iowait)/total × 100` sobre los 7 campos (user nice system idle iowait irq softirq), ventana de **1s**. Verificado con carga sintética: script corregido = estándar = 35% (antes 37/39/35 fluctuante).
+- **Umbrales recalibrados** para Ryzen 5 3400G (4C/8T) + 13GB sin swap: CPU_WARN 70→**75**, CPU_CRIT 90, RAM_WARN 80→**75**, RAM_CRIT 92→**88** (sin swap el margen entre avisar y congelarse es todo lo que queda; 88% ≈ 11.5GB usados deja ~1.5GB libres para reaccionar).
+
+**Archivos modificados:**
+- `~/.config/bspwm/config/sxhkdrc` — eliminado binding `super + Escape`
+- `~/.config/bspwm/bspwmrc` — `xset -dpms` + `xset s off` persistente
+- `~/.local/bin/monitor-alert` — fórmula estándar de CPU + umbrales recalibrados
+
+**Verificado:** `bash -n` OK en monitor-alert, script corre exit=0, timer systemd activo, valores concuerdan con polybar/top.
+
+**Pedido del usuario:** refinar las barras polybar del rice vista (paneles de vidrio flotantes, jerarquía limpia), quitar el icono de Windows de la barra inferior, corregir los relieves "sucios" de la barra superior y añadir info a la barra inferior (temperatura, disco, fecha+tiempo).
+
+**Cambios aplicados:**
+- **Huecos de ~100px entre módulos (RESUELTO):** en polybar 3.7.2, `padding`/`spacing` sin unidad se renderizan como **N caracteres de espacio** (`builder.cpp`: `string(value, ' ')`), no píxeles (≈8px por espacio con JetBrainsMono 10). Fix: todos los espaciados con sufijo `px`.
+- **Relieve "sucio" en bloques de la top bar:** los módulos `bi`/`bd` (`label-background = ${color.bg}`) pintaban costuras oscuras entre bloques; network/pulseaudio/updates tenían `format/label-background = ${color.mb}` (dobles rectángulos translúcidos) y los escritorios ocupados `label-occupied-background = ${color.mb}`. Fix: quitados bi/bd de `modules-center`/`modules-right` y eliminados los `*background = ${color.mb}` de módulos activos → texto/iconos limpios sobre vidrio.
+- **Botón Start (logo Windows) retirado a pedido:** `[module/start]` eliminado de modules.ini y de `modules-left` de la barra inferior.
+- **Fecha ausente en el reloj:** el label usaba `%date%` pero `[module/date]` no tenía la línea `date =` (solo `date-alt`) → renderizaba vacío. Fix: `date = "%a, %d %b %Y"`, `label = "%date%  %time%"`.
+- **Temperatura leía 0 + `%units%` literal:** `hwmon-path` en 3.7.2 = ruta completa al **ARCHIVO** del sensor (`/sys/class/hwmon/hwmon2/temp1_input`), no al directorio (apuntar al dir → lee el dir como archivo → `strtol("")` = 0, confirmado con strace). `%units%` no es token (es la opción `units`); `%temperature-c%` ya agrega "°C".
+- **Centro de barra inferior:** `bspwm` (duplicado con la top) → `cpu_bar sep memory_bar sep temp sep filesystem` con iconos FA6 Solid (   , colores red/yellow/orange/purple); `battery` quitado de `modules-right` (desktop, sin batería — solo logueaba error).
+- **Barra inferior murió sola una vez:** crash transitorio de runtime (sin OOM/segfault; IPC de ArchUpdates probado en vivo = inofensivo). Reinicio desacoplado con `setsid` + log en `/tmp/opencode/bar2.log` para capturar el motivo si reaparece.
+
+**Archivos modificados/creados:**
+- `~/.config/bspwm/rices/vista/config.ini`, `~/.config/bspwm/rices/vista/modules.ini` — barras y módulos
+- `~/.config/bspwm/rices/vista/CHANGELOG.md` — NUEVO: doc completo de la sesión (bugs, causa raíz, gotchas de polybar 3.7.2, mantenimiento)
+- `ai-context/PROJECTS.md` — sección "Escritorio — Rice vista" actualizada al estado actual
+- `ai-context/SESION.md` — entrada de sesión 2026-08-07
+
+---
+
+### 2026-08-06 — CodeGraph: descubrimiento y análisis de código (MCP + indexado + documentación)
+
+**Pedido del usuario:** configurar el servidor MCP de CodeGraph para consultar el grafo del código directamente durante las sesiones de código; probarlo en vivo y documentar su uso para que los agentes lo usen primero en proyectos grandes.
+
+**Cambios aplicados:**
+- **`@colbymchenry/codegraph` v1.5.0** (NUEVO, global, MIT, 100% local): grafo de conocimiento SQLite vía tree-sitter. Comando MCP: `codegraph serve --mcp`. Telemetría **desactivada**.
+- **Servidor MCP configurado en 4 agentes** (herramienta única `codegraph_explore`, probada en vivo con handshake JSON-RPC ✅): Gemini CLI (`~/.gemini/settings.json` + bloque en `GEMINI.md`), Claude Code (`~/.claude.json` + `~/.claude/settings.json` con auto-allow `mcp__codegraph__*` + hook `codegraph prompt-hook`), Antigravity (`~/.gemini/config/mcp_config.json`), Cline (VSCodium, cableado a mano — no está en la lista oficial).
+- **Proyectos indexados**: `autoscript-mobile-interface` (49 archivos · 1.084 símbolos · 1.896 aristas) y `ManUninstaller` (31 · 486 · 838). `.codegraph/` gitignored en ambos.
+- **Documentación**: sección "CodeGraph — Descubrimiento y Análisis (obligatorio)" en `AGENTS.md` de autoscript (comandos + ejemplos verificados); entradas en `PROJECTS.md` para GameBoost Pro Kotlin y ManUninstaller; regla global en `~/.AGENTS.md` (si existe `.codegraph/`, usar CodeGraph antes de grep/find).
+- **Decisión de alcance (datos)**: NO documentar en proyectos <30 archivos fuente (widgetos 28, data_car 28, pwa_securguard 20, lista_supermercado 17, porteria_pwa 17, GameBoostPro 10, codebuff-automation 6) — el bloque global de CLAUDE.md/GEMINI.md ya activa CodeGraph donde exista índice, y el ahorro de descubrimiento solo se nota a escala de autoscript.
+- **Demos de `impact` (ManUninstaller)**: `impact MainActivity` = 35 símbolos, 0 fuera del archivo (hoja del grafo — punto de entrada); `impact AppViewModel` = 47 símbolos en 2 archivos (6 call-sites en MainActivity) — mapa de riesgo para refactors.
+- **Pruebas end-to-end con Antigravity (`agy --print --dangerously-skip-permissions`) EXITOSAS**: en ManUninstaller reconstruyó el flujo de desinstalación (removeAdmin en línea 208) y en autoscript el flujo de boost (facade 1 línea en :215, 3 fallbacks de ejecución Shizuku→rish→Runtime) — líneas verificadas contra el grafo, sin errores MCP.
+- **CodeGraph visible para cualquier IA**: `AGENTS-root.md` sincronizado con `~/.AGENTS.md` (drift corregido, commit raíz 5862065); secciones en `INFO-core.md` (carga obligatoria), `LOAD_CONTEXT.md` ("CodeGraph PRIMERO"), `INFO-full.md` (commit 41c07f8); referencia completa nueva en `Knowledge/Tools/CodeGraph.md` (categoría Tools) con índices README actualizados y `buffy-doctor.sh` extendido (commit 341c2e5, doctor 60 OK / 0 errores).
+- **Sesión documentada** en `ai-context/SESION.md` (entrada 2026-08-06).
+
+**Archivos modificados/creados:**
+- `~/.gemini/settings.json`, `~/.gemini/config/mcp_config.json`, `~/.gemini/GEMINI.md` — MCP (Gemini + Antigravity)
+- `~/.claude.json`, `~/.claude/settings.json`, `~/.claude/CLAUDE.md` — MCP (Claude Code)
+- `VSCodium globalStorage/saoudrizwan.claude-dev/settings/cline_mcp_settings.json` — MCP (Cline)
+- `proyectos/autoscript-mobile-interface/AGENTS.md`, `.codegraph/` — sección CodeGraph + índice
+- `proyectos/ManUninstaller/.gitignore`, `.codegraph/` — índice + gitignore (commits ad6a12d, e77db36, 0d29483)
+- `~/.AGENTS.md` — regla global (commit raíz 6c6b985)
+- `ai-context/PROJECTS.md`, `ai-context/SESION.md` — registros (pusheados 255f766, a952e44)
+
+---
+
+### 2026-08-03 — BUFFY_HOME / common.sh (C2, opt-in): instalaciones alternativas sin romper el diseño
+
+**Pendiente §7.5 del digest ejecutado en modo autónomo** (Buffy PC): script común que
+exporta BUFFY_HOME para redirigir el estado generado a una raíz alternativa.
+
+**Cambios aplicados:**
+- **`scripts/lib/common.sh`** (NUEVO): configuración compartida — `BUFFY_HOME`
+  (default `$HOME`, opt-in), helpers `buffy_home`/`buffy_ai_context`/`buffy_snapshot`.
+  **Alcance deliberado**: BUFFY_HOME redirige SOLO el estado generado (ai-context/ +
+  SNAPSHOT); el escaneo del entorno del usuario ($HOME/proyectos, $HOME/scripts,
+  $HOME/.agents/skills, historial) sigue con el $HOME real.
+- **Scripts cableados**: `buffy-context.sh` (SNAPSHOT), `buffy-doctor.sh`
+  (detección/frescura), `buffy-repair.sh` (fix_regenerate_snapshot),
+  `buffy-router.sh` (base incluye SNAPSHOT) — todos vía `source lib/common.sh`.
+  Sin BUFFY_HOME definida → comportamiento idéntico (verificado).
+- **`scripts/tests/test-common.sh`** (NUEVO): 6 tests — helpers default/custom,
+  buffy-context genera SNAPSHOT bajo BUFFY_HOME, sin BUFFY_HOME no rompe,
+  doctor/router respetan BUFFY_HOME. Sin sandbox → corren en --quick.
+- **`scripts/tests/run-tests.sh`**: source del nuevo test + bash -n incluye los
+  scripts ya listados (common.sh se valida por el test de helpers).
+- **`INSTALL.md`**: sección "Configuración opcional: BUFFY_HOME (C2)" — qué redirige,
+  qué no, y qué scripts lo respetan.
+- **Validación**: suite `--quick` **116 OK** / completa **132 OK** · doctor 0
+  errores · bash -n OK · prueba real: SNAPSHOT generado en `/tmp/...` con
+  BUFFY_HOME y en `$HOME` sin él.
+
+**Archivos modificados/creados:**
+- `scripts/lib/common.sh`, `scripts/tests/test-common.sh` — NUEVOS
+- `scripts/buffy-context.sh`, `scripts/buffy-doctor.sh`, `scripts/buffy-repair.sh`,
+  `scripts/buffy-router.sh`, `scripts/tests/run-tests.sh`, `INSTALL.md` — MODIFICADOS
+
+---
+
+### 2026-08-03 — Schema-lite B1: validador estructural de ai-context (ai-context-lint.sh)
+
+**Pendiente §7.4 del digest ejecutado en modo autónomo** (Buffy PC): JSON Schema + test
+para INFO-core/CONTINUE/LOAD_CONTEXT. Decisión de diseño: validador bash puro
+(consistente con el repo), no JSON Schema formal — los consumidores son LLMs que leen
+markdown, y un schema-lite cubre el 80% del valor (como sugería el digest).
+
+**Cambios aplicados:**
+- **`scripts/ai-context-lint.sh`** (NUEVO): valida las secciones obligatorias que
+  LOAD_CONTEXT.md promete — INFO-core (`## Sistema`, `## Hardware`, `## Reglas personales`,
+  `## Estructura de proyectos`), CONTINUE (`## Resumen de la sesión`, `## Pendientes para
+  próxima sesión`, `## Stack del usuario`), LOAD_CONTEXT (`## Protocolo obligatorio al
+  iniciar sesión`, `## Carga condicional`, `## Arquitectura de memoria`) — + front-matter
+  semver-lite (`X.Y` o `X.Y.Z`, convención del repo) y `updated` ISO. Flags `--repo`,
+  `--json` (stderr limpio), `--quick`, exit 0/1/2.
+- **Hallazgo real del validador**: 3 front-matters (AGENTS.md, README.md, PROJECTS.md)
+  usaban `version: X.Y` (2 segmentos). Decisión: el validador acepta semver-lite X.Y/X.Y.Z
+  para alinearse con la convención existente de ai-context (skill.yaml sí exige X.Y.Z).
+- **`scripts/tests/test-ai-context-lint.sh`** (NUEVO): 5 tests — --help, repo sano (--json
+  schema + stderr limpio), secciones obligatorias presentes, repo roto (exit 1 + JSON),
+  front-matter semver-lite (X.Y y X.Y.Z válidos, rotos → exit 1), opción desconocida
+  (exit 2). Fixtures temporales en /tmp, sin sandbox → corren también en --quick.
+- **`scripts/tests/run-tests.sh`**: source del nuevo test + `ai-context-lint.sh` añadido
+  al bash -n previo.
+- **CI**: el job `suite` ya corre `run-tests.sh --json` → los 5 tests nuevos entran solos
+  (sin editar el workflow).
+- **Validación**: suite `--quick` 105 OK / completa **121 OK** · doctor 0 errores/1
+  warning · bash -n OK.
+
+**Archivos modificados/creados:**
+- `scripts/ai-context-lint.sh`, `scripts/tests/test-ai-context-lint.sh` — NUEVOS
+- `scripts/tests/run-tests.sh` — MODIFICADO
+
+---
+
+### 2026-08-03 — CI en GitHub Actions: suite completa + doctor con baseline de drift
+
+**Pedido del usuario:** crear un workflow que corra la suite completa y el doctor en cada push/PR. Decisión autónoma: el doctor bloquea **solo drift nuevo** (baseline medido en CI) para no dejar el CI permanentemente rojo.
+
+**Cambios aplicados:**
+- **`.github/workflows/ci.yml`** (NUEVO): dos jobs paralelos en `ubuntu-latest` — (1) **suite**: `run-tests.sh --json` como gate obligatorio; (2) **doctor**: `buffy-doctor.sh --json` con `BASELINE_ERRORS=16` (configurable) — el parseo es directo en python (una sola llamada, imprime resumen + lista ERR, falla con `::error::` solo si el drift aumenta; JSON no parseable → job falla en voz alta). `permissions: contents: read`, `timeout-minutes`, `concurrency` (cancela runs superseded), push en todas las ramas + PRs.
+- **Hallazgo de validación**: en un runner con HOME limpio el doctor ve **16 errores, no 13** — las skills que solo existen en `~/.agents/skills/` localmente pasan de `SKILL_NOT_IN_REPO` (warn) a `MISSING_SKILL` (err). El baseline se fijó a 16 (medido en clon fresco con HOME aislado). También se detectó un YAML inválido (python inline a columna 1 dentro del bloque `run: |`) y se corrigió indentándolo.
+- **`README.md`**: badge de CI + sección "GitHub Actions" en Testing (nota del baseline 16 vs 13 local).
+- **`CONTRIBUTING.md`**: nota sobre CI en la sección Tests (el doctor falla si un PR introduce drift nuevo).
+- **Validación**: YAML parseable (pyyaml), simulación del job doctor en clon fresco con HOME aislado (errors=16 = baseline → pasa; baseline=10 → falla, probando el gate), suite local, reviewer con sign-off.
+
+**Archivos modificados/creados:**
+- `.github/workflows/ci.yml` — NUEVO
+- `README.md`, `CONTRIBUTING.md` — MODIFICADOS
+
+---
+
+### 2026-08-03 — Entrada de release automática en el CHANGELOG (set-version + changelog-entry)
+
+**Pedido del usuario:** integrar `set-version.sh` con el changelog para generar la entrada de release automáticamente.
+
+**Cambios aplicados:**
+- **`scripts/changelog-entry.sh`** (NUEVO): genera la entrada de release desde git log — título `### <fecha> — Release vX.Y.Z`, sección **Cambios incluidos** (asuntos de commits desde el último tag) y **Archivos modificados/creados** (git diff --name-status). Modo `--dry-run` (previsualiza sin escribir), inserta tras la cabecera del CHANGELOG y actualiza el front matter `updated:`. **Sanitiza referencias `skills/<nombre>`** para que el doctor no las tome como skills documentadas (drift falso).
+- **`scripts/set-version.sh`**: ahora genera la entrada del CHANGELOG antes del commit de release y commitea `VERSION` + `ai-context/CHANGELOG.md` juntos; si la generación falla advierte y continúa; si el commit falla restaura VERSION y hace checkout del CHANGELOG.
+- **`scripts/tests/test-changelog.sh`** (NUEVO): 3 tests de sandbox — estructura del `--dry-run` (cabecera + commits + archivos), sanitización de `skills/` (no expone el nombre), inserción real en copia (cabecera intacta, nueva entrada al inicio, +1 entrada).
+- **`scripts/tests/run-tests.sh`**: `changelog-entry.sh` añadido al bash -n previo + source del nuevo test file.
+- **`README.md`**: sección Versioning actualizada (generación automática + `--dry-run`).
+- **Validación**: suite completa + suite `--quick` + reviewer con sign-off.
+
+**Archivos modificados/creados:**
+- `scripts/changelog-entry.sh`, `scripts/tests/test-changelog.sh` — NUEVOS
+- `scripts/set-version.sh`, `scripts/tests/run-tests.sh`, `README.md` — MODIFICADOS
+
+---
+
+### 2026-08-03 — Pendientes de infraestructura: CONTRIBUTING, versionado semántico, modo --quick, installer mejorado, migración SYSTEM.md
+
+**Cambios aplicados:**
+- **`CONTRIBUTING.md`** (NUEVO): guía para contribuidores corregida a la realidad del repo (remote GitHub real, suite bash puro, hook instalado vía `scripts/hooks/install.sh`).
+- **`VERSION`** (NUEVO, `v1.0.0`) + **`scripts/set-version.sh`** (NUEVO): versionado semántico — valida `vX.Y.Z`, corre la suite, commitea `VERSION`, crea tag anotado y lo pushea. Sección `## Versioning` en README.
+- **`scripts/tests/run-tests.sh`**: nuevo flag `--quick` que salta los ciclos de sandbox (heurística automática: cualquier test cuyo cuerpo llame `setup_sandbox` se omite) — rápido para hooks/CI. Nuevo **`scripts/tests/test-runner.sh`** (self-tests del runner con invocación filtrada para evitar recursión).
+- **`scripts/hooks/pre-commit.sh`**: ahora corre la suite en modo `--quick` por defecto; `BUFFY_HOOK_FULL=1` fuerza la suite completa puntualmente.
+- **`scripts/hooks/install.sh`**: opciones `--install/--uninstall/--check/--force/--no-test/--help`, manteniendo el mecanismo de escribir el hook con el shebang real (fix Termux).
+- **`scripts/migrate-system.sh`** (NUEVO): migración de los stubs `SYSTEM.md`/`SYSTEM_FULL.md` (contenido ya fusionado en `INFO-core.md`/`INFO-full.md`) a `ai-context/deprecated/` con timestamp, sed de referencias y verificación con la suite `--quick`. **EJECUTADO en el repo real el 2026-08-03** (decisión del usuario) — ver entrada de migración más abajo.
+- **`README.md`**: sección `## Versioning` + docs del modo `--quick` y de las variantes del hook (`BUFFY_HOOK_FULL`, re-instalación con `--force`).
+- **Validación**: suite completa 66/66 + suite `--quick` + reviewer con sign-off.
+
+**Archivos modificados/creados:**
+- `CONTRIBUTING.md`, `VERSION`, `scripts/set-version.sh`, `scripts/migrate-system.sh`, `scripts/tests/test-runner.sh` — NUEVOS
+- `scripts/tests/run-tests.sh`, `scripts/hooks/pre-commit.sh`, `scripts/hooks/install.sh`, `README.md` — MODIFICADOS
+
+---
+
+### 2026-08-03 — README actualizado: árbol de skills/Knowledge refleja el disco
+
+**Pedido del usuario:** el árbol del README no coincidía con el disco — el origen histórico del drift del doctor.
+
+**Cambios aplicados:**
+- **Árbol de `.agents/skills/`**: ahora muestra las **23 skills** agrupadas por dominio (Android 8, Web 2, Framework v4 5, Code & research 2, Frontend 4, Operación 2) — antes solo 10; se agregaron las 10 creadas + las 3 migradas (form-filler, image-analyzer, xiaomi-adb-tricks).
+- **Árbol de `Knowledge/`**: agregadas la categoría `AI/` (Kimi-K3.md) y `Vision.md` (antes invisibles); nota de versiones mínimas en scrcpy.md.
+- **Árbol de `scripts/`**: agregados skill-lint.sh, migrate-system.sh, set-version.sh, changelog-entry.sh, ollama-kill.sh, see.sh, lib/, hooks/, tests/ (antes solo 7 entradas).
+- **"What's included"**: Knowledge 17 files/7 categorías + Vision, 23 skills con manifest, CI verde 106 checks.
+- **Nueva sección "Skills (23 en disco)"**: tabla por grupo con nota de que el router las descubre por triggers.
+- **Tabla de categorías de Knowledge**: agregadas AI (1) y Vision (1).
+- **Validación**: doctor 0 errores (las 23 skills documentadas coinciden con disco — sin drift falso), suite `--quick` 90 OK.
+
+**Archivos modificados:**
+- `README.md` — MODIFICADO (71+/20-)
+
+---
+
+### 2026-08-03 — Versiones mínimas de scrcpy/Ollama documentadas
+
+**Decisión del usuario:** cerrar el pendiente (b) del digest — documentar las versiones mínimas verificadas desde el PC, con fuente.
+
+**Cambios aplicados:**
+- **`Knowledge/Android/scrcpy.md`**: sección "Versiones mínimas" — UHID ≥ 2.0 (release v2.0), `--video-buffer` ≥ 1.18, `--render-expired-frames` ≥ 1.19, `--stay-awake` ≥ 1.5, `--power-off-on-close` ≥ 1.20 con **fix en 3.3.1 (#6146)** → **mínimo recomendado ≥ 3.3.1** para el setup gaming. Verificado en el PC: `scrcpy 4.1-1` + `adb 1.0.41`.
+- **`Knowledge/Vision.md`**: sección "Versión de Ollama" — mínimo **≥ 0.30**, verificado binario `0.30.7` (sirviendo en `:11434`), paquete pacman `0.32.1-1`, último upstream v0.32.5. Notas: servicio de sistema activo (el de usuario deshabilitado), bug `ollama run` timeout → usar API, tags `:cloud` no ocupan RAM local.
+- **`BUFFY-PC-CONTEXT.md`** §7.6(b) y **`REVIEW-BASELINE.md`** §2.6: marcados como HECHA (antes "pendiente de decisión del usuario").
+- **`ai-context/CONTINUE.md`**: pendiente (b) resuelto.
+- **Validación**: doctor 0 errores + suite `--quick` (antes de commit).
+
+**Archivos modificados:**
+- `Knowledge/Android/scrcpy.md`, `Knowledge/Vision.md` — MODIFICADOS
+- `BUFFY-PC-CONTEXT.md`, `REVIEW-BASELINE.md`, `ai-context/CONTINUE.md` — MODIFICADOS
+
+---
+
+### 2026-08-03 — Migración SYSTEM.md/SYSTEM_FULL.md → deprecated/ (ejecutada)
+
+**Decisión del usuario:** marcar como 🔴 crítica la migración de los stubs SYSTEM.md/SYSTEM_FULL.md (contenido ya fusionado en INFO-core/INFO-full desde antes).
+
+**Cambios aplicados:**
+- **`scripts/migrate-system.sh`** EJECUTADO: los 2 stubs movidos a `ai-context/deprecated/` (con timestamp), referencias en `.md`/`.sh` actualizadas (AGENTS.md, README, LOAD_CONTEXT, CHANGELOG, CONTINUE, BUFFY-PC-CONTEXT, REVIEW-BASELINE).
+- **Correcciones manuales post-sed**: el sed global reemplazó `SYSTEM.md`→`AGENTS.md` ciegamente — se corrigió a mano: `ai-context/AGENTS.md` y `ai-context/README.md` ahora apuntan a `INFO-core.md`/`INFO-full.md` (destino real del contenido); árbol de `LOAD_CONTEXT.md` y `README.md` raíz muestran `deprecated/`; bitácoras históricas (SESION.md, SESION-archive.md) revertidas (no se reescriben).
+- **Doctor**: ya no reporta `DEPRECATED_FILE` (los archivos ya no están en `ai-context/`).
+- **Validación**: suite `--quick` ✅ (corrida por el propio script) + suite completa + doctor 0 errores.
+
+**Archivos modificados/creados:**
+- `ai-context/deprecated/{SYSTEM.md,SYSTEM_FULL.md}.20260803_150816` — MOVIDOS
+- `ai-context/AGENTS.md`, `ai-context/README.md`, `ai-context/LOAD_CONTEXT.md`, `README.md`, `BUFFY-PC-CONTEXT.md`, `REVIEW-BASELINE.md`, `ai-context/CHANGELOG.md`, `ai-context/CONTINUE.md` — MODIFICADOS
+
+---
+
+### 2026-08-03 — Suite de tests permanente + pre-commit hook
+
+**Pedido del usuario:** Convertir los checks ad-hoc (18/18 doctor/repair/agent) en una suite versionada con runner único, y añadir hook de pre-commit que ejecute la suite antes de cada commit.
+
+**Cambios aplicados:**
+- **`scripts/tests/`** (NUEVO): suite permanente en **bash puro** (bats no requerido — no está disponible en Termux). `run-tests.sh` es el runner único (bash -n previo de los 5 scripts, descubre `test_*` vía `declare -F`, `--json` para CI, filtro por nombre, `trap` que limpia el sandbox, exit 0/1 honesto). `helpers.sh` aporta `ok/bad/check/expect_exit/jassert` + `setup_sandbox` (copia del repo, HOME aislado, drift artificial: sin ~/ai-context y sin skills).
+- **`scripts/tests/test-doctor.sh`**: `--json` schema + conteos coherentes, catálogo fix_id (id/fix/safe/target + safe coherente con FIX_SAFE), errores con identidad (INVALID_REPO/UNKNOWN_OPTION), stderr limpio, `--quick` == `--json`, exit codes honestos.
+- **`scripts/tests/test-repair.sh`**: dry-run en repo real sin escribir (verificado con git status), `--auto` en sandbox reduce drift 26→0, regresión del bug `local skill dir` (cada skill en su dir con SKILL.md), `--fix` puntual, exit codes 0/1/2.
+- **`scripts/tests/test-agent.sh`**: ciclo completo en sandbox (drift→0, `repair.ran=true`, exit 0), `--no-repair` en repo real, exit condicional al estado real (suite determinística).
+- **`scripts/hooks/pre-commit.sh`** (NUEVO): hook versionado (no se pierde en clones) que ejecuta la suite y aborta el commit si falla.
+- **`scripts/hooks/install.sh`** (NUEVO): instalador que genera `.git/hooks/pre-commit` con el shebang de bash **real del sistema** — necesario en Termux, donde `/usr/bin/env` no existe y git ejecuta los hooks con exec directo (el primer commit falló con `cannot exec '.git/hooks/pre-commit': No such file or directory`; resuelto resolviendo `command -v bash`). `git commit --no-verify` para saltar.
+- **`README.md`**: sección `## Testing` (uso del runner, `--json` para CI, filtro, instalación del hook con `bash scripts/hooks/install.sh`).
+- **Validación**: 59/59 checks OK (1 ronda falló por resolución de rutas del runner — SCRIPT_DIR terminaba en /tests — y por regex ERE que interpretaba los paréntesis literales de `error(es)`; ambos corregidos). 2 rondas de code review con sign-off.
+
+**Archivos modificados/creados:**
+- `scripts/tests/{run-tests.sh,helpers.sh,test-doctor.sh,test-repair.sh,test-agent.sh}` — NUEVOS
+- `scripts/hooks/pre-commit.sh` — NUEVO
+- `README.md`, `ai-context/CHANGELOG.md` — actualizados
+
+---
+
+### 2026-08-03 — Ciclo operativo completo: doctor --json con catálogo fix_id + buffy-repair + buffy-agent
+
+**Pedido del usuario:** Cerrar el lazo doctor → decisión → acción (antes el sistema solo detectaba problemas, no actuaba). Diseño acordado: catálogo de `fix_id` en doctor --json (evita un sistema de parches), ajustes de base en buffy-context.sh, actuador buffy-repair.sh con clasificación AUTO_SAFE/REVIEW_REQUIRED, y orquestador buffy-agent.sh al final (envoltura de piezas confiables).
+
+**Cambios aplicados:**
+- **`scripts/buffy-doctor.sh`** (NUEVO): auditoría con `--json` — cada item accionable lleva identidad `{id, fix, safe, target}` (p.ej. `MISSING_SKILL / create_skill_dir / safe:true / "android-agent"`). Catálogo FIX_SAFE: AUTO_SAFE (regenerate_snapshot, create_ai_context_dir, create_skill_dir, chmod_plus_x) vs REVIEW_REQUIRED (create_*file, copy/migrate_skill, remove_or_merge, git_init, update_index). Detección de SNAPSHOT stale (STALE_SNAPSHOT) parseando `Generated:`. Errores con identidad (INVALID_REPO, UNKNOWN_OPTION); stderr limpio en modo JSON. Validado: 10/10 tests.
+- **`scripts/buffy-context.sh`**: shebang zsh → bash (consistencia con doctor/router; `--watch` re-ejecuta con bash), exit codes reales (0 éxito / 1 fallo verificable), header `> ⏱️ Generated: <ts>` en SNAPSHOT.md (frescura medible), `mkdir -p` del directorio destino (bug latente en sistemas sin ~/ai-context).
+- **`scripts/buffy-repair.sh`** (NUEVO): actuador con `case "$fix"` puro (sin parseo de mensajes). Dry-run por defecto; `--auto` solo AUTO_SAFE; `--fix NOMBRE`; `--json`; loop doctor → repair → verify con delta reportado. Exit codes honestos (0 limpio / 1 review pendiente o fixes fallidos / 2 error).
+- **`scripts/buffy-agent.sh`** (NUEVO): orquestador del ciclo — preflight (doctor --json) → repair --auto si hay drift → verify (doctor --json) → load (buffy-router) si hay mensaje. JSON final `{repo, preflight, repair, verify, load, ready}` para CI/protocolo. Validado: 18/18 tests (sandbox: drift 19→0 errores, 19 skills creadas en disco).
+- **`scripts/buffy-router.sh`** (NUEVO, ya existía localmente): carga condicional de contexto por categorías (base, knowledge, skills, scripts) con `--json`.
+- **`.agents/skills/`**: 5 skills nuevas con contenido curado (android-adb, android-game-opt, hyperos-hardening, scrcpy-freefire, shizuku-rikka).
+- **Bugs de bash encontrados en el camino**: `${arr[]}` con subscript vacío escupe "bad array subscript" (guard en jitem); `local skill="$1" dir="...$skill..."` expande con el valor viejo → skills se creaban en el dir equivocado (locals separados en fix_create_skill_dir).
+
+**Archivos modificados/creados:**
+- `scripts/buffy-doctor.sh`, `scripts/buffy-repair.sh`, `scripts/buffy-agent.sh`, `scripts/buffy-router.sh` — NUEVOS
+- `scripts/buffy-context.sh` — modificado
+- `.agents/skills/{android-adb,android-game-opt,hyperos-hardening,scrcpy-freefire,shizuku-rikka}/` — NUEVOS
+- `README.md`, `INSTALL.md`, `ai-context/CHANGELOG.md` — actualizados
+
+---
+
+### 2026-08-02 — Organización del home + Ollama al HDD + unificación ai-context
+
+**Pedido del usuario:** organizar el caos del home (con HDD disponible) y unificar el ai-context duplicado en una sola fuente de verdad.
+
+**Cambios aplicados:**
+- `~/Backups` (28G) → `/media/datos/Backups` con symlink (copia verificada byte a byte antes de borrar)
+- `data_car`, `codebuff-automation`, `odysseus` → `~/proyectos/` con symlinks (no rompe rutas absolutas)
+- Notas sueltas → `~/notas/`; logs → `~/logs/`; basura eliminada (`ervice --no-pager -n 50`, `udo systemctl start bluetooth.service`)
+- Caches limpiados: npm, gradle, `~/.cache` (8.5G→360M) — disco del sistema 67% → 39%
+- `~/.ollama` (14G) → `/media/datos/ollama` con symlink; deshabilitado el servicio de usuario duplicado (crash-loop); queda solo el servicio de sistema (`/usr/local/bin/ollama`)
+- Skill `file-organizer` instalada desde `ComposioHQ/awesome-claude-skills`
+- ai-context unificado: fusión bidireccional de `SESION.md` y `CHANGELOG.md` en `buffy-context/`; `~/ai-context` → symlink al repo; `AGENTS-root.md` → `INFO-core.md` (SYSTEM.md está deprecado)
+
+---
+
+### 2026-08-01 — systemd-boot fix + ask-model.js "segundo cerebro" + kimi_vision.js adoptado
+
+**Pedido del usuario:** (1) arreglar que el menú de arranque esperara Enter, (2) montar un complemento para consultar otros modelos (local/nube) cuando yo tenga dudas, (3) adoptar la mejora kimi_vision.js del repo buffy-context.
+
+**Cambios aplicados:**
+- **systemd-boot (no GRUB)**: variable EFI `LoaderConfigTimeout` (4a67b082-...) estaba en `menu-force` → esperaba Enter indefinidamente pisando el `timeout 3` del `loader.conf`. Fix: `bootctl set-timeout 3`, luego `0` a pedido del usuario (arranque instantáneo). `loader.conf`: `timeout 0`. Escape: boot counting/fallback + `systemctl reboot --boot-loader-menu=force`.
+- **`codebuff-automation/ask-model.js`** (NUEVO): consulta a Ollama local (qwen2.5:7b) o HF Router nube (DeepSeek V4 Flash/Pro/R1, Kimi K3). Modos one-shot, `--chat` (memoria), `--list`, `--json`, separador `--`.
+- **`codebuff-automation/lib/utils.js`**: `resolveHfToken()` compartida (env HF_TOKEN > `~/.huggingface/token` > vacío, fallback Termux). ask-model.js y kimi_vision.js la importan (refactor post-revisión).
+- **`~/.huggingface/token`** (chmod 600): token HF configurado.
+- **kimi_vision.js + lib/{logger,utils}.js + Kimi-K3.md** vendored desde `maneskinleon-del/buffy-context` → `codebuff-automation/`; skills image-analyzer actualizadas (kimi_vision recomendado, auto_permiso.py fallback OCR); provenance en codebuff-memoria.md.
+- **Verificado**: `node --check` en los 3 scripts; consultas reales a qwen2.5:7b, DeepSeek V4 Flash y Kimi K3 ✅; 2+ pasadas de code review aprobadas.
+
+**Aclaración clave:** MCP conecta herramientas (el LLM es el cliente, los servidores exponen tools). Para "consultar otro modelo" no hace falta MCP — es una llamada HTTP OpenAI-compatible.
+
+---
+
+### 2026-08-01 — Cleanup real al salir en scrcpy-freefire.sh + limpieza del teléfono (laboratorio)
+
+**Pedido del usuario:** al cerrar el script de Free Fire, cerrar las apps abiertas y apagar la pantalla (las apps seguían corriendo y gastaban batería). Además, empezar a limpiar el teléfono como laboratorio de pruebas.
+
+**Qué se hizo:**
+1. **Cleanup real al salir en `scrcpy-freefire.sh`**: `close_game_apps()` + apagado de pantalla a los 5s. Misterio resuelto: la sesión anterior corría código viejo (solo force-stop a 2 apps). Descubrimiento clave: 8 apps (Device Admins/auto-reinicio) ignoran el force-stop de Android.
+2. **Mecanismo nuevo**: `KILL_PERSISTENT` (default `0` seguro), `pm disable-user` al cerrar para matar de verdad a los Device Admins, `pm enable` + `dpm set-active-admin` al iniciar para restaurarlos completos (incluido el estado de admin — `pm enable` NO lo restaura), gate `SESSION_STARTED` (solo limpia si el juego arrancó).
+3. **Nuevo `scrcpy-freefire-restore.sh`**: restauración manual independiente; lee listas del main vía `sed` (una sola fuente de verdad).
+4. **Cierre con Alt+Q** (`sxhkdrc:162`): hint del notify actualizado (`Alt+Q para salir`).
+5. **Limpieza del teléfono**: desinstalados Tasker (`net.dinglisch.android.taskerm`), Automate (`com.llamalab.automate`) y Facebook (`com.facebook.katana`). Detalle técnico: eran Device Admins activos → bloqueo `DELETE_FAILED_DEVICE_POLICY_MANAGER`; solución `pm disable-user` → desactiva el admin → `pm uninstall`. Único admin restante: MacroDroid.
+6. **Scripts actualizados**: `PERSISTENT_APPS` y `PERSISTENT_ADMIN_RECEIVERS` sin tasker/automate (restore se autoactualiza).
+
+**Transparencia:** los ciclos disable→enable de prueba desactivaron el Device Admin de MacroDroid/Tasker/Automate; restaurados con `dpm set-active-admin` (los 3 con Success).
+
+**Validación:** `bash -n` OK en ambos scripts, sync a `.openclaw/`, revisor aprobó, desinstalación verificada (`pm path` vacío).
+
+**Pendiente mañana:** borrar más apps del lab (candidatos: MacroDroid, AutoJS, Kustom Widget, Steps, `com.launcher.hype`); considerar `KILL_PERSISTENT=1` para lab sin apps corriendo.
+
+---
+
+### 2026-08-01 — Fix ruta de rish + prueba real de --grant con diálogo de permiso
+
+**Hallazgo:** En la primera prueba real con `--grant`, el script fallaba con `rish: not found` porque rish vive en `~/bin/rish` y no está en PATH en este dispositivo.
+
+**Cambios aplicados:**
+- **`scripts/kimi_vision.js`** (y `~/kimi_vision.js`): nueva función `resolveRish()` — resuelve la ruta con prioridad env `RISH` > `~/bin/rish` (si existe) > `rish` en PATH (vía `command -v`) > fallback `rish`. La constante `RISH` usa ahora la ruta resuelta.
+- **Prueba real completada**: diálogo de notificaciones de VInstall (`com.vinstall.alwiz`) detectado por Kimi K3 al 98% (título, botones PERMITIR/NO PERMITIR) y concedido: `pm grant POST_NOTIFICATIONS` + `appops POST_NOTIFICATION=allow`. Verificado: `granted=true`, appop `allow`.
+
+---
+
+### 2026-08-01 — Fix endpoint Kimi K3 (router.huggingface.co/v1, sin /hf)
+
+**Hallazgo:** El endpoint `/hf/v1/chat/completions` devuelve 404; el correcto es `https://router.huggingface.co/v1/chat/completions` (verificado con prueba real: HTTP 200, Kimi K3 respondió en 10.2s).
+
+**Cambios aplicados:**
+- **`scripts/kimi_vision.js`** (y `~/kimi_vision.js`): `KIMI_ENDPOINT` default corregido a `router.huggingface.co/v1/chat/completions` (header + constante), + hint de error para 404 que recomienda revisar `KIMI_ENDPOINT`.
+- **`Knowledge/AI/Kimi-K3.md`**: las 3 referencias al endpoint actualizadas a `/v1` (tabla de acceso, ejemplo curl, sección Script implementado).
+- **Nota:** las entradas históricas de este CHANGELOG mencionan `/hf/v1`; quedan como referencia del estado previo al fix.
+
+---
+
+### 2026-08-01 — kimi_vision.js integrado al repo buffy-context
+
+**Pedido del usuario:** Agregar kimi_vision.js al repo: copiarlo a scripts/ y documentarlo en Knowledge/AI/Kimi-K3.md.
+
+**Cambios aplicados:**
+- **`scripts/kimi_vision.js`** (NUEVO): copia del script de visión IA (Kimi K3) para detectar diálogos de permisos — upgrade de auto_permiso.py. Idéntico al origen `~/kimi_vision.js` (22639 bytes, diff 0), `node --check` OK.
+- **`scripts/lib/logger.js` + `scripts/lib/utils.js`** (NUEVOS, vendored): copias de `~/lib/` para que el script sea **autocontenido y ejecutable desde el repo** (verificado: `node scripts/kimi_vision.js --help` ✅). Marcados como copia vendored (actualizar desde `~/lib/`).
+- **`Knowledge/AI/Kimi-K3.md`**: Nueva sección "Script implementado: scripts/kimi_vision.js" — modos CLI, cómo funciona (base64 → Kimi K3 → JSON → mapeo rish), robustez (retry/backoff, parseo robusto, fallback other), verificación.
+- **`README.md`**: árbol de scripts actualizado con `kimi_vision.js`.
+
+---
+
+### 2026-08-01 — kimi_vision.js creado + repo clonado vía SSH
+
+**Pedido del usuario:** Crear el script kimi_vision.js (visión IA con Kimi K3 para detectar diálogos de permisos, upgrade de auto_permiso.py) y sincronizar buffy-context con un clon local vía SSH.
+
+**Cambios aplicados:**
+- **`~/kimi_vision.js`** (NUEVO, fuera del repo): visión IA con `moonshotai/Kimi-K3` vía API HF OpenAI-compatible (`router.huggingface.co/hf/v1/chat/completions`). Screenshot en base64 → modelo devuelve JSON (tipo de permiso, app, botones, confianza) → mapeado a `pm grant`/`appops set` vía rish. Modos: `--img`, `--monitor`, `--watch`, `--screenshot`, `--grant`, `--pkg`, `--json`. Requiere `HF_TOKEN` + licencia gated aceptada. Probado con API simulada ✅ (extractJson 3 casos, mapeo, pipeline completo); 2 pasadas de code review (fixes: mtime en monitorLoop, orden help-vs-token, Number.isFinite en args).
+- **Repo clonado**: `~/buffy-context` vía HTTPS + remote `origin` en SSH (`git@github.com:...`). 44 archivos, working tree limpio, los 5 commits del doc Kimi K3 presentes.
+- **`ai-context/SESION.md`**: Sesión 2026-08-01 actualizada — kimi_vision.js + clon SSH + pendientes (clave SSH por registrar, HF_TOKEN, prueba real).
+- **Clave SSH**: ed25519 generada en este dispositivo; **pendiente de registrar** en github.com/settings/keys (el token actual no tiene scope `admin:public_key`).
+
+---
+
+### 2026-08-01 — Kimi K3 vía Hugging Face + MCP documentado
+
+**Pedido del usuario:** Investigar cómo usar Kimi K3 (Moonshot AI) desde Hugging Face vía MCP y documentar el hallazgo en el repo.
+
+**Cambios aplicados:**
+- **`Knowledge/AI/Kimi-K3.md`** (NUEVO): Referencia del modelo — 2.8T params MoE, multimodal nativo, 1M contexto, tool calling. Acceso: HuggingChat web, API OpenAI-compatible `router.huggingface.co/hf/v1` + token HF (pago por uso), API Moonshot. Aclaración clave: MCP conecta herramientas, NO es la forma de usar el modelo (HuggingChat es cliente MCP; el MCP oficial de HF expone el Hub). Casos de uso: visión de screenshots (upgrade OCR/auto_permiso.py), análisis de contexto 1M (CSVs SecurGuard, dumpsys, logcat), segunda opinión de código, JSON estructurado.
+- **`Knowledge/README.md`**: Nueva categoría `AI/` indexada en el árbol + fecha actualizada a 2026-08-01.
+- **`ai-context/SESION.md`**: Sesión 2026-08-01 registrada; sesión 07-29 archivada (poda automática).
+- **`ai-context/SESION-archive.md`**: Sesión 07-29 (día completo) movida al archivo.
