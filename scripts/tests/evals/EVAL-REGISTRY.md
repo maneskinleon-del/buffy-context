@@ -2340,3 +2340,24 @@ Criterio §6.3 del gate: *checkout limpio → mismo `corpus_hash` por contenido,
 
 **Conclusión:** mismo fixture + contenido idéntico → mismo `corpus_hash`,
 independiente de la máquina/checkout/caché. D4 PASADO.
+
+### D5 — GATE FINAL de Fase D (2026-08-15) — ✅ PASADO
+
+**Pregunta del gate:** ¿la infraestructura de fixture cumple el contrato congelado
+de Fase D? (NO reinterpreta 17B/17C/17D — solo valida el mecanismo.)
+
+| Criterio | Verificación | Resultado |
+|---|---|---|
+| §6.1 Reproducibilidad | 2 validaciones de identidad consecutivas | ✅ `0af49cc666d872a6` idéntico |
+| §6.2 Inmutabilidad frente al árbol vivo | editar `CONTINUE.md`/`CHANGELOG.md` → fixture sin cambios | ✅ mismo hash `0af49cc666d872a6` |
+| §6.3 Estabilidad multi-máquina | 3 checkouts limpios A/B/C + re-verificación en D5 | ✅ mismo hash (D4 + confirmación) |
+| §6.4 Detección de mutación → STOP | editar `README.md` del corpus copiado | ✅ `✗ FIXTURE MUTADO` → exit 2, sin reindex silencioso |
+| §6.5 Config sensible | `config_hash` base vs `PADS=[8]` | ✅ `b2b8b357…` ≠ `fdfc5256…` |
+| §6.6 Suite intacta | full + quick | ✅ **315 OK** · **299 OK** (0 FAIL) |
+| §6.7 Exclusión efectiva | find de instancia/memoria/pipeline en corpus | ✅ 0 archivos de instancia/memoria · 0 scripts (solo datos) |
+
+**Fase D: CERRADA y APROBADA como INFRAESTRUCTURA** (no como resultado
+experimental). La barrera entre estado operativo del proyecto y estado
+experimental quedó implementada y verificada: `--repo` (árbol vivo, histórico)
+vs `--fixture` (corpus congelado, hash por contenido, mismatch → STOP).
+**Ningún EVAL nuevo (17E+); ningún resultado experimental derivado de este gate.**
