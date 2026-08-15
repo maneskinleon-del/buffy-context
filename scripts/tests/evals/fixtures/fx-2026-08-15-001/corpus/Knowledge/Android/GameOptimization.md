@@ -1,0 +1,81 @@
+# Android Game Optimization — Referencia
+
+> Optimización de rendimiento para juegos en Android vía Shizuku/ADB.
+> Skill completa: `.agents/skills/android-game-opt/`.
+
+## Verificación previa
+
+```bash
+# Verificar Shizuku corriendo
+adb shell /data/local/tmp/rish -c "id"  # → uid=2000(shell)
+
+# Backup de valor antes de cambiar
+adb shell settings get global <key>
+```
+
+## CPU / Gobernador
+
+```bash
+# Ver gobernador actual
+adb shell cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
+
+# Cambiar a performance (si el kernel lo permite)
+adb shell su -c "echo performance > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor"
+```
+
+> ⚠️ `sysctl -w` está bloqueado por SELinux en casi todos los kernels stock.
+> `su` necesario para `echo` a sysfs.
+
+## Settings globales
+
+```bash
+# Forzar renderizado GPU
+adb shell settings put global force_gpu_rendering 1
+
+# Desactivar animaciones (reduce lag en input)
+adb shell settings put global window_animation_scale 0
+adb shell settings put global transition_animation_scale 0
+adb shell settings put global animator_duration_scale 0
+
+# No dormir mientras carga
+adb shell settings put global stay_on_while_plugged_in 7
+
+# Desactivar optimización de batería agresiva
+adb shell settings put global power_savings_mode 0
+```
+
+## Touch
+
+```bash
+# Sensibilidad táctil (depende del OEM)
+adb shell settings put global touch_pressure_scale 0.001
+adb shell settings put system touch_pressure_high_application 0
+
+# Desactivar ghost touch al cargar (útil para gaming)
+adb shell settings put global charging_optimization 0
+```
+
+## Thermal
+
+```bash
+# Ver temperatura
+adb shell dumpsys thermalservice | grep -i temperature
+
+# Modos térmicos (depende del OEM)
+adb shell settings put global thermal_control 0  # Desactivar thermal throttling
+```
+
+## Game profiles (por OEM)
+
+| OEM | Modo juego | Comando |
+|-----|-----------|---------|
+| Xiaomi | Game Turbo | `adb shell am broadcast -a com.xiaomi.gamebooster.action.ENTER` |
+| Samsung | Game Booster | Via app Game Booster |
+| OnePlus | Game Space | Via app Game Space |
+
+## Anti-patrones
+
+- ❌ No forzar `sysctl -w` si SELinux lo bloquea
+- ❌ No cambiar gobernador CPU en kernels stock (no tiene efecto)
+- ❌ No modificar `vm.swappiness` en Android (no aplica igual)
+- ✅ Shizuku es suficiente para la mayoría de optimizaciones
