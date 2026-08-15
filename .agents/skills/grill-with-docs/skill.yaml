@@ -1,0 +1,9 @@
+id: grill-with-docs
+name: "grill-with-docs"
+version: 1.0.0
+description: "Docs-anchored grilling session — challenges a plan against the project's existing language (CONTEXT.md) and recorded decisions (docs/adr/), and updates those files inline as terminology and decisio..."
+entry: SKILL.md
+safe: true
+triggers:
+  - "grill with docs"
+  - "grill-with-docs"

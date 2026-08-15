@@ -1,0 +1,9 @@
+id: changelog-generator
+name: "changelog-generator"
+version: 1.0.0
+description: "Automatically creates user-facing changelogs from git commits by analyzing commit history, categorizing changes, and transforming technical commits into clear, customer-friendly release notes. Turn..."
+entry: SKILL.md
+safe: true
+triggers:
+  - "changelog generator"
+  - "changelog-generator"

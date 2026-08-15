@@ -69,7 +69,7 @@ search_st_fixture() {
 
 test_search_strategy_or() {
   suite "search: estrategia OR (Fase 1 — query natural recupera lo que AND no puede)"
-  local SB="${TMPDIR:-/data/data/com.termux/files/usr/tmp}/buffy-search-or-$$"
+  local SB="${TMPDIR:-/tmp}/buffy-search-or-$$"
   rm -rf "$SB"
   search_st_fixture "$SB"
   local Q="el teléfono ADB no detecta el móvil conectado por USB"
@@ -103,7 +103,7 @@ test_search_strategy_or() {
 
 test_search_strategy_determinism() {
   suite "search: determinismo de la estrategia OR"
-  local SB="${TMPDIR:-/data/data/com.termux/files/usr/tmp}/buffy-search-or-$$"
+  local SB="${TMPDIR:-/tmp}/buffy-search-or-$$"
   rm -rf "$SB"
   search_st_fixture "$SB"
   local A B

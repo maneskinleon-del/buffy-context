@@ -1,0 +1,9 @@
+id: pr-review-expert
+name: "pr-review-expert"
+version: 1.0.0
+description: "Use when the user asks to review pull requests, analyze code changes, check for security issues in PRs, or assess code quality of diffs."
+entry: SKILL.md
+safe: true
+triggers:
+  - "pr review expert"
+  - "pr-review-expert"
