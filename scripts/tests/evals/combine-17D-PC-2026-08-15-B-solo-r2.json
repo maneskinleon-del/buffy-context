@@ -1,0 +1,368 @@
+{
+  "benchmark": "17C reducción del leak estructural del pool (A/V1/V2/V3)",
+  "variant": "A",
+  "eval_id": "eval-ctx-PC-2026-08-11",
+  "eval_hash": "98a0e3082d920e71a30b1f1a759332808a251f9d02b899a7db3e2604369b34ac",
+  "date": "2026-08-11",
+  "profile": "PC",
+  "host": "sabrewulf-a320ms2h",
+  "model": "bge-m3",
+  "commit_sha": "ad046316c0988da7d07b0574b7d1e47ee7fbff90",
+  "h1_dict_hash": "f534283fda257e3e",
+  "query_source": "query natural + términos H1 reales (expand_query.py) — SIN oráculo H2",
+  "pool_generation": "L ∪ X(H1 real) ∪ S ∪ P-F2, regenerado por PAS_PAD; max-passages=400; sin inyección de gold",
+  "rescue_low": 0.545,
+  "limit": 10,
+  "params": {
+    "N_L": 50,
+    "N_X": 50,
+    "N_S": 50,
+    "P_EXPAND_TOP_K": 10,
+    "MAX_PASSAGES": 400,
+    "BUDGET_TOKENS": 10400,
+    "PADS": [
+      4
+    ]
+  },
+  "corpus_hash": "029ed669cd599578",
+  "index_cache_hit": true,
+  "index_build_seconds": 2207.2,
+  "per_pad": {
+    "4": {
+      "passage_relevance_avg": 0.531,
+      "cross_domain_leakage_avg": 0.425,
+      "attributed_total": 13,
+      "attributed_n": 20,
+      "gold_containment_avg": 1.0,
+      "tokens_avg": 496.9,
+      "tokens_total": 4969,
+      "queries_attributed": 8,
+      "queries_n": 10,
+      "per_query": [
+        {
+          "qid": "Q01",
+          "query": "el teléfono no aparece en scrcpy",
+          "terms": [
+            "phone",
+            "device",
+            "adb",
+            "list",
+            "show",
+            "adb devices"
+          ],
+          "pool_size": 362,
+          "gated": 1,
+          "ctx_size": 1,
+          "gold_in_ctx": 1,
+          "passage_relevance": 1.0,
+          "cross_domain_leakage": 0.0,
+          "attributed": 0,
+          "gold_facts_n": 2,
+          "gold_containment": 1.0,
+          "tokens": 34,
+          "ctx_passages": [
+            "Knowledge/Android/ADB.md:1-9"
+          ]
+        },
+        {
+          "qid": "Q02",
+          "query": "cómo concedo permisos a una app con shizuku sin root",
+          "terms": [
+            "grant",
+            "pm grant",
+            "permission",
+            "application",
+            "package",
+            "shizuku",
+            "rish",
+            "root"
+          ],
+          "pool_size": 367,
+          "gated": 106,
+          "ctx_size": 10,
+          "gold_in_ctx": 9,
+          "passage_relevance": 0.9,
+          "cross_domain_leakage": 0.0,
+          "attributed": 3,
+          "gold_facts_n": 3,
+          "gold_containment": 1.0,
+          "tokens": 370,
+          "ctx_passages": [
+            "Knowledge/Android/Shizuku.md:50-58",
+            "Knowledge/Android/Shizuku.md:55-63",
+            "Knowledge/Android/HyperOS.md:55-56",
+            "Knowledge/Android/Shizuku.md:1-5",
+            "Knowledge/Android/Shizuku.md:42-50",
+            "Knowledge/Android/Shizuku.md:53-61",
+            "Knowledge/Android/Shizuku.md:56-64",
+            "Knowledge/Android/Shizuku.md:57-65",
+            "Knowledge/Android/Shizuku.md:47-55",
+            "Knowledge/Android/Shizuku.md:48-56"
+          ]
+        },
+        {
+          "qid": "Q03",
+          "query": "quiero pushear el commit y crear el pull request",
+          "terms": [
+            "push",
+            "commit",
+            "create",
+            "make",
+            "new",
+            "add",
+            "pull",
+            "pull request",
+            "request"
+          ],
+          "pool_size": 512,
+          "gated": 3,
+          "ctx_size": 3,
+          "gold_in_ctx": 0,
+          "passage_relevance": 0.0,
+          "cross_domain_leakage": 1.0,
+          "attributed": 0,
+          "gold_facts_n": 2,
+          "gold_containment": 1.0,
+          "tokens": 298,
+          "ctx_passages": [
+            "CONTRIBUTING.md:37-45",
+            "ai-context/CONTINUE.md:109-117",
+            "ai-context/CONTINUE.md:181-189"
+          ]
+        },
+        {
+          "qid": "Q04",
+          "query": "la pantalla se apaga sola después de unos minutos",
+          "terms": [
+            "screen",
+            "display",
+            "off",
+            "disable",
+            "dpms"
+          ],
+          "pool_size": 235,
+          "gated": 4,
+          "ctx_size": 4,
+          "gold_in_ctx": 2,
+          "passage_relevance": 0.5,
+          "cross_domain_leakage": 0.5,
+          "attributed": 2,
+          "gold_facts_n": 2,
+          "gold_containment": 1.0,
+          "tokens": 659,
+          "ctx_passages": [
+            "ai-context/CHANGELOG.md:292-300",
+            "ai-context/CHANGELOG.md:296-304",
+            "ai-context/SESION-archive.md:589-597",
+            "ai-context/SESION-archive.md:585-593"
+          ]
+        },
+        {
+          "qid": "Q05",
+          "query": "el componente React de la app necesita leer el serial del teléfono por adb",
+          "terms": [
+            "component",
+            "react",
+            "hooks",
+            "application",
+            "package",
+            "read",
+            "get",
+            "serial",
+            "devices",
+            "device",
+            "phone",
+            "adb"
+          ],
+          "pool_size": 415,
+          "gated": 14,
+          "ctx_size": 10,
+          "gold_in_ctx": 5,
+          "passage_relevance": 0.5,
+          "cross_domain_leakage": 0.75,
+          "attributed": 1,
+          "gold_facts_n": 2,
+          "gold_containment": 1.0,
+          "tokens": 522,
+          "ctx_passages": [
+            "Knowledge/Android/ADB.md:22-30",
+            "Knowledge/Android/ADB.md:20-28",
+            "Knowledge/Android/ADB.md:1-9",
+            "Knowledge/Android/ADB.md:18-26",
+            "Knowledge/Android/ADB.md:19-27",
+            "SKILLS_INDEX.md:9-17",
+            "ai-context/SHIZUKU-RISH-BUG.md:254-262",
+            "ai-context/SHIZUKU-RISH-BUG.md:252-260",
+            "ai-context/LOAD_CONTEXT.md:200-208",
+            "ai-context/LOAD_CONTEXT.md:204-212"
+          ]
+        },
+        {
+          "qid": "Q06",
+          "query": "el script bash de scrcpy no abre free fire, revisá el script",
+          "terms": [
+            "script",
+            "sh",
+            "launch",
+            "open",
+            "start",
+            "free fire",
+            "check",
+            "log",
+            "status"
+          ],
+          "pool_size": 425,
+          "gated": 32,
+          "ctx_size": 10,
+          "gold_in_ctx": 5,
+          "passage_relevance": 0.5,
+          "cross_domain_leakage": 0.333,
+          "attributed": 1,
+          "gold_facts_n": 1,
+          "gold_containment": 1.0,
+          "tokens": 940,
+          "ctx_passages": [
+            "Knowledge/Android/scrcpy.md:11-19",
+            "Knowledge/Android/scrcpy.md:1-7",
+            "Knowledge/Android/scrcpy.md:1-9",
+            "ai-context/CHANGELOG.md:273-281",
+            "ai-context/CHANGELOG.md:275-283",
+            "ai-context/CHANGELOG.md:283-291",
+            "ai-context/CHANGELOG.md:279-287",
+            "ai-context/CHANGELOG.md:278-286",
+            "ai-context/SESION-archive.md:1376-1384",
+            "ai-context/SESION-archive.md:1394-1402"
+          ]
+        },
+        {
+          "qid": "Q07",
+          "query": "el celular anda lento, qué puedo hacer",
+          "terms": [
+            "phone",
+            "device",
+            "adb",
+            "slow",
+            "performance"
+          ],
+          "pool_size": 306,
+          "gated": 44,
+          "ctx_size": 10,
+          "gold_in_ctx": 6,
+          "passage_relevance": 0.6,
+          "cross_domain_leakage": 0.333,
+          "attributed": 2,
+          "gold_facts_n": 2,
+          "gold_containment": 1.0,
+          "tokens": 384,
+          "ctx_passages": [
+            "Knowledge/README.md:68-76",
+            "Knowledge/README.md:66-74",
+            "Knowledge/README.md:64-72",
+            "Knowledge/README.md:73-81",
+            "Knowledge/Android/ADB.md:82-88",
+            "Knowledge/Android/GameOptimization.md:31-39",
+            "Knowledge/Android/GameOptimization.md:28-36",
+            "Knowledge/Android/GameOptimization.md:55-63",
+            "Knowledge/Android/ADB.md:55-63",
+            "Knowledge/Android/GameOptimization.md:37-45"
+          ]
+        },
+        {
+          "qid": "Q08",
+          "query": "la terminal se ve opaca y quiero que se vea transparente",
+          "terms": [
+            "terminal",
+            "transparent",
+            "opacity",
+            "view",
+            "show"
+          ],
+          "pool_size": 507,
+          "gated": 46,
+          "ctx_size": 10,
+          "gold_in_ctx": 3,
+          "passage_relevance": 0.3,
+          "cross_domain_leakage": 0.667,
+          "attributed": 1,
+          "gold_facts_n": 2,
+          "gold_containment": 1.0,
+          "tokens": 400,
+          "ctx_passages": [
+            "Knowledge/Linux/System.md:76-84",
+            "Knowledge/Linux/System.md:73-81",
+            "Knowledge/Linux/System.md:74-82",
+            "ai-context/SESION-archive.md:1054-1062",
+            "ai-context/SESION-archive.md:1801-1809",
+            "ai-context/SESION-archive.md:1050-1058",
+            "ai-context/SESION-archive.md:1796-1804",
+            "ai-context/CHANGELOG-archive.md:161-169",
+            "ai-context/SESION-archive.md:1021-1029",
+            "ai-context/SESION-archive.md:1767-1775"
+          ]
+        },
+        {
+          "qid": "Q09",
+          "query": "quiero optimizar el rendimiento",
+          "terms": [
+            "optimize",
+            "performance",
+            "governor"
+          ],
+          "pool_size": 259,
+          "gated": 7,
+          "ctx_size": 7,
+          "gold_in_ctx": 5,
+          "passage_relevance": 0.714,
+          "cross_domain_leakage": 0.333,
+          "attributed": 2,
+          "gold_facts_n": 2,
+          "gold_containment": 1.0,
+          "tokens": 234,
+          "ctx_passages": [
+            "Knowledge/Android/GameOptimization.md:16-24",
+            "Knowledge/Android/GameOptimization.md:28-36",
+            "Knowledge/Android/GameOptimization.md:18-26",
+            "Knowledge/Android/GameOptimization.md:19-27",
+            "Knowledge/Linux/Kernel.md:46-54",
+            "Knowledge/Android/Shizuku.md:60-68",
+            "Knowledge/Android/GameOptimization.md:1-9"
+          ]
+        },
+        {
+          "qid": "Q10",
+          "query": "la ZTE se calienta cuando juego free fire",
+          "terms": [
+            "thermal",
+            "temperature",
+            "game",
+            "free fire"
+          ],
+          "pool_size": 310,
+          "gated": 15,
+          "ctx_size": 10,
+          "gold_in_ctx": 3,
+          "passage_relevance": 0.3,
+          "cross_domain_leakage": 0.333,
+          "attributed": 1,
+          "gold_facts_n": 2,
+          "gold_containment": 1.0,
+          "tokens": 1128,
+          "ctx_passages": [
+            "Knowledge/Android/GameOptimization.md:64-72",
+            "Knowledge/Android/NubiaLab.md:7-15",
+            "ai-context/CHANGELOG.md:273-281",
+            "Knowledge/Android/NubiaLab.md:10-18",
+            "ai-context/CHANGELOG.md:271-279",
+            "ai-context/CHANGELOG.md:283-291",
+            "ai-context/CHANGELOG.md:275-283",
+            "ai-context/CHANGELOG.md:279-287",
+            "ai-context/CHANGELOG.md:278-286",
+            "ai-context/CHANGELOG.md:280-288"
+          ]
+        }
+      ]
+    }
+  },
+  "elapsed_seconds": 47,
+  "determinism_hash": "c0dedcbab3ff89f0"
+}

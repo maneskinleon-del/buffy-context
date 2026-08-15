@@ -2174,3 +2174,75 @@ V3=`48888238`).
    Próximo frente: **17D — V1 + DICT_H1_B combinados** (si el usuario lo
    aprueba), o volver a Q01 con puente conceptual/relacional (ADB discovery/
    transport/authorization).
+
+---
+
+## ⛔ VEREDICTO PASO 17D (2026-08-15) — combinación V1 + DICT_H1_B: STOP metodológico / NO EVALUADO
+
+**Spec:** `combine-17D-DESIGN.md` (commit `ad04631`). **H17D:** V1 (ensamblado:
+excluye noise de sesión del ctx final) + DICT_H1_B (ranking: rescata Q05) son
+ortogonales por construcción; la combinación podría cruzar el gate completo
+§17.4 por primera vez. **Regla §3.1 de la spec:** los controles A, B-solo y
+V1-solo deben reproducir EXACTAMENTE sus esperados históricos (todas las
+métricas contractuales, igualdad per-query, sin tolerancia) antes de evaluar
+T = V1 + DICT_H1_B. Si cualquiera no reproduce → **STOP, no se evalúa T**.
+
+**Runner:** mecanismo 17C congelado (`run-leak-17C.sh`, `--variant` + `--dict`).
+Pool L∪X∪S∪P-F2, M3 V6, PAS_PAD=4 fijo, piso 0.545, LIMIT=10. Sin runner nuevo
+(la combinación es una invocación, no un mecanismo nuevo). **T NO se ejecutó.**
+
+### Resultados de los controles (×2 corridas G2 cada uno, corpus 17D `029ed669`)
+
+| Métrica | **A** esperado §3.1 → obtenido | **B-solo** esperado → obtenido | **V1-solo** esperado → obtenido |
+|---|---|---|---|
+| `attributed` per-gold | 0,3,0,2,0,1,2,1,2,1 → **idéntico** ✅ | 0,3,0,2,1,1,2,1,2,1 → **idéntico** ✅ | 0,3,0,2,0,1,2,1,2,1 → **idéntico** ✅ |
+| attr total | 12/20 → **12/20** ✅ | 13/20 → **13/20** ✅ (Q05 rescatado) | 12/20 → **12/20** ✅ |
+| `cross_domain_leakage` | Q10 0.5 → **0.333** ❌ | Q10 0.5 → **0.333** ❌ | **idéntico** ✅ |
+| leak avg | 0.442 → **0.425** ❌ | 0.442 → **0.425** ❌ | 0.250 → **0.250** ✅ |
+| `passage_relevance` | 0.415 → **0.415** ✅ | 0.531 → **0.531** ✅ | 0.584 → **0.581** ❌ (Q10 0.333→0.300) |
+| contain | 1.0 → 1.0 ✅ | 1.0 → 1.0 ✅ | 1.0 → 1.0 ✅ |
+| G2 interno (r1=r2) | ✅ per-query idéntico (hash difiere solo por `index_cache_hit`/`elapsed`) | ✅ idéntico (hash `c0dedcba…` igual) | ✅ idéntico (hash `8962fc9d…` igual) |
+
+### Diagnóstico: drift real del corpus, no aleatoriedad
+
+- **`corpus_hash`: `236a87fa` (17C, 7653 líneas) → `029ed669` (17D, 7803 líneas).**
+- Archivos del corpus modificados entre 17C y 17D:
+  `README.md` (+16/-4, commit A), `ai-context/CHANGELOG.md` (+12),
+  `ai-context/CONTINUE.md` (+31/-7), `ai-context/SESION.md` (+64).
+- Queries afectadas (comparación `ctx_passages` histórico vs nuevo):
+  - **Q10** (leak 0.5→0.333; pRel 0.333→0.300 en V1): CHANGELOG.md creció +12 →
+    pasajes gold desplazados (`CHANGELOG.md:261-269` → `273-281`) y
+    `PROJECTS.md:82-90` salió del ctx.
+  - **Q03** (ctx_size 2→3): CONTINUE.md creció +31 → pasajes distintos de
+    `ai-context/CONTINUE.md` en el ctx (147-155 → 109-117/181-189).
+  - **Q04/Q06**: mismas líneas desplazadas de CHANGELOG.md (solo range; métricas
+    agregadas sin cambio).
+
+### Veredicto
+
+1. **STOP según la regla §3.1** — A no reproduce (leak 0.425 ≠ 0.442), B-solo no
+   reproduce (leak 0.425 ≠ 0.442), V1-solo no reproduce (pRel 0.581 ≠ 0.584).
+   La regla funcionó exactamente como fue diseñada: **el drift silencioso del
+   corpus quedó detectado ANTES de evaluar T**, evitando una conclusión falsa
+   sobre una mejora del sistema.
+2. **T = V1 + DICT_H1_B NO se ejecutó.** No existe veredicto sobre la
+   combinación (ni PASS ni FAIL del tratamiento); 17D queda **bloqueado antes
+   del tratamiento / NO EVALUADO**.
+3. **Gates y esperados históricos NO modificados.** 17B/17C siguen siendo
+   referencia histórica válida (corpus `236a87fa`).
+4. **Los 6 JSONs de sanity son internamente deterministas** (G2 confirmado bajo
+   el corpus `029ed669`); lo que no se reproduce es la comparación vs el
+   histórico 17B/17C, por drift del corpus — no por no-determinismo.
+5. **Hallazgo metodológico registrado:** el corpus de Buffy NO está aislado de
+   su propio estado operativo — CHANGELOG/CONTINUE/SESION/README participan del
+   fenómeno medido y su crecimiento entre pasos altera posiciones de pasajes,
+   contenido recuperado, leak, pRel y paths del ctx. Conecta con el frente
+   arquitectónico pendiente SESION/CONTINUE local.
+6. **No se re-congela `029ed669` ni se actualizan los esperados** (decisión del
+   usuario): cambiar la referencia después de observar el drift debilitaría la
+   disciplina. Continuar exigiría diseñar primero un mecanismo de
+   **fixture/corpus experimental congelado e inmutable** (trabajo de diseño
+   nuevo, no parte de 17D). Próximo experimento solo después de eso.
+
+**Evidencia:** `combine-17D-PC-2026-08-15-{control-A,control-A-r2,B-solo,B-solo-r2,V1-solo,V1-solo-r2}.json`
+(6 JSONs, commit de cierre). **Estado: CERRADO — STOP metodológico / NO EVALUADO.**
