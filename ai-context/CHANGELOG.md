@@ -15,6 +15,16 @@ system-id: mangonz-desktop
 
 
 
+### 2026-08-15 — Fase D cerrada: fixture experimental congelado D0–D5 como infraestructura (Freebuff, PC)
+
+- **D0 `bd52050`** — diseño `FIXTURE-EXPERIMENTAL-DESIGN.md`: corpus congelado con hash POR CONTENIDO, exclusiones contractuales (sin instancia/memoria por defecto, `--include` opt-in), gate §6.1–§6.7.
+- **D1 `881af3f`** — `build-fixture.sh`: descubre corpus (mismo alcance que el runner), filtra, copia + `manifest.json` (corpus_hash, config_hash, runner/version).
+- **D2 `cc17eb4`** — fixture `fx-2026-08-15-001` congelado: 45 archivos / 640 KB / `corpus_hash 0af49cc666d872a6`; exclusión efectiva (0 instancia/memoria, 0 scripts).
+- **D3 `bd931aa`** — runner `--fixture`: CORPUS = fixture congelado, PIPELINE = árbol vivo; validación de inmutabilidad (mismatch → STOP, sin reindex silencioso); `commit_sha` (corpus) vs `pipeline_commit` (runtime); `--repo` intacto.
+- **D4 `9212aa7`** — multi-dispositivo: 3 checkouts limpios con caché fresco, sin `--reindex` → mismo `corpus_hash 0af49cc666d872a6`; manifest idéntico.
+- **D5 `f5e51a7`** — gate §6.1–§6.7 PASADO: reproducible, inmutable (editar CONTINUE/CHANGELOG no cambia el hash), multi-PC, mutación→STOP, `config_hash` sensible, suite **315 OK / 299 OK**, exclusión efectiva.
+- **Resultado:** separación real `--repo` (estado operativo) vs `--fixture` (estado experimental). Resuelve el hallazgo estructural de 17D. **Infraestructura, NO resultado experimental; sin EVAL nuevo (17E+).** Último commit `f5e51a7` (pusheado, `origin/main == HEAD`).
+
 ### 2026-08-15 — Cierre serie 17B→17C→17D: Commit A de infraestructura + 17D STOP metodológico / NO EVALUADO (Freebuff, PC)
 
 - **Commit A `abbee6d` (PUSHEADO)** — los 22 `skill.yaml` untracked eran manifests legítimos (B2, exigidos por `skill-lint.sh --require-all`); 2 fixes de `SKILL.md` (frontmatter `name` sin comillas) + `test-scale.sh` (ruta Termux → `${TMPDIR:-/tmp}`). Suite: **313 OK / 0 FAIL full · 297 OK / 0 FAIL --quick** (los 4 preexistentes documentados en CONTINUE.md quedaron resueltos). Ninguno tocó runtime.
