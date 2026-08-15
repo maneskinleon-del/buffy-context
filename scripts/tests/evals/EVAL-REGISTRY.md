@@ -2311,3 +2311,32 @@ Pool L∪X∪S∪P-F2, M3 V6, PAS_PAD=4 fijo, piso 0.545, LIMIT=10. Sin runner n
 
 **Pendiente (NO abierto):** D4 (validación multi-PC), D5 (gate final §6 completo).
 **Sin EVAL nuevo; sin benchmark comparativo.**
+
+### D4 — validación multi-dispositivo (2026-08-15) — PASADO
+
+Criterio §6.3 del gate: *checkout limpio → mismo `corpus_hash` por contenido, sin
+`--reindex`, cache miss inicial OK.*
+
+| Entorno | Checkout | Caché | Resultado |
+|---|---|---|---|
+| A (repo actual) | `bd931aa` | — | `corpus_hash 0af49cc666d872a6` (referencia) |
+| B (git clone limpio) | `bd931aa` | `XDG_CACHE_HOME` fresco (miss) | `✓ fixture íntegro: corpus_hash 0af49cc666d872a6 == manifest` |
+| C (segundo git clone limpio) | `bd931aa` | `XDG_CACHE_HOME` fresco (miss) | `✓ fixture íntegro: corpus_hash 0af49cc666d872a6 == manifest` |
+
+**Verificado (9 puntos de D4):**
+
+1. ✅ Fixture obtenido desde Git en checkout limpio (clone A→B, A→C).
+2. ✅ `--fixture` ejecutado en B y C (entornos independientes).
+3. ✅ `corpus_hash` EXACTO e idéntico en A/B/C: `0af49cc666d872a6`.
+4. ✅ `manifest.json` idéntico (sha256 `34ef78c2…` igual en A y B).
+5. ✅ Cache miss inicial aceptable y NO altera la identidad (hash por contenido,
+   independiente del índice; 0 cachés con `0af49cc` antes de D4).
+6. ✅ **No hace falta `--reindex`** para establecer la identidad (validación ocurre
+   antes de cargar/construir el índice).
+7. ✅ Pipeline del checkout (árbol vivo) — `scripts/lib` presente en B/C; el fixture
+   solo aporta datos (0 scripts).
+8. ✅ Fixture y pipeline NO modificados; entorno de test eliminado; `git status` limpio.
+9. ✅ Sin queries completas de EVAL, sin resultados 17E, sin benchmark.
+
+**Conclusión:** mismo fixture + contenido idéntico → mismo `corpus_hash`,
+independiente de la máquina/checkout/caché. D4 PASADO.
