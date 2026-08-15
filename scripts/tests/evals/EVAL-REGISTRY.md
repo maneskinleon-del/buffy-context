@@ -2361,3 +2361,36 @@ experimental). La barrera entre estado operativo del proyecto y estado
 experimental quedó implementada y verificada: `--repo` (árbol vivo, histórico)
 vs `--fixture` (corpus congelado, hash por contenido, mismatch → STOP).
 **Ningún EVAL nuevo (17E+); ningún resultado experimental derivado de este gate.**
+
+---
+
+## 🏗️ INFRAESTRUCTURA — Paso 17E (orquestador + analizador + tests, sin EVAL)
+
+**Spec:** `combine-17E-DESIGN.md` (congelada `6adc7e4`) · **Fixture:** `fx-2026-08-15-001` (`0af49cc666d872a6`)
+**Fecha:** 2026-08-15 · **Estado:** infraestructura lista, **experimento NO ejecutado**
+
+### Qué se creó (solo infraestructura, sin correr el runner)
+
+| Archivo | Rol |
+|---|---|
+| `run-combine-17E.sh` | Orquestador: valida fixture (hash) → cobertura golds ⊆ fixture → sanity A/B-solo/V1-solo (×2 G2) → **STOP si sanity falla** → T = V1 + DICT_H1_B (×2) → gate §4. `--skip-run` para dry-run sin Ollama. |
+| `analiza-17E.py` | Baseline del fixture (en la MISMA ejecución, no histórico), tabla de interacción por gold, diagnóstico de interacción, veredicto gate §4. |
+| `test-combine-17E.sh` | 12 checks sin Ollama: sintaxis (orquestador/analizador/heredoc), fixture congelado + hash, configs ×2 G2, gate §4 completo, orden sanity→T, anti-oráculo (términos nuevos B ∩ golds = ∅), cobertura golds ⊆ fixture, campos reales del JSON. |
+
+### Verificación realizada (sin Ollama, sin experimento)
+
+| Check | Resultado |
+|---|---|
+| Sintaxis `bash -n` orquestador + `py_compile` analizador | ✅ |
+| Dry-run `--skip-run` (fixture íntegro + golds ⊆ fixture + 6 invocaciones + T + gate) | ✅ exit 0 |
+| Sanity con JSONs reales 17D (modo repo, sin `fixture_corpus_hash`) → **STOP exit 3** (6 mismatches detectados) | ✅ la barrera funciona |
+| Sanity con hash inyectado correcto → pasa (A 12/0.425 · B 13/0.425 Q05=1 · V1 12/0.250 = valores históricos leídos correctamente) | ✅ |
+| Sanity con B corrompido (Q05 no rescatado) → **STOP exit 3** (G2 + dirección de efecto) | ✅ |
+| Suite completa | ✅ **327 OK full** · **311 OK --quick** (+12 checks de 17E) |
+
+### Semántica clave (spec congelada)
+
+- Controles calculados **en la misma ejecución** sobre el fixture — nunca de documentación histórica.
+- Gate por **dominancia combinada**: `leak(T) ≤ min` · `attr(T) ≥ max` · Q05 ≥ 1 · sin regresión por gold vs A · `pRel(T) ≥ min` (complementaria, no sustituye) · contain ≥ 0.80 y ≥ min · G2.
+- Cache miss inicial = condición de infraestructura, no drift.
+- **17E NO ejecutado**: ni sanity con Ollama, ni T, ni gate aplicado. Pendiente de autorización explícita.
