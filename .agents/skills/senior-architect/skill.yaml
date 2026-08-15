@@ -1,0 +1,9 @@
+id: senior-architect
+name: "senior-architect"
+version: 1.0.0
+description: "This skill should be used when the user asks to "design system architecture", "evaluate microservices vs monolith", "create architecture diagrams", "analyze dependencies", "choose a database", "pla..."
+entry: SKILL.md
+safe: true
+triggers:
+  - "senior architect"
+  - "senior-architect"

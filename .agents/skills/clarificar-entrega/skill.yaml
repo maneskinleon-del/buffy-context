@@ -1,0 +1,9 @@
+id: clarificar-entrega
+name: "clarificar-entrega"
+version: 1.0.0
+description: "Activa cuando una petición de diseño/look/estilo/tema NO especifica su destino o plataforma, y existen 2+ interpretaciones válidas con costo alto de asumir mal. Señales: "quiero un look estilo X", ..."
+entry: SKILL.md
+safe: true
+triggers:
+  - "clarificar entrega"
+  - "clarificar-entrega"

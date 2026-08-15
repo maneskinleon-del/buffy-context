@@ -1,0 +1,9 @@
+id: android-clean-architecture
+name: "android-clean-architecture"
+version: 1.0.0
+description: "Clean Architecture patterns for Android and Kotlin Multiplatform projects — module structure, dependency rules, UseCases, Repositories, and data layer patterns."
+entry: SKILL.md
+safe: true
+triggers:
+  - "android clean architecture"
+  - "android-clean-architecture"

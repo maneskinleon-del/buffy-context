@@ -1,0 +1,9 @@
+id: idea-a-spec
+name: "idea-a-spec"
+version: 1.0.0
+description: "Activa cuando el mensaje del usuario es una idea vaga, un problema o un objetivo abierto — NO una instrucción ya desglosada en pasos. Señales de activación: "me gustaría que…", "se me ocurrió que…"..."
+entry: SKILL.md
+safe: true
+triggers:
+  - "idea a spec"
+  - "idea-a-spec"
