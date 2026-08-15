@@ -1,7 +1,19 @@
 # 🔄 CONTINUE — Handoff entre sesiones
 
 > ⚡ **PRÓXIMA SESIÓN: LEE ESTO PRIMERO**
-> Generado: 2026-08-14 (Freebuff — **Rama X (query expansion H1) implementada y documentada** (`210b871` + `16c626b`, locales). **Q03 ACEPTADO COMO LÍMITE DOCUMENTADO**: Commands.md:64 entra al pool (15→91) y S1 mejora 0.468→0.493 con `--expand-query`, pero la ventana ±4 diluye (línea exacta 0.613 cruza el piso) → causa raíz = granularidad del pasaje (PAS_PAD=4), NO el modelo. Bajar el piso descartado (evidencia 15A). **PRÓXIMA SESIÓN: sin deuda técnica urgente** — opciones: (a) diseño del experimento de granularidad de pasaje (línea/ventana 1/2, gate propio), (b) Q05 `useState` (misma raíz que Q03), (c) roadmap Buffy 2.0. Runtime: defaults congelados, rama X opt-in (BUFFY_EXPAND_QUERY=true).**)
+> Generado: 2026-08-15 (Freebuff — **17C cerrado · Commit A limpio · 17D spec congelada + STOP metodológico / NO EVALUADO**).
+> **Serie 17B→17C→17D cerrada:** 17B PASS exp / NO ADOPTED (B = DICT_H1_B `f534283f`, rescata Q05 → 13/20, leak 0.442 invariante).
+> 17C PASS del objetivo primario / NO ADOPTED (V1 excl. noise: leak 0.442→0.250, attr 12/20, H17C confirmada).
+> Commit A `abbee6d` (22 skill.yaml + 2 SKILL.md + test-scale.sh + README 313/297) PUSHEADO a origin/main.
+> **17D (`ad04631` spec congelada + `932f146` cierre): T = V1+DICT_H1_B NUNCA se evaluó.** Los 3 controles de sanity
+> (A/B-solo/V1-solo, ×2 G2) NO reprodujeron sus esperados de §3.1 por **drift real del corpus**:
+> `236a87fa` (7653 líneas) → `029ed669` (7803): README/CHANGELOG/CONTINUE/SESION crecieron entre 17C y 17D y
+> alteraron pasajes, leak (Q10 0.5→0.333), pRel (Q10 0.333→0.300), ctx (Q03 2→3). Regla §3.1 → **STOP antes de T**.
+> **PRÓXIMO TRABAJO (decidir antes de otra serie experimental):** diseñar el mecanismo de **fixture/corpus
+> experimental congelado e INMUTABLE** (aislar el corpus del estado operativo mutable — CHANGELOG/CONTINUE/SESION
+> participan del fenómeno medido). NO se re-congela `029ed669` ni se actualizan esperados retrospectivamente
+> (decisión del usuario). SESION/CONTINUE local = frente arquitectónico independiente, NO mezclar.
+> Auditoría pendiente: `AUDITORIA-HANDOFF-FREEBUFF.md` (skill handoff vs Freebuff). Suite PC: 313/297 OK (full/--quick).**
 
 > 🎯 **AUDITORÍA PENDIENTE (2026-08-14, Buffy):** ver `AUDITORIA-HANDOFF-FREEBUFF.md` en este repo.
 > El usuario observó que OpenCode compacta contexto automáticamente pero Freebuff no.
@@ -13,39 +25,7 @@
 > porcentaje; solo triggers explícitos/implícitos con confirmación (línea 41). OpenCode
 > NO tiene hooks SessionStart/SessionEnd configurados (verificado).
 
-> 📊 **17B CERRADO (2026-08-14, Buffy): PASS experimental / NO ADOPTED.**
-> Ver `EVAL-REGISTRY.md` (sección 17B). Tratamiento B (DICT_H1_B `f534283f`)
-> mejora 12→13/20 (Q05 rescatado, pRel 0.415→0.531) sin regresiones, pero el
-> gate formal NO se cruza: leak 0.442 > 0.308 — **invariante entre A y B**
-> (estructural del pool, no del tratamiento). **No se modifica el umbral. No se
-> adopta B.** B = candidato positivo/no adoptado. **Próximo frente: 17C —
-> reducción del leak estructural del pool (0.442 → ≤0.308)**, con diseño y gate
-> propios. Después, volver a Q01 con puente conceptual/relacional (ADB
-> discovery/transport/authorization), no más sinónimos.
 
-> 📐 **17C SPEC CONGELADA (2026-08-14, Buffy):** ver `leak-17C-DESIGN.md` en
-> `scripts/tests/evals/`. Caracterización causal del leak (31 paths): A=noise de
-> sesión 17 (55%), B=ai-context canónico CHANGELOG 6 (19%), C=Knowledge/ dominio
-> NO gold 5 (16%), D=raíz no-Knowledge 3 (10%). Variantes (1 factor c/u):
-> V1=exclusión dura de noise en ctx final (ataca A), V2=refuerzo S4 en
-> ensamblado (ataca A vía ranking), V3=exclusión raíz no-Knowledge (ataca D).
-> Gate: leak ≤ 0.308 PRIMARIO, attr ≥ 13, sin regresiones, pRel ≥ 0.121,
-> contain ≥ 0.80, G2. Si ninguna cruza → fallo del frente, NO relajar umbral.
-> Golds Q04/Q06 viven en CHANGELOG.md (no noise) → no se rompen.
-
-> ✅ **17C CERRADO (2026-08-14, Buffy): PASS experimental del objetivo primario /
-> NO ADOPTED.** Ver `EVAL-REGISTRY.md` (sección 17C). V1 (exclusión dura de
-> noise en ctx final) cruza el gate PRIMARIO: leak 0.442 → **0.250** (-43%),
-> pRel 0.415 → **0.584**, contain 1.0, cero regresiones en los 8 golds, G2
-> determinista (V1r1=V1r2 `289f8470`). **PERO attr = 12/20 < 13/20** (gate #2):
-> V1 no incluye DICT_H1_B de 17B → Q05 sigue en 0. V2 (S4×3) SIN EFECTO
-> (idéntica a A: el peso S4 no cambia el ranking cuando s1/s2/s3 dominan).
-> V3 (excl. raíz no-Knowledge) EFECTO MÍNIMO (leak 0.433; fuente D solo 10%).
-> **No se modifica el gate retrospectivamente. V1 = candidato positivo/no
-> adoptado.** **Próximo frente: 17D — V1 + DICT_H1_B combinados** (ortogonales:
-> V1 mata el leak en ensamblado, B rescata Q05 en ranking) — requiere diseño y
-> gate propios + aprobación del usuario. Alternativa: volver a Q01 con puente
-> conceptual/relacional (ADB discovery/transport/authorization).
 
 ---
 

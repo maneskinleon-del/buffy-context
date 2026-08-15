@@ -14,6 +14,17 @@ system-id: mangonz-desktop
 # CHANGELOG.md — Historial de cambios del sistema
 
 
+
+### 2026-08-15 — Cierre serie 17B→17C→17D: Commit A de infraestructura + 17D STOP metodológico / NO EVALUADO (Freebuff, PC)
+
+- **Commit A `abbee6d` (PUSHEADO)** — los 22 `skill.yaml` untracked eran manifests legítimos (B2, exigidos por `skill-lint.sh --require-all`); 2 fixes de `SKILL.md` (frontmatter `name` sin comillas) + `test-scale.sh` (ruta Termux → `${TMPDIR:-/tmp}`). Suite: **313 OK / 0 FAIL full · 297 OK / 0 FAIL --quick** (los 4 preexistentes documentados en CONTINUE.md quedaron resueltos). Ninguno tocó runtime.
+- **Spec 17D congelada `ad04631`** (`combine-17D-DESIGN.md`) — T = V1 + DICT_H1_B como único tratamiento; controles A/B-solo/V1-solo con **sanity de igualdad EXACTA per-query** (ajuste del usuario: todas las métricas contractuales); gate por contrato §17.4; ceguera metodológica (no nace como "V1+B dará 13/20 y 0.250").
+- **Sanity ×2 G2 (6 corridas) bajo corpus `029ed669` (7803 líneas)** vs histórico `236a87fa` (7653): A attr 12/20 ✅ pero **leak 0.425 ≠ 0.442** ❌; B-solo attr 13/20 ✅ pero **leak 0.425 ≠ 0.442** ❌; V1-solo leak 0.250 ✅ pero **pRel 0.581 ≠ 0.584** ❌. G2 interno ✅ en los 3.
+- **STOP por regla §3.1 — T = V1+DICT_H1_B NUNCA se ejecutó.** Causa: drift real del corpus — README/CHANGELOG/CONTINUE/SESION crecieron entre 17C y 17D y alteraron Q10 (leak 0.5→0.333, pRel 0.333→0.300) y Q03 (ctx_size 2→3).
+- **Cierre `932f146`** — veredicto en `EVAL-REGISTRY.md` §17D: **STOP metodológico / NO EVALUADO** + 6 JSONs de sanity como evidencia. No se re-congela `029ed669` ni se actualizan esperados retrospectivamente (decisión del usuario: cambiar la referencia tras observar el drift debilitaría la disciplina).
+- **Hallazgo estructural:** el corpus de Buffy NO está aislado de su propio estado operativo (CHANGELOG/CONTINUE/SESION participan del fenómeno medido). Continuar exige diseñar un **fixture/corpus experimental congelado e INMUTABLE** (trabajo de diseño nuevo, no 17D). Conecta con el frente arquitectónico SESION/CONTINUE local.
+- Registro completo en `EVAL-REGISTRY.md` → sección 17D. Suite: sin cambios de runtime (313/297).
+
 ### 2026-08-14 — EVAL 17C ejecutado y cerrado: reducción del leak estructural del pool (opencode, PC)
 
 - **Runner `run-leak-17C.sh` (NUEVO)** — copia del mecanismo 17B + `--variant {A,V1,V2,V3}`. Pool L∪X∪S∪P-F2, M3 V6, PAS_PAD=4 fijo, piso 0.545, LIMIT=10, sin oráculo. Corpus congelado `236a87fa` (7653 líneas), `eval_hash 98a0e308…`, `commit_sha 51b8079…`, `h1_dict_hash 8294f200…`.
