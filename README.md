@@ -426,6 +426,16 @@ machine-readable validado por `scripts/skill-lint.sh` — gate activo en CI).
 
 ---
 
+## Principio rector
+
+> **Buffy Context — La complejidad debe ser proporcional a la tarea.**
+> Cada capa del sistema existe porque resolvió un problema medido (benchmark,
+> evidencia, caso real), no por acumulación. Antes de agregar una capa nueva,
+> demostrar que la existente no alcanza; antes de adoptar una variante, cruzar
+> su gate formal. El benchmark primero, la feature después.
+
+---
+
 <p align="center">
   <sub>Built with ♥ for better AI-assisted development.</sub>
 </p>

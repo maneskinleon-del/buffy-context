@@ -2104,3 +2104,73 @@ líneas), `corpus_hash f36eaf1e…`, `eval_hash 98a0e308…`, `commit_sha
    evidencia válida; B = candidato positivo/no adoptado. Próximo frente:
    **17C — reducción del leak estructural del pool** (0.442 → ≤0.308), con su
    propio diseño y gate. Después, volver a Q01 con el conocimiento obtenido.
+
+---
+
+## ✅ VEREDICTO PASO 17C (2026-08-14) — reducción del leak estructural del pool: PASS experimental del objetivo primario / NO ADOPTED
+
+**Spec:** `leak-17C-DESIGN.md` (commit `51b8079`). **H17C:** el leak 0.442 es
+estructural del pool (invariante A/B en 17B); atacarlo en el ENSAMBLADO del
+contexto final con un solo factor por variante. **Gate §17.4 pre-fijado:**
+(1) leak ≤ 0.308 PRIMARIO, (2) attr ≥ 13/20, (3) sin regresión Q02/Q06/Q08/Q09,
+(4) sin regresión Q03/Q04/Q07/Q10, (5) pRel ≥ 0.121, (6) contain ≥ 0.80,
+(7) G2 determinismo.
+
+**Runner:** `run-leak-17C.sh` (copia del mecanismo 17B + `--variant {A,V1,V2,V3}`).
+Pool L∪X∪S∪P-F2, M3 V6, PAS_PAD=4 fijo, piso 0.545, LIMIT=10, sin oráculo ni
+inyección de gold. Corpus congelado `236a87fa` (7653 líneas), `eval_hash
+98a0e308…`, `commit_sha 51b8079…`, `h1_dict_hash 8294f200…` (DICT_H1 de 17B-A).
+G2: 2 corridas por variante — **JSONs idénticos per-query** (determinismo
+confirmado; `determinism_hash` A=`0d44653e`, V1=`289f8470`, V2=`0c471a33`,
+V3=`48888238`).
+
+### Resultados (pad 4, A vs V1/V2/V3)
+
+| Métrica | A (control) | V1 (excl. noise) | V2 (S4×3) | V3 (excl. raíz) | Gate §17.4 |
+|---|---|---|---|---|---|
+| **leak** | 0.442 | **0.250** | 0.442 | 0.433 | **✅ V1 ≤0.308** |
+| attr total | 12/20 | 12/20 | 12/20 | 12/20 | ❌ (≥13) |
+| pRel | 0.415 | **0.584** | 0.415 | 0.421 | ✅ ≥0.121 |
+| containment | 1.0 | 1.0 | 1.0 | 1.0 | ✅ ≥0.80 |
+| Q02/Q06/Q08/Q09 | 3/1/1/2 | 3/1/1/2 | 3/1/1/2 | 3/1/1/2 | ✅ sin regresión |
+| Q03/Q04/Q07/Q10 | 0/2/2/1 | 0/2/2/1 | 0/2/2/1 | 0/2/2/1 | ✅ sin regresión |
+| determinismo G2 | — | V1r1=V1r2 | V2r1=V2r2 | V3r1=V3r2 | ✅ |
+
+### Análisis por variante
+
+- **V1 (exclusión dura de noise en ctx final) — CRUZA el objetivo PRIMARIO:**
+  leak 0.442 → **0.250** (-43%), pRel 0.415 → **0.584** (+41%), contain 1.0,
+  **cero regresiones** en los 8 golds, G2 determinista. La fuente A (noise de
+  sesión, 55% del leak) era la causa dominante y la exclusión la elimina sin
+  tocar golds (Q04/Q06 viven en CHANGELOG.md, que NO es noise → preservados).
+  **PERO attr = 12/20 < 13/20** (gate #2): V1 no incluye DICT_H1_B de 17B, así
+  que Q05 sigue en 0 (el pasaje ADB.md:1-9 con `adb devices -l` no cruza el
+  piso para el qtext de Q05). El gate completo NO se cruza.
+- **V2 (refuerzo S4, W 0.5→1.5) — SIN EFECTO:** resultados IDÉNTICOS a A en
+  todo (leak 0.442, pRel 0.415, attr 12/20). El peso de S4 en el score final
+  no cambia el ranking cuando s1/s2/s3 dominan — la fuente A entra por el gate
+  S1 ≥ 0.545, no por el score final. Variante descartada.
+- **V3 (exclusión raíz no-Knowledge) — EFECTO MÍNIMO:** leak 0.442 → 0.433
+  (-2%), pRel 0.421. La fuente D (3 paths, 10%) era demasiado pequeña para
+  cruzar el umbral. Variante descartada.
+
+### Veredicto
+
+1. **El leak estructural SÍ es reducible**: V1 demuestra que excluir el noise
+   de sesión del contexto final baja el leak 0.442 → 0.250 (-43%) sin perder
+   attr ni regresar en prosa, con pRel mejorado y determinismo G2. La hipótesis
+   H17C queda **confirmada** (la fuente A era la causa dominante).
+2. **V1 NO está aprobado para producción**: el gate §17.4 exige attr ≥ 13/20 y
+   V1 da 12/20 (Q05 no rescatado sin DICT_H1_B). No se modifica el criterio
+   retrospectivamente (regla metodológica conservada).
+3. **V2 y V3 descartadas**: sin efecto / efecto mínimo; no cruzan leak.
+4. **Combinación natural pendiente (NO probada en este paso, sería 2 factores):**
+   V1 (ensamblado: mata el leak) + DICT_H1_B de 17B (ranking: rescata Q05) son
+   ORTOGONALES — V1 ataca el ensamblado, B ataca el ranking. La combinación
+   podría cruzar el gate completo (leak 0.250 + attr 13/20). Requiere un
+   experimento nuevo (17D) con diseño y gate propios y aprobación del usuario.
+5. **Conclusión de adopción: NO adoptar V1 todavía.** Congelar 17C como
+   evidencia válida; V1 = candidato positivo/no adoptado (igual que B en 17B).
+   Próximo frente: **17D — V1 + DICT_H1_B combinados** (si el usuario lo
+   aprueba), o volver a Q01 con puente conceptual/relacional (ADB discovery/
+   transport/authorization).

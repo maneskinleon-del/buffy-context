@@ -6,6 +6,70 @@
 
 ---
 
+## ✅ 17C ejecutado y cerrado — reducción del leak estructural del pool (2026-08-14 · opencode)
+
+### Pedido del usuario
+Ejecutar el experimento 17C (spec congelada `leak-17C-DESIGN.md`): caracterización
+causal del leak (31 paths: A=noise de sesión 55%, B=CHANGELOG 19%, C=Knowledge no-gold
+16%, D=raíz no-Knowledge 10%) con 3 variantes de 1 factor: V1=exclusión dura de noise,
+V2=refuerzo S4, V3=exclusión raíz no-Knowledge. Gate §17.4: leak ≤ 0.308 PRIMARIO,
+attr ≥ 13, sin regresiones, pRel ≥ 0.121, contain ≥ 0.80, G2.
+
+### Lo hecho
+1. **Runner `run-leak-17C.sh`** (copia del mecanismo 17B + `--variant {A,V1,V2,V3}`).
+   Pool L∪X∪S∪P-F2, M3 V6, PAS_PAD=4 fijo, piso 0.545, LIMIT=10, sin oráculo.
+   Corpus congelado `236a87fa` (7653 líneas), `eval_hash 98a0e308…`,
+   `commit_sha 51b8079…`, `h1_dict_hash 8294f200…` (DICT_H1 de 17B-A).
+2. **7 corridas completas** (~45-49s c/u con índice cacheado): control-A + V1×2 + V2×2 + V3×2.
+   **G2 confirmado en las 3 variantes** (JSONs idénticos per-query; determinism_hash
+   A=`0d44653e`, V1=`289f8470`, V2=`0c471a33`, V3=`48888238`).
+3. **Hallazgo de instrumento:** `--repeat` es vestigial (se parsea pero no se usa en
+   loop) — G2 = invocar el runner 2 veces con distinto `--out` (igual que 16B/17B).
+
+### Resultados (pad 4, A vs V1/V2/V3)
+
+| Métrica | A | V1 | V2 | V3 | Gate §17.4 |
+|---|---|---|---|---|---|
+| **leak** | 0.442 | **0.250** | 0.442 | 0.433 | **✅ V1 ≤0.308** |
+| attr total | 12/20 | 12/20 | 12/20 | 12/20 | ❌ (≥13) |
+| pRel | 0.415 | **0.584** | 0.415 | 0.421 | ✅ ≥0.121 |
+| containment | 1.0 | 1.0 | 1.0 | 1.0 | ✅ ≥0.80 |
+| determinismo G2 | — | V1r1=V1r2 | V2r1=V2r2 | V3r1=V3r2 | ✅ |
+
+### Veredicto
+- **V1 CRUZA el objetivo PRIMARIO** (leak 0.442→0.250, -43%; pRel +41%; cero
+  regresiones; G2) — la fuente A (noise de sesión) era la causa dominante del leak.
+  **PERO attr = 12/20 < 13/20** (gate #2): V1 no incluye DICT_H1_B → Q05 sigue en 0.
+  **NO adoptado** (no se modifica el gate retrospectivamente). V1 = candidato
+  positivo/no adoptado (igual que B en 17B).
+- **V2 SIN EFECTO** (idéntica a A: el peso S4 no cambia el ranking cuando s1/s2/s3
+  dominan — la fuente A entra por el gate S1 ≥ 0.545, no por el score final).
+- **V3 EFECTO MÍNIMO** (leak 0.433; fuente D solo 10%).
+- **Próximo frente: 17D = V1 + DICT_H1_B combinados** (ortogonales: V1 mata el leak
+  en ensamblado, B rescata Q05 en ranking) — requiere diseño y gate propios +
+  aprobación del usuario. Alternativa: volver a Q01 con puente conceptual/relacional.
+
+### Revisión de arquitectura (pedido del usuario: separación proyecto/instancia)
+- `buffy-memory-sync.sh` sincroniza SOLO `MEMORY.md`/`USER.md` vía repo
+  `ai-context/memories/`; `.sync-state` es perfil-local (NUNCA versionado) ✅.
+- `SNAPSHOT.md` y `facts.yaml` YA están en `.gitignore` (perfil-local) ✅.
+- **Problema real:** `SESION.md` y `CONTINUE.md` SÍ están versionados → con N
+  dispositivos, contaminación + conflictos. Solución propuesta: hacerlos locales
+  (como SNAPSHOT) — **decisión de diseño, requiere aprobación del usuario, NO
+  implementada**.
+
+### Commits
+- `51b8079` — spec 17C congelada (ya pusheado).
+- Pendiente: runner + JSONs + EVAL-REGISTRY + cierre (este commit).
+
+### ⏳ Pendientes
+- **Decisión del usuario:** ¿proseguir 17D (V1 + DICT_H1_B)? ¿implementar la
+  separación SESION/CONTINUE → local?
+- Untracked `.agents/skills/*/skill.yaml` (ajenos a 17C) — NO commitear sin
+  confirmación.
+
+---
+
 ## ✅ Shizuku activado por ADB + protocolo de diagnóstico global (2026-08-14 · PC)
 
 ### Pedido del usuario

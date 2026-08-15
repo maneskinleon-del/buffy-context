@@ -24,15 +24,28 @@
 > discovery/transport/authorization), no más sinónimos.
 
 > 📐 **17C SPEC CONGELADA (2026-08-14, Buffy):** ver `leak-17C-DESIGN.md` en
-> `scripts/tests/evals/`. **NO ejecutar todavía — esperar aprobación del
-> usuario.** Caracterización causal del leak (31 paths): A=noise de sesión 17
-> (55%), B=ai-context canónico CHANGELOG 6 (19%), C=Knowledge/ dominio NO gold
-> 5 (16%), D=raíz no-Knowledge 3 (10%). Variantes (1 factor c/u): V1=exclusión
-> dura de noise en ctx final (ataca A), V2=refuerzo S4 en ensamblado (ataca A
-> vía ranking), V3=exclusión raíz no-Knowledge (ataca D). Gate: leak ≤ 0.308
-> PRIMARIO, attr ≥ 13, sin regresiones, pRel ≥ 0.121, contain ≥ 0.80, G2. Si
-> ninguna cruza → fallo del frente, NO relajar umbral. Golds Q04/Q06 viven en
-> CHANGELOG.md (no noise) → no se rompen.
+> `scripts/tests/evals/`. Caracterización causal del leak (31 paths): A=noise de
+> sesión 17 (55%), B=ai-context canónico CHANGELOG 6 (19%), C=Knowledge/ dominio
+> NO gold 5 (16%), D=raíz no-Knowledge 3 (10%). Variantes (1 factor c/u):
+> V1=exclusión dura de noise en ctx final (ataca A), V2=refuerzo S4 en
+> ensamblado (ataca A vía ranking), V3=exclusión raíz no-Knowledge (ataca D).
+> Gate: leak ≤ 0.308 PRIMARIO, attr ≥ 13, sin regresiones, pRel ≥ 0.121,
+> contain ≥ 0.80, G2. Si ninguna cruza → fallo del frente, NO relajar umbral.
+> Golds Q04/Q06 viven en CHANGELOG.md (no noise) → no se rompen.
+
+> ✅ **17C CERRADO (2026-08-14, Buffy): PASS experimental del objetivo primario /
+> NO ADOPTED.** Ver `EVAL-REGISTRY.md` (sección 17C). V1 (exclusión dura de
+> noise en ctx final) cruza el gate PRIMARIO: leak 0.442 → **0.250** (-43%),
+> pRel 0.415 → **0.584**, contain 1.0, cero regresiones en los 8 golds, G2
+> determinista (V1r1=V1r2 `289f8470`). **PERO attr = 12/20 < 13/20** (gate #2):
+> V1 no incluye DICT_H1_B de 17B → Q05 sigue en 0. V2 (S4×3) SIN EFECTO
+> (idéntica a A: el peso S4 no cambia el ranking cuando s1/s2/s3 dominan).
+> V3 (excl. raíz no-Knowledge) EFECTO MÍNIMO (leak 0.433; fuente D solo 10%).
+> **No se modifica el gate retrospectivamente. V1 = candidato positivo/no
+> adoptado.** **Próximo frente: 17D — V1 + DICT_H1_B combinados** (ortogonales:
+> V1 mata el leak en ensamblado, B rescata Q05 en ranking) — requiere diseño y
+> gate propios + aprobación del usuario. Alternativa: volver a Q01 con puente
+> conceptual/relacional (ADB discovery/transport/authorization).
 
 ---
 

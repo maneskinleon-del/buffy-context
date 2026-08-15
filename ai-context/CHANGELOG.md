@@ -14,6 +14,18 @@ system-id: mangonz-desktop
 # CHANGELOG.md — Historial de cambios del sistema
 
 
+### 2026-08-14 — EVAL 17C ejecutado y cerrado: reducción del leak estructural del pool (opencode, PC)
+
+- **Runner `run-leak-17C.sh` (NUEVO)** — copia del mecanismo 17B + `--variant {A,V1,V2,V3}`. Pool L∪X∪S∪P-F2, M3 V6, PAS_PAD=4 fijo, piso 0.545, LIMIT=10, sin oráculo. Corpus congelado `236a87fa` (7653 líneas), `eval_hash 98a0e308…`, `commit_sha 51b8079…`, `h1_dict_hash 8294f200…`.
+- **7 corridas completas** (control-A + V1×2 + V2×2 + V3×2, ~45-49s c/u con índice cacheado). **G2 confirmado en las 3 variantes** (determinism_hash A=`0d44653e`, V1=`289f8470`, V2=`0c471a33`, V3=`48888238`).
+- **V1 (exclusión dura de noise en ctx final) CRUZA el gate PRIMARIO:** leak 0.442 → **0.250** (-43%), pRel 0.415 → **0.584** (+41%), contain 1.0, cero regresiones en los 8 golds, G2 determinista. La fuente A (noise de sesión, 55% del leak) era la causa dominante. **PERO attr = 12/20 < 13/20** (gate #2): V1 no incluye DICT_H1_B → Q05 sigue en 0. **NO ADOPTADO** (no se modifica el gate retrospectivamente). V1 = candidato positivo/no adoptado.
+- **V2 (S4×3) SIN EFECTO** — idéntica a A (leak 0.442): el peso S4 no cambia el ranking cuando s1/s2/s3 dominan (la fuente A entra por el gate S1 ≥ 0.545, no por el score final). **V3 (excl. raíz no-Knowledge) EFECTO MÍNIMO** (leak 0.433; fuente D solo 10%). Ambas descartadas.
+- **Hallazgo de instrumento:** `--repeat` es vestigial (se parsea pero no se usa en loop) — G2 = invocar el runner 2 veces con distinto `--out`.
+- **Veredicto:** el leak estructural SÍ es reducible (hipótesis H17C confirmada); V1 no aprobado para producción. **Próximo frente: 17D = V1 + DICT_H1_B combinados** (ortogonales) — requiere diseño y gate propios + aprobación del usuario.
+- **Revisión de arquitectura (separación proyecto/instancia):** `buffy-memory-sync.sh` sincroniza SOLO MEMORY/USER (`.sync-state` perfil-local, nunca versionado) ✅; `SNAPSHOT.md`/`facts.yaml` ya gitignored ✅; **problema real = `SESION.md`/`CONTINUE.md` versionados** → con N dispositivos, contaminación + conflictos. Propuesta: hacerlos locales (decisión de diseño, requiere aprobación).
+- **Principio rector agregado al README:** "La complejidad debe ser proporcional a la tarea".
+- Registro completo en `EVAL-REGISTRY.md` → sección 17C. Suite: sin cambios (no se tocó runtime).
+
 ### 2026-08-14 — Shizuku activado por ADB (13.6.0) + protocolo de diagnóstico global (Buffy, PC)
 
 - **Shizuku v13.6.0.r1086 activado en Mi 10 (HyperOS)**: reinstalado desde GitHub oficial (sha256 `6e273ab0e991c4e79bc8b1bbb9b9dd739ccac1a8712a541a214078886b7b790f`), fix de batería (whitelist deviceidle + appops `RUN_ANY_IN_BACKGROUND` + standby active), método oficial 13.6.0 (`libshizuku.so` → `/data/local/tmp/shizuku`). Servidor pid 22501, 12 apps autorizadas, logcat `✅ Shizuku OK`.
