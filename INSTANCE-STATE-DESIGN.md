@@ -3,7 +3,9 @@
 > Estado: **✅ APROBADO — Fase A (diseño) y Fase B (cambio mínimo) implementadas**
 > (2026-08-15). Fase A congelada en commit `51a5631`; Fase B en el commit inmediato
 > posterior a `51a5631` en `main` (ver `git log`).
-> Fase D (fixture experimental) sigue como frente separado, NO abierta.
+> Fase D (fixture experimental): **diseño en borrador (`FIXTURE-EXPERIMENTAL-DESIGN.md`),
+> NO implementada — pendiente de aprobación**. El borrador no implica apertura ni
+> implementación del frente; sigue separado hasta su aprobación explícita.
 > Motivo original: evidencia empírica del experimento **17D** (2026-08-15): los controles de
 > sanity (A/B-solo/V1-solo) NO reprodujeron sus esperados históricos por **drift real
 > del corpus** — `README.md`, `ai-context/CHANGELOG.md`, `ai-context/CONTINUE.md` y
@@ -177,8 +179,10 @@ config_hash
 runner/version
 ```
 
-**Este frente NO se abre todavía.** Se diseña después del cambio mínimo, como
-problema separado (relacionado pero distinto: multi-dispositivo ≠ reproducibilidad).
+**Este frente NO está implementado todavía.** Hay un **diseño en borrador**
+(`FIXTURE-EXPERIMENTAL-DESIGN.md`, pendiente de aprobación — no implica apertura
+ni implementación). Se implementa solo tras aprobación explícita, como problema
+separado (relacionado pero distinto: multi-dispositivo ≠ reproducibilidad).
 
 ---
 
@@ -245,8 +249,11 @@ como está** — punto de compatibilidad, no cambio de arquitectura.
 
 ## 9. Verificación (Fase C)
 
-1. **Suite completa** en PC: `313 OK / 0 FAIL` full · `297 OK / 0 FAIL` --quick
+1. **Suite completa** en PC: `315 OK / 0 FAIL` full · `299 OK / 0 FAIL` --quick
    (los checks de doctor/lint siguen pasando: los archivos existen en disco).
+   El incremento vs `313/297` se explica por los **2 checks nuevos** de
+   `test-close-day.sh` (aserciones de que el commit de cierre NO versiona
+   `SESION.md`/`CONTINUE.md`).
 2. **Test de cierre de día** (`test-close-day.sh`): el commit de cierre NO incluye
    `SESION.md`/`CONTINUE.md` (gitignore) y el repo queda limpio.
 3. **Simulación multi-instancia:** PC A → SESION A · PC B → SESION B — sin
@@ -259,12 +266,12 @@ como está** — punto de compatibilidad, no cambio de arquitectura.
 
 ## 10. Criterios de aceptación del contrato
 
-- [ ] `SESION.md`, `SESION-archive.md` y `CONTINUE.md` dejan de versionarse (git rm --cached + gitignore).
-- [ ] Los archivos siguen existiendo en disco (doctor/lint/source intactos).
-- [ ] `MEMORY/USER` sigue sincronizable; `CHANGELOG.md` sigue compartido.
-- [ ] Suite PC verde (313/297) sin cambios en el mecanismo de memoria ni runtime.
-- [ ] El commit de cierre de día no incluye archivos de instancia.
-- [ ] Fase D (fixture experimental) queda documentada como frente separado, NO abierta.
+- [x] `SESION.md`, `SESION-archive.md` y `CONTINUE.md` dejan de versionarse (git rm --cached + gitignore).
+- [x] Los archivos siguen existiendo en disco (doctor/lint/source intactos).
+- [x] `MEMORY/USER` sigue sincronizable; `CHANGELOG.md` sigue compartido.
+- [x] Suite PC verde (315/299) sin cambios en el mecanismo de memoria ni runtime.
+- [x] El commit de cierre de día no incluye archivos de instancia.
+- [x] Fase D (fixture experimental) queda documentada como frente separado, con diseño en borrador pendiente de aprobación (NO implementada).
 
 ---
 
@@ -287,5 +294,5 @@ este contrato (usuario, 2026-08-15). No se abre Fase D ni se toca el runtime.
 - [x] `buffy-close-day.sh` sin cambios (su `git add -A` respeta `.gitignore`).
 - [x] `test-close-day.sh` adaptado: sandbox copia `.gitignore` real + aserciones de no-versionado.
 - [x] Documentación: README (árbol + nota ¹ + sección de agentes), LOAD_CONTEXT (pasos 3 y 4).
-- [x] Suite completa full `313 OK` / `--quick` `297 OK`.
+- [x] Suite completa full `315 OK` / `--quick` `299 OK` (+2 checks de `test-close-day.sh`).
 - [x] Simulación multi-instancia PC-A/PC-B sin conflictos (archivos ni trackeados → no hay merge).
