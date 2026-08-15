@@ -2246,3 +2246,36 @@ Pool L∪X∪S∪P-F2, M3 V6, PAS_PAD=4 fijo, piso 0.545, LIMIT=10. Sin runner n
 
 **Evidencia:** `combine-17D-PC-2026-08-15-{control-A,control-A-r2,B-solo,B-solo-r2,V1-solo,V1-solo-r2}.json`
 (6 JSONs, commit de cierre). **Estado: CERRADO — STOP metodológico / NO EVALUADO.**
+
+---
+
+## 🏗️ INFRAESTRUCTURA — Fase D1 del fixture experimental (2026-08-15)
+
+**Diseño:** `FIXTURE-EXPERIMENTAL-DESIGN.md` (congelado, commit `bd52050`).
+**D1 implementado:** `scripts/tests/evals/build-fixture.sh` — congela el corpus en
+`fixtures/<fixture_id>/corpus/` + `manifest.json` de identidad completa.
+
+### Verificación D1 (ejecutada, sin EVAL nuevo)
+
+| Criterio | Resultado |
+|---|---|
+| Sintaxis (`bash -n`) | ✅ |
+| Build real (corpus vivo actual) | ✅ 45 archivos / 366358 bytes / 5338 líneas · `corpus_hash 0af49cc…` · `config_hash b2b8b35…` |
+| **Determinismo: re-build → mismo hash** | ✅ `0af49cc666d872a6` idéntico |
+| **mtime NO afecta** (touch de todos los archivos) | ✅ mismo hash por contenido |
+| **contenido SÍ afecta** (editar README.md del corpus) | ✅ `b9430213f5054a12` ≠ original |
+| **Exclusión efectiva** (gate §6.7) | ✅ 0 archivos de instancia/memoria en `corpus/` (find vacío) |
+| **`--include` opt-in de memoria** | ✅ `--include ai-context/memories/MEMORY.md` → 46 archivos, MEMORY.md presente |
+| Fixture ya existente → `exit 2` | ✅ |
+
+### Semántica implementada (diseño §3.2)
+
+- **Excluidos por defecto** (nunca en fixture normal): SESION, SESION-archive,
+  CONTINUE, SNAPSHOT, facts.yaml, `.sync-state` (instancia) + `memories/` (memoria).
+- **`--include`** re-incluye explícitamente (distractores, memoria para EVALs que la midan).
+- **`corpus_hash` POR CONTENIDO** (`sha1(path:contenido)`, no mtime) — determinista entre máquinas.
+- **`config_hash`** = sha256 del bloque config canónico (model + params + variant + dict + eval + runner).
+
+**Pendiente (NO abierto):** D2 (build + commit del primer fixture real), D3
+(runner `--fixture` + validación de mutación + campos nuevos en el JSON), D4
+(gate §6 completo), D5 (registro formal). **Ningún EVAL nuevo.**
