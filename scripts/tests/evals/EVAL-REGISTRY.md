@@ -2539,3 +2539,120 @@ produce el MISMO resultado que 17E-T (que sí usaba `gold_files`).
 - Copia temporal del runner ELIMINADA; runner versionado intacto (solo se tocó
   la línea 746 en la copia).
 - Próximo paso: **§7.3** — modificar `expand_query.py` + `selector_m3.py`.
+
+---
+
+## 📐 PORT A PRODUCCIÓN — Paso §7.3: Port aplicado (2026-08-16)
+
+**Spec:** `PRODUCTION-PORT-SPEC.md` (§7.3) · **Cambios funcionales (SOLO 2
+archivos):**
+
+1. `scripts/lib/expand_query.py` — `DICT_H1` 60 → 67 entradas (7 nuevas:
+   `conecta`, `estado`, `hook`, `hooks`, `react`, `tcpip`, `telefono`; 1
+   modificada: `serial` + `device`). Verificado: `DICT_H1 == dict_h1_b.json`
+   (67/67 idéntico, hash `f534283f`).
+2. `scripts/lib/selector_m3.py` — V1 en `select()`: entre `gated.sort()` y
+   `gated[:top_k]`, `gated = [p for p in gated if not is_session_noise(p["path"])]`.
+   Solo `is_session_noise()`, **sin `gold_files`** (producción no tiene golds).
+
+**Cambio de verificación (no runtime):** `scripts/tests/test-expand-query.sh` —
+la referencia de fidelidad pasó de `baseline-H1` (Paso 10, 60 entradas) a
+`dict_h1_b.json` (67 entradas), que es la referencia correcta post-adopción.
+
+**No modificado:** scoring M3, pesos, S1/S4, threshold 0.545, LIMIT=10,
+`dom_of()`, router, search, gates. Suite: 308 OK / 3 FAIL (los 3 preexistentes
+de documentación README, no tocados).
+
+### Estado
+
+- **§7.3 APLICADO y verificado.** `DICT_H1 == dict_h1_b.json` (67/67),
+  `dict_hash = f534283fda257e3e`, diff de `selector_m3.py` = 4 líneas en el
+  punto previsto.
+- Próximo paso: **§7.4** — gate repo vivo ×2.
+
+---
+
+## 📐 PORT A PRODUCCIÓN — Paso §7.4: Gate repo vivo ×2 (2026-08-16)
+
+**Spec:** `PRODUCTION-PORT-SPEC.md` (§7.4) · **Runner:** copia temporal
+(`run-leak-17C-prodcheck.sh`, SOLO línea 746: V1 sin `gold_files`) · **Repo
+vivo** (sin fixture) · **Config:** `--variant V1 --dict dict_h1_b.json` ·
+**EVAL:** `98a0e308…`.
+
+**Objetivo:** medir el mecanismo portado sobre el corpus vivo (el "después" del
+port) contra el baseline §7.1 (el "antes").
+
+### Resultados (pad 4, repo vivo)
+
+| Gate | Exigencia | Baseline §7.1 | Port r1 | Port r2 | Estado |
+|---|---|---|---|---|---|
+| Attr | ≥13/20 | 12/20 | 13/20 | 13/20 | ✅ |
+| Leak | ≤0.308 | 0.442 | 0.267 | 0.267 | ✅ |
+| pRel | ≥0.121 | 0.415 | 0.689 | 0.689 | ✅ |
+| Containment | ≥0.80 | 1.00 | 1.00 | 1.00 | ✅ |
+| Q05 attr | ≥1 | 0 | 1 | 1 | ✅ |
+| Regresión por-gold | ninguna | — | NO | NO | ✅ |
+| G2 determinista | idéntico | — | OK | OK | ✅ |
+| Tokens | ≤10400 | 460.6 | 400.0 | 400.0 | ✅ |
+
+`determinism_hash = 879673726e927aef` en ambas corridas → G2 exacto.
+
+### Análisis por-gold (no solo promedios)
+
+- **Cero regresiones** en attr en ninguna query.
+- **Q05 mejora**: 0/2 → 1/2 (rescatada por DICT_H1_B).
+- Q04/Q06/Q08: leak baja (0.5→0, 0.333→0, 0.667→0) y pRel sube — el ruido
+  eliminado es noise de sesión, no contexto válido.
+- Q01: pRel 0→1.0 (el único pasaje es correcto; no cubre gold — sin cambio de
+  attr).
+- Q03: sin cambios (leak 1.0 — gold fuera del pool, limitación preexistente
+  documentada, NO se intenta arreglar en este port).
+
+### Estado
+
+- **§7.4 PASADO — 8/8 gates en ambas corridas.** Condición de parada no
+  activada; no se ajustó nada post-hoc.
+- JSONs: `port-gate74-2026-08-16-repo-{r1,r2}.json`.
+- Próximo paso: **§7.5** — veredicto ADOPT/NO ADOPT.
+
+---
+
+## 🏁 PORT A PRODUCCIÓN — Paso §7.5: Veredicto (2026-08-16)
+
+**Spec:** `PRODUCTION-PORT-SPEC.md` (§7.5) · **Decisión del usuario: ADOPT.**
+
+### Veredicto formal
+
+**17E / Production Port — ADOPTED**
+
+| Métrica | Baseline | Port | Resultado |
+|---|---|---|---|
+| Attr | 12/20 | 13/20 | ✅ |
+| Leak | 0.442 | 0.267 | ✅ |
+| pRel | 0.415 | 0.689 | ✅ |
+| Containment | 1.00 | 1.00 | ✅ |
+| Q05 | 0 | 1 | ✅ |
+| Regresiones | — | ninguna | ✅ |
+| G2 | — | OK | ✅ |
+| Tokens | 460.6 | 400.0 | ✅ |
+
+**Notas del veredicto:**
+
+- Leak 0.442 → **0.267** (mejor incluso que el 0.307 del fixture).
+- Attr 12 → **13/20**; Q05 rescatada por DICT_H1_B.
+- pRel 0.415 → **0.689**; cero regresiones por gold; G2 exacto.
+- Q03 queda identificado como limitación preexistente (gold fuera del pool) —
+  NO se intenta arreglar como parte de este port.
+
+### Cierre de serie
+
+- 17B → cerrado · 17C → cerrado · 17E → cerrado · **Production Port → ADOPTED**
+- 17F/17G → **NO ABIERTOS** (no añadir más mejoras ahora).
+
+### Estado
+
+- **§7.5 ADOPT.** Port funcional aplicado (expand_query.py + selector_m3.py),
+  verificación actualizada (test-expand-query.sh), gate repo vivo 8/8.
+- JSONs: `port-gate74-2026-08-16-repo-{r1,r2}.json`.
+- Commit del port + registro: solo los archivos del port (los artefactos
+  experimentales `combine-17E-*` quedan fuera deliberadamente).

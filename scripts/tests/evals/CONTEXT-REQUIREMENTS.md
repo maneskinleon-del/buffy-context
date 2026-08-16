@@ -194,20 +194,49 @@ objetivos (R3: 0.500, R10: 600) son informativos y NO bloquean adopción.
 
 ---
 
+## 3b. Verificación en producción (port §7.4, corpus vivo)
+
+**Estado: ADOPTED** (decisión del usuario, 2026-08-16). El port V1 + DICT_H1_B
+se aplicó a `expand_query.py` + `selector_m3.py` y se re-validó sobre el corpus
+vivo (no fixture) contra el baseline §7.1.
+
+| Requisito | Gate | Baseline §7.1 | Port §7.4 | Estado |
+|---|---|---|---|---|
+| R1 leak | ≤ 0.308 | 0.442 | 0.267 | ✅ |
+| R2 attr | ≥ 13/20 | 12/20 | 13/20 | ✅ |
+| R3 pRel | ≥ 0.121 | 0.415 | 0.689 | ✅ |
+| R4 contain | ≥ 0.80 | 1.00 | 1.00 | ✅ |
+| R5 sin regresión | por gold | — | 0 regresiones | ✅ |
+| R6 Q05 | ≥ 1 | 0 | 1 | ✅ |
+| R7 G2 | r1=r2 | — | idéntico | ✅ |
+| R8 noise excluido | — | — | verificado | ✅ |
+| R9 puente léxico | anti-oráculo | — | verificado | ✅ |
+| R10 tokens | ≤ 10400 | 460.6 | 400.0 | ✅ |
+
+**Veredicto producción: 8/8 gates pasados en ambas corridas (G2 exacto,
+`determinism_hash=879673726e927aef`).** La distinción fixture vs corpus vivo se
+mantiene: los valores absolutos del fixture (10/10) y del corpus vivo (8/8)
+son de escenarios distintos; ambos confirman el mecanismo.
+
+- JSONs port: `port-gate74-2026-08-16-repo-{r1,r2}.json`.
+- Baseline: `port-baseline-2026-08-16-repo-{r1,r2}.json`.
+- Q03 (leak 1.0) es limitación preexistente (gold fuera del pool) — NO se
+  intenta arreglar en este port.
+
+---
+
 ## 4. Pendientes y riesgos
 
-1. **Decisión de adopción del usuario**: 17E = PASS / CANDIDATO A ADOPCIÓN. Si se
-   adopta, el siguiente paso es portar V1 + DICT_H1_B al pipeline de producción
-   (runtime real, no fixture) con su propio gate de regresión sobre corpus vivo.
+1. **Adopción**: **RESUELTO — ADOPTED** (2026-08-16). Port aplicado y gate de
+   producción 8/8 sobre corpus vivo. Serie cerrada: 17B/17C/17E + Production
+   Port. 17F/17G NO abiertos.
 2. **Q01 sigue en 0** en todas las configs: el pasaje con `adb tcpip 5555` /
    `adb connect` no cruza el piso. El diagnóstico 17B indica que necesita un
    puente **conceptual/relacional** (ADB discovery → transport → authorization),
    no más sinónimos léxicos. Fuera de alcance de esta spec.
-3. **Fixture vs producción**: los valores absolutos son del fixture (excluye
-   estado de instancia). El pipeline real incluye SESION/CONTINUE/CHANGELOG —
-   la adopción debe re-validar R1–R10 sobre el corpus vivo con el mecanismo
-   portado. **El fixture demuestra que el mecanismo funciona; NO demuestra que
-   sea seguro incorporarlo a producción.**
+3. **Fixture vs producción**: **RESUELTO — re-validado sobre corpus vivo en
+   §7.4** (8/8 gates). El fixture demuestra el mecanismo; el port demuestra que
+   es seguro en producción.
 4. **Cache de embedding de query** (§3.3 de 17E): infraestructura pendiente para
    que las corridas no requieran levantar el modelo cuando el componente medido
    es independiente de la inferencia.

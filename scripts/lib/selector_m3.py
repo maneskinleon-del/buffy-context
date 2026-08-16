@@ -295,6 +295,10 @@ def select(query, passages, repo, theta, rescue_low, top_k):
                        W["s3"] * p["_s3"] + W["s4"] * p["_s4"])
 
     gated.sort(key=lambda x: -x["_score"])
+    # V1 (port §7.3): exclusión de noise de sesión en el ensamblado del
+    # contexto final — SOLO is_session_noise(), sin gold_files (producción no
+    # tiene golds conocidos; §7.2 demostró equivalencia con 17E-T).
+    gated = [p for p in gated if not is_session_noise(p["path"])]
     selected = []
     for p in gated[:top_k]:
         selected.append({
