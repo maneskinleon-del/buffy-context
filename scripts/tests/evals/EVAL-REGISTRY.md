@@ -2496,3 +2496,46 @@ el "antes" del port queda registrado.
 - JSONs: `port-baseline-2026-08-16-repo-{r1,r2}.json`.
 - Sin modificación de código. Próximo paso: §7.2 sanity (17E sin cláusula
   `gold_files` sobre fixture).
+
+---
+
+## 📐 PORT A PRODUCCIÓN — Paso §7.2: Sanity V1 sin gold_files (2026-08-16)
+
+**Spec:** `PRODUCTION-PORT-SPEC.md` (§7.2) · **Runner:** `run-leak-17C.sh` copia
+temporal (`run-leak-17C-prodcheck.sh`, SOLO línea 746 modificada: V1 excluye con
+`is_session_noise(p["path"])` únicamente, sin cláusula `and p["path"] not in
+gold_files`) · **Fixture:** `fx-2026-08-15-001` (`0af49cc666d872a6`) · **Config:**
+`--variant V1 --dict dict_h1_b.json` (T = V1 + DICT_H1_B) · **EVAL:** `98a0e308…`.
+
+**Objetivo:** confirmar que la exclusión V1 de producción (solo
+`is_session_noise()`, sin `gold_files` — no hay golds conocidos en producción)
+produce el MISMO resultado que 17E-T (que sí usaba `gold_files`).
+
+### Resultados (pad 4)
+
+| Métrica | §7.2 r1 | §7.2 r2 | 17E-T (con gold) | G2 |
+|---|---|---|---|---|
+| attr | 13/20 | 13/20 | 13/20 | ✅ |
+| leak | 0.307 | 0.307 | 0.307 | ✅ |
+| pRel | 0.630 | 0.630 | 0.630 | ✅ |
+| contain | 1.0 | 1.0 | 1.0 | ✅ |
+| tokens_avg | 404.9 | 404.9 | 404.9 | ✅ |
+
+### Verificaciones
+
+1. **G2 interno**: r1 = r2 per-query (10/10) · `determinism_hash` idéntico.
+2. **Equivalencia con 17E-T**: §7.2 (sin `gold_files`) = 17E-T (con `gold_files`)
+   per-query en las 10 queries → **eliminar `gold_files` NO cambia el
+   comportamiento experimental** (la cláusula era una salvaguarda de medición
+   que nunca se activó: ningún gold es noise).
+3. **Anti-oráculo**: ningún gold del EVAL es clasificado como
+   `is_session_noise()` → la exclusión de producción es segura (no descarta golds).
+
+### Estado
+
+- **§7.2 PASADO.** La exclusión V1 de producción (solo `is_session_noise()`) es
+  válida: 10/10 gates sobre el fixture, idéntico a 17E-T.
+- JSONs: `port-sanity72-2026-08-16-fixture-{r1,r2}.json`.
+- Copia temporal del runner ELIMINADA; runner versionado intacto (solo se tocó
+  la línea 746 en la copia).
+- Próximo paso: **§7.3** — modificar `expand_query.py` + `selector_m3.py`.
