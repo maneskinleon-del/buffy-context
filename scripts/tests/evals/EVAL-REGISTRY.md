@@ -2394,3 +2394,105 @@ vs `--fixture` (corpus congelado, hash por contenido, mismatch → STOP).
 - Gate por **dominancia combinada**: `leak(T) ≤ min` · `attr(T) ≥ max` · Q05 ≥ 1 · sin regresión por gold vs A · `pRel(T) ≥ min` (complementaria, no sustituye) · contain ≥ 0.80 y ≥ min · G2.
 - Cache miss inicial = condición de infraestructura, no drift.
 - **17E NO ejecutado**: ni sanity con Ollama, ni T, ni gate aplicado. Pendiente de autorización explícita.
+
+---
+
+## 🧪 RESULTADO — Paso 17E: V1 + DICT_H1_B sobre fx-2026-08-15-001
+
+**Spec:** `combine-17E-DESIGN.md` (congelada `6adc7e4`) · **Fixture:** `fx-2026-08-15-001` (`0af49cc666d872a6`)
+**Fecha:** 2026-08-15 · **Veredicto:** **GATE 17E PASADO — T CANDIDATO A ADOPCIÓN**
+
+### Ejecución (orden estricto §3.1, todo en la MISMA corrida)
+
+1. Validación de fixture (hash por contenido) → ✅ íntegro.
+2. Cobertura golds ⊆ fixture → ✅ 10/10.
+3. Sanity A/B-solo/V1-solo ×2 G2 → ✅ (G2 r1=r2 · fixture íntegro en las 8 corridas · direcciones de efecto OK: B rescata Q05, V1 reduce leak).
+4. T = V1 + DICT_H1_B ×2 → ✅.
+5. Gate §4 → **PASADO 7/7**.
+
+### Resultados por config (baseline del fixture, NO comparable con 17B/17C/17D)
+
+| config | attr | leak | pRel | contain |
+|---|---|---|---|---|
+| A (control) | 12/20 | 0.407 | 0.430 | 1.000 |
+| B-solo | 13/20 | 0.398 | 0.547 | 1.000 |
+| V1-solo | 12/20 | 0.307 | 0.520 | 1.000 |
+| **T = V1+B** | **13/20** | **0.307** | **0.630** | **1.000** |
+
+### Gate §4 (dominancia combinada)
+
+| Criterio | Resultado |
+|---|---|
+| 1. leak(T) ≤ min(A,B,V1) = 0.307 | ✅ 0.307 ≤ 0.307 |
+| 2. attr(T) ≥ max(A,B,V1) = 13 | ✅ 13 ≥ 13 |
+| 3. Q05 ≥ 1 | ✅ Q05=1 (rescate de B sobrevive bajo V1) |
+| 4. sin regresión por gold vs A | ✅ ninguna |
+| 5. pRel(T) ≥ min = 0.430 | ✅ 0.630 ≥ 0.430 |
+| 6. contain ≥ 0.80 y ≥ min | ✅ 1.000 |
+| 7. G2 (T r1=r2) | ✅ determinista |
+
+### Diagnóstico de interacción por gold
+
+- **Q05**: A=0 · B=1 · V1=0 · T=**1** — el rescate de Q05 por DICT_H1_B **sobrevive** la combinación con V1 (la hipótesis de ortogonalidad de mecanismos se confirma en este gold: V1 = ensamblado final, B = ranking).
+- Única diferencia T vs controles: T = B-solo en attr (13) y T = V1-solo en leak (0.307) → **T hereda lo mejor de cada factor sin regresiones**.
+- pRel de T (0.630) supera a ambos controles (0.430/0.547) — la combinación mejora la relevancia global.
+
+### Estado
+
+- **17E = PASS experimental / CANDIDATO A ADOPCIÓN** (decisión final del usuario).
+- JSONs: `combine-17E-2026-08-15-{a,b,v1,T}-r{1,2}.json` (8 archivos).
+- Fixture intacto (`0af49cc666d872a6`) · runner/runtime sin cambios · 17B/17C/17D intactos.
+- El índice del fixture quedó cacheado (`bge-m3-0af49cc666d872a6`) → futuras corridas serán rápidas (~1-2 min cada una).
+
+---
+
+## 📐 PORT A PRODUCCIÓN — Paso §7.1: Baseline repo vivo (2026-08-16)
+
+**Spec:** `PRODUCTION-PORT-SPEC.md` (commit `f74a7e7`) · **Runner:** `run-leak-17C.sh`
+`--variant A` (config actual, sin V1, sin DICT_H1_B) sobre **repo vivo** (sin `--fixture`).
+**EVAL:** `eval-ctx-PC-2026-08-11` (`98a0e308…`) · commit corpus `f74a7e7`.
+
+### Ejecución
+
+- **r1**: reindex completo del corpus vivo (8368 líneas) + 10 queries → 504s, `index_cache_hit=False`.
+- **r2**: índice cacheado → 52s, `index_cache_hit=True`.
+- **G2 per-query: IDÉNTICO en las 10 queries** (attr, leak, pRel, contain, ctx_size).
+- `determinism_hash` difiere solo por `index_cache_hit`/`elapsed_seconds` — resto de campos idénticos.
+
+### Resultados (pad 4, baseline repo vivo)
+
+| Métrica | r1 | r2 | G2 |
+|---|---|---|---|
+| attr | 12/20 | 12/20 | ✅ |
+| pRel | 0.415 | 0.415 | ✅ |
+| leak | 0.442 | 0.442 | ✅ |
+| contain | 1.0 | 1.0 | ✅ |
+| tokens_avg | 460.6 | 460.6 | ✅ |
+
+### Per-query (idéntico en r1/r2)
+
+| Q | attr | leak | pRel | ctx_size |
+|---|---|---|---|---|
+| Q01 | 0/2 | 0.000 | 0.000 | 0 |
+| Q02 | 3/3 | 0.000 | 0.900 | 10 |
+| Q03 | 0/2 | 1.000 | 0.000 | 2 |
+| Q04 | 2/2 | 0.500 | 0.500 | 4 |
+| Q05 | 0/2 | 0.750 | 0.333 | 6 |
+| Q06 | 1/1 | 0.333 | 0.500 | 10 |
+| Q07 | 2/2 | 0.333 | 0.600 | 10 |
+| Q08 | 1/2 | 0.667 | 0.300 | 10 |
+| Q09 | 2/2 | 0.333 | 0.714 | 7 |
+| Q10 | 1/2 | 0.500 | 0.300 | 10 |
+
+### Sanity vs histórico
+
+El baseline reproduce **exactamente** los valores de 17B-A sobre corpus vivo
+(attr 12/20, pRel 0.415, leak 0.442, contain 1.0) → el mecanismo es estable y
+el "antes" del port queda registrado.
+
+### Estado
+
+- **Baseline repo vivo registrado** — referencia del "antes" para el gate §6.
+- JSONs: `port-baseline-2026-08-16-repo-{r1,r2}.json`.
+- Sin modificación de código. Próximo paso: §7.2 sanity (17E sin cláusula
+  `gold_files` sobre fixture).
