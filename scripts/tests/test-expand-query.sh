@@ -34,37 +34,41 @@ test_expand_sintaxis() {
 }
 
 test_expand_fidelidad_runner() {
-  suite "expand-query: fidelidad vs runner H1 congelado (baseline-H1)"
-  local baseline="$REPO_DIR/scripts/tests/evals/baseline-H1-expansion-PC-2026-08-12.json"
+  suite "expand-query: fidelidad vs DICT_H1_B congelado (port §7.3)"
+  # Referencia del port: dict_h1_b.json (67 entradas, hash f534283f) — el dict
+  # aprobado para producción en §7.3. Antes del port la referencia era
+  # baseline-H1 del Paso 10 (60 entradas); el port cambió el contrato del dict.
+  local baseline="$REPO_DIR/scripts/tests/evals/dict_h1_b.json"
   if [ ! -f "$baseline" ]; then
-    ok "skip fidelidad (baseline H1 ausente)"
+    ok "skip fidelidad (dict_h1_b.json ausente)"
     return 0
   fi
-  # Para CADA query del EVAL congelado, el módulo debe producir EXACTAMENTE los
-  # mismos expansion_terms que el runner del Paso 10 registró (10/10).
+  # Verificación real del port (no circular): el dict del módulo DEBE ser
+  # EXACTAMENTE el dict B congelado (60→67 entradas). Si difiere, el port no
+  # quedó fiel a la referencia aprobada.
   local out rc
-  out=$(python3 - "$baseline" "$REPO_DIR" <<'PY' 2>/dev/null
+  out=$(python3 - "$baseline" <<'PY' 2>/dev/null
 import json, sys
 import importlib.util
 spec = importlib.util.spec_from_file_location("eq", "scripts/lib/expand_query.py")
 eq = importlib.util.module_from_spec(spec); spec.loader.exec_module(eq)
-baseline = json.load(open(sys.argv[1], encoding="utf-8"))
-mismatch = []
-for q in baseline["per_query"]:
-    mine = eq.expansion_terms(q["query"])
-    if mine != q["expansion_terms"]:
-        mismatch.append((q["id"], mine, q["expansion_terms"]))
-if mismatch:
-    print("FAIL", mismatch[:3])
+ref = json.load(open(sys.argv[1], encoding="utf-8"))["h1"]
+if eq.DICT_H1 != ref:
+    # reportar entradas que difieren
+    diffs = []
+    for k in sorted(set(eq.DICT_H1) | set(ref)):
+        if eq.DICT_H1.get(k) != ref.get(k):
+            diffs.append((k, eq.DICT_H1.get(k), ref.get(k)))
+    print("FAIL dict difiere: %d/%d, ejemplos: %s" % (len(diffs), len(set(eq.DICT_H1) | set(ref)), diffs[:3]))
 else:
-    print("OK %d/%d" % (len(baseline["per_query"]), len(baseline["per_query"])))
+    print("OK dict==B %d/%d" % (len(ref), len(ref)))
 PY
   )
   rc=$?
   if [ "$rc" -eq 0 ] && printf '%s' "$out" | grep -q '^OK'; then
-    ok "expansion_terms == runner H1 para las 10 queries del EVAL ($out)"
+    ok "DICT_H1 == dict_h1_b.json (port fiel, $out)"
   else
-    bad "fidelidad vs runner H1: $out"
+    bad "fidelidad vs DICT_H1_B: $out"
   fi
 
   # dict_hash: drift-detector del diccionario (congelado en el módulo).
