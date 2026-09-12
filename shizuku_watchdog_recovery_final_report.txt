@@ -1,0 +1,156 @@
+================================================================================
+INFORME DE CIERRE — EVIDENCIA WATCHDOG SHIZUKU RECOVERY
+Repo: buffycontext (canónico)
+Dispositivo: Xiaomi Mi 10 (umi)
+Android: 13 / API 33
+HyperOS: V816.0.4.0.TJBMIXM
+Shizuku: moe.shizuku.privileged.api v13.6.0.r1086.2650830c
+Starter: /data/local/tmp/shizuku (16680 B, 0755)
+Serial utilizado: 127.0.0.1:37685 (detección dinámica + fallback adb connect)
+Fecha ejecución: 2026-09-12 (reloj dispositivo/reportero)
+================================================================================
+
+RESUMEN EJECUTIVO
+--------------------------------------------------------------------------------
+WATCHDOG_RECOVERY = VERIFIED
+SHIZUKU_FUNCTIONAL_RECOVERY = NOT_TESTED
+
+La evidencia incorporada demuestra que, en una ejeción controlada del watchdog:
+- serial ADB válido detectado,
+- servidor ausente observado mecánicamente,
+- ejecución del starter observada en el log,
+- nuevo PID obtenido y distinto del anterior,
+- nuevo PID estable en N0/N1/N2/N3.
+
+No se realizó prueba posterior vía rish ni operación privilegiada post-recovery.
+Por tanto NO se declara recuperación funcional de Shizuku.
+
+================================================================================
+1. EVIDENCIA INCORPORADA
+--------------------------------------------------------------------------------
+Archivo incorporado al repo:
+  buffycontext/shizuku_watchdog_recovery_final_report.txt
+
+Nota de trazabilidad: el reporte original fue generado desde
+  storage/downloads/shizuku_watchdog_recovery_final_report.txt.
+Si en el entorno ese archivo original existe, su hash debe verificarse mecánicamente
+y registrarse aquí. Si no está disponible en este momento, se conserva como evidencia
+el contenido del archivo incorporado al repo, sin inventar hash.
+
+Estado del repo al incorporar:
+  buffycontext/
+    shizuku_watchdog_recovery_final_report.txt  (copia integra del reporte final)
+
+Meta-evidencia incorporada también:
+  - diag_watchdog_final.log            (log del watchdog en la prueba final)
+  - diag_watchdog_final_oldpid.txt     (OLD_PID registrado antes del kill)
+  (ambos presentes en el árbol del repo en esta sesión)
+
+--------------------------------------------------------------------------------
+Cadena experimental (estado cerrado):
+  WATCHDOG_SERIAL_DETECTION       VERIFIED
+  WATCHDOG_SERVER_DETECTION       VERIFIED
+  WATCHDOG_STARTER_EXECUTION      VERIFIED
+  WATCHDOG_SERVER_RESTART         VERIFIED
+  WATCHDOG_SERVER_STABILITY       VERIFIED
+  WATCHDOG_RECOVERY               VERIFIED
+
+Niveles NO probados:
+  SHIZUKU_FUNCTIONAL_RECOVERY     NOT_TESTED
+  RISH_POST_RECOVERY              NOT_TESTED
+  PRIVILEGED_OPERATION_POST_RECOVERY NOT_TESTED
+
+================================================================================
+2. DATOS DEL EXPERIMENTO
+--------------------------------------------------------------------------------
+Dispositivo:        Xiaomi Mi 10 (umi)
+Android:            13 / API 33
+HyperOS:            V816.0.4.0.TJBMIXM
+Shizuku:            13.6.0
+Serial detectado:   127.0.0.1:37685
+OLD_PID:            27663
+NEW_PID:            30618
+N0:                 30618
+N1:                 30618
+N2:                 30618
+N3:                 30618
+
+Criterio de recuperación aplicado (mínimo mecánico):
+  1. serial ADB válido detectado
+  2. ausencia del servidor observada mecánicamente
+  3. ejecución del starter observada en el log
+  4. nuevo PID obtenido
+  5. nuevo PID distinto de OLD_PID
+  6. mismo nuevo PID observado en N0/N1/N2/N3
+
+No se consideró suficiente:
+  - exit code 0 del starter por sí solo
+  - mensaje textual aislado
+  - una sola lectura de PID
+
+================================================================================
+3. WATCHDOG — ESTADO DE IMPLEMENTACIÓN
+--------------------------------------------------------------------------------
+Archivo controlado/disparador: ~/bin/shizuku-watchdog.sh
+Sintaxis: bash -n ~/bin/shizuku-watchdog.sh -> OK
+
+Reglas implementadas (verificadas en este archivo):
+  - No asume "127.0.0.1:5555" como serial.
+  - No usa un serial fijo como mecanismo principal.
+  - Detecta dinámicamente un dispositivo cuyo estado es "device".
+  - Prioriza serial TLS "_adb-tls-connect".
+  - Luego considera seriales TCP/local "host:port" (campo con ':').
+  - Fallback de conexión documentado: 127.0.0.1:37685 como puerto de adb connect
+    (NO como serial hardcodeado).
+  - Usa siempre "adb -s "$SERIAL"" para operaciones.
+  - Usa estado "device" (no posición frágil) y es tolerante a separador mediante $NF.
+
+--------------------------------------------------------------------------------
+4. SHIZUKU 13.6.0 — NOTAS DE VERSION
+--------------------------------------------------------------------------------
+- Shizuku 13.6.0 usa el starter nativo.
+- Binario relevante: /data/local/tmp/shizuku
+- Proviene del libshizuku.so de la arquitectura instalada.
+- start.sh NO existe en esta instalación/version.
+- "moe.shizuku.privileged.api.Server" NO es el mecanismo de arranque válido
+  observado en este dispositivo/version.
+- Arranque requiere contexto shell / UID 2000.
+- Termux por sí solo no puede escribir/ejecutar arbitrariamente /data/local/tmp
+  como shell 2000.
+- ADB/LADB/Wireless Debugging puede proporcionar el transporte necesario.
+- El watchdog debe detectar dinámicamente el serial.
+
+================================================================================
+5. DISTINCIÓN DE RESULTADOS
+--------------------------------------------------------------------------------
+WATCHDOG_RECOVERY:
+  el servidor de Shizuku fue detectado caído, el starter fue ejecutado y un nuevo
+  PID quedó estable (en la prueba).
+
+SHIZUKU_FUNCTIONAL_RECOVERY:
+  además de lo anterior, una operación funcional posterior vía Shizuku/rish fue
+  ejecutada y verificada.
+
+Evidencia actual:
+  WATCHDOG_RECOVERY = VERIFIED
+  SHIZUKU_FUNCTIONAL_RECOVERY = NOT_TESTED
+
+No se elevó el nivel de evidencia.
+
+================================================================================
+6. ESTADO OPERATIVO CERRADO
+--------------------------------------------------------------------------------
+Estado canónico de esta sesión:
+  WATCHDOG_RECOVERY = VERIFIED
+  SHIZUKU_FUNCTIONAL_RECOVERY = NOT_TESTED
+
+Hecho constar:
+  - la recuperación del proceso fue demostrada,
+  - la estabilidad temporal fue demostrada,
+  - no se realizó prueba post-recovery vía rish,
+  - no se realizó operación privilegiada post-recovery,
+  - por tanto no se declara recuperación funcional.
+
+================================================================================
+FIN DEL INFORME
+================================================================================
