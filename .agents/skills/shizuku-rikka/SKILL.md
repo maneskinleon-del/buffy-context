@@ -4,7 +4,11 @@ description: >
   Shizuku + rish: escalación de privilegios Android sin root. Setup (Wireless
   Debugging / ADB / Termux), uso de rish desde Termux, concesión de permisos
   (pm grant, appops), settings del sistema y troubleshooting. Cubre también Sui.
-version: 1.0.0
+  Incluye evidencia operacional del Watchdog Shizuku Recovery (2026-09-12,
+  Shizuku 13.6.0): starter nativo, serial ADB dinámico y criterio mecánico de
+  recuperación. WATCHDOG_RECOVERY = VERIFIED;
+  SHIZUKU_FUNCTIONAL_RECOVERY = NOT_TESTED.
+version: 1.1.0
 ---
 
 # shizuku-rikka — Shizuku + rish (privilegios sin root)
@@ -62,13 +66,24 @@ version: 1.0.0
 
 ### Método 2: ADB vía PC
 ```bash
-adb shell sh /sdcard/Android/data/moe.shizuku.privileged.api/start.sh
+adb -s "$SERIAL" shell /data/local/tmp/shizuku
 ```
 
 ### Método 3: Vía Termux (en el dispositivo)
+Solo con contexto shell/UID 2000 (ADB/LADB/Wireless Debugging). Termux como
+app normal NO es equivalente automático a shell 2000:
 ```bash
-sh /sdcard/Android/data/moe.shizuku.privileged.api/start.sh
+# requiere transporte ADB previo; el starter corre con identidad shell
+adb -s "$SERIAL" shell /data/local/tmp/shizuku
 ```
+
+> **Starter en Shizuku 13.6.0 (evidencia 2026-09-12, Mi 10 / HyperOS):** el
+> starter es el binario nativo **`/data/local/tmp/shizuku`** (proviene del
+> `libshizuku.so` de la arquitectura instalada). **No asumir `start.sh`:**
+> `sh /sdcard/Android/data/moe.shizuku.privileged.api/start.sh` NO existe en
+> esta instalación/versión, y `moe.shizuku.privileged.api.Server` NO es el
+> mecanismo de arranque válido observado. Verificar el mecanismo según la
+> versión instalada antes de arrancar.
 
 ### Verificar que corre
 ```bash
@@ -115,18 +130,47 @@ export MANAGER_APPLICATION_ID=moe.shizuku.privileged.api
 ```
 
 ### Watchdog (auto-reinicio sin root)
-El clásico NO tiene watchdog propio (el fork sí). En Termux se envuelve con ADB
-loopback (5555) que nunca se cae por red — no requiere Wi-Fi real:
+El clásico NO tiene watchdog propio (el fork sí). El patrón actual (validado
+en el Watchdog Shizuku Recovery 2026-09-12) es el reinicio directo vía ADB
+con serial dinámico — no requiere Wi-Fi real:
 ```bash
 # ~/bin/shizuku-watchdog.sh: vigila shizuku_server cada N s (default 30)
-# Si muere: lanza la app (MainActivity) → la app detecta el adb wireless 5555
-# y re-arranca el server SOLA (validado: kill   pidof → relanzamiento OK)
+# Si muere: detecta el serial dinámicamente (estado "device") y ejecuta
+# /data/local/tmp/shizuku → nuevo PID (validado: kill   pidof → relanzamiento OK)
 nohup ~/bin/shizuku-watchdog.sh 30 > /dev/null 2>&1 &
 ```
-Detalle: si la app ya está arriba, `am start` no para el proceso caído; el
-watchdog usa la detección de adb en 5555 para que la misma app rebote el
-server. Matar el server a propósito solo desde `rish -c "kill -9 <pid>"`
+Matar el server a propósito solo desde `rish -c "kill -9 <pid>"`
 (adb shell falla: uid distinto).
+
+#### Serial ADB dinámico (obligatorio)
+NO usar `127.0.0.1:5555` como serial fijo. Detectar dinámicamente un
+dispositivo cuyo estado sea `device`, con esta prioridad:
+1. serial `_adb-tls-connect`;
+2. serial TCP/local `host:port` (campo con `:`);
+3. otro dispositivo con estado `device`, si corresponde.
+
+Después de obtener el serial, usar SIEMPRE `adb -s "$SERIAL"` de forma
+explícita en cada operación ADB.
+
+#### Fallback de conexión
+`127.0.0.1:37685` se documenta únicamente como endpoint de fallback para
+`adb connect` (puerto observado en la evidencia; puede cambiar) — NO como
+serial hardcodeado del dispositivo:
+- `"127.0.0.1:37685"` = endpoint de conexión/fallback (`adb connect`)
+- `"$SERIAL"` = resultado dinámico que usan las operaciones ADB
+
+#### Criterio de recuperación (evidencia mecánica en una misma ejecución)
+`WATCHDOG_RECOVERY = VERIFIED` solo cuando:
+- serial ADB válido detectado;
+- servidor ausente observado mecánicamente;
+- ejecución del starter observada;
+- nuevo PID obtenido;
+- nuevo PID distinto del OLD_PID;
+- nuevo PID estable en las comprobaciones temporales N0/N1/N2/N3.
+
+NO considerar suficiente: exit code 0 del starter, mensaje textual del
+starter, una sola observación de PID, o la existencia del binario. La
+estabilidad temporal del PID es parte de la evidencia.
 
 ### Fallback: addon `termux-shizuku` (F-Droid)
 Usar solo si el exportado no es usable. Requiere el paquete del addon
@@ -181,6 +225,27 @@ rish -c "settings put global <key> <value>"
 ```
 
 ---
+
+## Distinción epistemológica: WATCHDOG_RECOVERY vs SHIZUKU_FUNCTIONAL_RECOVERY
+
+- **WATCHDOG_RECOVERY:** se demostró que el servidor caído fue relanzado y que
+  el nuevo proceso permaneció estable.
+- **SHIZUKU_FUNCTIONAL_RECOVERY:** además de lo anterior, se ejecutó y verificó
+  una operación funcional posterior mediante rish/Shizuku.
+
+Evidencia actual (Watchdog Shizuku Recovery, 2026-09-12, commit `b3b73af`,
+reporte `shizuku_watchdog_recovery_final_report.txt`):
+
+```
+WATCHDOG_RECOVERY = VERIFIED
+SHIZUKU_FUNCTIONAL_RECOVERY = NOT_TESTED
+```
+
+Ninguna frase de esta skill implica que el watchdog demostró automáticamente
+que rish quedó funcional tras la recuperación. "Starter ejecutado
+correctamente" requiere evidencia del proceso (PID nuevo + estabilidad);
+"Shizuku funcional después del recovery" requiere además una prueba
+funcional post-recovery vía rish/Shizuku. No mezclar ambos niveles.
 
 ## Shizuku vs Root
 
