@@ -7,7 +7,8 @@ description: >
   Incluye evidencia operacional del Watchdog Shizuku Recovery (2026-09-12,
   Shizuku 13.6.0): starter nativo, serial ADB dinámico y criterio mecánico de
   recuperación. LADB_RECOVERY_MECHANICAL = VERIFIED;
-  SHIZUKU_FUNCTIONAL_RECOVERY = VERIFIED. WATCHDOG = NOT_IMPLEMENTED.
+  SHIZUKU_FUNCTIONAL_RECOVERY = VERIFIED. SERIAL_CHANGE = VERIFIED.
+  WATCHDOG_V0 = VERIFIED (in-session). WATCHDOG_DAEMON/PERSISTENCE = NOT_PROVEN.
 version: 1.1.0
 ---
 
@@ -283,7 +284,37 @@ not a universal Android compatibility claim.
 
 Checkpoint:
 PoC repository commit 3efedb79831382c7b2ff6b0a643ae5d284c84c07.
-Next unexecuted experiment: LADB serial change.
+LADB serial change: later executed and VERIFIED (see next section).
+
+### Evidencia operacional — serial change y watchdog v0 (2026-09-13)
+
+SERIAL_CHANGE = VERIFIED:
+- Normal LADB app restart (no re-pairing) changed the serial in value AND format:
+  localhost:38639 (host:port) -> adb-..._adb-tls-connect._tcp. (mDNS/TLS).
+- doctor/recover/verify ran unmodified and detected the new serial dynamically
+  (doctor.sh printed it itself); verify.sh -> UP + FUNCTIONAL; rish functional.
+- shizuku_server survived the LADB restart (PID unchanged): server lifetime is
+  independent of the LADB app session.
+- Scope: transport detection only (relaunch branch not exercised; server stayed UP).
+- PoC repository commit 5ded4ee (ladb-shizuku-recovery).
+
+WATCHDOG_V0 = VERIFIED (in-session):
+- watchdog.sh: dynamic serial detection; conservative DOWN criterion
+  (adb ps succeeds AND no shizuku_server row — transport-down is NOT server
+  death); recovery delegated entirely to recover.sh (zero duplicated logic).
+- Single forced DOWN event: rish -c "kill -9 385" -> detected within ~3s ->
+  recover.sh -> new PID 2624, stable N0-N3, rish -> uid=2000(shell),
+  16 consecutive UP cycles after. In-session run; watchdog stopped by exact PID.
+- PoC repository commit 83ec34f (ladb-shizuku-recovery).
+
+WATCHDOG_DAEMON/PERSISTENCE = NOT_PROVEN:
+- A backgrounded watchdog dies when its Termux session tears down (observed).
+- Daemonization (Termux:service / wake-lock), Termux:Boot, reboot recovery and
+  multi-event failure storms are NOT tested. Next increment: watchdog
+  daemonization (v1), not reboot.
+
+Do NOT summarize this board as "WATCHDOG = VERIFIED": the precise state is
+WATCHDOG_V0 = VERIFIED (in-session) only.
 
 ## Shizuku vs Root
 
