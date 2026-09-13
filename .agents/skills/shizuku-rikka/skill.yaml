@@ -1,8 +1,8 @@
 # skill.yaml — manifiesto machine-readable (contrato B2). Validado por scripts/skill-lint.sh.
 id: shizuku-rikka
 name: shizuku-rikka
-version: 1.1.0
-description: "Shizuku + rish: comandos privilegiados en el dispositivo (pm, settings, appops) sin root completo. Incluye evidencia Watchdog Recovery 2026-09-12 (Shizuku 13.6.0): starter nativo /data/local/tmp/shizuku, serial ADB dinámico y distinción WATCHDOG_RECOVERY vs SHIZUKU_FUNCTIONAL_RECOVERY."
+version: 1.2.0
+description: "Shizuku + rish: comandos privilegiados en el dispositivo (pm, settings, appops) sin root completo. Evidencia operacional 2026-09-12/13 (Shizuku 13.6.0, Mi 10/HyperOS): starter nativo /data/local/tmp/shizuku, serial ADB dinámico, watchdog v0 in-session + v1 daemonizado (termux-services), failure storm multi-evento y Termux force-stop. Placa canónica: LADB_RECOVERY_MECHANICAL/SHIZUKU_FUNCTIONAL_RECOVERY/SERIAL_CHANGE = VERIFIED; WATCHDOG_V0 = VERIFIED (in-session); WATCHDOG_V1 = VERIFIED (daemonized, session-teardown scope); MULTI_EVENT_STORM = VERIFIED (daemonized); TERMUX_FORCE_STOP = VERIFIED (app-level kill scope); REBOOT_PERSISTENCE = NOT_TESTED. Nunca resumir como 'WATCHDOG = VERIFIED'."
 entry: SKILL.md
 safe: false
 requires_sudo: false
