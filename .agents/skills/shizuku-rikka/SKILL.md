@@ -8,8 +8,11 @@ description: >
   Shizuku 13.6.0): starter nativo, serial ADB dinámico y criterio mecánico de
   recuperación. LADB_RECOVERY_MECHANICAL = VERIFIED;
   SHIZUKU_FUNCTIONAL_RECOVERY = VERIFIED. SERIAL_CHANGE = VERIFIED.
-  WATCHDOG_V0 = VERIFIED (in-session). WATCHDOG_DAEMON/PERSISTENCE = NOT_PROVEN.
-version: 1.1.0
+  WATCHDOG_V0 = VERIFIED (in-session). WATCHDOG_V1 = VERIFIED (daemonized,
+  session-teardown scope). MULTI_EVENT_STORM = VERIFIED (daemonized).
+  TERMUX_FORCE_STOP = VERIFIED (app-level kill scope). REBOOT_PERSISTENCE =
+  NOT_TESTED. Nunca resumir como "WATCHDOG = VERIFIED".
+version: 1.2.0
 ---
 
 # shizuku-rikka — Shizuku + rish (privilegios sin root)
@@ -140,6 +143,10 @@ con serial dinámico — no requiere Wi-Fi real:
 # /data/local/tmp/shizuku → nuevo PID (validado: kill   pidof → relanzamiento OK)
 nohup ~/bin/shizuku-watchdog.sh 30 > /dev/null 2>&1 &
 ```
+> **Supervisión persistente entre sesiones (VALIDADO):** termux-services/
+> runit (`runsv`) con `service/shizuku-watchdog/run` — el patrón `nohup` de
+> fondo muere con el teardown de la sesión. Ver `WATCHDOG_V1` en la sección
+> de evidencia y el repo `~/ladb-shizuku-recovery`.
 Matar el server a propósito solo desde `rish -c "kill -9 <pid>"`
 (adb shell falla: uid distinto).
 
@@ -284,7 +291,9 @@ not a universal Android compatibility claim.
 
 Checkpoint:
 PoC repository commit 3efedb79831382c7b2ff6b0a643ae5d284c84c07.
-LADB serial change: later executed and VERIFIED (see next section).
+Later increments (all VERIFIED, see next sections): serial change (5ded4ee),
+watchdog v0 (83ec34f), watchdog v1 daemonized (a1ff0c4), multi-event storm
+(b9ca628), Termux force-stop (075ff50). REBOOT_PERSISTENCE = NOT_TESTED.
 
 ### Evidencia operacional — serial change y watchdog v0 (2026-09-13)
 
@@ -312,9 +321,70 @@ WATCHDOG_DAEMON/PERSISTENCE = NOT_PROVEN:
 - Daemonization (Termux:service / wake-lock), Termux:Boot, reboot recovery and
   multi-event failure storms are NOT tested. Next increment: watchdog
   daemonization (v1), not reboot.
+  [2026-09-13, superseded in part: daemonization EXECUTED and VERIFIED as
+  WATCHDOG_V1 (session-teardown scope); multi-event storm VERIFIED; force-stop
+  VERIFIED — see next section. Termux:Boot / reboot recovery remains NOT tested.]
 
 Do NOT summarize this board as "WATCHDOG = VERIFIED": the precise state is
-WATCHDOG_V0 = VERIFIED (in-session) only.
+WATCHDOG_V0 = VERIFIED (in-session) plus WATCHDOG_V1 = VERIFIED (daemonized,
+session-teardown scope).
+
+### Evidencia operacional — watchdog v1, failure storm y force-stop (2026-09-13)
+
+WATCHDOG_V1 = VERIFIED (daemonized, session-teardown scope):
+- runit `runsv` supervision via termux-services (`service/shizuku-watchdog/run`
+  + `install-service.sh`); watchdog alive across interactive session teardown
+  (16+ min, ~15 sessions); `runsv` respawned the loop after a deliberate kill
+  of its session; one autonomous forced-DOWN recovery over the dynamic
+  transport; conservative skip while the transport was genuinely absent (no
+  false recovery). `watchdog.sh detect_serial()` fixed to the full priority
+  chain (v0 only saw tls-connect serials).
+- PoC repository commit a1ff0c4 (ladb-shizuku-recovery).
+
+MULTI_EVENT_STORM = VERIFIED (daemonized):
+- Three sequential forced DOWN events under the live daemon (kill chain
+  2442 -> 6444 -> 7671 -> 8679): strictly sequential detections (~3-6 s),
+  exactly one delegated recover.sh per event, stable N0-N3 + functional
+  rish each time; log deltas +3 DOWN / +3 OK / +0 FAILED (no false positives,
+  no overlapping recoveries, no duplicate processes).
+- PoC repository commit b9ca628 (ladb-shizuku-recovery).
+
+TERMUX_FORCE_STOP = VERIFIED (app-level kill scope):
+- `am force-stop com.termux` (performed OUTSIDE Termux, by the user) killed
+  EVERY Termux-UID process: runsv tree, watchdog, adb server — none of the
+  pre-state PIDs survived. `shizuku_server` (UID shell) SURVIVED with the
+  SAME PID (8679). Serial changed localhost:43459 -> localhost:42125 as a
+  CONSEQUENCE of the adb-server death (mdns re-discovery); scripts detected
+  it dynamically, unmodified. verify.sh exit 0 (UP + FUNCTIONAL); rish
+  functional; log continuity across the kill gap.
+- Explicit distinction: the watchdog did NOT survive the force-stop as a
+  process (cycle counter reset to 1 = new process). The service tree was
+  AUTO-REVIVED by termux-services at the next Termux start. "Daemon survived
+  force-stop" is NOT proven; "service auto-restored on Termux restart" IS
+  proven. WATCHDOG_V1's daemonized scope remains session-teardown, NOT
+  force-stop.
+- PoC repository commit 075ff50 (ladb-shizuku-recovery).
+
+REBOOT_PERSISTENCE = NOT_TESTED:
+- Termux:Boot / reboot recovery has NOT been executed. Never infer reboot
+  persistence from session-teardown or force-stop results.
+
+Current token board (2026-09-13, post 075ff50):
+
+```
+LADB_RECOVERY_MECHANICAL    = VERIFIED
+SHIZUKU_FUNCTIONAL_RECOVERY = VERIFIED
+SERIAL_CHANGE               = VERIFIED
+WATCHDOG_V0                 = VERIFIED (in-session)
+WATCHDOG_V1                 = VERIFIED (daemonized, session-teardown scope)
+MULTI_EVENT_STORM           = VERIFIED (daemonized)
+TERMUX_FORCE_STOP           = VERIFIED (app-level kill scope)
+REBOOT_PERSISTENCE          = NOT_TESTED
+```
+
+Do NOT summarize as a bare "WATCHDOG = VERIFIED": the precise scopes are
+WATCHDOG_V0 (in-session) and WATCHDOG_V1 (daemonized, session-teardown
+scope) only.
 
 ## Shizuku vs Root
 
