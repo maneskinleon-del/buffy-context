@@ -6,8 +6,8 @@ description: >
   (pm grant, appops), settings del sistema y troubleshooting. Cubre también Sui.
   Incluye evidencia operacional del Watchdog Shizuku Recovery (2026-09-12,
   Shizuku 13.6.0): starter nativo, serial ADB dinámico y criterio mecánico de
-  recuperación. WATCHDOG_RECOVERY = VERIFIED;
-  SHIZUKU_FUNCTIONAL_RECOVERY = NOT_TESTED.
+  recuperación. LADB_RECOVERY_MECHANICAL = VERIFIED;
+  SHIZUKU_FUNCTIONAL_RECOVERY = VERIFIED. WATCHDOG = NOT_IMPLEMENTED.
 version: 1.1.0
 ---
 
@@ -233,7 +233,7 @@ rish -c "settings put global <key> <value>"
 - **SHIZUKU_FUNCTIONAL_RECOVERY:** además de lo anterior, se ejecutó y verificó
   una operación funcional posterior mediante rish/Shizuku.
 
-Evidencia actual (Watchdog Shizuku Recovery, 2026-09-12, commit `b3b73af`,
+Evidencia previa (Watchdog Shizuku Recovery, 2026-09-12, commit `b3b73af`,
 reporte `shizuku_watchdog_recovery_final_report.txt`):
 
 ```
@@ -246,6 +246,44 @@ que rish quedó funcional tras la recuperación. "Starter ejecutado
 correctamente" requiere evidencia del proceso (PID nuevo + estabilidad);
 "Shizuku funcional después del recovery" requiere además una prueba
 funcional post-recovery vía rish/Shizuku. No mezclar ambos niveles.
+
+## Evidencia operacional — LADB local recovery
+
+Verified on Xiaomi Mi 10 (umi), Android 13 (API 33) / HyperOS, no root:
+LADB local adbd provides UID 2000 shell access on-device.
+The Shizuku native starter at /data/local/tmp/shizuku can relaunch
+shizuku_server without PC, root, app_process, or CLASSPATH manipulation.
+
+Verified recovery:
+  old PID 12057
+  DOWN confirmed through process table
+  starter launched through LADB
+  new PID 7793
+  N0=N1=N2=N3=7793
+  rish -c "id" succeeded after recovery
+  verify.sh exit 0 -> UP + FUNCTIONAL
+
+Therefore:
+  LADB_RECOVERY_MECHANICAL = VERIFIED
+  SHIZUKU_FUNCTIONAL_RECOVERY = VERIFIED
+  WATCHDOG = NOT_IMPLEMENTED
+
+Operational invariants:
+- LADB serial/port must be detected dynamically; never hardcode localhost:port.
+- rish requires RISH_APPLICATION_ID and MANAGER_APPLICATION_ID.
+- Use rish -c "command".
+- rish exit 255 immediately after killing shizuku_server is expected;
+  verify process state independently.
+- adb shell UID 2000 cannot kill the Shizuku server directly because
+  the server has a different UID; the forced-down test used rish.
+
+Scope:
+This is verified evidence for the tested Mi 10 / Android 13 environment,
+not a universal Android compatibility claim.
+
+Checkpoint:
+PoC repository commit 3efedb79831382c7b2ff6b0a643ae5d284c84c07.
+Next unexecuted experiment: LADB serial change.
 
 ## Shizuku vs Root
 
