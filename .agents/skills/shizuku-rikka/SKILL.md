@@ -10,9 +10,13 @@ description: >
   SHIZUKU_FUNCTIONAL_RECOVERY = VERIFIED. SERIAL_CHANGE = VERIFIED.
   WATCHDOG_V0 = VERIFIED (in-session). WATCHDOG_V1 = VERIFIED (daemonized,
   session-teardown scope). MULTI_EVENT_STORM = VERIFIED (daemonized).
-  TERMUX_FORCE_STOP = VERIFIED (app-level kill scope). REBOOT_PERSISTENCE =
-  NOT_TESTED. Nunca resumir como "WATCHDOG = VERIFIED".
-version: 1.2.0
+  TERMUX_FORCE_STOP = VERIFIED (app-level kill scope). REBOOT_BOOT_SUPERVISION
+  = VERIFIED (boot-glue scope). SHIZUKU_FUNCTIONAL_POST_REBOOT = VERIFIED.
+  REBOOT_PERSISTENCE = VERIFIED (boot-glue supervision scope).
+  REBOOT_AUTONOMOUS_RECOVERY = NOT_TESTED; Termux:Boot app-driven supervision
+  (com.termux.boot) = NOT_TESTED. Nunca resumir como "WATCHDOG = VERIFIED" ni
+  como "REBOOT = VERIFIED".
+version: 1.3.0
 ---
 
 # shizuku-rikka — Shizuku + rish (privilegios sin root)
@@ -293,7 +297,9 @@ Checkpoint:
 PoC repository commit 3efedb79831382c7b2ff6b0a643ae5d284c84c07.
 Later increments (all VERIFIED, see next sections): serial change (5ded4ee),
 watchdog v0 (83ec34f), watchdog v1 daemonized (a1ff0c4), multi-event storm
-(b9ca628), Termux force-stop (075ff50). REBOOT_PERSISTENCE = NOT_TESTED.
+(b9ca628), Termux force-stop (075ff50), reboot persistence
+(af14a393efc3506f9cafd6cc4d0a83abed7e74e1). REBOOT_PERSISTENCE = VERIFIED
+(boot-glue supervision scope); REBOOT_AUTONOMOUS_RECOVERY = NOT_TESTED.
 
 ### Evidencia operacional — serial change y watchdog v0 (2026-09-13)
 
@@ -323,7 +329,9 @@ WATCHDOG_DAEMON/PERSISTENCE = NOT_PROVEN:
   daemonization (v1), not reboot.
   [2026-09-13, superseded in part: daemonization EXECUTED and VERIFIED as
   WATCHDOG_V1 (session-teardown scope); multi-event storm VERIFIED; force-stop
-  VERIFIED — see next section. Termux:Boot / reboot recovery remains NOT tested.]
+  VERIFIED — see next section. Reboot recovery was later registered (2026-09-15)
+  at boot-glue supervision scope — see the reboot section;
+  REBOOT_AUTONOMOUS_RECOVERY remains NOT_TESTED.]
 
 Do NOT summarize this board as "WATCHDOG = VERIFIED": the precise state is
 WATCHDOG_V0 = VERIFIED (in-session) plus WATCHDOG_V1 = VERIFIED (daemonized,
@@ -365,26 +373,84 @@ TERMUX_FORCE_STOP = VERIFIED (app-level kill scope):
   force-stop.
 - PoC repository commit 075ff50 (ladb-shizuku-recovery).
 
-REBOOT_PERSISTENCE = NOT_TESTED:
-- Termux:Boot / reboot recovery has NOT been executed. Never infer reboot
-  persistence from session-teardown or force-stop results.
+REBOOT_PERSISTENCE (registered 2026-09-15; reboot executed 2026-09-14 22:36):
+- Scope: boot-glue supervision only — see the reboot section below. Never infer
+  autonomous post-reboot server recovery from session-teardown, force-stop, or
+  boot-glue results (REBOOT_AUTONOMOUS_RECOVERY = NOT_TESTED).
 
-Current token board (2026-09-13, post 075ff50):
+Current token board (2026-09-15, post af14a39 — PoC frozen):
 
 ```
-LADB_RECOVERY_MECHANICAL    = VERIFIED
-SHIZUKU_FUNCTIONAL_RECOVERY = VERIFIED
-SERIAL_CHANGE               = VERIFIED
-WATCHDOG_V0                 = VERIFIED (in-session)
-WATCHDOG_V1                 = VERIFIED (daemonized, session-teardown scope)
-MULTI_EVENT_STORM           = VERIFIED (daemonized)
-TERMUX_FORCE_STOP           = VERIFIED (app-level kill scope)
-REBOOT_PERSISTENCE          = NOT_TESTED
+LADB_RECOVERY_MECHANICAL       = VERIFIED
+SHIZUKU_FUNCTIONAL_RECOVERY    = VERIFIED
+SERIAL_CHANGE                  = VERIFIED
+WATCHDOG_V0                    = VERIFIED (in-session)
+WATCHDOG_V1                    = VERIFIED (daemonized, session-teardown scope)
+MULTI_EVENT_STORM              = VERIFIED (daemonized)
+TERMUX_FORCE_STOP              = VERIFIED (app-level kill scope)
+REBOOT_BOOT_SUPERVISION        = VERIFIED (boot-glue scope)
+SHIZUKU_FUNCTIONAL_POST_REBOOT = VERIFIED
+REBOOT_AUTONOMOUS_RECOVERY     = NOT_TESTED
+REBOOT_PERSISTENCE             = VERIFIED (boot-glue supervision scope)
 ```
 
 Do NOT summarize as a bare "WATCHDOG = VERIFIED": the precise scopes are
 WATCHDOG_V0 (in-session) and WATCHDOG_V1 (daemonized, session-teardown
-scope) only.
+scope) only. Likewise never a bare "REBOOT = VERIFIED": the reboot is claimed
+only as REBOOT_BOOT_SUPERVISION + REBOOT_PERSISTENCE at boot-glue supervision
+scope, with REBOOT_AUTONOMOUS_RECOVERY = NOT_TESTED.
+
+### Evidencia operacional — reboot persistence (reboot 2026-09-14 22:36, registered 2026-09-15)
+
+Evidence: PoC repo `~/ladb-shizuku-recovery` (standalone), final commit
+`af14a393efc3506f9cafd6cc4d0a83abed7e74e1` (`report_reboot_persistence.md/.txt`,
+`reboot_boot_evidence.log`, preregistration + abort addendum). The reboot was
+user-directed WITHOUT prerequisites: com.termux.boot was NOT installed and the
+transport was ABSENT at reboot time.
+
+Demonstrated evidence (full chain across the PoC series, each at the exact scope
+recorded in the sections above):
+
+1. LADB provides the ADB transport dynamically (on-device adbd, no PC).
+2. The transport rotates serial/endpoint (host:port and mDNS/tls-connect) across
+   LADB restarts, force-stop and reboot; the watchdog discovers it dynamically
+   (never hardcode a serial).
+3. Watchdog v1 runs as a daemonized service (runit `runsv` via termux-services).
+4. The watchdog mechanically distinguishes "transport absent" (conservative skip,
+   "transport down is NOT server DOWN") from "server Shizuku absent" (DOWN →
+   delegated recover.sh).
+5. Server recovery uses the existing native starter (`/data/local/tmp/shizuku`);
+   multi-fall recovery is strictly sequential, exactly one delegated recovery per
+   event.
+6. Termux force-stop kills every Termux-UID process, but `shizuku_server`
+   survives with the SAME PID (it runs in the shell UID context, not Termux's).
+7. Post-reboot, the Termux:Boot boot glue (`~/.termux/boot/`, executed by
+   Termux:Boot-plugin infrastructure — NOT the com.termux.boot app, which was
+   never installed) started runsvdir + the watchdog unattended at device boot,
+   before any interactive session.
+8. With the transport initially absent post-reboot, the watchdog stayed
+   conservative (27 consecutive skip cycles, zero false recoveries).
+9. After the operator restored the transport manually via LADB
+   (MANUAL_INTERVENTION, transport only), the watchdog correctly detected the
+   already-running server (UP, zero recovery actions) and `verify.sh` confirmed
+   UP + FUNCTIONAL with rish `uid=2000(shell)` →
+   `SHIZUKU_FUNCTIONAL_POST_REBOOT = VERIFIED`.
+
+Limits that MUST be preserved (verbatim policy):
+
+- `REBOOT_AUTONOMOUS_RECOVERY = NOT_TESTED`: the server was already UP when the
+  transport returned; the watchdog performed NO post-reboot server recovery.
+- `Termux:Boot app-driven supervision (com.termux.boot) = NOT_TESTED`: the
+  demonstrated variant is the boot glue in `~/.termux/boot/`, not the app.
+- NEVER state: "the watchdog recovered Shizuku after the reboot";
+  "shizuku_server survived the reboot as a process" (post-reboot PID was new);
+  "Android restores the ADB transport automatically" (it was restored manually
+  via LADB); "com.termux.boot ran the test".
+- Accurate phrasing: "Shizuku was functional post-reboot without the watchdog
+  having to perform a server recovery during this experiment; boot-time
+  supervision of the watchdog itself was mechanically verified."
+- Never summarize as a bare "REBOOT = VERIFIED" — the umbrella is
+  `REBOOT_PERSISTENCE = VERIFIED (boot-glue supervision scope)` only.
 
 ## Shizuku vs Root
 
