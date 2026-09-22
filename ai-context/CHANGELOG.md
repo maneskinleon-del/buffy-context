@@ -15,6 +15,13 @@ system-id: mangonz-desktop
 
 
 
+### 2026-09-22 — GameBoostPro: fix H6 (validación read-back de restores shell) pusheado + evidencia forense (Freebuff, PC)
+
+- **Fix H6 `073cea9`** — valores leídos del provider/baseline (`settings get`) se interpolaban directo en `settings put` de restore: un valor corrupto o provider manipulado podía alcanzar `runCommand()` como segunda instrucción shell. Nuevo `RestoreValueValidators.kt` (dominios por key: zen_mode numérico 0..3 AOSP, private_dns_mode/specifier, wifi_bt_coexistence, genérico `isValidRestoreValue`) + gates en GameSessionManager (zen_mode), NetworkOptimizer, TouchOptimizer y BoostSessionManager (baseline). Regla adoptada: **rechazar + log ERROR, NUNCA mutar** (se preserva byte a byte); defaults preexistentes (ausencia de backup) intactos, sin defaults inventados. 7 archivos, +595/-12.
+- **Tests:** 56/56 unit (39 previos + 17 nuevos: `RestoreValueValidatorsTest` + `H6ShellReadBackTest`). **Sin validación en dispositivo aún** (sin APK en la sesión; pendiente ciclo boost/restore con valores borde en Mi 10).
+- **Evidencia `65b4bab`** — 37 archivos: forensic-phase1 (6 informes F1 + 4 screenshots), R1/INVENTORY/OVERLAY reorg (5 md), forensic-phase3 (F3B-F4, F4-BoostKeys), shizuku-off-t1 (scripts captura/verify, informe T1, snapshots T4/T4B, room-logs preservadas ~20MB) + `.codegraph/.gitignore`. Los .log pesados (~27MB) quedaron fuera vía `experiments/.gitignore` (mismo patrón de `4608202`). Scan de secretos sobre lo commiteado: limpio.
+- **Checkpoint:** push fast-forward `4608202..65b4bab` a origin/main (`~/GameBoosterManu`), working tree limpio, CONTINUE/SESION/CHANGELOG sincronizados a `~/ai-context/`.
+
 ### 2026-08-15 — Fase D cerrada: fixture experimental congelado D0–D5 como infraestructura (Freebuff, PC)
 
 - **D0 `bd52050`** — diseño `FIXTURE-EXPERIMENTAL-DESIGN.md`: corpus congelado con hash POR CONTENIDO, exclusiones contractuales (sin instancia/memoria por defecto, `--include` opt-in), gate §6.1–§6.7.
