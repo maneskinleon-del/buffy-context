@@ -6,7 +6,7 @@
 ---
 
 version: 1.8
-updated: 2026-08-08
+updated: 2026-09-25
 schema: system-profile
 system-id: mangonz-desktop
 ---
@@ -14,6 +14,21 @@ system-id: mangonz-desktop
 # CHANGELOG.md — Historial de cambios del sistema
 
 
+
+### 2026-09-25 — ai-context: checkpoint BUFFY-CURRENT-STATE.md v1 commiteado + convención [orig]/[verificado] en LOAD_CONTEXT (Freebuff, PC)
+
+- **BUFFY-CURRENT-STATE.md v1** creado en `ai-context/` y commiteado: el original de la auditoría (ejecutada 2026-09-25 sobre estado HEAD 2026-09-15 de buffy-next/buffy-context) no llegó a persistir en disco; la reconstrucción re-verificó la evidencia el mismo día (§8 del doc: HEADs git, skill-lint 43/43 manifests, ci.yml:29, adapter MCP dangling).
+- **4 correcciones del review aplicadas:** R1 fechas separadas (HEAD observado ≠ fecha de auditoría), R2 sin recuento exacto de scripts ("scripts auditados + librerías auxiliares"), R3 `skill-lint.sh --require-all` verificado como uso efectivo en CI (no solo capacidad), R4 `buffy serve --mcp` conservado como configuración previamente observada, no estado verificado.
+- **Convención `[orig]` / `[verificado YYYY-MM-DD]`** registrada en LOAD_CONTEXT.md como regla documental del proyecto; BUFFY-CURRENT-STATE.md es su referencia de aplicación. Decisión: los veredictos de auditoría/checkpoint se versionan en Git (precedente `AUDITORIA-HANDOFF-FREEBUFF.md`); CONTINUE/SESION siguen siendo estado local de instancia (INSTANCE-STATE-DESIGN §3).
+- Pendiente menor detectado: adapter MCP `buffy-tools` en `~/.gemini/settings.json` apunta a `~/experiments/opencode-buffy-cplus/adapter/buffy-mcp-server.js`, que no existe en disco.
+
+### 2026-09-24 — GameBoostPro: checkpoint T4B-A1 (lock global BoostSessionStore) + fix H6b (validación ns/key del baseline) pusheados (Freebuff, PC)
+
+- **Fix T4B-A1 `0f67c7c`** — el lock por instancia de `BoostSessionStore` no protegía las dos instancias productivas que comparten `boost_session.json`/`.tmp` (repro controlado: 499/500 pérdidas). Nuevo `FILE_LOCK` a nivel proceso (companion object, save/load/clear) + fallback destructivo eliminado (`file.delete()` + segundo `renameTo` → log ERROR + `tmp.delete()` + false, preservando el último commit válido). Test adversarial `BoostSessionStoreConcurrencyA1Test` (2 instancias reales, mismo path, CyclicBarrier, 250 saves/thread): **falla en `65b4bab`, pasa con fix**. Hallazgo de entorno CONFIRMADO: `File.renameTo(archivo→dir-vacío)` puede retornar TRUE en este JDK/FS → inyección de fallo por EACCES (permisos POSIX), portable.
+- **Auditoría T4B post-A1 (read-only)** — inventario de 6 hallazgos; dominante: ns/key del baseline sin validar en `restoreVerified` (mitad no cubierta por H6). Items #2 (composites no atómicos), #3-#5 (BAJO) y #6 (UNVERIFIED) documentados en CONTINUE.md como pendientes.
+- **Fix H6b `f13666f`** — gate fail-closed de `entry.namespace`/`entry.key` ANTES de cualquier `runCommand` en `restoreVerified` (incluido el `settings get` de relectura): `isValidSettingsNamespace` (dominio cerrado {global,system,secure} según inventario autoritativo `BoostKeys`) + `isValidSettingsKey` (token shell-inerte, keys legacy incluidas). Rechazar, nunca mutar: válidos pasan byte a byte. Test `H6bNamespaceKeyInjectionTest` (5 tests, `sh -c` real + marcador inocuo; cubre put/delete/get): falsificación contra HEAD sin gate = payload llega al shell; con fix, nunca.
+- **Tests:** 63/63 unit (58 tras A1 + 5 H6b), `assembleDebug` OK en ambas tandas. Sidecars `audit.db-shm/-wal` (lectura read-only del audit.db) quedaron fuera de los commits; `.gitignore` pendiente. Sin validación en dispositivo (H6/H6b/A1) — pendiente ciclo boost/restore en Mi 10.
+- **Checkpoint:** pushes `65b4bab..0f67c7c..f13666f` a origin/main (`~/GameBoosterManu`), CONTINUE/SESION/CHANGELOG sincronizados a `~/ai-context/`.
 
 ### 2026-09-22 — GameBoostPro: fix H6 (validación read-back de restores shell) pusheado + evidencia forense (Freebuff, PC)
 
