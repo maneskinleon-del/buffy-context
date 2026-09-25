@@ -15,6 +15,13 @@ system-id: mangonz-desktop
 
 
 
+### 2026-09-25 (parte 6) — ronda superficie CLI directa: 8 hallazgos H1-H8 (Freebuff, PC)
+
+- **Primera sesión de uso directo del CLI standalone** (sin consumer AGY, ~30 min, black-box): 8 hallazgos → ratio señal/minuto ~10x mayor que las rondas de routing AGY. Valida Buffy-como-herramienta-standalone. Registro: `a568c6a` en buffy-next (pusheado).
+- **Confirmados:** H4 `--json` contamina `query` 2/2 (prioridad 1); H1 doctor↔capabilities contradicen ADB + H1b driver GPU `pcieport`; H5 Observed==Inferred en recommendations (viola contrato epistémico E4.1); H2/H3 selector ES/EN brittle ("uso alto de CPU" → 0 checks; "temperature" solo EN).
+- **H6 frescura:** por-diseño en context path (contrato E4.1, 7/7 en `doctor --context`); diagnose emite observedAt+source pero sin epistemicState/freshness por-observación — residual UNVERIFIED hasta abrir src/. **H7** `--dry-run` no existe. **H8** `capabilities` no cataloga acciones aunque `act` deriva ahí el descubrimiento.
+- T3 solo path negativo (rechazo limpio de acción desconocida); positivo NO ejecutado por seguridad (sin dry-run). Evidencia: `~/docs/experiments/2026-09-25-cli-surface/` (8 archivos, SHA256SUMS 8/8).
+
 ### 2026-09-25 (parte 5) — Q2: timestamp de corte obligatorio en handoffs (Freebuff, PC)
 
 - **3er caso real de la familia** (handoff desactualizado): la ronda B se ejecutó entre la redacción del handoff y el inicio de la sesión; el drift fue detectado porque el agente chequeó estado git antes de asumir el plan. Precedentes: flake latencyMs mal fechado, checkpoint v1 perdido.
