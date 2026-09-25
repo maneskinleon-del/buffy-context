@@ -72,7 +72,7 @@ Notas de frescura `[verificado 2026-09-25]`:
 - **Configuración previamente observada [orig]:** `buffy → buffy serve --mcp`. Es una observación previa, NO estado local actualmente verificado. Coherente con §15 del original: la configuración MCP local no fue verificada.
 - `[verificado 2026-09-25]`:
   - El modo existe en código: `buffy-next/src/cli.ts` (`case 'serve'` en línea 80, uso `buffy serve --mcp` en 328, modo stdio JSON-RPC en 324) y `src/mcp.ts` está presente. Existencia en código ≠ verificación de runtime.
-  - `~/.gemini/settings.json` registra `mcpServers.buffy-tools` → `node ~/experiments/opencode-buffy-cplus/adapter/buffy-mcp-server.js`; **ese archivo no existe en disco** → la entrada registrada está rota (dangling). No apunta a `buffy serve --mcp`.
+  - `~/.gemini/settings.json` registra `mcpServers.buffy-tools` → `[verificado 2026-09-25, parte 4]` reapuntado a `/home/mangonz/.npm-global/bin/buffy serve --mcp` (binario real buffy-next v0.2.2); `gemini mcp list` → **Connected**. Previamente dangling: apuntaba a `~/experiments/opencode-buffy-cplus/adapter/buffy-mcp-server.js`, archivo inexistente (dir padre eliminado).
   - `~/.gemini/antigravity-cli/mcp/buffy/instructions.md` existe (describe `buffy_context` como herramienta read-only).
 - No se verificó ningún servidor MCP de Buffy funcionando en runtime.
 
@@ -88,7 +88,7 @@ Del texto original solo sobrevivieron las 4 correcciones del review. Cualquier o
 
 - Contenido íntegro de la v1 original fuera de las 4 correcciones (ver §6).
 - `scripts/tests/` (suite bash + evals): existencia verificada hoy; contenido no auditado.
-- Runtime MCP: nada verificado en ejecución; la única entrada MCP registrada apunta a un archivo inexistente.
+- Runtime MCP: `[verificado 2026-09-25, parte 4]` handshake OK con la ruta exacta de settings.json (initialize → serverInfo `buffy-next v0.2.2`; tools/list → `[buffy_context]`); end-to-end `gemini mcp list` → Connected (3/3 servers). Previamente la única entrada MCP registrada estaba dangling.
 - buffy-next: commit `1c975f0` (2026-09-24) y código de `src/mcp.ts` no auditados.
 - `ai-context/` (INFO-core, facts_rules.yaml, CONTINUE, SESION): no auditado en este checkpoint.
 
@@ -106,6 +106,7 @@ Del texto original solo sobrevivieron las 4 correcciones del review. Cualquier o
 | 6 | Adapter MCP registrado | `~/experiments/opencode-buffy-cplus/adapter/buffy-mcp-server.js` → **no existe** |
 | 7 | Modo serve --mcp en código | `cli.ts:80,324,328` + `src/mcp.ts` presente |
 | 8 | Total `.sh` en buffy-context | 70 (excluye `.git/`) |
+| 9 | Handshake MCP post-reapunte (parte 4) | initialize OK v0.2.2 · tools/list `[buffy_context]` · `gemini mcp list` 3/3 Connected |
 
 ---
 
@@ -147,7 +148,11 @@ Citar "634/634" es válido desde el HEAD actual; citarlo retroactivamente al 11-
 | buffy-context | `365c117` (checkpoint + convención; tras rebase limpio con docs shizuku del teléfono) | `origin/main` — sincronizado |
 | buffy-next | `d036312` (docs AGY closure + gitignore) | `origin/master` — sincronizado |
 
-### 10.5 Nota post-ciclo (2026-09-25, parte 3) — anotación de vigencia e438f29
+### 10.6 Q1 — dangling buffy-tools resuelto (2026-09-25, parte 4)
+
+- **Cambio:** `~/.gemini/settings.json` `mcpServers.buffy-tools` reapuntado de adapter inexistente (`~/experiments/opencode-buffy-cplus/adapter/buffy-mcp-server.js`) a `/home/mangonz/.npm-global/bin/buffy serve --mcp`. **Se mantiene el nombre de server** (`buffy-tools`): cambio mínimo, no rompe consumidores — grep en `~/.gemini/` solo encontró menciones en transcripts históricos de brains (ago/06-sep); `GEMINI.md` referencia el tool `buffy_context`, no el nombre de server.
+- **Verificación trazable [verificado 2026-09-25]:** JSON re-parseado OK; handshake MCP con la ruta exacta de settings (initialize → `buffy-next v0.2.2`, tools/list → `[buffy_context]`); `gemini mcp list` end-to-end → 3/3 Connected. Backup reversible: `~/.gemini/settings.json.bak-2026-09-25`.
+- **Alcance:** settings.json es config de Gemini CLI — la superficie AGY (`~/.gemini/antigravity-cli/mcp/buffy/`, ServerName `buffy`) es un mecanismo distinto y no fue tocada. Backup fuera de repos por contener auth config.
 
 - La contradicción señalada en el handoff quedó resuelta: el diagnóstico C3′ de `e438f29` ("workspace vacío → run_command") está anotado en `docs/research/AGY-BUFFY-ROUTING-C3-PRIME-ANALYSIS-2026-09-15.md` (commit `eb496f9`, buffy-next) con la convención de este documento: **[orig]** preserva el texto forense íntegro; **[verificado 2026-09-23]** documenta que la ronda de replicación no soporta la hipótesis como condición suficiente (3/3 PASS en vacío; FAILs del 14-sep no reproducidos, contraste ≈11% no distinguible del ruido, §7.2.2 del doc 23-sep). Refinamiento añadido: C5-B (2026-09-25) — routing observado consistente con el contrato declarado (no-fire en codebase exploration); hipótesis de task-sensibilidad sin significancia primaria (p=0.114; secundaria p=0.029 exploratoria).
 - HEADs vigentes tras la parte 3: buffy-next `eb496f9` (solo docs — 0 cambios en `src/`, el sello de §10.1 sigue aplicando). La ronda B del handoff ya estaba ejecutada antes de esta sesión: protocolo `f706bb6` + resultado `0df24e1` (ver CHANGELOG 2026-09-25 parte 2).
