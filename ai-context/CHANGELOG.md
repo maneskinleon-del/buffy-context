@@ -17,15 +17,15 @@ system-id: mangonz-desktop
 
 ### 2026-09-25 (parte 3) — anotación de vigencia e438f29 + post-ciclo C5-B (Freebuff, PC)
 
-- **Contradicción del handoff resuelta:** el diagnóstico C3′ de `e438f29` ("workspace vacío → run_command") quedó anotado en `docs/research/AGY-BUFFY-ROUTING-C3-PRIME-ANALYSIS-2026-09-15.md` (commit `eb496f9` en buffy-next) con la convención `[orig]`/`[verificado 2026-09-23]`: texto forense original intacto; anotación de que la ronda del 23-sep no soporta la hipótesis como condición suficiente (3/3 PASS en vacío, FAILs del 14-sep no reproducidos). Refinamiento añadido: C5-B (task-sensible, contract-correcto).
+- **Contradicción del handoff resuelta:** el diagnóstico C3′ de `e438f29` ("workspace vacío → run_command") quedó anotado en `docs/research/AGY-BUFFY-ROUTING-C3-PRIME-ANALYSIS-2026-09-15.md` (commit `eb496f9` en buffy-next) con la convención `[orig]`/`[verificado 2026-09-23]`: texto forense original intacto; anotación de que la ronda del 23-sep no soporta la hipótesis como condición suficiente (3/3 PASS en vacío, FAILs del 14-sep no reproducidos). Refinamiento añadido: C5-B (dirección consistente con contrato; hipótesis de task-sensibilidad sin significancia primaria — precisión aplicada también al título de la parte 2).
 - **Estado:** la ronda B del handoff ya estaba ejecutada antes de esta sesión (`f706bb6` protocolo + `0df24e1` resultado, parte 2 del changelog). BUFFY-CURRENT-STATE.md §10.4 actualizada a HEADs vigentes + §10.5 con la anotación. Sello de vigencia intacto: 0 cambios en `src/` desde `e438f29`.
 - Handoff desactualizado: no refleja las 3 rondas del 25-sep (audit-checkpoint, C5-B y esta anotación). Este commit es el cierre.
 
-### 2026-09-25 (parte 2) — C5-B: routing de buffy_context es task-sensible (experimento pre-registrado) (Freebuff, PC)
+### 2026-09-25 (parte 2) — C5-B: routing consistente con contrato; task-sensibilidad solo como señal exploratoria (experimento pre-registrado) (Freebuff, PC)
 
 - **C5-B ejecutado** según protocolo pre-registrado (`C5B-PROTOCOL-2026-09-25.md`, commit `f706bb6` ANTES de ejecutar): 2 tasks × workspace fijo × N=3. Workspace reconstruido **byte-exacto** contra los shas publicados del 23-sep (README `18887a9f`, notes `e49c81e2`, example.py `ed79c172`) — ancla de comparabilidad perfecta.
 - **T1 control (entorno, verbatim C3-R): 3/3** con `buffy_context` como primera tool — replica C3-R exactamente. **T2 (código): 1/4 presencia, siempre tardía** (pos 4 tras explorar archivos); 3/4 comienzan con `view_file(example.py)`; una sesión usó `search_web` para `greet()`.
-- **Métrica primaria (presencia) inconclusiva** (Fisher p=0.114, n=7 válidas) — reportada tal cual, sin promoción post hoc. **Secundaria (primera tool) p=0.029 exploratoria**: la selección NO es task-invariante.
+- **Métrica primaria (presencia) inconclusiva** (Fisher p=0.114, n=7 válidas) — reportada tal cual, sin promoción post hoc. **Secundaria (primera tool) p=0.029 exploratoria**: señal de selección no task-invariante, sin confirmación primaria.
 - **Dirección contract-correcta**: la surface del tool declara "Never for: codebase exploration" → no llamarlo primero en revisión de código es cumplimiento del contrato, no fallo. Refuerza el cierre de la ronda 23-sep: sin caso empírico para discovery nuevo ni RAG.
 - Congestión de servidor: 6 intentos INVALID (ERROR/rate-limit), t2r5 réplica no obtenida tras 3 intentos. Evidencia: `~/docs/experiments/2026-09-25-c5b-transcripts/` (30 archivos, SHA256SUMS 30/30). Workspaces sin ediciones (diff -r vs template, 5/5 limpios).
 - Commits: `f706bb6` (protocolo) → `0df24e1` (resultado), pusheados a origin/master.
