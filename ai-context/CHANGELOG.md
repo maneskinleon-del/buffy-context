@@ -15,6 +15,13 @@ system-id: mangonz-desktop
 
 
 
+### 2026-09-25 (parte 4) — Q1: dangling buffy-tools RESUELTO (reapunte + verificación trazable) (Freebuff, PC)
+
+- **Diagnóstico:** entrada `buffy-tools` en `~/.gemini/settings.json` apuntaba a adapter inexistente (`~/experiments/opencode-buffy-cplus/adapter/` — el dir padre entero fue eliminado). Binario real: `~/.npm-global/bin/buffy` (buffy-next v0.2.2, `serve --mcp` en cli.ts:80,328,366).
+- **Cambio mínimo:** reapunte manteniendo el nombre de server (no rompe consumidores; grep en `~/.gemini/` solo encontró transcripts históricos de brains — `GEMINI.md` referencia el tool `buffy_context`, no el server). Superficie AGY (`mcp/buffy/`) intacta — mecanismo distinto.
+- **Verificación [verificado 2026-09-25]:** handshake MCP con la ruta exacta de settings (initialize OK v0.2.2 + tools/list `[buffy_context]`) + `gemini mcp list` end-to-end → 3/3 Connected. Backup: `~/.gemini/settings.json.bak-2026-09-25` (fuera de repos por auth config).
+- Deuda operativa cerrada: los tres pendientes del ciclo (contradicción e438f29, ronda B, dangling) están RESUELTOS.
+
 ### 2026-09-25 (parte 3) — anotación de vigencia e438f29 + post-ciclo C5-B (Freebuff, PC)
 
 - **Contradicción del handoff resuelta:** el diagnóstico C3′ de `e438f29` ("workspace vacío → run_command") quedó anotado en `docs/research/AGY-BUFFY-ROUTING-C3-PRIME-ANALYSIS-2026-09-15.md` (commit `eb496f9` en buffy-next) con la convención `[orig]`/`[verificado 2026-09-23]`: texto forense original intacto; anotación de que la ronda del 23-sep no soporta la hipótesis como condición suficiente (3/3 PASS en vacío, FAILs del 14-sep no reproducidos). Refinamiento añadido: C5-B (dirección consistente con contrato; hipótesis de task-sensibilidad sin significancia primaria — precisión aplicada también al título de la parte 2).
