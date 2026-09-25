@@ -63,6 +63,17 @@ ai-context/CONTINUE.md
 ```
 Qué se hizo, en qué quedó, qué pendientes hay. **Es el archivo más importante.**
 
+> ⏱️ **Timestamp de corte del handoff (obligatorio)**: todo handoff lleva marca
+> `[redactado YYYY-MM-DD HH:MM]` en su encabezado. El agente que lo recibe DEBE,
+> **antes de asumir el plan**, correr `git log -1` (o `git log` breve) en los repos
+> implicados buscando commits **posteriores a esa marca**. Si los hay → el handoff
+> puede estar desactualizado (drift temporal): verificar estado real antes de
+> re-ejecutar o planificar nada.
+> (Origen: caso real 2026-09-25 — la ronda B fue ejecutada entre la redacción del
+> handoff y el inicio de la sesión; el drift fue detectado al chequear estado antes
+> de actuar. Tercer caso de la familia: flake latencyMs mal fechado, checkpoint
+> v1 perdido, handoff sin timestamp.)
+
 > ℹ️ **CONTINUE.md es LOCAL de instancia** (contrato `INSTANCE-STATE-DESIGN.md` §3-4):
 > no se versiona en Git — cada dispositivo (PC, teléfono, Freebuff…) tiene el suyo.
 > Por eso un repo recién clonado NO lo trae, y es normal que cada instancia parta
@@ -155,6 +166,7 @@ ai-context/AGENTS.md     → Solo si necesita notas técnicas de agentes previos
 
 ### 1. `ai-context/CONTINUE.md` (SIEMPRE)
 Resumen ultra-conciso (máximo 10 líneas, prioriza lo no obvio):
+- **Timestamp de corte en el encabezado**: `[redactado YYYY-MM-DD HH:MM]` — obligatorio (ver regla ⏱️ en Paso 3 del inicio de sesión)
 - Qué se hizo esta sesión (3-5 líneas máximo)
 - Archivos modificados/creados (solo los relevantes)
 - Pendientes para la próxima sesión (máximo 3)
