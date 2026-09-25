@@ -113,6 +113,25 @@ dato de la doc; usa el valor real. Preferencia vs hecho confirmado:
 > menor autoridad que discrepan), para que el agente sepa que hay contradicción.
 > `--no-live` ignora el nivel 1 (útil en CI o para resolver solo la doc).
 
+> 🏷️ **Convención de trazabilidad documental** (auditorías, checkpoints, handoffs):
+> toda afirmación debe ser distinguible por origen mediante marcas:
+> - `[orig]` — heredada de una auditoría/sesión anterior, NO re-verificada.
+> - `[verificado YYYY-MM-DD]` — comprobada contra el sistema en esa fecha, con
+>   evidencia referenciada en el propio documento.
+>
+> Reglas derivadas:
+> - Un documento con estas marcas se usa como checkpoint SIN re-auditarlo antes;
+>   el consumidor distingue hecho verificado de herencia por la marca.
+> - Las zonas no auditadas se declaran explícitamente (sección de límites):
+>   nunca se ocultan ni se convierten en afirmaciones positivas.
+> - Las fechas se distinguen: "HEAD observado: <fecha>" ≠ "auditoría: <fecha>".
+> - Los veredictos de auditoría/checkpoint se versionan en Git (precedentes:
+>   `AUDITORIA-HANDOFF-FREEBUFF.md`, `BUFFY-CURRENT-STATE.md`) — la memoria de
+>   conversación NO es almacenamiento. CONTINUE/SESION siguen siendo estado
+>   local de instancia (contrato `INSTANCE-STATE-DESIGN.md` §3).
+>
+> Referencia de aplicación: `ai-context/BUFFY-CURRENT-STATE.md` (v1, 2026-09-25).
+
 ### Paso 4 — Bitácora (OPCIONAL — con límite)
 ```markdown
 ai-context/SESION.md     → SOLO las últimas 5 entradas (cabeceras visibles)
