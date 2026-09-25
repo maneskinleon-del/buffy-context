@@ -15,6 +15,12 @@ system-id: mangonz-desktop
 
 
 
+### 2026-09-25 (parte 3) — anotación de vigencia e438f29 + post-ciclo C5-B (Freebuff, PC)
+
+- **Contradicción del handoff resuelta:** el diagnóstico C3′ de `e438f29` ("workspace vacío → run_command") quedó anotado en `docs/research/AGY-BUFFY-ROUTING-C3-PRIME-ANALYSIS-2026-09-15.md` (commit `eb496f9` en buffy-next) con la convención `[orig]`/`[verificado 2026-09-23]`: texto forense original intacto; anotación de que la ronda del 23-sep no soporta la hipótesis como condición suficiente (3/3 PASS en vacío, FAILs del 14-sep no reproducidos). Refinamiento añadido: C5-B (task-sensible, contract-correcto).
+- **Estado:** la ronda B del handoff ya estaba ejecutada antes de esta sesión (`f706bb6` protocolo + `0df24e1` resultado, parte 2 del changelog). BUFFY-CURRENT-STATE.md §10.4 actualizada a HEADs vigentes + §10.5 con la anotación. Sello de vigencia intacto: 0 cambios en `src/` desde `e438f29`.
+- Handoff desactualizado: no refleja las 3 rondas del 25-sep (audit-checkpoint, C5-B y esta anotación). Este commit es el cierre.
+
 ### 2026-09-25 (parte 2) — C5-B: routing de buffy_context es task-sensible (experimento pre-registrado) (Freebuff, PC)
 
 - **C5-B ejecutado** según protocolo pre-registrado (`C5B-PROTOCOL-2026-09-25.md`, commit `f706bb6` ANTES de ejecutar): 2 tasks × workspace fijo × N=3. Workspace reconstruido **byte-exacto** contra los shas publicados del 23-sep (README `18887a9f`, notes `e49c81e2`, example.py `ed79c172`) — ancla de comparabilidad perfecta.
