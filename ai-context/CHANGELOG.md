@@ -15,6 +15,12 @@ system-id: mangonz-desktop
 
 
 
+### 2026-09-25 (parte 9) — PR2 ejecutado: H2+H5 resueltos, suite 654/654 (Freebuff, PC)
+
+- **PR2 (`8fbdca9`, master):** H2 — patrón `/\bcpu\b|procesador/` en el selector + señales diagnósticas ampliadas; verificado: "uso alto de CPU" → `[cpu, processes]` observable (antes `no_evidence`). H5 — decisión del operador **(b) omisión condicional**: `inferred?` opcional por contrato, se emite solo con inferencia real, fallback eliminado con comentario anti-regresión en action-mapper.ts; verificado: 0 "Inferido" fantasma, ningún inferred==observed. Suite **648→654** (+6), tsc limpio, build OK.
+- **Corrección del conteo de casos (propuesta del operador, aceptada): son 5, no 4, en dos clases** — (1-3) documentación corrupta en el repo (AUDIT-v0.3 dryRun, e438f29, CURRENT-STATE §0); (4) paráfrasis que nunca llegó al repo (no cuenta como corrupción); **(5) afirmación del auditor sin verificar** (la paráfrasis atribuida a BUFFY-CURRENT-STATE sin grep previo — atrapada en vuelo). La convención `[orig]/[verificado]` aplica también a las afirmaciones del propio auditor. Registrado como observación metodológica, no como castigo.
+- Pendientes: PR3 (H6 — decisión de contrato: `epistemicState` por-observación vs telemetría), PR4 (H1 semántica ADB + H8 catálogo en capabilities + rename plan-mode).
+
 ### 2026-09-25 (parte 8) — PR1 ejecutado: H4+H1b resueltos y verificados (Freebuff, PC)
 
 - **PR1 (`d62fa07`, master):** H4 — `stripFlags()` en `src/shared/cli-args.ts` (puro, 6 tests) cableado en cli.ts antes de construir texto de usuario; H1b — `extractGpuSlot()` (regex hex estricta, bloquea también inyección vía `-s`) + `lspci -k -s <slot>` + `extractDriverFromLspciK()` (8 tests con fixtures del sistema real). **Verificación empírica:** `query: 'temperatura'` limpio; `driver: amdgpu` (antes pcieport). Suite **634→648** (39 archivos), `tsc --noEmit` limpio, build OK. Rama `fix/h4-h1b-cli-surface` fusionada ff y eliminada; estado de resolución agregado al src map (`ed52845`).
