@@ -15,6 +15,12 @@ system-id: mangonz-desktop
 
 
 
+### 2026-09-25 (parte 5) — Q2: timestamp de corte obligatorio en handoffs (Freebuff, PC)
+
+- **3er caso real de la familia** (handoff desactualizado): la ronda B se ejecutó entre la redacción del handoff y el inicio de la sesión; el drift fue detectado porque el agente chequeó estado git antes de asumir el plan. Precedentes: flake latencyMs mal fechado, checkpoint v1 perdido.
+- **Regla formalizada** en `LOAD_CONTEXT.md` (commit `8a85eda`), en los dos lados del contrato: **emisor** — todo handoff lleva `[redactado YYYY-MM-DD HH:MM]` en el encabezado; **receptor** — antes de asumir el plan, `git log` en los repos implicados buscando commits posteriores a la marca. Extensión del protocolo de cierre de sesión existente, no regla nueva.
+- Precisión C5-B aplicada en esta misma fase (commit `1cf6902`): primaria p=0.114 inconclusiva; task-sensibilidad solo como señal exploratoria (p=0.029). Reformulado como "routing consistente con contrato; hipótesis sin significancia primaria".
+
 ### 2026-09-25 (parte 4) — Q1: dangling buffy-tools RESUELTO (reapunte + verificación trazable) (Freebuff, PC)
 
 - **Diagnóstico:** entrada `buffy-tools` en `~/.gemini/settings.json` apuntaba a adapter inexistente (`~/experiments/opencode-buffy-cplus/adapter/` — el dir padre entero fue eliminado). Binario real: `~/.npm-global/bin/buffy` (buffy-next v0.2.2, `serve --mcp` en cli.ts:80,328,366).
