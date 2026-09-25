@@ -15,7 +15,12 @@ system-id: mangonz-desktop
 
 
 
-### 2026-09-25 (parte 7) — src map H1-H8: causas raíz, H7=(c), H3 retractado (Freebuff, PC)
+### 2026-09-25 (parte 8) — PR1 ejecutado: H4+H1b resueltos y verificados (Freebuff, PC)
+
+- **PR1 (`d62fa07`, master):** H4 — `stripFlags()` en `src/shared/cli-args.ts` (puro, 6 tests) cableado en cli.ts antes de construir texto de usuario; H1b — `extractGpuSlot()` (regex hex estricta, bloquea también inyección vía `-s`) + `lspci -k -s <slot>` + `extractDriverFromLspciK()` (8 tests con fixtures del sistema real). **Verificación empírica:** `query: 'temperatura'` limpio; `driver: amdgpu` (antes pcieport). Suite **634→648** (39 archivos), `tsc --noEmit` limpio, build OK. Rama `fix/h4-h1b-cli-surface` fusionada ff y eliminada; estado de resolución agregado al src map (`ed52845`).
+- **4to caso del patrón "documentado ≠ real" — la paráfrasis como modo de falla dominante:** (1) `AUDIT-v0.3.md:87` `dryRun ✅` falso desde v2.2; (2) `e438f29` "vacío→run_command"; (3) `CURRENT-STATE.md §0` flake mal fechado; (4) paráfrasis de la cadena de gate en el review de hoy — **detectada antes de corromper docs**: grep verificó que nunca estuvo en BUFFY-CURRENT-STATE.md (0 matches). La convención `[orig]/[verificado]` pasa de preventiva a estadísticamente necesaria: 4 casos reales en 2 días.
+- **Nota metodológica H3:** dos corridas no bastan para atribuir causa — el falso positivo fue del observador (freebuff fluctuando), no del sistema.
+- Pendientes: Grupo B (H2+H5, contexto de módulo — H5 requiere decisión inferencia-real vs honestidad-semántica), Grupo C-contract (H6 serializar epistemicState), Grupo C-semánticos (H1+H8+rename plan-mode). — src map H1-H8: causas raíz, H7=(c), H3 retractado (Freebuff, PC)
 
 - **Paso 3 ejecutado** (lectura dirigida de src/ con H1-H8 como índice, `4c4d248` pusheado): 5/8 son FIX_TRIVIAL (H4 `cli.ts:66`; H1b `linux.ts:38`; H5 `action-mapper.ts:115-117`; H2 la palabra "cpu" no existe en el vocabulario del selector; mitad H6 `diagnose.ts:211` calcula epistemicState y lo descarta). Estructurales = alineación semántica (H1 instalado≠conectado, H8 capabilities sin catálogo, H7 plan-mode sin nombre).
 - **H7 veredicto (c) reorganización:** dryRun() del spec v2.1 fue reemplazado en v2.2 por `ActionPlanner.preview`; el plan-mode existe como `act --json` (muestra plan y retorna ANTES de gate.execute — verificado empíricamente con list-processes read-only; T3 completado). La cadena de gate citada por el review era paráfrasis — no existe verbatim en ningún doc. `AUDIT-v0.3.md:87` (fila dryRun ✅) anotado como desactualizado.
