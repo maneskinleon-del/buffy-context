@@ -1,6 +1,6 @@
 # BUFFY-CURRENT-STATE — checkpoint de auditoría (handoff a otro AI)
 
-**Versión:** v1 — reconstrucción con las correcciones del review
+**Versión:** v1.1 — reconstrucción con las correcciones del review + addendum de cierre (§10)
 **Fecha del checkpoint:** 2026-09-25
 **Estado:** listo para usar como checkpoint. No requiere más auditoría previa.
 **Ubicación:** `~/buffy-context/ai-context/` (fuente de verdad; `~/ai-context/` es snapshot sincronizado).
@@ -114,3 +114,35 @@ Del texto original solo sobrevivieron las 4 correcciones del review. Cualquier o
 - Este documento **SÍ puede usarse como checkpoint** (decisión del review). No re-auditar antes de usar.
 - Tratar `[orig]` como afirmación heredada de auditoría (no re-verificada) y `[verificado 2026-09-25]` como hecho con evidencia en §8.
 - No convertir las zonas no auditadas (§7) en afirmaciones positivas.
+
+---
+
+## 10. ADDENDUM v1.1 (2026-09-25, misma sesión) — sello de vigencia y estado real de la suite
+
+### 10.1 Veredictos de código vigentes al HEAD actual
+
+- Cadena de provenancia desde el HEAD auditado: `e438f29` (auditado) → `1c975f0` (solo docs de research, 0 archivos en `src/`) → `d036312` (los 2 archivos modificados del operador: `.gitignore` +`.gemini/`, `CURRENT-STATE.md` +§9 cierre ronda AGY — 0 archivos en `src/`). Ambos commits pusheados; `master == origin/master`, working tree limpio.
+- **Cero cambios en `src/` desde el HEAD auditado** → los veredictos de código de la auditoría aplican textualmente al HEAD `d036312`. Este documento puede consumirse sin re-auditar código.
+
+### 10.2 Flake `latencyMs` — NO activo (corrección al checkpoint 606/607)
+
+- El "1 fallo conocido (latencyMs 0 vs 1)" del checkpoint 2026-09-11 **fue corregido al día siguiente**: commit `094a3af` (2026-09-12) excluye `audit.latencyMs` de la igualdad byte-a-byte conservando su validación (`typeof number` + `≥ 0`), con cobertura máxima del resto del payload. Validado entonces: 607/607. Documentado en `docs/COMPANION-READINESS.md:92`.
+- **Advertencia de lectura:** `CURRENT-STATE.md` de buffy-next §0 es un **checkpoint congelado del 2026-09-11** — sus "problemas conocidos" NO describen el estado de HEAD. (Esta confusión propagó un flag obsoleto durante la sesión del 25-sep; el flag se levantó sin re-verificar la fecha de la sección.)
+- Estabilidad actual sobre HEAD `d036312`: **3/3 pasadas consecutivas de la suite completa → 634/634 (38 archivos)** + `tsc --noEmit` limpio.
+
+### 10.3 Procedencia del conteo de tests
+
+| Conteo | Desde | Causa del delta |
+|---|---|---|
+| 606/607 | checkpoint 2026-09-11 | estado congelado en CURRENT-STATE.md §0 |
+| 607/607 | `094a3af` (2026-09-12) | fix del flake (+1 estable) |
+| 634/634 | `1c975f0`/`d036312` | +27 tests por features en la ventana (distribution, discovery, install — commits `eaad4a9`, `d0c49fe`, `a54d0bd`, `9e19bb8`, `e70219c`) |
+
+Citar "634/634" es válido desde el HEAD actual; citarlo retroactivamente al 11-sep sería falso.
+
+### 10.4 HEADs vigentes al cierre del ciclo
+
+| Repo | HEAD local | Remoto |
+|---|---|---|
+| buffy-context | `365c117` (checkpoint + convención; tras rebase limpio con docs shizuku del teléfono) | `origin/main` — sincronizado |
+| buffy-next | `d036312` (docs AGY closure + gitignore) | `origin/master` — sincronizado |
