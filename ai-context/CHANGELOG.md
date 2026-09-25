@@ -15,7 +15,12 @@ system-id: mangonz-desktop
 
 
 
-### 2026-09-25 (parte 6) — ronda superficie CLI directa: 8 hallazgos H1-H8 (Freebuff, PC)
+### 2026-09-25 (parte 7) — src map H1-H8: causas raíz, H7=(c), H3 retractado (Freebuff, PC)
+
+- **Paso 3 ejecutado** (lectura dirigida de src/ con H1-H8 como índice, `4c4d248` pusheado): 5/8 son FIX_TRIVIAL (H4 `cli.ts:66`; H1b `linux.ts:38`; H5 `action-mapper.ts:115-117`; H2 la palabra "cpu" no existe en el vocabulario del selector; mitad H6 `diagnose.ts:211` calcula epistemicState y lo descarta). Estructurales = alineación semántica (H1 instalado≠conectado, H8 capabilities sin catálogo, H7 plan-mode sin nombre).
+- **H7 veredicto (c) reorganización:** dryRun() del spec v2.1 fue reemplazado en v2.2 por `ActionPlanner.preview`; el plan-mode existe como `act --json` (muestra plan y retorna ANTES de gate.execute — verificado empíricamente con list-processes read-only; T3 completado). La cadena de gate citada por el review era paráfrasis — no existe verbatim en ningún doc. `AUDIT-v0.3.md:87` (fila dryRun ✅) anotado como desactualizado.
+- **H3 RETRACTADO:** "temperatura" sí está en el selector (`check-selector.ts:29`); la discrepancia entre corridas era el proceso freebuff fluctuando — estado del sistema, no idioma.
+- **Frontera conocer/ejecutar intacta a nivel diseño** → BUFFY-CURRENT-STATE.md no requiere corrección (veredicto no fue (a)/(d)). Next: fixes triviales (candidato: lote H4+H2+H5+H1b con tests). — ronda superficie CLI directa: 8 hallazgos H1-H8 (Freebuff, PC)
 
 - **Primera sesión de uso directo del CLI standalone** (sin consumer AGY, ~30 min, black-box): 8 hallazgos → ratio señal/minuto ~10x mayor que las rondas de routing AGY. Valida Buffy-como-herramienta-standalone. Registro: `a568c6a` en buffy-next (pusheado).
 - **Confirmados:** H4 `--json` contamina `query` 2/2 (prioridad 1); H1 doctor↔capabilities contradicen ADB + H1b driver GPU `pcieport`; H5 Observed==Inferred en recommendations (viola contrato epistémico E4.1); H2/H3 selector ES/EN brittle ("uso alto de CPU" → 0 checks; "temperature" solo EN).
