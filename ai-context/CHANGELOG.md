@@ -15,6 +15,12 @@ system-id: mangonz-desktop
 
 
 
+### 2026-09-27 — buffy-next: PR5 ejecutado — buffy ctx + buffy env (C1-c), suite 679/679 (Freebuff, PC)
+
+- **Ciclo completo evaluación→decisión→implementación.** Evaluación arquitectónica del CLI autónomo con corrección al marco del operador ("tree limpio" falso al llegar — 7º caso del patrón, registrado en LOAD_CONTEXT.md: la convención [orig]/[verificado] incluye premisas de handoffs de terceros). Decisión: **(c) extender el binario existente** con ajustes — `ctx` (evita colisión con `doctor --context` y `act check-*`), pass-through con discovery del filesystem (Next no conoce la lista de subcomandos de Context), `env` no recortable (diagnóstico R3). Wrapper Context-side descartado: recrea el patrón H1 a nivel familia.
+- **PR5 (`6fbc16f`, master):** `src/shared/ctx.ts` (delegador: args verbatim desde argv crudo — el test atrapó que stripFlags habría robado --json al script; validación pre-interpolación; CWD=repo root; stdio inherit; exit code preservado), `buffy env` (topología, VERSION única lectura documentada, null honesto), dispatch temprano pre-adapter con guard estructural, `BUFFY_CONTEXT_REPO`. Señales: group-kill verificado empíricamente en producción (cero huérfanos; 3 falsos positivos previos = artefactos de medición). Tests 668→679, tsc limpio, build OK.
+- Commits del día en buffy-next: `34d55b8` (PR3), `26f2b6d`+`06bd4c6` (PR4), `6fbc16f` (PR5) — todos en origin.
+
 ### 2026-09-27 — buffy-next: PR4 ejecutado — ciclo H1-H8 CERRADO, suite 668/668 (Freebuff, PC)
 
 - **H8:** `capabilities` expone catálogo de acciones (`getActionCatalog()`: id+name+level+prerequisites). JSON `{capabilities, actions}` — **BREAKING** documentado (único consumidor conocido: subprocess CLI; sin buffy_capabilities en código MCP). Contract: discovery ≠ authorization. La brecha era preexistente: BUFFY-AGENT-CONTRACT.md:34 ya prometía "acciones con su nivel de seguridad y requisitos".

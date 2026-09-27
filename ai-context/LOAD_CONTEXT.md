@@ -133,6 +133,12 @@ dato de la doc; usa el valor real. Preferencia vs hecho confirmado:
 > Reglas derivadas:
 > - Un documento con estas marcas se usa como checkpoint SIN re-auditarlo antes;
 >   el consumidor distingue hecho verificado de herencia por la marca.
+> - **El alcance de la convención incluye a premisas de handoffs de terceros
+>   (incluido el operador).** Caso 7 (2026-09-27): handoff de evaluación
+>   arquitectónica afirmaba "tree limpio" de buffy-next; era cierto al
+>   redactarlo y dejó de serlo con PR3+PR4 sin commitear. El receptor verificó
+>   el estado real antes de razonar (patrón correcto). La verificación de
+>   premisas no es desconfianza: es el mismo estándar que se aplica al repo.
 > - Las zonas no auditadas se declaran explícitamente (sección de límites):
 >   nunca se ocultan ni se convierten en afirmaciones positivas.
 > - Las fechas se distinguen: "HEAD observado: <fecha>" ≠ "auditoría: <fecha>".
