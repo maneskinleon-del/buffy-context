@@ -6,7 +6,7 @@
 ---
 
 version: 1.8
-updated: 2026-09-25
+updated: 2026-09-27
 schema: system-profile
 system-id: mangonz-desktop
 ---
@@ -14,6 +14,21 @@ system-id: mangonz-desktop
 # CHANGELOG.md — Historial de cambios del sistema
 
 
+
+### 2026-09-27 — buffy-next: PR4 ejecutado — ciclo H1-H8 CERRADO, suite 668/668 (Freebuff, PC)
+
+- **H8:** `capabilities` expone catálogo de acciones (`getActionCatalog()`: id+name+level+prerequisites). JSON `{capabilities, actions}` — **BREAKING** documentado (único consumidor conocido: subprocess CLI; sin buffy_capabilities en código MCP). Contract: discovery ≠ authorization. La brecha era preexistente: BUFFY-AGENT-CONTRACT.md:34 ya prometía "acciones con su nivel de seguridad y requisitos".
+- **H1 (D1-c):** `doctor` desambigua ADB — `adb-binario` (capabilities) vs `adb-dispositivo` (privileges.adb); fila ambigua `priv-adb` eliminada (guard); `Capability.deviceConnected?` medido-por-adapter, ausencia ≠ false. Empírico en esta PC: `ADB (binario): instalado` + `ADB (dispositivo): conectado`.
+- **D3 (rename):** docs-only — grep verificado 0 `--dry-run` vivo en src/ (6 matches = comentarios históricos). Sin alias ni deprecation.
+- **Tests:** 657→668 (+11), tsc limpio. **Estado del ciclo: 7/8 resueltos (H4, H1b, H2, H5, H6, H1, H8) + D3 docs-only + H7=(c) + H3 RETRACTADO.** Pendiente: commits PR3+PR4 (autorización del operador).
+- Nota: el contrato lista `buffy_capabilities` como tool MCP sin superficie en código — brecha doc↔binario preexistente, registrada fuera de alcance.
+
+### 2026-09-27 — buffy-next: PR3 ejecutado — H6 (brecha de serialización) resuelto, suite 657/657 (Freebuff, PC)
+
+- **H6 cerrado** (sin commit — pendiente autorización): `epistemicState` + `ageMs` serializados por-observación en los 9 pushes de `analyzeForQuery` (`diagnose.ts`), comentario anti-regresión "NO eliminar: contrato E4.1" en el ex-sitio de dead computation (ex `diagnose.ts:211`), stamp en boundary de gating (`freshness-gating.ts`: legacy → observed, refreshed → valor real post-refresh). **Telemetría agregada intacta** (`staleFields`/`refreshRequired`/`refreshPerformed`/`instrumentation` sin cambios — ortogonal: describe el pipeline, no los ítems).
+- **Tests H6 (3, `tests/h6-epistemic-serialization.test.ts`):** per-obs siempre emitido (mata dead computation) + valor real no-constante (`vi.mock` de `classifyEpistemicState`, gpu→'stale', apunta al sitio de serialización pre-gating porque el gating nunca deja salir un stale+relevante sin refresh) + guard estructural del comentario. `analyzeForQuery` exportado como seam de test. Suite **654→657**, tsc limpio; empírico: `diagnose --json` 5/5 obs con epistemicState+ageMs, `audit.staleFields: []`.
+- Nota de diseño: observedAt=now → hoy todo nace 'observed'; el campo queda establecido antes de que cache lande (refuerzo #3 del operador). diagnose y `doctor --context` ahora consistentes (per-field en las 9 categorías).
+- Pendiente: PR4 (H1 semántica ADB + H8 catálogo capabilities + rename plan-mode) — semántica UX, decisión del operador.
 
 ### 2026-09-25 (parte 9) — PR2 ejecutado: H2+H5 resueltos, suite 654/654 (Freebuff, PC)
 

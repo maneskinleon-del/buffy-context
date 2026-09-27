@@ -460,3 +460,21 @@ foot mostraba errores de colores. La sesión mango funcionaba.
 - `~/.config/systemd/user/mango-kwin.service` — NUEVO
 - `~/.config/foot/foot.ini` — corregido
 - `ai-context/CHANGELOG.md` — actualizado
+
+---
+
+### 2026-09-25 (partes 4-5) — precisión C5-B + dangling buffy-tools resuelto + regla timestamp (archivado desde SESION.md)
+
+- Precisión C5-B (`1cf6902`): primaria p=0.114 inconclusiva; task-sensibilidad solo señal exploratoria (p=0.029) — "task-sensible" corregido en los 4 archivos documentales.
+- Q1 dangling buffy-tools RESUELTO (`79e25d6`): reapunte a `buffy serve --mcp` conservando el nombre (sin consumidores activos del nombre; superficie AGY intacta). [verificado 2026-09-25]: handshake con la ruta exacta de settings + `gemini mcp list` 3/3 Connected. Backup reversible fuera de repos.
+- Q2 formalizada (`8a85eda`): timestamp de corte obligatorio en handoffs (emisor `[redactado HH:MM]`, receptor `git log` posterior a la marca) — extensión del protocolo de cierre, 3er caso real.
+- Pushes finales: buffy-next `eb496f9` → origin/master; buffy-context `7af7a51→8a85eda` → origin/main. Ciclo sin pendientes operativos.
+
+---
+
+### 2026-09-25 (parte 6) — ronda superficie CLI directa: 8 hallazgos H1-H8 (archivado desde SESION.md)
+
+- Uso black-box del CLI (doctor/capabilities/diagnose/act) sin consumer en el medio: 8 hallazgos verificados (H1-H8), registrados en `docs/research/CLI-SURFACE-FINDINGS-2026-09-25.md` (`a568c6a`, pusheado).
+- Destacados: `--json` contamina `query` (H4, prio 1); doctor↔capabilities ADB contradictorio (H1); Observed==Inferred rompe contrato epistémico (H5); sin `--dry-run` (H7) y `capabilities` sin acciones (H8) → T3 solo path negativo.
+- H6 frescura resuelta a medias: por-diseño en context path (E4.1), diagnose sin estado epistémico por-observación — residual UNVERIFIED. Probe anti-caché: re-observación total por invocación (.buffy vacío).
+- Evidencia canónica: `~/docs/experiments/2026-09-25-cli-surface/` (SHA256SUMS 8/8). Próximo: abrir src/ con H1-H8 como índice.
