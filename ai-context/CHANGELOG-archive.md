@@ -478,3 +478,17 @@ foot mostraba errores de colores. La sesión mango funcionaba.
 - Destacados: `--json` contamina `query` (H4, prio 1); doctor↔capabilities ADB contradictorio (H1); Observed==Inferred rompe contrato epistémico (H5); sin `--dry-run` (H7) y `capabilities` sin acciones (H8) → T3 solo path negativo.
 - H6 frescura resuelta a medias: por-diseño en context path (E4.1), diagnose sin estado epistémico por-observación — residual UNVERIFIED. Probe anti-caché: re-observación total por invocación (.buffy vacío).
 - Evidencia canónica: `~/docs/experiments/2026-09-25-cli-surface/` (SHA256SUMS 8/8). Próximo: abrir src/ con H1-H8 como índice.
+
+---
+
+### 2026-09-25 (parte 8) — PR1 H4+H1b ejecutados (archivado desde SESION.md)
+
+- Diseño de tests antes de codear: `stripFlags` puro + `extractGpuSlot`/`extractDriverFromLspciK` con fixtures reales. Branch → ff merge (`d62fa07`) → push. 634→648 tests (+14), tsc limpio, build OK; empírico `query` sin flag y `driver: amdgpu`. 4to caso del patrón paráfrasis atrapado en vuelo. Nota metodológica H3: 2 corridas no bastan para atribuir causa.
+
+---
+
+### 2026-09-25 (parte 7) — src map H1-H8: causas raíz y clasificación (archivado desde SESION.md)
+
+- Lectura dirigida de src/ con H1-H8 como índice (`4c4d248`): H4 `cli.ts:66`; H1 semánticas ADB divergentes; H1b `lspci | head -1` agarra pcieport; H5 fallback inferred=message; H2 "cpu" ausente del vocabulario; H6 epistemicState calculado y descartado (diagnose.ts:211).
+- H7=(c): dryRun reemplazado por ActionPlanner en v2.2; plan-mode = `act --json` (verificado empírico). H3 RETRACTADO (freebuff fluctuando). Frontera conocer/ejecutar intacta.
+- Evidencia ampliada: `~/docs/experiments/2026-09-25-cli-surface/` (10 archivos, SHA256SUMS 10/10).
