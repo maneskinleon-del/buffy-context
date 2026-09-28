@@ -3,6 +3,22 @@
 > Generado con la skill `changelog-generator` a partir de los commits de git (2026-07-29 → 2026-08-02).
 > Historial de *sesiones* de memoria → `ai-context/CHANGELOG.md` (separado de este).
 
+## 2026-09-28
+
+### 🧪 Tests (preparatorio a C1): Ollama fuera del camino crítico
+
+- **Probe de capacidad en vez de liveness** — `ollama_up()` en los tests de selector/expand-query ahora hace `POST /api/embed` (bge-m3, el endpoint real del motor) con gate de performance para input largo (~5.7KB ≤ 6s). `GET /api/tags` respondía 200 con el serve colgado → tests colgados 10 min en el hook pre-commit (falla 2026-09-28). Skips honestos que documentan el contrato RC=3 (auditoría 2026-09-25).
+- **Motor acotado** — `selector_m3.py`: `ollama_available()` pasa de GET tags a probe embed; `ollama_post` de `retries=3 × timeout=600s` (hasta ~30 min colgado) a `retries=1 × timeout=20s`.
+- **Techos `timeout` por comando** en toda invocación pesada de tests (15B, rama-P, determinismo, pool-crece, smoke Q03) — ni un wedge de Ollama a mitad de corrida puede colgar la suite.
+- Decisión arquitectónica completa documentada en `CONTRIBUTING.md` §Tests: Ollama como feature queda (degradación RC=3 ya implementada); como dependencia de tests/CI/pre-commit sale del camino crítico. Marado como enhancement opcional en README y LOAD_CONTEXT.
+
+### 🔒 Privacidad (auditoría PII — decisión D0.1b, Opción 1)
+
+- **Canal privado de memoria** — `ai-context/memories/` deja de versionarse en el repo público: el perfil de identidad (USER.md) y las notas del operador (MEMORY.md) ya no viajan por el Git de este repo (auditoría PII 2026-09-28). Source: `~/.buffy/memories`; la sincronización entre dispositivos va vía `BUFFY_SYNC_DIR` apuntando a un repo privado — el env ya existía en `buffy-memory-sync.sh`, ahora es el canal documentado.
+- **Guards anti-falso-éxito en `sync push`** — cinco protecciones: (1) aborta si el destino está gitignoreado, antes de mutar nada; (2) verifica que cada candidato quedó stageado (check específico, no genérico); (3) propaga el RC de add/commit antes de pushear; (4) si el push falla NO marca `.sync-state` — contrato nuevo: el estado registra lo último *efectivamente* pusheado, no lo *intentado* — y deja un registro de push pendiente que el próximo `sync push` reintenta automáticamente; (5) pre-check global antes de mutar (atomicidad por corrida). Antes, un add/commit/push fallido se reportaba "✔ commiteado y pusheado" sin haber sincronizado nada.
+- **Untrack de estado personal** — `USER-MANU.md`, `shizuku_watchdog_recovery_final_report.txt` y `ai-context/memories/*` fuera del index (siguen en disco); `.sync-state` cubierto preventivamente en `.gitignore`.
+- **Tests** — 3 tests nuevos de git real (`test-memory-sync-guards.sh`) ejercitan los guards (gitignore → abort honesto, push fallido → estado sin marcar + reintento, stage específico); el sandbox de close-day replica el canal privado (remote bare).
+
 ## 2026-08-02
 
 ### ✨ Nuevas funcionalidades

@@ -9,16 +9,27 @@ close_setup() {
   CLOSE_T="${TMPDIR:-/tmp}/buffy-close-$$"
   rm -rf "$CLOSE_T"
   mkdir -p "$CLOSE_T/repo" "$CLOSE_T/mem" "$CLOSE_T/home"
+  git init -q --bare "$CLOSE_T/remote.git"
   git -C "$CLOSE_T/repo" init -q
   git -C "$CLOSE_T/repo" config user.email test@test
   git -C "$CLOSE_T/repo" config user.name test
   git -C "$CLOSE_T/repo" commit -q --allow-empty -m init
-  # Replicar la realidad del repo real: los archivos de estado de instancia
-  # (SESION.md/SESION-archive.md/CONTINUE.md) son LOCALES y no se versionan
-  # (contrato INSTANCE-STATE-DESIGN.md §8.1). El sandbox copia el .gitignore
-  # real para que el flujo de cierre los trate igual que en producción.
+  # Remote bare: con el guard #4 un push sin upstream ya no se traga — el sandbox
+  # replica producción (hay a dónde pushear; el canal de memoria ES este repo).
+  git -C "$CLOSE_T/repo" remote add origin "$CLOSE_T/remote.git"
+  git -C "$CLOSE_T/repo" push -q -u origin HEAD
+  # Replicar la realidad del repo real: el estado de instancia (SESION/
+  # CONTINUE) y la memoria curada son LOCALES y no se versionan (contrato
+  # INSTANCE-STATE-DESIGN.md §3; auditoría PII 2026-09-28 D0.1b Opción 1 —
+  # el canal de memoria es BUFFY_SYNC_DIR, no el git de este repo). El sandbox
+  # copia el .gitignore real para que el flujo los trate como en producción.
   if [ -f "$REPO_DIR/.gitignore" ]; then
     cp "$REPO_DIR/.gitignore" "$CLOSE_T/repo/.gitignore"
+    # El repo de este sandbox ES el canal privado de sync (como un repo
+    # dedicado BUFFY_SYNC_DIR): quitar el bloque de memories/ del .gitignore
+    # copiado — en el repo público sí está ignorado, pero acá el push debe
+    # funcionar (canal privado Opción 1).
+    sed -i '/^ai-context\/memories\/$/d; /^USER-MANU\.md$/d; /^shizuku_watchdog_recovery_final_report\.txt$/d; /^\.sync-state$/d' "$CLOSE_T/repo/.gitignore"
   fi
   # NO poner trap aquí: el trap RETURN se dispara al retornar ESTA función
   # y borraría el sandbox antes de usarlo. El trap va en cada test_*.
@@ -44,10 +55,15 @@ test_close_day_flujo_completo() {
   else
     bad "commit de cierre: $(git -C "$CLOSE_T/repo" log --oneline -1)"
   fi
+  # Canal privado de memoria (D0.1b): este sandbox ES el canal (repo privado
+  # apuntado por BUFFY_SYNC_DIR) → la memoria SÍ se versiona acá vía sync push;
+  # lo que NO se versiona es el estado de instancia (SESION/CONTINUE, asserts
+  # siguientes). La exclusión en el repo público la cubre
+  # test_memory_sync_guard_gitignore (con el .gitignore real → guard aborta).
   if git -C "$CLOSE_T/repo" ls-tree -r --name-only HEAD | grep -q "ai-context/memories/MEMORY.md"; then
-    ok "memoria curada versionada en el repo"
+    ok "memoria versionada en el canal privado de sync"
   else
-    bad "memoria curada versionada en el repo"
+    bad "memoria versionada en el canal privado de sync"
   fi
   if git -C "$CLOSE_T/repo" ls-tree -r --name-only HEAD | grep -q "ai-context/SESION.md"; then
     bad "SESION.md local NO debe versionarse en el commit de cierre"

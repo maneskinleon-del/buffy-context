@@ -15,8 +15,9 @@
 #   buffy-memory.sh remove  [memory|user] "old_text"
 #   buffy-memory.sh batch  [memory|user] 'JSON'
 #   buffy-memory.sh sync status|push|pull [--force]
-#       → puente PC↔teléfono: versiona la memoria en <repo>/ai-context/memories
-#         (push: local→repo + commit/push git · pull: repo→local con guard)
+#       → puente PC↔teléfono: sincroniza vía BUFFY_SYNC_DIR (repo PRIVADO de
+#         sync; default <repo>/ai-context/memories, que el repo público deja
+#         en disco pero NO versiona — auditoría PII 2026-09-28, D0.1b)
 #   buffy-memory.sh --json ...    → stdout JSON puro (máquina)
 #   BUFFY_MEM_DIR=/ruta buffy-memory.sh ...   → store alterno (tests/portable)
 #   BUFFY_SYNC_DIR=/ruta buffy-memory.sh sync ... → repo alterno (tests)

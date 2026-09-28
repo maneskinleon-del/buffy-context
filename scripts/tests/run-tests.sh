@@ -50,6 +50,8 @@ source "$SCRIPT_DIR/test-router.sh"
 source "$SCRIPT_DIR/test-verify.sh"
 # shellcheck source=test-memory.sh
 source "$SCRIPT_DIR/test-memory.sh"
+# shellcheck source=test-memory-sync-guards.sh
+source "$SCRIPT_DIR/test-memory-sync-guards.sh"
 # shellcheck source=test-close-day.sh
 source "$SCRIPT_DIR/test-close-day.sh"
 # shellcheck source=test-documentation.sh

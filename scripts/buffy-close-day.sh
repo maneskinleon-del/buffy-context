@@ -4,7 +4,8 @@
 # El agente escribe el contexto (SESION.md/CONTINUE.md/CHANGELOG.md) y luego
 # ejecuta este script para la parte mecánica del protocolo:
 #
-#   1. sync push de la memoria curada  → ai-context/memories (viaja por git)
+#   1. sync push de la memoria curada  → canal BUFFY_SYNC_DIR (repo privado;
+#      el repo público no versiona memories/ — auditoría PII 2026-09-28, D0.1b)
 #   2. Regenerar SNAPSHOT              → buffy-context.sh (queda local)
 #   3. Doctor --quick                  → valida que el cierre esté consistente
 #   4. Commit + push del repo          → "docs(sesion): cerrar día — <fecha>"
@@ -78,7 +79,7 @@ if [ ! -d "$REPO_DIR/.git" ]; then
 fi
 cd "$REPO_DIR"
 
-# ── 1. Memoria curada → repo (viaja a GitHub) ─────────────
+# ── 1. Memoria curada → canal privado (BUFFY_SYNC_DIR) ────
 log "1/4 · sync push de la memoria curada"
 if ! bash "$MEMORY" sync push; then
   echo "" >&2

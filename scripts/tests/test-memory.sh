@@ -132,9 +132,10 @@ test_memory_render() {
 
 # ── sync (P0: puente PC ↔ teléfono) ────────────────────────────────────────
 # Sin git real (BUFFY_SYNC_GIT=true simula push/pull directo sobre SYNC_DIR
-# compartido, como el repo en GitHub visto por ambos hosts). Cada host usa su
-# propio BUFFY_MEM_DIR pero el MISMO SYNC_DIR (el repo versionado). El estado
-# .sync-state es LOCAL a cada MEM_DIR (no viaja — el repo solo tiene contenido).
+# compartido, como un repo privado de sync visto por ambos hosts). Cada host usa
+# su propio BUFFY_MEM_DIR pero el MISMO SYNC_DIR. El estado .sync-state es LOCAL
+# a cada MEM_DIR (no viaja). Los guards anti-falso-éxito con git REAL (gitignore,
+# push fallido, stage específico) tienen tests propios en test-memory-sync-guards.sh.
 mem_sync_setup() {
   SYNC_T="${TMPDIR:-/tmp}/buffy-sync-$$"
   rm -rf "$SYNC_T"

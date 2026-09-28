@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
 # buffy-memory-sync.sh — Puente PC ↔ teléfono para la memoria curada (P0).
 #
-# La memoria curada es perfil-local por diseño (~/.buffy/memories) — no viaja
-# entre dispositivos. Este script la sincroniza vía el repo buffy-context:
-# las copias versionadas viven en <repo>/ai-context/memories/ y viajan por git.
+# La memoria curada es perfil-local por diseño (~/.buffy/memories). El canal de
+# sincronización entre dispositivos es UN REPO PRIVADO apuntado por
+# BUFFY_SYNC_DIR (default: <repo>/ai-context/memories — en el repo público el
+# .gitignore lo bloquea y el guard #1 aborta con remedio). El git de este repo
+# NO es canal de memoria: llevaría el perfil del operador a GitHub
+# (auditoría PII 2026-09-28, decisión D0.1b Opción 1).
 #
 #   sync status                    → compara local vs repo (shas + conflicto)
 #   sync push  [--force]           → copia local → repo, commit + push git
@@ -21,8 +24,14 @@
 #            locales sin sincronizar → conflicto (no sobrescribir).
 #   · primer sync sin marca propia y contenidos distintos → aviso preventivo.
 #
-# El repo solo contiene CONTENIDO (ai-context/memories/MEMORY.md + USER.md):
-# el estado es conocimiento local de cada máquina y nunca viaja por git.
+# El repo de sync solo contiene CONTENIDO (MEMORY.md + USER.md): el estado es
+# conocimiento local de cada máquina y nunca viaja por git.
+#
+# Contrato .sync-state: registra lo último EFECTIVAMENTE pusheado a remoto.
+# NO lo último intentado — si el push falla, NO se marca (guard #4), así un
+# sync status posterior reporta la divergencia real en vez de un ok falso.
+# · pending_push: commit local que el remoto aún no confirmó; se cierra solo
+#   al verificar el push (reintento automático en el próximo sync push).
 #
 # Env: BUFFY_MEM_DIR (default ~/.buffy/memories) · BUFFY_SYNC_DIR
 #      (default: repo/ai-context/memories junto a este script) ·
@@ -80,6 +89,30 @@ my_last() {  # my_last <store> → sha que YO sincronicé ("" si nunca)
   json_get "$(cat "$STATE" 2>/dev/null || echo '{}')" hosts "$HOST" "$1"
 }
 
+pend_set() {  # pend_set <store> <sha> — registra commit local aún no verificado en remoto
+  python3 -c '
+import json,sys,time
+state_file,store,sha=sys.argv[1],sys.argv[2],sys.argv[3]
+try: d=json.load(open(state_file))
+except Exception: d={}
+d.setdefault("pending_push",{})[store]=sha
+d["updated"]=time.strftime("%Y-%m-%dT%H:%M:%S%z")
+json.dump(d,open(state_file,"w"),indent=1)
+' "$STATE" "$1" "$2"
+}
+
+pend_clear() {  # pend_clear <store> — cierra el registro de push pendiente
+  python3 -c '
+import json,sys
+state_file,store=sys.argv[1],sys.argv[2]
+try: d=json.load(open(state_file))
+except Exception: sys.exit(0)
+d.get("pending_push",{}).pop(store,None)
+if not d.get("pending_push"): d.pop("pending_push",None)
+json.dump(d,open(state_file,"w"),indent=1)
+' "$STATE" "$1"
+}
+
 file_pair() {  # file_pair <dir> → "sha_memory sha_user" (vacíos si no existen)
   local sha_m="" sha_u=""
   [[ -f "$1/MEMORY.md" ]] && sha_m=$(sha "$1/MEMORY.md")
@@ -130,52 +163,127 @@ do_push() {
     R=($(file_pair "$SYNC_DIR"))
   fi
 
-  local -a to_commit=()
+  # ── FASE 1 · PRE-CHECK GLOBAL (sin mutación: ni copia ni .sync-state) ──
+  # Contrato: toda causa de fallo CONOCIDA se detecta acá, antes de tocar
+  # nada — el repo y el estado nunca quedan a medias (atomicidad, guard #5).
+  # En modo simulación (BUFFY_SYNC_GIT=true) no hay git real: los guards de
+  # git-semántica no aplican — el "push" es una copia comparada por sha.
+  local -a cand=() pend_retry=()
+  local -i i
+  local name f l r s p
   for i in 0 1; do
-    local name="${STORES[$i]}" f="${FILES[$i]}"
-    local l="${L[$i]:-""}" r="${R[$i]:-""}" s=$(my_last "$name")
+    name="${STORES[$i]}"; f="${FILES[$i]}"
+    l="${L[$i]:-}"; r="${R[$i]:-}"; s=$(my_last "$name")
     [[ -z "$l" ]] && { echo "⚠ $name: no existe en local — nada que pushear"; continue; }
+    # Push pendiente de una corrida anterior (guard #4): el commit local existe
+    # pero el remoto pudo no haberlo recibido. FASE 1 solo lo registra; el
+    # reintento (y el cierre del registro) ocurre en FASE 2a.
+    p=$(json_get "$(cat "$STATE" 2>/dev/null || echo '{}')" pending_push "$name")
+    if [[ -n "$p" && "$p" != "$s" ]]; then
+      pend_retry+=("$i")
+      continue
+    fi
     [[ "$l" == "$r" ]] && continue
     if ! $force; then
       if [[ -n "$s" && -n "$r" && "$r" != "$s" && "$r" != "$l" ]]; then
         echo "✗ CONFLICTO en $name: el repo (sha ${r:0:8}) cambió desde mi último sync" >&2
-        echo "  (¿el PC escribió mientras tanto?). Decide:" >&2
+        echo "  (¿el otro dispositivo escribió mientras tanto?). Decide:" >&2
         echo "    · el OTRO lado manda → buffy-memory.sh sync pull --force" >&2
         echo "    · TU memoria manda  → buffy-memory.sh sync push --force" >&2
         return 1
       fi
       if [[ -z "$s" && -n "$r" && "$r" != "$l" ]]; then
         echo "✗ PRIMER SYNC en este host y el repo ya tiene $name" >&2
-        echo "  (¿memoria del PC?). No copio encima sin decisión: push --force" >&2
+        echo "  (¿memoria del otro dispositivo?). No copio encima sin decisión: push --force" >&2
         return 1
       fi
     fi
-    if [[ -n "$l" && "$l" != "$r" ]]; then
-      cp "$MEM_DIR/$f" "$SYNC_DIR/$f"
-      to_commit+=("$f")
-      echo "✔ $name: local → repo"
+    # Guard #1: el destino no debe estar gitignoreado. check-ignore es
+    # pattern-based (no requiere que el archivo exista — primer push incluido).
+    # Abort ANTES de state_set: .sync-state queda honesto ("yo NO sincronicé
+    # esto") y el drift-guard de status sigue válido.
+    if [[ "$GIT" != "true" ]] && \
+       ( cd "$REPO_ROOT" && $GIT check-ignore -q "ai-context/memories/$f" 2>/dev/null ); then
+      echo "✗ $name: 'ai-context/memories/$f' no es commiteable (¿gitignore?) — NADA se pushea" >&2
+      echo "  canal correcto: exporta BUFFY_SYNC_DIR a un repo privado de sync y reintenta" >&2
+      return 1
+    fi
+    cand+=("$i")
+  done
+  # ── FASE 2 · MUTACIÓN (copia → git → push → estado, con propagación) ──
+  # 2a. Reintento de pushes pendientes — corre SIEMPRE (incluso sin cambios
+  # nuevos): un push fallido anterior no puede quedarse huérfano. Si el remoto
+  # ya recibió el commit, se cierra el registro marcando el estado; si no, se
+  # conserva para el próximo intento (nunca se marca un estado no verificado).
+  local -i pend_fail=0
+  for i in "${pend_retry[@]}"; do
+    name="${STORES[$i]}"; f="${FILES[$i]}"
+    p=$(json_get "$(cat "$STATE" 2>/dev/null || echo '{}')" pending_push "$name")
+    [[ -z "$p" ]] && continue
+    if [[ "$GIT" != "true" ]]; then
+      if ( cd "$REPO_ROOT" && $GIT push -q 2>/dev/null ); then
+        state_set "$name" "$p"; pend_clear "$name"
+        echo "✔ $name: push pendiente completado"
+      else
+        echo "⚠ $name: push pendiente sigue sin completarse (¿sin red/remote?) — registro conservado" >&2
+        pend_fail=1
+      fi
+    else
+      state_set "$name" "$p"; pend_clear "$name"
+      echo "✔ $name: push pendiente completado"
     fi
   done
-
-  if [[ ${#to_commit[@]} -eq 0 ]]; then
+  if [[ ${#cand[@]} -eq 0 ]]; then
+    (( pend_fail )) && return 1   # solo había pendiente y sigue fallando
     echo "ya sincronizado (sin cambios)"
     return 0
   fi
-  for i in 0 1; do
-    local name="${STORES[$i]}" f="${FILES[$i]}" new
-    new=$(sha "$SYNC_DIR/$f" 2>/dev/null || true)
-    [[ -n "$new" ]] && state_set "$name" "$new"
+
+  local -a add_args=()
+  for i in "${cand[@]}"; do
+    name="${STORES[$i]}"; f="${FILES[$i]}"
+    cp "$MEM_DIR/$f" "$SYNC_DIR/$f"
+    add_args+=("ai-context/memories/$f")
+    echo "✔ $name: local → repo"
   done
 
-  local add_args=()
-  for f in "${to_commit[@]}"; do add_args+=(ai-context/memories/$f); done
-  ( cd "$REPO_ROOT" && $GIT add "${add_args[@]}" >/dev/null 2>&1 && \
-    $GIT commit -q -m "docs(memory): sync memoria curada desde $HOST" >/dev/null 2>&1 )
-  if ( cd "$REPO_ROOT" && ! $GIT push -q 2>/dev/null ); then
-    echo "⚠ commit local hecho pero git push falló (¿sin red?) — pushea luego" >&2
-  else
-    echo "✔ commiteado y pusheado"
+  if [[ "$GIT" != "true" ]]; then
+    # Guard #3: propagación — add/commit falla ⇒ abort ANTES de push.
+    ( cd "$REPO_ROOT" && $GIT add "${add_args[@]}" >/dev/null 2>&1 ) || {
+      echo "✗ git add falló — nada pusheado, estado sin marcar" >&2; return 1; }
+    # Guard #2 (específico): CADA archivo candidato debe quedar staged — no
+    # vale "hay algo staged en general" (podría ser cambio ajeno al sync).
+    for f in "${add_args[@]}"; do
+      ( cd "$REPO_ROOT" && $GIT diff --cached --name-only ) | grep -qxF "$f" || {
+        echo "✗ $f no quedó staged (¿contenido idéntico tras filtros git?) — nada pusheado, estado sin marcar" >&2
+        return 1
+      }
+    done
+    ( cd "$REPO_ROOT" && $GIT commit -q -m "docs(memory): sync memoria curada desde $HOST" >/dev/null 2>&1 ) || {
+      echo "✗ git commit falló — nada pusheado, estado sin marcar" >&2; return 1; }
+    # Guard #4: si el push falla NO se marca estado (contrato del header).
+    if ! ( cd "$REPO_ROOT" && $GIT push -q 2>/dev/null ); then
+      echo "⚠ commit local hecho pero git push falló (¿sin red/sin upstream?) — .sync-state NO se marca" >&2
+      echo "  el próximo 'sync push' reintentará automáticamente (push pendiente)" >&2
+      for i in "${cand[@]}"; do
+        pend_set "${STORES[$i]}" "$(sha "$SYNC_DIR/${FILES[$i]}" 2>/dev/null || true)"
+      done
+      return 1
+    fi
   fi
+
+  # state_set corre DESPUÉS de un push OK (o de la copia, en simulación):
+  # marcar antes reintroduciría la divergencia silenciosa del falso éxito.
+  for i in "${cand[@]}"; do
+    name="${STORES[$i]}"; f="${FILES[$i]}"
+    local new
+    new=$(sha "$SYNC_DIR/$f" 2>/dev/null || true)
+    [[ -n "$new" ]] && state_set "$name" "$new"
+    # Un push exitoso confirma TODOS los commits locales del branch, incluido
+    # cualquier pendiente de corridas anteriores → cerrar su registro.
+    pend_clear "$name"
+  done
+  echo "✔ commiteado y pusheado"
 }
 
 do_pull() {

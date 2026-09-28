@@ -59,7 +59,7 @@ El experimento no debe depender del árbol vivo.
 | Grupo | Contenido | Ciclo de vida | Viaja por Git |
 |---|---|---|---|
 | **PROYECTO** | `scripts/`, `skills/`, `Knowledge/`, `README.md`, `docs/`, `CHANGELOG.md` | Compartido | ✅ Sí |
-| **MEMORIA** | `MEMORY/USER` (`ai-context/memories/`) | Sincronizable | ✅ Sí (vía `buffy-memory.sh sync`) |
+| **MEMORIA** | `MEMORY/USER` (`ai-context/memories/`) | Sincronizable | ⚠️ Sí, por canal PRIVADO (`BUFFY_SYNC_DIR`) — no por el Git de este repo (auditoría PII 2026-09-28, D0.1b Opción 1) |
 | **INSTANCIA** | `SESION.md`, `CONTINUE.md`, `SNAPSHOT.md`, `facts.yaml`, `.sync-state` | Local por dispositivo | ❌ No |
 
 ---
@@ -68,7 +68,7 @@ El experimento no debe depender del árbol vivo.
 
 | Archivo | Compartido | Local | Experimental |
 | ------- | ---------: | ----: | ------------: |
-| `MEMORY/USER` | ✅ | | según fixture |
+| `MEMORY/USER` | ✅ (canal privado) | | según fixture |
 | `Knowledge/` | ✅ | | ✅ |
 | `CHANGELOG.md` | ✅ | | fixture |
 | `README.md` | ✅ | | fixture |

@@ -10,6 +10,15 @@ ai-context/SESION.md
 ai-context/SESION-archive.md
 ai-context/CONTINUE.md
 
+# Memoria curada: el repo público NO es canal de sync (auditoría PII 2026-09-28,
+# decisión D0.1b Opción 1). Source: ~/.buffy/memories · canal privado: BUFFY_SYNC_DIR
+# apuntando a un repo privado. El sync escribe la copia en disco (disponible para
+# el corpus vivo) pero no se versiona acá.
+ai-context/memories/
+USER-MANU.md
+shizuku_watchdog_recovery_final_report.txt
+.sync-state
+
 # Archivos generados
 *.log
 *.swp
