@@ -152,12 +152,15 @@ test_source_hierarchy() {
   rm -rf "$BH/repo/.git"
   # facts.yaml: gitignored → lo genero en el sandbox (no existe en CI fresco)
   HOME="$BH/home" bash "$SCRIPTS_DIR/buffy-verify.sh" --update-facts --repo "$BH/repo" >/dev/null 2>&1
-  # codegraph VERIFICADO (confianza 1.0, TTL vigente)
+  # codegraph VERIFICADO (confianza 1.0, TTL vigente). Fecha DINÁMICA (hoy):
+  # con '2026-08-07' hardcodeada el fixture era una bomba de tiempo — el TTL
+  # (30d) venció el 2026-09-06 y el resolver legítimamente descartó el hecho
+  # expirado → caía a info-core y los 3 checks fallaban por paso del tiempo.
   python3 -c "
-import yaml
+import datetime, yaml
 p = '$BH/repo/ai-context/facts.yaml'
 d = yaml.safe_load(open(p))
-d['facts']['codegraph'] = {'value': '1.5.0', 'source': 'system', 'confidence': 1.0, 'status': 'verified', 'verified': '2026-08-07', 'scope': 'test', 'ttl_days': 30}
+d['facts']['codegraph'] = {'value': '1.5.0', 'source': 'system', 'confidence': 1.0, 'status': 'verified', 'verified': datetime.date.today().isoformat(), 'scope': 'test', 'ttl_days': 30}
 open(p, 'w').write(yaml.dump(d, sort_keys=False, allow_unicode=True))
 "
   # INFO-core: codegraph con versión DISTINTA (contradice a facts.yaml)
@@ -168,10 +171,14 @@ open(p, 'w').write(yaml.dump(d, sort_keys=False, allow_unicode=True))
   OUT=$(bash "$SCRIPTS_DIR/buffy-source.sh" --resolve codegraph --json --no-live --repo "$BH/repo" 2>/dev/null)
   jassert "gana facts.yaml sobre info-core (codegraph)" "$OUT" 'import json,sys; d=json.load(sys.stdin); assert d["value"]=="1.5.0", d; assert d["source"]=="facts", d'
   jassert "conflicto con info-core reportado" "$OUT" 'import json,sys; d=json.load(sys.stdin); assert any(c.startswith("info-core") for c in d.get("conflicts", [])), d'
-  # Sin facts.yaml → inferred (uv nunca tiene live ni doc)
+  # Sin facts.yaml → inferred. --no-live: sin live, el resolver no ve las
+  # herramientas instaladas localmente (uv SÍ existe en algunas máquinas →
+  # devolvía real-time "instalado" y el test fallaba SOLO ahí, nunca en CI).
+  # Con --no-live el caso queda hermético en cualquier máquina, igual que el
+  # bloque codegraph de arriba.
   rm -f "$BH/repo/ai-context/facts.yaml"
   local OUT2
-  OUT2=$(bash "$SCRIPTS_DIR/buffy-source.sh" --resolve uv --json --repo "$BH/repo" 2>/dev/null)
+  OUT2=$(bash "$SCRIPTS_DIR/buffy-source.sh" --resolve uv --json --no-live --repo "$BH/repo" 2>/dev/null)
   jassert "sin fuentes → inferred" "$OUT2" 'import json,sys; d=json.load(sys.stdin); assert d["source"]=="inferred" and d["value"] is None, d'
   rm -rf "$BH"
 }

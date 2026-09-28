@@ -5,9 +5,24 @@
 # no-regresión del default (sin flags = comportamiento histórico byte a byte).
 # sourced por run-tests.sh.
 
+# Probe de CAPACIDAD (no de liveness): POST /api/embed con bge-m3 — el
+# endpoint que el selector realmente consume. GET /api/tags da 200 incluso con
+# el scheduler colgado (falla 2026-09-28: serve wedged 3+ días → tests
+# colgados 10 min). Sin respuesta o sin embeddings en 8s → skip honesto.
+# Respeta OLLAMA_URL. Contrato del motor sin Ollama: RC=3 (ollama_unavailable).
 ollama_up() {
   command -v curl >/dev/null 2>&1 || return 1
-  [ "$(curl -s -o /dev/null -w '%{http_code}' --max-time 3 http://localhost:11434/api/tags 2>/dev/null)" = "200" ]
+  local url="${OLLAMA_URL:-http://localhost:11434}"
+  # 1) capacidad: bge-m3 embebe y responde con embeddings en <=8s
+  curl -s --max-time 8 -X POST "$url/api/embed" \
+    -d '{"model":"bge-m3","input":"probe"}' 2>/dev/null | grep -q 'embeddings' || return 1
+  # 2) performance con input LARGO (~5.7KB) en <=6s: el 15B embebe ~60 pasajes
+  #    de KB (3-8KB cada uno). Medido 2026-09-28 con serve degradado (wedge
+  #    parcial): input corto 0.7s pero 3.5-8KB → 9-10s → el veredicto nunca
+  #    cabría en su budget → skip honesto en vez de colgar o fallar la suite.
+  #    Con serve sano el gate largo pasa en ~1-2s.
+  curl -s --max-time 6 -X POST "$url/api/embed" \
+    -d "{\"model\":\"bge-m3\",\"input\":\"$(printf 'el sistema guarda contexto de sesion %.0s' $(seq 1 155))\"}" 2>/dev/null | grep -q 'embeddings'
 }
 
 test_selector_sintaxis() {
@@ -240,15 +255,15 @@ PY
 test_selector_determinismo() {
   suite "selector: determinismo M3 (requiere Ollama — skip si no está)"
   if ! ollama_up; then
-    ok "skip determinismo (Ollama no disponible)"
+    ok "skip determinismo — Ollama sin capacidad (no responde en 8s o embed ~5.7KB >6s: ¿wedge parcial o sin bge-m3?). Contrato sin Ollama: RC=3. Auditoría 2026-09-25"
     return 0
   fi
   local out1 out2 rc1 rc2
   out1=$(printf '%s' '[{"path":"README.md","lineno":246},{"path":"ai-context/INFO-full.md","lineno":189}]' \
-         | bash "$SCRIPTS_DIR/buffy-selector.sh" --query "el teléfono no aparece en scrcpy" --json 2>/dev/null)
+         | timeout 90 bash "$SCRIPTS_DIR/buffy-selector.sh" --query "el teléfono no aparece en scrcpy" --json 2>/dev/null)
   rc1=$?
   out2=$(printf '%s' '[{"path":"README.md","lineno":246},{"path":"ai-context/INFO-full.md","lineno":189}]' \
-         | bash "$SCRIPTS_DIR/buffy-selector.sh" --query "el teléfono no aparece en scrcpy" --json 2>/dev/null)
+         | timeout 90 bash "$SCRIPTS_DIR/buffy-selector.sh" --query "el teléfono no aparece en scrcpy" --json 2>/dev/null)
   rc2=$?
   # determinismo = mismo ranking/señales; elapsed_seconds siempre difiere
   local d1 d2
@@ -264,7 +279,7 @@ test_selector_determinismo() {
 test_selector_veredicto_15b() {
   suite "selector: veredicto 15B V6 (attr 19/20 — requiere Ollama, skip si no está)"
   if ! ollama_up; then
-    ok "skip 15B (Ollama no disponible)"
+    ok "skip 15B — Ollama sin capacidad (no responde en 8s o embed ~5.7KB >6s: ¿wedge parcial o sin bge-m3?). Contrato sin Ollama: RC=3. Auditoría 2026-09-25"
     return 0
   fi
   local fixture="$REPO_DIR/scripts/tests/evals/selector-pool-frozen-2026-08-13.json"
@@ -275,8 +290,11 @@ test_selector_veredicto_15b() {
   # Reproduce el veredicto 15B (V6) sobre el fixture congelado: attr 19/20 con
   # Q02 3/3 · Q07 2/2 · Q08 2/2 · Q06 1/1. El synth de Q06 se lee del corpus
   # congelado (77bf26a) para ser drift-proof (el fixture no trae el gold de Q06).
+  # timeout: techo duro — ni un wedge de Ollama a mitad de corrida puede colgar
+  # la suite. 300s cubre ~60 embeds con serve degradado (~3s/embed, medido
+  # 2026-09-28); con serve sano corre en ~60s.
   local out rc
-  out=$(python3 - "$fixture" "$REPO_DIR" <<'PY' 2>/dev/null
+  out=$(timeout 300 python3 - "$fixture" "$REPO_DIR" <<'PY' 2>/dev/null
 import json, sys, subprocess
 import importlib.util
 spec = importlib.util.spec_from_file_location("m3", "scripts/lib/selector_m3.py")

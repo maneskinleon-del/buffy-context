@@ -9,9 +9,23 @@
 #         re-consultan FTS5 por término + X-query alimenta S1 del selector).
 # sourced por run-tests.sh.
 
+# Probe de CAPACIDAD (no de liveness): POST /api/embed con bge-m3 — el
+# endpoint que el pipeline realmente consume. GET /api/tags da 200 incluso con
+# el scheduler colgado (falla 2026-09-28: serve wedged 3+ días → tests
+# colgados 10 min). Sin respuesta o sin embeddings en 8s → skip honesto.
+# Respeta OLLAMA_URL. Contrato del motor sin Ollama: RC=3 (ollama_unavailable).
 ollama_up() {
   command -v curl >/dev/null 2>&1 || return 1
-  [ "$(curl -s -o /dev/null -w '%{http_code}' --max-time 3 http://localhost:11434/api/tags 2>/dev/null)" = "200" ]
+  local url="${OLLAMA_URL:-http://localhost:11434}"
+  # 1) capacidad: bge-m3 embebe y responde con embeddings en <=8s
+  curl -s --max-time 8 -X POST "$url/api/embed" \
+    -d '{"model":"bge-m3","input":"probe"}' 2>/dev/null | grep -q 'embeddings' || return 1
+  # 2) performance con input LARGO (~5.7KB) en <=6s: los tests embeben pasajes
+  #    de KB reales (varios KB cada uno). Medido 2026-09-28 con serve
+  #    degradado (wedge parcial): input corto 0.7s pero 3.5-8KB → 9-10s → los
+  #    tests no caben en su budget → skip honesto en vez de colgar o fallar.
+  curl -s --max-time 6 -X POST "$url/api/embed" \
+    -d "{\"model\":\"bge-m3\",\"input\":\"$(printf 'el sistema guarda contexto de sesion %.0s' $(seq 1 155))\"}" 2>/dev/null | grep -q 'embeddings'
 }
 
 test_expand_sintaxis() {
@@ -189,7 +203,7 @@ assert d.get("degraded") is True, d
 test_expand_pool_crece() {
   suite "expand-query: X-candidatos agrandan el pool (requiere Ollama — skip si no)"
   if ! ollama_up; then
-    ok "skip pool crece (Ollama no disponible)"
+    ok "skip pool crece — Ollama sin capacidad (no responde en 8s o embed ~5.7KB >6s: ¿wedge parcial o sin bge-m3?). Contrato sin Ollama: RC=3. Auditoría 2026-09-25"
     return 0
   fi
   # Q03 del EVAL sobre el repo real: el pool sin expansión ~15 (LIMIT),
@@ -197,8 +211,12 @@ test_expand_pool_crece() {
   # (X-candidatos agregan hits), no el top-K (hallazgo documentado por separado).
   local q="quiero pushear el commit y crear el pull request"
   local base exp pb pe
-  base=$(BUFFY_REPO="$REPO_DIR" bash "$SCRIPTS_DIR/buffy-search.sh" --select --json "$q" 2>/dev/null)
-  exp=$(BUFFY_REPO="$REPO_DIR" bash "$SCRIPTS_DIR/buffy-search.sh" --select --expand-query --json "$q" 2>/dev/null)
+  # timeout: techo duro por comando — ni un wedge de Ollama a mitad de corrida
+  # puede colgar la suite (falla 2026-09-28: embeds trabados 10+ min).
+  # timeout: techo duro por comando — ni un wedge de Ollama a mitad de corrida
+  # puede colgar la suite (falla 2026-09-28: embeds trabados 10+ min).
+  base=$(BUFFY_REPO="$REPO_DIR" timeout 150 bash "$SCRIPTS_DIR/buffy-search.sh" --select --json "$q" 2>/dev/null)
+  exp=$(BUFFY_REPO="$REPO_DIR" timeout 180 bash "$SCRIPTS_DIR/buffy-search.sh" --select --expand-query --json "$q" 2>/dev/null)
   pb=$(printf '%s' "$base" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("pool_size",0))' 2>/dev/null)
   pe=$(printf '%s' "$exp" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("pool_size",0))' 2>/dev/null)
   if [ -n "$pb" ] && [ -n "$pe" ] && [ "$pe" -gt "$pb" ]; then
@@ -211,7 +229,7 @@ test_expand_pool_crece() {
 test_expand_smoke_q03() {
   suite "expand-query: smoke Q03 — Commands.md:64 en pool pero bajo el piso S1"
   if ! ollama_up; then
-    ok "skip smoke Q03 (Ollama no disponible)"
+    ok "skip smoke Q03 — Ollama sin capacidad (no responde en 8s o embed ~5.7KB >6s: ¿wedge parcial o sin bge-m3?). Contrato sin Ollama: RC=3. Auditoría 2026-09-25"
     return 0
   fi
   local fixture="$REPO_DIR/scripts/tests/evals/eval-ctx-PC-2026-08-11.json"
@@ -224,7 +242,7 @@ test_expand_smoke_q03() {
   #   (2) su S1 con la query expandida mejora vs natural pero NO cruza el piso
   #       rescue 0.545 → queda fuera del top-K (hallazgo medido, no calibrar).
   local out rc
-  out=$(python3 - "$REPO_DIR" <<'PY' 2>/dev/null
+  out=$(timeout 240 python3 - "$REPO_DIR" <<'PY' 2>/dev/null
 import json, sys
 import importlib.util
 spec = importlib.util.spec_from_file_location("m3", "scripts/lib/selector_m3.py")

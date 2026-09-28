@@ -312,6 +312,7 @@ múltiples búsquedas coordinadas).
 
 **Modelo recomendado**: `minicpm-v` (vía Ollama).
 **Alternativa ligera**: `moondream` si hay poca RAM.
+> Ollama es **enhancement opcional** — fuera del camino crítico de tests/CI (decisión 2026-09-28 en `CONTRIBUTING.md` §Tests). Los tests skipean con timeout si no responde.
 
 ---
 

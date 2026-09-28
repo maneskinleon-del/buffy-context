@@ -108,6 +108,36 @@ Reglas:
 - Los tests son **determinísticos y seguros**: todo lo que escribe corre en un sandbox (`setup_sandbox` en `helpers.sh`, HOME aislado); el repo real solo se lee.
 - El runner descubre automáticamente cualquier función `test_*` definida en `scripts/tests/test-*.sh` — no hay que registrarla en ningún lado.
 
+### Decisión arquitectónica (2026-09-28): Ollama fuera del camino crítico
+
+Hay dos "Ollama" en el sistema, y solo uno sale del camino crítico:
+
+- **Ollama como feature de runtime** (`--select` M3, `see.sh`): queda. Ya degrada
+  limpio (`error:ollama_unavailable`, RC=3) y el sistema funciona sin él.
+- **Ollama como dependencia de tests / CI / pre-commit**: fuera. Los tests que lo
+  requieren deben **skippear con timeout explícito**, nunca bloquear una operación
+  por una dependencia externa que puede colgar.
+
+Contrato de los tests que dependen de Ollama:
+
+1. **Probe de capacidad, no de liveness**: `POST /api/embed` con `bge-m3` (el
+   endpoint que el motor realmente consume) — `GET /api/tags` responde 200 incluso
+   con el scheduler colgado (falla 2026-09-28: serve wedged 3+ días → tests
+   colgados 10 min en el hook pre-commit).
+2. **Gate de performance con input largo (~5.7KB en ≤6s)**: un serve degradado
+   responde embeds cortos rápidos pero los largos en 9-10s — los tests que embeben
+   pasajes de KB reales nunca terminarían → skip honesto.
+3. **Skip con mensaje explícito** que documenta el contrato (`RC=3
+   ollama_unavailable`) y la auditoría de origen (2026-09-25).
+4. **Techos `timeout` por comando** en toda invocación pesada: ni un wedge a
+   mitad de corrida puede colgar la suite.
+5. En el motor (`selector_m3.py`): probe embed en `ollama_available()` y
+   `ollama_post` con `retries=1, timeout=20` (antes 3×600s = hasta 30 min colgado).
+
+Razón: 3+ días de serve degradado bloqueando el sprint. La complejidad operativa
+de Ollama no está justificada en el camino crítico mientras el selector M3 esté
+UNVERIFIED. Se reinicia como *enhancement opcional*, no como dependencia.
+
 ### Crear un nuevo test
 
 1. Crea `scripts/tests/test-nuevo.sh` con funciones `test_nuevo_*`.

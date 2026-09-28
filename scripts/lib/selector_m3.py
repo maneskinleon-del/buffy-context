@@ -97,14 +97,18 @@ def deaccent(s):
     return re.sub(r'[\u0300-\u036f]', '', s)
 
 
-def ollama_post(path, payload, retries=3):
+def ollama_post(path, payload, retries=1, timeout=20):
+    # retries=1 + timeout=20: una llamada Ollama acota su peor caso a ~20s.
+    # Antes: retries=3 × timeout=600 → hasta ~30 min colgado si el scheduler
+    # de Ollama está wedged (falla observada 2026-09-28: serve vivo 3+ días
+    # respondía GET /api/tags pero ningún POST generaba nunca).
     last = None
     for attempt in range(retries):
         try:
             req = urllib.request.Request(os.environ.get("OLLAMA_URL", "http://localhost:11434") + path,
                                          data=json.dumps(payload).encode(),
                                          headers={"Content-Type": "application/json"})
-            with urllib.request.urlopen(req, timeout=600) as r:
+            with urllib.request.urlopen(req, timeout=timeout) as r:
                 return json.load(r)
         except Exception as e:
             last = e
@@ -114,11 +118,15 @@ def ollama_post(path, payload, retries=3):
 
 
 def ollama_available():
-    """GET /api/tags (endpoint GET, no POST) — verifica que el servidor responda."""
+    """Probe de CAPACIDAD: POST /api/embed con bge-m3 (el endpoint que este
+    módulo realmente consume). Antes se hacía GET /api/tags, que un servidor
+    colgado responde igual → falso "disponible" y cuelgues posteriores en el
+    primer embed (falla observada 2026-09-28, serve wedged 3+ días).
+    Responde False si no hay servidor, no responde en 8s, o no tiene bge-m3.
+    """
     try:
-        req = urllib.request.Request(os.environ.get("OLLAMA_URL", "http://localhost:11434") + "/api/tags")
-        with urllib.request.urlopen(req, timeout=10) as r:
-            return r.status == 200
+        d = ollama_post('/api/embed', {"model": "bge-m3", "input": "probe"}, retries=1, timeout=8)
+        return bool(d.get("embeddings"))
     except Exception:
         return False
 
