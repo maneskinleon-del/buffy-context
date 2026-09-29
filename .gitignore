@@ -19,6 +19,12 @@ USER-MANU.md
 shizuku_watchdog_recovery_final_report.txt
 .sync-state
 
+# Estado de instancia con topología personal: doc de estado → local (auditoría
+# PII 2026-09-28, C3 — decisión consciente del operador, sin .example; la
+# historia de Git local conserva las versiones previas).
+ai-context/BUFFY-CURRENT-STATE.md
+BUFFY-PC-CONTEXT.md
+
 # Archivos generados
 *.log
 *.swp

@@ -143,11 +143,14 @@ dato de la doc; usa el valor real. Preferencia vs hecho confirmado:
 >   nunca se ocultan ni se convierten en afirmaciones positivas.
 > - Las fechas se distinguen: "HEAD observado: <fecha>" ≠ "auditoría: <fecha>".
 > - Los veredictos de auditoría/checkpoint se versionan en Git (precedentes:
->   `AUDITORIA-HANDOFF-FREEBUFF.md`, `BUFFY-CURRENT-STATE.md`) — la memoria de
+>   `AUDITORIA-HANDOFF-FREEBUFF.md`; `BUFFY-CURRENT-STATE.md` lo fue hasta
+>   C3, ahora es estado local por contener topología personal) — la memoria de
 >   conversación NO es almacenamiento. CONTINUE/SESION siguen siendo estado
 >   local de instancia (contrato `INSTANCE-STATE-DESIGN.md` §3).
 >
-> Referencia de aplicación: `ai-context/BUFFY-CURRENT-STATE.md` (v1, 2026-09-25).
+> Referencia de aplicación: `ai-context/BUFFY-CURRENT-STATE.md` (v1, 2026-09-25;
+> local desde C3-2026-09-29 — vive en disco y en la historia de Git local, ya no
+> en el tracking público).
 
 > 🏷️ **Convención anti-falso-éxito** (2026-09-28, bautizada tras el ciclo C1):
 > la documentación y la verificación pueden ser correctas por separado y aun así
@@ -171,6 +174,11 @@ dato de la doc; usa el valor real. Preferencia vs hecho confirmado:
 > Corolario operativo: toda verificación debe terminar en tiempo acotado y
 > assertionar el HECHO (no la intención); un skip es honesto solo si documenta
 > qué condición no se cumplió.
+>
+> Taxonomía completa con nombre técnico (**Fallo de acoplamiento señal-estado**,
+> las 5 instancias por dimensión — trabajo, remoto, tiempo, entorno, ejecución —
+> y la meta-propiedad "el sistema se aplica a sí mismo"):
+> **`SIGNAL-STATE-COUPLING-FAILURES.md`** (raíz del repo, tracked).
 
 ### Paso 4 — Bitácora (OPCIONAL — con límite)
 ```markdown

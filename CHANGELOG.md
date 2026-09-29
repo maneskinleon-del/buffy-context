@@ -5,6 +5,11 @@
 
 ## 2026-09-29
 
+### 🔒 Privacidad (C3 — estado de instancia a local) + taxonomía de fallos
+
+- **`BUFFY-CURRENT-STATE.md` y `BUFFY-PC-CONTEXT.md` a local** — fuera del tracking público (quedan en disco y en la historia de Git local). Decisión consciente del operador: son doc de **estado** (topología personal), no contrato; sin `.example` (sobre-ingeniería para el alcance actual). Sin consumidores en scripts/ ni CI (verificado antes de extraer — preflight estilo C4). Menciones en `LOAD_CONTEXT.md` anotadas como local.
+- **`SIGNAL-STATE-COUPLING-FAILURES.md` (nuevo, tracked)** — taxonomía operativa con nombre técnico: **Fallo de acoplamiento señal-estado** — la señal de verificación existe pero está desacoplada del estado que verifica. Las 5 instancias del ciclo C1/C2 por dimensión (trabajo: Ollama wedged · remoto: sync push · tiempo: time-bomb TTL · entorno: caso uv · ejecución: hook no instalado), corolario operativo y la meta-propiedad registrada: **el sistema se aplica a sí mismo sin ceremonia extra** (la verificación cazó a quien la diseñaba, dos veces en un ciclo).
+
 ### 🔒 Privacidad (C2 — redacciones HEAD + guard de regresión)
 
 - **Redacciones A-list en tracked** — email/nombre real (`Knowledge/Git/Commands.md`, `ai-context/INFO-core.md`), serial del dispositivo (`Knowledge/Android/NubiaLab.md`, `CHANGELOG.md`, skill `android-project-setup` ×3), Script IDs de Apps Script (`ai-context/PROJECTS.md`), ruta absoluta del home del operador (11 apariciones en 4 archivos) → forma `~` (convención del repo). Cada redacción con marca de auditoría y puntero al valor real local. El alias del operador queda fuera hasta D2.1 (decisión pendiente).
