@@ -51,7 +51,7 @@ graphics: Wayland > X11
 wm: bspwm
 clipboard: xclip > wl-copy/wl-paste
 package-manager: npm (global → ~/.npm-global)
-git-user: Manuel Gonzalez <mangonz970@gmail.com>
+git-user: (identidad configurada en `~/.gitconfig` — PII no versionada, auditoría 2026-09-28)
 git-auth: gh auth git-credential
 
 reglas:

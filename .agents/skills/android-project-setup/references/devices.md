@@ -8,7 +8,7 @@
 | Plataforma | `ums9620` (Unisoc T820) — verificado en vivo con `getprop ro.board.platform` |
 | Android | 13 |
 | Encoder HW | `c2.unisoc.avc.encoder` |
-| Serial | `(serial redactado)` (visto en sesiones) |
+| Serial | ver `adb devices` (no versionar el serial real — auditoría 2026-09-28) |
 | Uso | Free Fire + GameBoost Pro + laboratorio de apps |
 
 - Pantalla física 2400x1080; con Free Fire se fuerza `wm size 1600x720` (o 1920x480) + `wm density 280` + `user_rotation 1`.

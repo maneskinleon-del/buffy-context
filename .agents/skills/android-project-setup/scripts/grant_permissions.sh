@@ -3,7 +3,7 @@
 # (GameBoost Pro, ManUninstaller, etc.): Shizuku API + overlay + batería + usage stats.
 # Uso: bash grant_permissions.sh <paquete> [serial]
 # Ejemplos: bash grant_permissions.sh com.example
-#           bash grant_permissions.sh com.example (serial redactado)
+#           bash grant_permissions.sh com.example <SERIAL>
 
 PKG="${1:?Uso: bash grant_permissions.sh <paquete> [serial]}"
 SERIAL="${2:-$(adb devices 2>/dev/null | grep -w device | head -1 | awk '{print $1}')}"

@@ -213,8 +213,8 @@ err: wayland.c:1788: failed to connect to wayland; no compositor running?
   - Modo `region`: `slurp` → `grim -g "$area" - | wl-copy` (clipboard) **y** `grim -g "$area" ~/Pictures/Screenshots/...` (archivo)
   - Maneja cancelación de selección (slurp vacío)
 - Actualizados binds en `~/.config/mango/config.conf`:
-  - `bind=SUPER,BackSpace,spawn,/home/mangonz/.local/bin/screenshot.sh full`
-  - `bind=SUPER+SHIFT,BackSpace,spawn,/home/mangonz/.local/bin/screenshot.sh region`
+  - `bind=SUPER,BackSpace,spawn,~/.local/bin/screenshot.sh full`
+  - `bind=SUPER+SHIFT,BackSpace,spawn,~/.local/bin/screenshot.sh region`
 
 **Dependencia:** `wl-clip-persist` debe estar corriendo en el arranque para retener el contenido del clipboard en Wayland tras la salida del script.
 

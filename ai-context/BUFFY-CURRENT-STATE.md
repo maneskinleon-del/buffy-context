@@ -72,7 +72,7 @@ Notas de frescura `[verificado 2026-09-25]`:
 - **Configuración previamente observada [orig]:** `buffy → buffy serve --mcp`. Es una observación previa, NO estado local actualmente verificado. Coherente con §15 del original: la configuración MCP local no fue verificada.
 - `[verificado 2026-09-25]`:
   - El modo existe en código: `buffy-next/src/cli.ts` (`case 'serve'` en línea 80, uso `buffy serve --mcp` en 328, modo stdio JSON-RPC en 324) y `src/mcp.ts` está presente. Existencia en código ≠ verificación de runtime.
-  - `~/.gemini/settings.json` registra `mcpServers.buffy-tools` → `[verificado 2026-09-25, parte 4]` reapuntado a `/home/mangonz/.npm-global/bin/buffy serve --mcp` (binario real buffy-next v0.2.2); `gemini mcp list` → **Connected**. Previamente dangling: apuntaba a `~/experiments/opencode-buffy-cplus/adapter/buffy-mcp-server.js`, archivo inexistente (dir padre eliminado).
+  - `~/.gemini/settings.json` registra `mcpServers.buffy-tools` → `[verificado 2026-09-25, parte 4]` reapuntado a `~/.npm-global/bin/buffy serve --mcp` (binario real buffy-next v0.2.2); `gemini mcp list` → **Connected**. Previamente dangling: apuntaba a `~/experiments/opencode-buffy-cplus/adapter/buffy-mcp-server.js`, archivo inexistente (dir padre eliminado).
   - `~/.gemini/antigravity-cli/mcp/buffy/instructions.md` existe (describe `buffy_context` como herramienta read-only).
 - No se verificó ningún servidor MCP de Buffy funcionando en runtime.
 
@@ -150,7 +150,7 @@ Citar "634/634" es válido desde el HEAD actual; citarlo retroactivamente al 11-
 
 ### 10.6 Q1 — dangling buffy-tools resuelto (2026-09-25, parte 4)
 
-- **Cambio:** `~/.gemini/settings.json` `mcpServers.buffy-tools` reapuntado de adapter inexistente (`~/experiments/opencode-buffy-cplus/adapter/buffy-mcp-server.js`) a `/home/mangonz/.npm-global/bin/buffy serve --mcp`. **Se mantiene el nombre de server** (`buffy-tools`): cambio mínimo, no rompe consumidores — grep en `~/.gemini/` solo encontró menciones en transcripts históricos de brains (ago/06-sep); `GEMINI.md` referencia el tool `buffy_context`, no el nombre de server.
+- **Cambio:** `~/.gemini/settings.json` `mcpServers.buffy-tools` reapuntado de adapter inexistente (`~/experiments/opencode-buffy-cplus/adapter/buffy-mcp-server.js`) a `~/.npm-global/bin/buffy serve --mcp`. **Se mantiene el nombre de server** (`buffy-tools`): cambio mínimo, no rompe consumidores — grep en `~/.gemini/` solo encontró menciones en transcripts históricos de brains (ago/06-sep); `GEMINI.md` referencia el tool `buffy_context`, no el nombre de server.
 - **Verificación trazable [verificado 2026-09-25]:** JSON re-parseado OK; handshake MCP con la ruta exacta de settings (initialize → `buffy-next v0.2.2`, tools/list → `[buffy_context]`); `gemini mcp list` end-to-end → 3/3 Connected. Backup reversible: `~/.gemini/settings.json.bak-2026-09-25`.
 - **Alcance:** settings.json es config de Gemini CLI — la superficie AGY (`~/.gemini/antigravity-cli/mcp/buffy/`, ServerName `buffy`) es un mecanismo distinto y no fue tocada. Backup fuera de repos por contener auth config.
 

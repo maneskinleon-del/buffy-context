@@ -8,7 +8,7 @@ description: Automatiza el setup completo de proyectos Android locales del usuar
 Automatiza el ciclo build → install → permisos → launch de los proyectos Android del usuario
 (`~/proyectos/autoscript-mobile-interface` = GameBoost Pro, `~/proyectos/ManUninstaller`,
 `~/proyectos/GameBoostPro`). Los comandos se ejecutan contra el dispositivo ADB conectado
-(generalmente el ZTE Nubia Z2352N, serial `(serial redactado)`).
+(generalmente el ZTE Nubia Z2352N — obtener el serial con `adb devices`; no versionar el serial real, auditoría 2026-09-28).
 
 ## Cuándo usar
 

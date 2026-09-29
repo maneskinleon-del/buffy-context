@@ -3,6 +3,14 @@
 > Generado con la skill `changelog-generator` a partir de los commits de git (2026-07-29 → 2026-08-02).
 > Historial de *sesiones* de memoria → `ai-context/CHANGELOG.md` (separado de este).
 
+## 2026-09-29
+
+### 🔒 Privacidad (C2 — redacciones HEAD + guard de regresión)
+
+- **Redacciones A-list en tracked** — email/nombre real (`Knowledge/Git/Commands.md`, `ai-context/INFO-core.md`), serial del dispositivo (`Knowledge/Android/NubiaLab.md`, `CHANGELOG.md`, skill `android-project-setup` ×3), Script IDs de Apps Script (`ai-context/PROJECTS.md`), ruta absoluta del home del operador (11 apariciones en 4 archivos) → forma `~` (convención del repo). Cada redacción con marca de auditoría y puntero al valor real local. El alias del operador queda fuera hasta D2.1 (decisión pendiente).
+- **Guard de regresión PII** (`test-pii-guard.sh`, 6 checks): los patrones redactados no pueden reaparecer en tracked (`git grep`, no disco). Exclusión temporal de `scripts/tests/evals/` hasta C5 (corpus congelado del 2026-08-13 con PII histórica) — al ejecutar C5: quitar la exclusión y esperar 0 absoluto.
+- **Convención anti-falso-éxito registrada** en `LOAD_CONTEXT.md` — familia de 5 casos con nombre propio: health check que miente (Ollama wedged), estado que registra intención (sync push), test time-bomb (fixture TTL), test dependiente del entorno (caso uv), mecanismo escrito pero no conectado (hook pre-commit).
+
 ## 2026-09-28
 
 ### 🧪 Tests (preparatorio a C1): Ollama fuera del camino crítico
@@ -28,7 +36,7 @@
 - **Skill de búsqueda de código** — `code-search` con criterios v4 para buscar en el codebase de forma más precisa.
 - **Liberador de RAM de Ollama** — `scripts/ollama-kill.sh` para detener el daemon cuando no se usa.
 - **Repo público** — licencia MIT + README profesional con estructura, quick start y guía de uso con agentes de IA.
-- **Skill `android-project-setup`** — automatiza el ciclo build → install → permisos → launch de los proyectos Android del usuario (GameBoost Pro, ManUninstaller). Incluye `scripts/` (check_device, build_install, grant_permissions) y referencias de dispositivos/permisos. Probada contra el ZTE Nubia real (serial (serial redactado)).
+- **Skill `android-project-setup`** — automatiza el ciclo build → install → permisos → launch de los proyectos Android del usuario (GameBoost Pro, ManUninstaller). Incluye `scripts/` (check_device, build_install, grant_permissions) y referencias de dispositivos/permisos. Probada contra el ZTE Nubia real (serial redactado 2026-09-28 — no versionar seriales).
 
 ### 🔧 Mejoras
 

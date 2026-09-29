@@ -149,6 +149,29 @@ dato de la doc; usa el valor real. Preferencia vs hecho confirmado:
 >
 > Referencia de aplicación: `ai-context/BUFFY-CURRENT-STATE.md` (v1, 2026-09-25).
 
+> 🏷️ **Convención anti-falso-éxito** (2026-09-28, bautizada tras el ciclo C1):
+> la documentación y la verificación pueden ser correctas por separado y aun así
+> fallar **el pegamento entre ambas** — un contrato que promete (estados, health
+> checks, dry-runs, CI) puede ser fingido por la implementación que lo reporta.
+> Familia registrada (5 casos, mismo patrón):
+> - **Servicio que miente en el health check** — Ollama wedged 3+ días:
+>   `GET /api/tags` respondía 200 con generación muerta y embeds largos en 9-10s.
+>   Fix: probe de capacidad + gate de performance (embed ~5.7KB ≤6s), no liveness.
+> - **Estado que registra intención, no hecho** — "✔ commiteado y pusheado" sin
+>   commit (sync push). Fix: `.sync-state` registra lo EFECTIVAMENTE pusheado
+>   (comment + tests git-real que assertionan el fallo).
+> - **Test que pasa hoy y falla mañana** — time-bomb del fixture TTL (verified
+>   2026-08-07 + ttl 30d venció el 2026-09-06). Fix: fecha dinámica. Variante
+>   temporal del patrón: "el test pasa" ≠ "el test pasará mañana".
+> - **Test dependiente del entorno disfrazado de determinista** — caso uv
+>   (fallaba solo donde uv está instalado). Fix: `--no-live` (hermético).
+> - **Mecanismo escrito pero no conectado** — hook pre-commit existente en el
+>   repo pero ausente de `.git/hooks/`. Fix: instalar + verificar con corrida real.
+>
+> Corolario operativo: toda verificación debe terminar en tiempo acotado y
+> assertionar el HECHO (no la intención); un skip es honesto solo si documenta
+> qué condición no se cumplió.
+
 ### Paso 4 — Bitácora (OPCIONAL — con límite)
 ```markdown
 ai-context/SESION.md     → SOLO las últimas 5 entradas (cabeceras visibles)

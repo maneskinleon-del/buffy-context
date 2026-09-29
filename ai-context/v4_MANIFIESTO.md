@@ -73,4 +73,4 @@ CONFIANZA: {alta|media|baja}
 
 ## Registro
 
-Los skills están registrados en `/home/mangonz/skills-lock.json` con sourceType `local`. En la próxima sesión aparecerán en la lista de skills precargados.
+Los skills están registrados en `~/skills-lock.json` con sourceType `local`. En la próxima sesión aparecerán en la lista de skills precargados.

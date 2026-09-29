@@ -1,6 +1,6 @@
 # Git — Referencia rápida
 
-> Config del usuario: `git config user.name = "Manuel Gonzalez"`, `user.email = "mangonz970@gmail.com"`.
+> Config del usuario: `git config user.name = "<Tu Nombre>"`, `user.email = "<tu@email.com>"` (PII redactada 2026-09-28 — valores reales en `~/.gitconfig`).
 > Auth: `gh auth git-credential`.
 > GitHub: `maneskinleon-del`.
 
@@ -69,8 +69,8 @@ gh issue list                          # Listar issues
 ## Config
 
 ```bash
-git config --global user.name "Manuel Gonzalez"
-git config --global user.email "mangonz970@gmail.com"
+git config --global user.name "<Tu Nombre>"
+git config --global user.email "<tu@email.com>"
 git config --global init.defaultBranch main
 git config --global pull.rebase true
 git config --global core.autocrlf input

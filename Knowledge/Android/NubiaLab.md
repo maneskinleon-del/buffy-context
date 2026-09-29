@@ -1,7 +1,7 @@
 # 🧪 Laboratorio ZTE Nubia — Setup, inventario y purga
 
 > Dispositivo de pruebas principal: Free Fire + scrcpy + GG Mouse + ADB/Shizuku/AutoJS.
-> Serial: `(serial redactado)` · Modelo: **ZTE Z2352N** (P820F03) · **Android 13** (API 33) · security patch `2025-06-05`.
+> Serial: ver `adb devices` (no versionar el real — auditoría 2026-09-28) · Modelo: **ZTE Z2352N** (P820F03) · **Android 13** (API 33) · security patch `2025-06-05`.
 > Prerrequisitos activos: **Shizuku** (corriendo) + **ManUninstaller v2.1.0** (instalado vía `pm install`, verificado con Shizuku ACTIVE).
 
 ---
@@ -66,7 +66,7 @@ cn.nubia.gamehelperline   cn.nubia.gamehelpmodule
 ## 🛠️ Comandos de purga (referencia)
 
 ```bash
-DEV=(serial redactado)
+DEV=<SERIAL>   # obtener con `adb devices` (no versionar el real)
 
 # Inventario
 adb -s $DEV shell pm list packages -3                     # Apps de usuario

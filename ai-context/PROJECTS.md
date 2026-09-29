@@ -20,7 +20,7 @@ system-id: mangonz-desktop
 ## Gmail Organizer V3 (organiza_gmail_V3)
 - **Objetivo:** clasificar automáticamente la bandeja de entrada de Gmail en etiquetas (Compras, Telecom, Bancos, Gobierno, Trabajo, Facturas, Envíos, etc.) con etiquetas específicas por empresa (BancoEstado, Tenpo, Fonasa, Mercado Libre, AliExpress, WOM...)
 - **Plataforma:** Google Apps Script (V8 runtime, timeZone America/Santiago)
-- **Script ID:** `(script-id redactado)`
+- **Script ID:** (redactado 2026-09-28 — no versionar IDs de Apps Script; disponible en script.google.com o vía `clasp`)
 - **Ruta local:** `~/proyectos/gmail-scripts/` (git local, commit `a207071`, sincronizado vía `clasp pull` el 2026-08-10) · en el teléfono: `~/gscript-audit/organiza_gmail_V3/` (con mejoras locales de rate limiting no pusheadas a la web)
 - **Componentes:** `main.js` (entrada con rate limiting + triggers), `gmail.js` (procesamiento por lotes con reanudación), `scoring.js` (scoring de importancia), `classifiers.js`/`companies.js` (reglas de clasificación), `labels.js`, `reports.js` (reporte diario), `config.js`, `constants.js`, `cleanup_tmp.js` (limpieza one-shot de etiquetas), `test.js`
 - **Detalles clave:** fix de paginación con snapshot único `search()` en vez de `getInboxThreads(pos)`; reanudación tras pausa/cuota (`scheduleResume`); restaura cadencia de triggers al completar
@@ -31,7 +31,7 @@ system-id: mangonz-desktop
 ## Drive Organizer Pro (ordenar_drive_pro)
 - **Objetivo:** organizar Google Drive por reglas de clasificación (MIME + nombre + prioridad), modo MAESTRO (todo el Drive BFS) o ESPECÍFICO (carpeta por ID), con modo PRUEBA (simula) / REAL (mueve)
 - **Plataforma:** Google Apps Script (V8 runtime, timeZone America/Santiago)
-- **Script ID:** `(script-id redactado)`
+- **Script ID:** (redactado 2026-09-28 — no versionar IDs de Apps Script; disponible en script.google.com o vía `clasp`)
 - **Ruta local:** `~/proyectos/gmail-scripts-otro/` (git local, commit `610a040`, sincronizado vía `clasp pull` el 2026-08-10)
 - **Componentes:** `main.js` (entrada con rate limiting + triggers), `organizador.js` (núcleo BFS con batches y reanudación por cola de carpetas), `clasificador.js` (motor de reglas con prioridad), `drive.js` (utilidades: carpetas, extensiones, exclusiones), `config.js` (reglas + carpetas administradas/excluidas), `estadisticas.js` (conteo con desglose recursivo), `script_limpieza.js`, `logger.js`, `constants.js`
 - **Detalles clave:** rate limiting estilo Gmail Organizer (batches de 30, delay 1s, runtime limit 270s, retry con backoff); carpetas administradas: Scripts, Documentación, Android, Configuraciones, Multimedia, Backups, Web, Recursos, Sin clasificar, Comprimidos, Chats; excluidas: Google Fotos, Trash, etc.
