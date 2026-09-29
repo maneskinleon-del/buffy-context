@@ -9,6 +9,12 @@ clasificarlos por **función / riesgo / impacto** — **sin tocar el sistema**.
 > auditoría que la invoca; esta skill solo describe *cómo* obtenerlo y *cómo*
 > razonarlo.
 
+> **Alcance y limitaciones.** Los parsers leen de `HOME = "/data/data/com/termux/files/home/"`
+> (y `H` equivalente en `matriz_preinstalados.py`), hardcodeado. La auditoría se diseñó para
+> el Termux del dispositivo; un clon limpio en otro host requiere ajustar esa ruta.
+> Propuesta: leer `AUDIT_DIR` de env (default `HOME`) y pasar `--outdir` a `collect.sh`.
+> Debilidad consciente: no afecta a `collect.sh` (read‑only), pero limita portabilidad.
+
 ---
 
 ## 1. Objetivo
@@ -38,6 +44,7 @@ candidatos a desinstalación son seguros y reversibles.
 | fuente | artefacto | comando base |
 |---|---|---|
 | PackageManager (full dump) | `pkg_dumpsys_full.txt` | `dumpsys package packages` |
+| PackageManager (full dump, resolvers) | `dumpsys_package_FULL.txt` | `dumpsys package` (Activity/Receiver/Service/Provider Resolver Tables → `parse_resolvers`) |
 | paquetes instalados (lista) | `pkgs_plain.txt` (canónico, instalados AHORA); `pkgs_sys.txt`, `pkgs_third.txt`, `pkgs_u_f.txt` | `pm list packages` / `[-s\|-3\|-u]` |
 | path + installer por paquete | `pkgs_all_fi.txt` | `pm list packages -f -i` |
 | UID por paquete | `pkgs_uids.txt` | `dumpsys package packages` → `appId=NNNN` (`package:pkg uid:N`) |

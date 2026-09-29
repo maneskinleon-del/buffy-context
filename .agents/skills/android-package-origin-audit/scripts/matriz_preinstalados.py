@@ -447,10 +447,10 @@ def main():
     blocks = parse_blocks(H + 'pkg_dumpsys_full.txt')
     comp = parse_resolvers(H + 'dumpsys_package_FULL.txt')
     S = load_signals()
-    referenced_by = Counter()
+    referenced_by_queries = Counter()
     for pkg, b in blocks.items():
         for ref in re.findall(r'[A-Za-z0-9_.]+', b.get('queriesPackages', '')):
-            referenced_by[ref] += 1
+            referenced_by_queries[ref] += 1
 
     out = []
     for r in rows_in:
@@ -477,13 +477,13 @@ def main():
                   or (uprov > 0 and pkg.startswith(('com.android','com.qualcomm','com.qti',
                       'vendor.','org.codeaurora','com.google.android.providers')))
                   or pkg in SYS_NECESSARY)
-        # bajo riesgo = sin dependencia externa (referenced_by==0) y no activo como
+        # bajo riesgo = sin dependencia externa (referenced_by_queries==0) y no activo como
         # servicio/vendor/HAL. Los proveedores PROPIOS de una app opcional no hacen
         # insegura la eliminacion por --user 0; importa referencias/queries, doze-whitelist,
         # admin/IME/listener, flag PERSISTENT/PRIVILEGED/APEX o proceso activo.
         inert = (not brx and not run and svc == 0 and job == 0 and alm == 0
                  and uid != 1000 and not persistent and not apex and not privileged
-                 and referenced_by.get(pkg, 0) == 0 and pkg not in S['doze']
+                 and referenced_by_queries.get(pkg, 0) == 0 and pkg not in S['doze']
                  and not is_crit and not is_sys
                  and pkg not in S['admins'] and pkg != S['ime']
                  and pkg not in S['notif'] and pkg != S['assistant'])
@@ -540,7 +540,7 @@ def main():
             'activities': c.get('activities', 0), 'receivers': c.get('receivers', 0),
             'services': c.get('services', 0), 'providers': uprov,
             'authorities': len(c.get('authorities', ())), 'launcher': pkg in S['launcher'],
-            'boot_receiver': brx, 'referenced_by': referenced_by.get(pkg, 0),
+            'boot_receiver': brx, 'referenced_by_queries': referenced_by_queries.get(pkg, 0),
             'running': run, 'services_running': svc, 'jobs': job, 'alarms': alm,
             'doze': pkg in S['doze'], 'power_mah': round(mah, 3), 'power_fgs': round(pfgs, 3),
             'power_bg': round(pbg, 3), 'impacto': lvl, 'inert': inert,

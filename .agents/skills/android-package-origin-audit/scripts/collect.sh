@@ -10,6 +10,7 @@ run() { $ASHELL "$*"; }          # para redirecciones simples (echo inofensivo)
 
 # --- PackageManager (full dump, source of truth) ---
 run "dumpsys package packages"   > "$D/pkg_dumpsys_full.txt"
+run "dumpsys package"            > "$D/dumpsys_package_FULL.txt"   # full dump: Resolver Tables (parse_resolvers)
 
 # --- listas pm (formato `package:name`); pkgs_plain.txt es lo que parse_full lee ---
 run "pm list packages"      > "$D/pkgs_plain.txt"   # instalados AHORA (pm_plain)

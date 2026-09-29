@@ -133,10 +133,10 @@ ma = sum(float(r['power_mah']) for r in pre_rows)
 hi = sum(1 for r in pre_rows if r['impacto'] == 'alto')
 md = sum(1 for r in pre_rows if r['impacto'] == 'medio')
 cr = sum(1 for r in pre_rows if r['candidato'].startswith('SI'))
-l(f'- Paquetes preinstalados con matriz: **{len(pre_rows)}** | mA total: **{ma:.2f}** |')
+l(f'- Paquetes preinstalados con matriz: **{len(pre_rows)}** | mAh total: **{ma:.2f}** |')
 l(f'  impacto alto/medio: **{hi}/{md}** | candidatos bajo riesgo: **{cr}**.')
 l('')
-l('| cat | grupo | paquetes | mA | alto/medio | bajo riesgo |')
+l('| cat | grupo | paquetes | mAh | alto/medio | bajo riesgo |')
 l('|---|---|:---:|:---:|:---:|:---:|')
 for k in sorted(by_cat, key=lambda x: int(x)):
     rrs = by_cat[k]
@@ -159,7 +159,7 @@ def detalle(r):
     if r['services_running'] not in ('0', ''): e.append(f'svc={r["services_running"]}')
     if r['jobs'] not in ('0', ''): e.append(f'jobs={r["jobs"]}')
     if r['alarms'] not in ('0', ''): e.append(f'alarms={r["alarms"]}')
-    if r['referenced_by'] not in ('0', ''): e.append(f'ref={r["referenced_by"]}')
+    if r['referenced_by_queries'] not in ('0', ''): e.append(f'ref={r["referenced_by_queries"]}')
     if r['power_mah'] not in ('0', '0.0', ''): e.append(f'mah={r["power_mah"]}')
     s = f'`{r["pkg"]}`  # {r["funcion"][:55]}'
     if e: s += '  · ' + ', '.join(e)
@@ -201,11 +201,11 @@ l('')
 
 l('### Telemetria (Cat 5) y servicios OEM (Cat 6) activos — preferiblemente DESHABILITAR')
 l('')
-l('| paquete | candidato | senales | mA |')
+l('| paquete | candidato | senales | mAh |')
 l('|---|---|---|---|')
 for r in sorted(by_cat.get('5', []) + by_cat.get('6', []), key=lambda x: -float(r['power_mah'])):
     sigs = []
-    for k in ('boot_receiver', 'running', 'doze', 'services_running', 'jobs', 'alarms', 'referenced_by'):
+    for k in ('boot_receiver', 'running', 'doze', 'services_running', 'jobs', 'alarms', 'referenced_by_queries'):
         v = r[k]
         if v not in ('False', '0', ''):
             sigs.append(f'{k}={v}')

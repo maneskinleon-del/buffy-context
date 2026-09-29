@@ -192,7 +192,7 @@ def classify(r, hid):
     if part != 'data':
         t = parse_dt(first)
         if t and BOOT_EPOCH and t >= BOOT_EPOCH - 600:
-            return 'PREINSTALADO_POR_LA_OTA_DE_HOY', ev
+            ev.append('sugerencia_ota_por_fecha=si')   # evidencia, NO clasificacion (ver §5.9/§5.12)
         if epoch:
             return 'PREINSTALADO_IMAGEN', ev
         return 'PREINSTALADO_IMAGEN_FECHA_TARDIA', ev
