@@ -1,0 +1,23 @@
+# skill.yaml — manifiesto machine-readable (contrato B2). Validado por scripts/skill-lint.sh.
+id: android-package-origin-audit
+name: android-package-origin-audit
+version: 1.0.0
+description: "Auditoría read-only de procedencia de paquetes Android (evidencia > nombre). Pipeline: collect.sh -> parse_full.py -> matriz_preinstalados.py -> generar_reporte_matriz.py. Cat 8 = shortlist reversible. No-eliminación automática (safe: true)."
+entry: SKILL.md
+safe: true
+requires_sudo: false
+platforms: [linux]
+triggers:
+  - auditar paquetes android
+  - auditoria de paquetes android
+  - procedencia de paquetes
+  - procedencia de apps
+  - origen de paquetes
+  - preinstalados
+  - preinstaladas
+  - bloatware
+  - inerciales
+capabilities:
+  - app-management
+  - diagnosis
+dependencies: []
