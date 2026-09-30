@@ -14,7 +14,15 @@
 #      hay overlay porque todo está commiteado: la sim es estrictamente más
 #      estricta). Los untracked se omiten: CI tampoco los ve.
 #   3. Suite (full por defecto, --quick opcional) con HOME aislado — el
-#      runner de Actions no tiene el $HOME del operador.
+#      runner de Actions no tiene el $HOME del operador — y SIN Ollama:
+#      OLLAMA_URL apuntada a un puerto muerto. En CI no existe Ollama, así
+#      que ollama_up() siempre falla allá y los tests Ollama-dependientes
+#      skippean con su contrato honesto. Sin esto, la sim ve el Ollama
+#      LOCAL del operador — servicio de estado variable minuto a minuto
+#      (semi-wedged, instancia 1) — y el gate deja pasar/cortar según el
+#      pico de turno: el hook pre-push abortó su propio push inaugural por
+#      exactamente eso. Los tests con Ollama corren como bonus en corridas
+#      locales directas (bash scripts/tests/run-tests.sh), fuera de ci-sim.
 #
 # Uso:
 #   bash scripts/tests/ci-sim.sh            → suite full en clone fresco
@@ -55,14 +63,15 @@ git status --porcelain | grep -v '^??' | while IFS= read -r line; do
   fi
 done
 
-# 3. Suite simulada con HOME aislado
+# 3. Suite simulada: HOME aislado + OLLAMA_URL muerta (reproducir el runner)
 cd "$SIM/repo"
+export HOME="$SIM/home"
+export OLLAMA_URL="http://127.0.0.1:1"
+set +e
 if [ "$QUICK" = true ]; then
-  set +e
-  HOME="$SIM/home" bash scripts/tests/run-tests.sh --quick
+  bash scripts/tests/run-tests.sh --quick
 else
-  set +e
-  HOME="$SIM/home" bash scripts/tests/run-tests.sh
+  bash scripts/tests/run-tests.sh
 fi
 rc=$?
 if [ "$rc" -eq 0 ]; then
