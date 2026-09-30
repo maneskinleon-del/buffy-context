@@ -584,6 +584,11 @@ while IFS= read -r f; do
     ok "$f"
   elif [[ "$f" == "ai-context/SNAPSHOT.md" ]]; then
     warn "ai-context/SNAPSHOT.md — ausente (regenerable: bash scripts/buffy-context.sh)"
+  elif [[ "$f" == "ai-context/CONTINUE.md" ]] && \
+       git -C "$REPO_DIR" check-ignore -q "ai-context/CONTINUE.md" 2>/dev/null; then
+    # INSTANCE-STATE §3: estado de instancia local por diseño — un clone
+    # fresco es válido sin él (mismo criterio que buffy-doctor.sh).
+    ok "ai-context/CONTINUE.md — estado local por diseño (gitignored, INSTANCE-STATE §3)"
   else
     warn "$f — ausente (regenerable o bajo demanda)"
   fi

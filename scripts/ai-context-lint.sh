@@ -81,6 +81,15 @@ check_file() {  # <rel> <sección1> <sección2> ...
   local f="$AI_CONTEXT/$rel"
   local sec
   if [ ! -f "$f" ]; then
+    # INSTANCE-STATE-DESIGN §3: los archivos de estado de instancia viven solo
+    # en la máquina local (gitignored). Ausente + gitignoreado = clone fresco
+    # válido, no error estructural (mismo criterio que buffy-doctor.sh).
+    if git -C "$REPO_DIR" check-ignore -q "ai-context/$rel" 2>/dev/null; then
+      if [ "$JSON" = false ] && [ "$QUICK" = false ]; then
+        echo "  OK   $rel: estado local por diseño (gitignored, INSTANCE-STATE §3)"
+      fi
+      return
+    fi
     err "$rel: archivo no existe"
     return
   fi

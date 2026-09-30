@@ -25,7 +25,17 @@ test_router_base_files() {
   local OUT
   OUT=$(bash "$SCRIPTS_DIR/buffy-router.sh" --quick "hola" 2>/dev/null)
   if echo "$OUT" | grep -q 'ai-context/INFO-core.md'; then ok "INFO-core.md en base"; else bad "INFO-core.md en base"; fi
-  if echo "$OUT" | grep -q 'ai-context/CONTINUE.md'; then ok "CONTINUE.md en base"; else bad "CONTINUE.md en base"; fi
+  # CONTINUE.md es estado de instancia (INSTANCE-STATE §3, gitignored): si
+  # existe, --quick lo lista; si falta (clone fresco), omitirlo es el contrato
+  # de --quick ("solo rutas existentes") — no es drift.
+  if echo "$OUT" | grep -q 'ai-context/CONTINUE.md'; then
+    ok "CONTINUE.md en base"
+  elif [ ! -f "$REPO_DIR/ai-context/CONTINUE.md" ] && \
+       git -C "$REPO_DIR" check-ignore -q "ai-context/CONTINUE.md" 2>/dev/null; then
+    ok "CONTINUE.md ausente (estado local por diseño) — --quick omite inexistentes (contrato)"
+  else
+    bad "CONTINUE.md en base"
+  fi
 }
 
 test_router_skill_via_manifest() {

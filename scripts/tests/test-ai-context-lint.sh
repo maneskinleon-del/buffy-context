@@ -40,7 +40,14 @@ test_ai_context_lint_secciones_obligatorias() {
   local OUT
   OUT=$(bash "$SCRIPTS_DIR/ai-context-lint.sh" 2>/dev/null)
   if echo "$OUT" | grep -q "sección 'Reglas personales'"; then ok "INFO-core tiene 'Reglas personales'"; else bad "INFO-core tiene 'Reglas personales'"; fi
-  if echo "$OUT" | grep -q "sección 'Pendientes para próxima sesión'"; then ok "CONTINUE tiene 'Pendientes para próxima sesión'"; else bad "CONTINUE tiene 'Pendientes para próxima sesión'"; fi
+  # CONTINUE.md es estado de instancia (INSTANCE-STATE §3, gitignored): puede
+  # no existir en un clone fresco — el lint lo reporta como estado local, no
+  # como error. El check de su sección solo aplica si existe.
+  if [ -f "$REPO_DIR/ai-context/CONTINUE.md" ]; then
+    if echo "$OUT" | grep -q "sección 'Pendientes para próxima sesión'"; then ok "CONTINUE tiene 'Pendientes para próxima sesión'"; else bad "CONTINUE tiene 'Pendientes para próxima sesión'"; fi
+  else
+    if echo "$OUT" | grep -q "CONTINUE.md: estado local por diseño"; then ok "CONTINUE ausente → lint lo trata como estado local (INSTANCE-STATE §3)"; else bad "CONTINUE ausente → lint debería tratarlo como estado local"; fi
+  fi
   if echo "$OUT" | grep -q "sección 'Protocolo obligatorio al iniciar sesión'"; then ok "LOAD_CONTEXT tiene 'Protocolo obligatorio al iniciar sesión'"; else bad "LOAD_CONTEXT tiene 'Protocolo obligatorio al iniciar sesión'"; fi
 }
 
