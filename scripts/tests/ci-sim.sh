@@ -44,12 +44,17 @@ trap 'rm -rf "$SIM"' EXIT
 git clone -q file://"$REPO_DIR" "$SIM/repo"
 mkdir -p "$SIM/home"
 
-# 2. Overlay: cambios tracked sin commitear (M/A/D/R — como los pushearía
-#    el próximo commit). Untracked (??) se omite: CI tampoco los vería.
+# 2. Overlay: cambios sin commitear (M/A/D/R) + untracked NO-ignorados.
+#    Los untracked que git NO ignora son archivos nuevos del working tree que
+#    irían en el próximo commit: la sim los incluye (si no, un helper nuevo
+#    no resuelto dejaba al clone sin él y toda la suite fallaba en cascada —
+#    falso ❌ del bautismo de C4-B). Los gitignored (los .local, memorias) se
+#    omiten: exactamente lo que CI ve.
 cd "$REPO_DIR"
-git status --porcelain | grep -v '^??' | while IFS= read -r line; do
+git status --porcelain --untracked-files=normal | while IFS= read -r line; do
   status="${line:0:2}"
   path="${line:3}"
+  [[ "$status" == "??" ]] && git check-ignore -q "$path" 2>/dev/null && continue
   if [[ "$path" == *" -> "* ]]; then
     # rename: formato porcelain "R  NUEVA -> VIEJA"; el clone ya tiene VIEJA
     new="${path%% -> *}"

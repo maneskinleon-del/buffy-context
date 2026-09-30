@@ -15,9 +15,13 @@ Cuando comiences una sesión con mangonz, DEBES cargar estos archivos en este or
 
 ### Paso 1 — Contexto base del sistema (SIEMPRE, ~3KB)
 ```markdown
-ai-context/INFO-core.md
+ai-context/INFO-core.md   → resolver con scripts/lib/resolve-path.sh (Patrón B)
 ```
 Esto te da: OS, WM, shell, herramientas, reglas personales, stack de proyectos.
+> **Patrón B (C4-B)**: si existe `INFO-core.local.md` (gitignored), ES LA
+> INSTANCIA REAL del operador y tiene AUTORIDAD TOTAL — úsala en vez del base.
+> El base tracked es una plantilla genérica válida. Misma regla para
+> `AGENTS.md`/`PROJECTS.md` → `*.local.md` (regla única en resolve-path.sh).
 
 ### Paso 1.5 — Memoria curada (SIEMPRE — snapshot Congelado)
 ```markdown
