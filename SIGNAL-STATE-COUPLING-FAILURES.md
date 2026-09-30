@@ -181,7 +181,9 @@ servicios muertos) — ver Principios operativos, P1.
 ## Principios operativos
 
 Reglas del sistema de verificación (las instancias las motivaron; la regla
-es más general que el caso que la parió).
+es más general que el caso que la parió). Carácter de cada una: P1 es
+operativo (cómo verificar), P2 estructural (qué es la verificación), P3
+ontológico (qué emerge cuando se componen cosas).
 
 - **P1 — «¿Qué ve el runner?, no ¿qué veo yo?».** Todo verificador que corre
   en un entorno anidado o distinto del de desarrollo debe reproducir el
@@ -198,6 +200,11 @@ es más general que el caso que la parió).
   anidando dos piezas verificadas aisladas (instancia 8, aborto 2), buscar la
   **colisión** antes que el culpable: puede que no lo haya — dos decisiones
   correctas por separado se contradicen en un contexto específico.
+  El precedente ya estaba en el ciclo, antes de la instancia 8: el dispatch
+  de `buffy ctx` (buffy-next, PR5) derivó hacia nombres cortos porque
+  `buffy context` / `buffy doctor --context` / `buffy act check-*` iban a
+  colisionar en el espacio público — cada comando correcto por separado.
+  Regla derivada: **evitar colisión es más barato que resolverla.**
 
 ## Observación metodológica (2026-09-29): override, no ausencia
 
