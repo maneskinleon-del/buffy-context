@@ -64,14 +64,19 @@ git status --porcelain | grep -v '^??' | while IFS= read -r line; do
 done
 
 # 3. Suite simulada: HOME aislado + OLLAMA_URL muerta (reproducir el runner)
+#    + stdin cerrado: CI corre sin stdin, pero el hook pre-push hereda de git
+#    las ref-lines del push — si la suite las hereda, el router sin --message
+#    las LEE como mensaje (exit 0 en vez de 1). Segundo fallo del hook
+#    inaugural, misma raíz: la sim debe reproducir el entorno COMPLETO del
+#    runner, no solo el filesystem.
 cd "$SIM/repo"
 export HOME="$SIM/home"
 export OLLAMA_URL="http://127.0.0.1:1"
 set +e
 if [ "$QUICK" = true ]; then
-  bash scripts/tests/run-tests.sh --quick
+  bash scripts/tests/run-tests.sh --quick </dev/null
 else
-  bash scripts/tests/run-tests.sh
+  bash scripts/tests/run-tests.sh </dev/null
 fi
 rc=$?
 if [ "$rc" -eq 0 ]; then
