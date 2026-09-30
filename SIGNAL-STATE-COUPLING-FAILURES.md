@@ -161,9 +161,15 @@ del mismo ciclo en que **la verificación cazó a quien la diseñaba**:
 3. **CI cazando el fix que iba a arreglar CI** (2026-09-30): el commit
    `8431ed9` que des-rompía el CI destapó, vía la suite full, 4 fallos nuevos
    — la verificación operó sobre la verificación, no sobre el objeto.
+4. **El hook pre-push abortando su propio push inaugural** (2026-09-30,
+   dos veces): el simulador de CI (`ci-sim.sh`) vio el Ollama local del
+   operador (estado variable, instancia 1) y heredó las ref-lines de git
+   por stdin (el router las leyó como mensaje). Su push inaugural fue
+   abortado por él mismo hasta corregir su propia fidelidad (`511486d`,
+   `530fb90`) — el gate nació gateándose.
 
-En los tres, la herramienta de verificación falla **sobre la herramienta de
-verificación**, no sobre el objeto. Eso ya no es anécdota: es el patrón
+En los cuatro, la herramienta de verificación opera **sobre la herramienta
+de verificación**, no sobre el objeto. Eso ya no es anécdota: es el patrón
 dominante del proyecto.
 
 ### Meta-sección: la verificación es un objeto más
@@ -182,3 +188,9 @@ que en cualquier contrato. Consecuencias operativas:
 - La verificación no puede assertionar su propia no-cascada desde adentro —
   la demostración empírica (un FAIL forzado en CI real) es parte del
   registro, no un lujo.
+- **Un simulador de entorno es un verificador y tiene su propio
+  acoplamiento**: reproduce el filesystem pero no el stdin, el $HOME o los
+  servicios locales del operador → produce falsos ✅ y falsos ❌ con la
+  suite perfecta. El estándar de fidelidad es "¿qué ve el runner?", no
+  "¿qué veo yo?" — y se alcanza reproducir el entorno COMPLETO, no solo
+  el filesystem (caso 4: incidente del bautismo).
