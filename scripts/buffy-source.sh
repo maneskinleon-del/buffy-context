@@ -66,10 +66,12 @@ fi
 norm() { echo "$1" | sed 's/^[vV]//'; }
 
 # ── Fuentes ──────────────────────────────────────────────
+# INFO-core vía resolve-path (Patrón B: override .local si existe — la regla
+# vive SOLO en el helper, este script no la reimplementa).
 SNAPSHOT_FILE="$(buffy_snapshot)"
 FACTS_FILE="$REPO_DIR/ai-context/facts.yaml"
 CONTINUE_FILE="$REPO_DIR/ai-context/CONTINUE.md"
-INFO_FILE="$REPO_DIR/ai-context/INFO-core.md"
+INFO_FILE="$REPO_DIR/$(bash "$SCRIPT_DIR/lib/resolve-path.sh" --repo "$REPO_DIR" ai-context/INFO-core.md)"
 RULES_FILE="$REPO_DIR/ai-context/facts_rules.yaml"
 
 # ── Valor REAL-TIME de un hecho ──────────────────────────

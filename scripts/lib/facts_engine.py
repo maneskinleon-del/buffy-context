@@ -86,7 +86,20 @@ def parse_rules(repo_dir):
 def main():
     repo_dir = sys.argv[1] if len(sys.argv) > 1 else "."
     as_json = "--json" in sys.argv
-    info_core_path = os.path.join(repo_dir, "ai-context", "INFO-core.md")
+    # Patrón B: la regla de resolución .local vive SOLO en resolve-path.sh
+    # (subprocess — una fuente de verdad, sin reimplementación en Python).
+    helper = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "lib", "resolve-path.sh")
+    try:
+        r = subprocess.run(
+            ["bash", helper, "--repo", repo_dir, "ai-context/INFO-core.md"],
+            capture_output=True, text=True, timeout=10,
+        )
+        rel = r.stdout.strip()
+        info_core_path = os.path.join(repo_dir, rel)
+    except Exception:
+        # helper ausente/no-ejecutable: el base es la ruta canónica — el
+        # consumidor decide qué significa su ausencia (open() fallará abajo).
+        info_core_path = os.path.join(repo_dir, "ai-context", "INFO-core.md")
     try:
         with open(info_core_path, encoding="utf-8") as fh:
             info_core = fh.read()

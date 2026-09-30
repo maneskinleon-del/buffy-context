@@ -69,6 +69,9 @@ PAS_PAD = 4
 W = {"s1": 1.0, "s2": 1.0, "s3": 0.5, "s4": 0.5}
 
 # ── archivos de ruido de sesión (S4 — el diseño §3 los penaliza) ──
+# C4-B: las variantes .local (INFO-core.local.md, AGENTS.local.md, ...) YA
+# quedan cubiertas por la regla estructural de abajo (todo ai-context/* es
+# ruido salvo CHANGELOG.md) — NO enumerarlas aquí (redundancia engañosa).
 NOISE_FILES = {"ai-context/SESION-archive.md", "ai-context/AGENTS.md",
                "ai-context/CONTINUE.md", "ai-context/SESION.md"}
 

@@ -52,6 +52,10 @@ fi
 ERRORS=0
 
 # --- helpers ----------------------------------------------------------------
+resolve() {  # <rel-en-ai-context> → ruta efectiva (Patrón B: regla única en
+             # resolve-path.sh; el lint NUNCA implementa la regla por su cuenta)
+  bash "$SCRIPT_DIR/lib/resolve-path.sh" --repo "$REPO_DIR" "ai-context/$1"
+}
 err() {  # <msg>
   ERRORS=$((ERRORS+1))
   if [ "$JSON" = false ] && [ "$QUICK" = false ]; then
@@ -78,7 +82,11 @@ check_section() {  # <archivo> <rel> <sección>
 check_file() {  # <rel> <sección1> <sección2> ...
   local rel="$1"
   shift
-  local f="$AI_CONTEXT/$rel"
+  # Patrón B: validar el archivo EFECTIVO (override .local si existe —
+  # autoridad total; el base es instancia válida si no hay override).
+  local eff
+  eff="$(resolve "$rel")"
+  local f="$REPO_DIR/$eff"
   local sec
   if [ ! -f "$f" ]; then
     # INSTANCE-STATE-DESIGN §3: los archivos de estado de instancia viven solo
@@ -94,7 +102,7 @@ check_file() {  # <rel> <sección1> <sección2> ...
     return
   fi
   for sec in "$@"; do
-    check_section "$f" "$rel" "$sec"
+    check_section "$f" "$eff" "$sec"
   done
 }
 

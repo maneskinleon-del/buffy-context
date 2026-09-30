@@ -83,7 +83,8 @@ if [ ! -d "$REPO_DIR/ai-context" ]; then
   exit 1
 fi
 
-INFO_CORE="$REPO_DIR/ai-context/INFO-core.md"
+# Patrón B: verificar el archivo EFECTIVO (override .local si existe).
+INFO_CORE="$REPO_DIR/$(bash "$SCRIPT_DIR/lib/resolve-path.sh" --repo "$REPO_DIR" ai-context/INFO-core.md)"
 if [ ! -f "$INFO_CORE" ]; then
   if [ "$JSON_MODE" = true ]; then
     python3 -c 'import json,sys; print(json.dumps({"repo":sys.argv[1],"verified":0,"stale":0,"unknown":0,"trust_score":0,"items":[{"level":"err","fact":"general","message":"INFO-core.md ausente — sin hechos que verificar","id":"MISSING_INFO_CORE","source":"doc"}],"_info":"verificación factual de ai-context/INFO-core.md vs sistema real"}, ensure_ascii=False))' "$REPO_DIR"

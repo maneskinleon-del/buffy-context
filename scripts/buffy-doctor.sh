@@ -197,9 +197,12 @@ section "📄 Contexto (ai-context/)"
 # Excepción (INSTANCE-STATE-DESIGN §3): los archivos de estado de instancia
 # se mantienen locales POR DISEÑO (gitignored, p.ej. CONTINUE.md). Si faltan
 # pero están gitignoreados → OK, no error: un clone fresco es válido así.
+# Patrón B (C4-B): la existencia se valida sobre el archivo EFECTIVO
+# (override .local si existe) — la regla vive en resolve-path.sh.
 for f in LOAD_CONTEXT.md INFO-core.md CONTINUE.md; do
-  if [ -f "$REPO_DIR/ai-context/$f" ]; then
-    ok "$f"
+  eff="$(bash "$SCRIPT_DIR/lib/resolve-path.sh" --repo "$REPO_DIR" "ai-context/$f" 2>/dev/null)"
+  if [ -f "$REPO_DIR/$eff" ]; then
+    ok "$eff"
   elif git -C "$REPO_DIR" check-ignore -q "ai-context/$f" 2>/dev/null; then
     ok "$f — estado local por diseño (gitignored, INSTANCE-STATE §3)"
   else
@@ -207,9 +210,10 @@ for f in LOAD_CONTEXT.md INFO-core.md CONTINUE.md; do
   fi
 done
 
-# Bajo demanda / opcionales
+# Bajo demanda / opcionales (Patrón B: existencia sobre el EFECTIVO)
 for f in INFO-full.md SESION.md SESION-archive.md PROJECTS.md CHANGELOG.md CHANGELOG-archive.md AGENTS.md v4_MANIFIESTO.md README.md; do
-  if [ -f "$REPO_DIR/ai-context/$f" ]; then ok "$f"; else warn "$f (bajo demanda)" "MISSING_OPTIONAL_FILE" "create_context_file" "$f"; fi
+  eff="$(bash "$SCRIPT_DIR/lib/resolve-path.sh" --repo "$REPO_DIR" "ai-context/$f" 2>/dev/null)"
+  if [ -f "$REPO_DIR/$eff" ]; then ok "$eff"; else warn "$f (bajo demanda)" "MISSING_OPTIONAL_FILE" "create_context_file" "$f"; fi
 done
 
 # DEPRECATED (deberían existir pero marcados obsoletos)

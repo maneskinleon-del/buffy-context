@@ -231,9 +231,11 @@ SKILL_FILES=()
 SCRIPT_FILES=()
 MISSING_MANIFESTS=()
 
-# BASE — siempre
+# BASE — siempre. Patrón B (C4-B): se lista el archivo EFECTIVO (override
+# .local si existe) — la regla vive SOLO en resolve-path.sh, el router no la
+# reimplementa. CONTINUE.md queda literal: es estado de instancia sin override.
 BASE_FILES=(
-  "ai-context/INFO-core.md"
+  "$(bash "$SCRIPT_DIR/lib/resolve-path.sh" --repo "$REPO_DIR" ai-context/INFO-core.md)"
   "ai-context/CONTINUE.md"
 )
 # SNAPSHOT: se resuelve entre el estado generado (BUFFY_HOME/ai-context) y el repo
@@ -243,9 +245,9 @@ else
   BASE_FILES+=("ai-context/SNAPSHOT.md")
 fi
 
-# PROJECTS.md — solo si menciona un proyecto
+# PROJECTS.md — solo si menciona un proyecto (efectivo vía resolve-path)
 if has 'proyecto|widgetos|pwa_securguard|timemark|gameboost|game boost pro|manuninstaller|codebuff-automation|autoscript|xuper|scrcpy-freefire\.sh'; then
-  BASE_FILES+=("ai-context/PROJECTS.md")
+  BASE_FILES+=("$(bash "$SCRIPT_DIR/lib/resolve-path.sh" --repo "$REPO_DIR" ai-context/PROJECTS.md)")
 fi
 
 # SESION.md — solo si pregunta por sesión/historial reciente
@@ -258,9 +260,9 @@ if has 'que cambio|qué cambió|que cambió|qué cambio|cambios recientes|change
   BASE_FILES+=("ai-context/CHANGELOG.md")
 fi
 
-# AGENTS.md — solo si necesita notas técnicas de agentes previos
+# AGENTS.md — solo si necesita notas técnicas de agentes previos (efectivo)
 if has 'notas tecnicas|notas técnicas|agente anterior|que hizo el agente|nota de agente'; then
-  BASE_FILES+=("ai-context/AGENTS.md")
+  BASE_FILES+=("$(bash "$SCRIPT_DIR/lib/resolve-path.sh" --repo "$REPO_DIR" ai-context/AGENTS.md)")
 fi
 
 # ── ANDROID ────────────────────────────────────────────────

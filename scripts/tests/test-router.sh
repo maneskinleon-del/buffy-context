@@ -24,7 +24,9 @@ test_router_base_files() {
   suite "router: base siempre incluye INFO-core + CONTINUE"
   local OUT
   OUT=$(bash "$SCRIPTS_DIR/buffy-router.sh" --quick "hola" 2>/dev/null)
-  if echo "$OUT" | grep -q 'ai-context/INFO-core.md'; then ok "INFO-core.md en base"; else bad "INFO-core.md en base"; fi
+  # Patrón B: el router lista el EFECTIVO (override .local si existe) —
+  # acepta cualquiera de las dos rutas como "en base".
+  if echo "$OUT" | grep -qE 'ai-context/INFO-core(\.local)?\.md'; then ok "INFO-core.md en base"; else bad "INFO-core.md en base"; fi
   # CONTINUE.md es estado de instancia (INSTANCE-STATE §3, gitignored): si
   # existe, --quick lo lista; si falta (clone fresco), omitirlo es el contrato
   # de --quick ("solo rutas existentes") — no es drift.

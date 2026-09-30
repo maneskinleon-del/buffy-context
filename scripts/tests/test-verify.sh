@@ -76,8 +76,13 @@ test_verify_fixture_stale() {
   cp -r "$REPO_DIR" "$BH/repo"
   rm -rf "$BH/repo/.git"
 
-  # Fixture 1: kernel falso (5.0.0-fake) → KERNEL_STALE
-  if ! sed -i 's/kernel [0-9][0-9.]*[-a-z0-9]*/kernel 5.0.0-fake/' "$BH/repo/ai-context/INFO-core.md" || ! grep -q 'kernel 5.0.0-fake' "$BH/repo/ai-context/INFO-core.md"; then
+  # Fixture 1: kernel falso (5.0.0-fake) → KERNEL_STALE. Patrón B: la
+  # inyección va sobre el archivo EFECTIVO (override .local si existe —
+  # el sandbox cp -r arrastra el .local del operador y por diseño tiene
+  # autoridad total). Resolución vía el helper, no re-implementada.
+  local EFF
+  EFF="$(bash "$SCRIPTS_DIR/lib/resolve-path.sh" --repo "$BH/repo" ai-context/INFO-core.md)"
+  if ! sed -i 's/kernel [0-9][0-9.]*[-a-z0-9]*/kernel 5.0.0-fake/' "$BH/repo/$EFF" || ! grep -q 'kernel 5.0.0-fake' "$BH/repo/$EFF"; then
     bad "fixture kernel inyectado"
     return
   fi
@@ -93,7 +98,7 @@ test_verify_fixture_stale() {
   rm -rf "$BH/repo"
   cp -r "$REPO_DIR" "$BH/repo"
   rm -rf "$BH/repo/.git"
-  if ! sed -i 's/node v[0-9.]*/node v0.1.0/' "$BH/repo/ai-context/INFO-core.md" || ! grep -q 'node v0.1.0' "$BH/repo/ai-context/INFO-core.md"; then
+  if ! sed -i 's/node v[0-9.]*/node v0.1.0/' "$BH/repo/$EFF" || ! grep -q 'node v0.1.0' "$BH/repo/$EFF"; then
     bad "fixture node inyectado"
     return
   fi
@@ -163,8 +168,12 @@ d = yaml.safe_load(open(p))
 d['facts']['codegraph'] = {'value': '1.5.0', 'source': 'system', 'confidence': 1.0, 'status': 'verified', 'verified': datetime.date.today().isoformat(), 'scope': 'test', 'ttl_days': 30}
 open(p, 'w').write(yaml.dump(d, sort_keys=False, allow_unicode=True))
 "
-  # INFO-core: codegraph con versión DISTINTA (contradice a facts.yaml)
-  sed -i 's/codegraph v[0-9.]*/codegraph v0.0.1/' "$BH/repo/ai-context/INFO-core.md"
+  # INFO-core (EFECTIVO — el sandbox cp -r puede arrastrar el .local del
+  # operador, que tiene autoridad total): codegraph con versión DISTINTA
+  # (contradice a facts.yaml)
+  local EFF
+  EFF="$(bash "$SCRIPTS_DIR/lib/resolve-path.sh" --repo "$BH/repo" ai-context/INFO-core.md)"
+  sed -i 's/codegraph v[0-9.]*/codegraph v0.0.1/' "$BH/repo/$EFF"
   # --no-live: aísla la jerarquía del sistema real del runner (en CI no hay
   # código instalado, y en local el real-time siempre ganaría).
   local OUT

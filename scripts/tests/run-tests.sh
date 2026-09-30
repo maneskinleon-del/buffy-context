@@ -58,6 +58,8 @@ source "$SCRIPT_DIR/test-pii-guard.sh"
 source "$SCRIPT_DIR/test-close-day.sh"
 # shellcheck source=test-documentation.sh
 source "$SCRIPT_DIR/test-documentation.sh"
+# shellcheck source=test-local-override.sh
+source "$SCRIPT_DIR/test-local-override.sh"
 # shellcheck source=test-scale.sh
 source "$SCRIPT_DIR/test-scale.sh"
 # shellcheck source=test-context-selection.sh
