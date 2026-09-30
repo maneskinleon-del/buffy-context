@@ -3,7 +3,7 @@
 # Cubre (sin Ollama):
 #   - sintaxis del orquestador run-combine-17E.sh y del analizador analiza-17E.py
 #   - heredoc python del orquestador compila (anti-regresión del sanity/gate)
-#   - params congelados: fixture fx-2026-08-15-001, corpus_hash 0af49cc666d872a6,
+#   - params congelados: fixture fx-2026-08-15-001, corpus_hash 9b82e8041ad1930d
 #     4 configs ×2 G2 (A/B-solo/V1-solo/T), gate §4 presente con dominancia combinada
 #   - anti-oráculo: términos de DICT_H1_B ∩ gold_facts del EVAL = ∅ (el dict NO
 #     contiene la respuesta — el dict ya pasó esto en 17B; se re-verifica aquí)
@@ -17,7 +17,10 @@ ORCH="$SCRIPTS_DIR/tests/evals/run-combine-17E.sh"
 ANAL="$SCRIPTS_DIR/tests/evals/analiza-17E.py"
 DICT="$SCRIPTS_DIR/tests/evals/dict_h1_b.json"
 EVAL_F="$SCRIPTS_DIR/tests/evals/eval-ctx-PC-2026-08-11.json"
-FIX_HASH="0af49cc666d872a6"
+# C5 (2026-09-30): corpus sanitizado (redacciones A-list, sin PII) → hash nuevo.
+# Historial: 0af49cc666d872a6 = original (con PII) · bf10aeefecea8b74 = sanitizado
+# parcial (falta Script IDs) · 9b82e8041ad1930d = sanitizado final.
+FIX_HASH="9b82e8041ad1930d"
 
 test_combine17e_sintaxis() {
   suite "combine-17E: sintaxis"

@@ -131,7 +131,7 @@ else
   python3 - "${JSONS[0]}" "${JSONS[1]}" "${JSONS[2]}" "${JSONS[3]}" "${JSONS[4]}" "${JSONS[5]}" <<'PY'
 import json, sys
 files = sys.argv[1:]
-EXP_FIX = "0af49cc666d872a6"
+EXP_FIX = "9b82e8041ad1930d"  # C5: corpus sanitizado (era 0af49cc666d872a6, con PII)
 
 def load(f):
     d = json.load(open(f))

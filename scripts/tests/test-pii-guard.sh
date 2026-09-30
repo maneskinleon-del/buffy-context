@@ -4,10 +4,9 @@
 # Alcance: SOLO contenido tracked (`git grep`, no disco) — el estado local
 # gitignored lo cubre .gitignore, no este guard.
 #
-# EXCLUSIÓN TEMPORAL: `scripts/tests/evals/` (corpus congelado del selector,
-# snapshot forense del 2026-08-13 con PII histórica). Se sanitiza en C5;
-# hasta entonces este guard no lo mira. ⚠ AL EJECUTAR C5: quitar la exclusión
-# y esperar 0 matches ABSOLUTOS (verificación "→ vacío" post-C5).
+# C5 (2026-09-30): la exclusión de `scripts/tests/evals/` está LEVANTADA —
+# el corpus del fixture fue sanitizado (redacciones A-list in situ, corpus_hash
+# 0af49cc666d872a6 → bf10aeefecea8b74) y el guard lo cubre. 0 matches ABSOLUTOS.
 #
 # Allowlist consciente (no-PII o fuera de alcance):
 #   - AKIAIOSFODNN7EXAMPLE / hf_xxx — fixtures del propio linter PII (en evals/).
@@ -16,7 +15,7 @@
 #     identificador neutro vs identificador personal).
 
 test_pii_guard_patrones() {
-  suite "pii-guard: patrones A-list ausentes en tracked (excl. evals hasta C5)"
+  suite "pii-guard: patrones A-list ausentes en tracked (incl. evals — C5)"
 
   local -a patrones=(
     'mangonz970@gmail.com'
@@ -29,7 +28,7 @@ test_pii_guard_patrones() {
   # contiene las literales de los patrones (este array) y se auto-matchearía —
   # misma familia que el pkill/pgrep que se auto-detecta (lección 2026-09-28:
   # bracket-trick o exclusión de pathspec).
-  local -a excl=(':!scripts/tests/evals' ':!scripts/tests/test-pii-guard.sh')
+  local -a excl=(':!scripts/tests/test-pii-guard.sh')
   local p hits
   for p in "${patrones[@]}"; do
     hits=$(git -C "$REPO_DIR" grep -c -F "$p" -- "${excl[@]}" 2>/dev/null \
