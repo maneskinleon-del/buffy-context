@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # pre-push — simula CI en clone fresco antes de pushear (2026-09-30).
 #
-# Por qué existe (instancia 4b de SIGNAL-STATE-COUPLING-FAILURES.md):
+# Por qué existe (instancia 5 de SIGNAL-STATE-COUPLING-FAILURES.md — antes «4b»):
 # `--quick` corre contra el working tree y CI corre contra un clone fresco;
 # quick verde no implica CI verde. El costo de descubrirlo en Actions es
 # ~1 min de espera + run rojo; aquí son ~5-20s en local.

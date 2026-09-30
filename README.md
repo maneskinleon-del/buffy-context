@@ -223,7 +223,7 @@ La suite es **determinística y segura**: todo lo que escribe (repair `--auto`, 
 
 La suite termina con `doc_truth_check`, que valida **dos números por separado**:
 
-- **Functional** (los checks que prueban Buffy: 347 full / 331 `--quick`) — el README debe declarar exactamente el conteo real derivado del runner.- **Total** (functional + meta: 353 full / 337 `--quick`) — los meta-checks son los que validan la representación documental; el check de total se calcula al final contra passed+failed completo (invariante ante fallos ajenos, instancia #8 de SIGNAL-STATE-COUPLING-FAILURES), así que si la fase meta crece y nadie actualiza el README, el CI rompe.
+- **Functional** (los checks que prueban Buffy: 347 full / 331 `--quick`) — el README debe declarar exactamente el conteo real derivado del runner.- **Total** (functional + meta: 353 full / 337 `--quick`) — los meta-checks son los que validan la representación documental; el check de total se calcula al final contra passed+failed completo (invariante ante fallos ajenos, instancia 7 de SIGNAL-STATE-COUPLING-FAILURES), así que si la fase meta crece y nadie actualiza el README, el CI rompe.
 El resumen de la suite los muestra por separado: `Functional: 345 OK · Meta: 5 OK · Total: 350 OK`. También verifica que la regla de poda de `SESION.md` siga unificada ("5 entradas o ~30KB") y que no reaparezcan residuos viejos.
 
 ### Benchmark de escala y contaminación (P0)

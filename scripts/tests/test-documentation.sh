@@ -37,7 +37,7 @@ doc_truth_check() {
   local pass_functional="$1"
   local quick_mode="$2"
   suite "documental-truth: functional + meta representan el estado real"
-  # Instancia #8 (2026-09-30): comparar contra PASSED contamina la señal —
+  # Instancia 7 (2026-09-30, antes «#8» del operador): comparar contra PASSED contamina la señal —
   # cuando otro test falla, passed baja y el README (correcto) "miente".
   # Comparar contra TOTALES (passed+failed): son invariantes ante fallos
   # ajenos, así doc_truth solo muerde cuando la doc realmente miente.
@@ -90,7 +90,7 @@ doc_truth_check() {
     ok "README: sin residuos de '3 sesiones'"
   fi
 
-  # 4. Anti-cascada (instancia #8): doc_truth compara contra TOTALES
+  # 4. Anti-cascada (instancia 7): doc_truth compara contra TOTALES
   #    (passed+failed), nunca contra passed — los passed incorporan FAILs
   #    ajenos: un FAIL en cualquier parte de la suite los baja y este check
   #    diría "README miente" cuando en realidad falló OTRO test (la señal se
@@ -101,14 +101,14 @@ doc_truth_check() {
   local src
   src=$(declare -f doc_truth_check)
   if echo "$src" | grep -qE '\$\{?PASS\}?\b|PASS \+ 1|PASS\+1'; then
-    bad "doc_truth vuelve a comparar contra passed (cascada, instancia #8 — comparar contra passed+failed)"
+    bad "doc_truth vuelve a comparar contra passed (cascada, instancia 7 — comparar contra passed+failed)"
   else
-    ok "doc_truth compara contra totales (anti-cascada #8)"
+    ok "doc_truth compara contra totales (anti-cascada 7)"
   fi
 
   # 5. TOTAL — debe ser el ÚLTIMO check de esta función. Se calcula como
   #    PASS+FAIL+1 (todo lo emitido + este check): los TOTALES son invariantes
-  #    ante fallos ajenos (instancia #8) — si otro test falla, passed baja
+  #    ante fallos ajenos (instancia 7) — si otro test falla, passed baja
   #    pero passed+failed no cambia, y este check no se contagia.
   local total_real=$((PASS + FAIL + 1))
   if [ "$quick_mode" = true ]; then

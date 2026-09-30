@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ci-sim.sh — simula las condiciones exactas de CI en local (2026-09-30).
 #
-# Lección (instancia 4b de SIGNAL-STATE-COUPLING-FAILURES.md): `--quick`
+# Lección (instancia 5 de SIGNAL-STATE-COUPLING-FAILURES.md — antes «4b»): `--quick`
 # corre contra el working tree (ve CONTINUE.md, memorias, overrides .local)
 # y CI corre contra un clone fresco (no ve nada de eso) → `--quick` verde es
 # condición necesaria pero NO suficiente para CI verde. La única forma de
@@ -21,7 +21,7 @@
 #      LOCAL del operador — servicio de estado variable minuto a minuto
 #      (semi-wedged, instancia 1) — y el gate deja pasar/cortar según el
 #      pico de turno: el hook pre-push abortó su propio push inaugural por
-#      exactamente eso. Los tests con Ollama corren como bonus en corridas
+#      exactamente eso (instancia 8, aborto 1). Los tests con Ollama corren como bonus en corridas
 #      locales directas (bash scripts/tests/run-tests.sh), fuera de ci-sim.
 #
 # Uso:
@@ -67,8 +67,8 @@ done
 #    + stdin cerrado: CI corre sin stdin, pero el hook pre-push hereda de git
 #    las ref-lines del push — si la suite las hereda, el router sin --message
 #    las LEE como mensaje (exit 0 en vez de 1). Segundo fallo del hook
-#    inaugural, misma raíz: la sim debe reproducir el entorno COMPLETO del
-#    runner, no solo el filesystem.
+#    inaugural: la sim debe reproducir el entorno COMPLETO del runner, no
+#    solo el filesystem (instancia 8, Principio P1 de la taxonomía).
 cd "$SIM/repo"
 export HOME="$SIM/home"
 export OLLAMA_URL="http://127.0.0.1:1"
