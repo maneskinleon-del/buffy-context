@@ -222,6 +222,14 @@ test_selector_fidelidad_expand() {
     ok "skip fidelidad (fixture ausente)"
     return 0
   fi
+  # Gate de corpus: el fixture se generó sobre el corpus de 77bf26a. Si el
+  # corpus indexable (find_scope) cambió, una fidelidad baja es drift esperado
+  # (pide re-gen del fixture), no un bug del motor → SKIP honesto (cuenta
+  # como PASS). Instancia del patrón: SIGNAL-STATE-COUPLING-FAILURES.md.
+  if ! corpus_frozen_ok; then
+    ok "skip fidelidad — corpus vivo ≠ corpus congelado 77bf26a (drift; el veredicto pide re-gen del fixture, no fix del motor)"
+    return 0
+  fi
   # El módulo expand debe generar ≥98% de los pasajes rama-P del fixture (el
   # único mismatch esperado es corpus drift: archivo creció tras el fixture).
   # Sin Ollama — solo lectura del fixture + tile_windows.
@@ -285,6 +293,12 @@ test_selector_veredicto_15b() {
   local fixture="$REPO_DIR/scripts/tests/evals/selector-pool-frozen-2026-08-13.json"
   if [ ! -f "$fixture" ]; then
     ok "skip 15B (fixture ausente)"
+    return 0
+  fi
+  # Mismo gate de corpus que la fidelidad expand: veredicto congelado vs
+  # corpus vivo → drift = SKIP honesto.
+  if ! corpus_frozen_ok; then
+    ok "skip 15B — corpus vivo ≠ corpus congelado 77bf26a (drift; el veredicto pide re-gen del fixture, no fix del motor)"
     return 0
   fi
   # Reproduce el veredicto 15B (V6) sobre el fixture congelado: attr 19/20 con

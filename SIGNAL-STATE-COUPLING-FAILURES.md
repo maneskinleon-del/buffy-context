@@ -82,6 +82,39 @@ aspiracional: commits históricos nunca fueron gateados.
 - Ante un fallo nuevo de esta clase, nombrar primero la **dimensión** (¿trabajo,
   remoto, tiempo, entorno, ejecución?) y después buscar el desacople concreto.
 
+## Observación metodológica (2026-09-29): override, no ausencia
+
+El preflight de C4 reveló **18 fallos** por ausencia de `INFO-core.md` — la
+cifra es señal, no carga de trabajo: un archivo consumido por 8 sitios + eval
++ lint + doctor **no es estado personal tolerado, es contrato del sistema**.
+La ausencia de un contrato no es un estado legítimo ("checkout incompleto"),
+y adaptar a todos los consumidores para tolerarla sería diseñar el contrato
+para mentir.
+
+**El patrón correcto por cantidad de consumidores:**
+
+- **1 consumidor, ausencia semánticamente normal** (CONTINUE.md: "instancia
+  sin handoff previo") → ausencia tolerada (`MISSING` informativo, no error).
+- **N consumidores, ausencia anormal** (INFO-core: el sistema no funciona sin
+  él) → **split tracked/local (`.local` override)**: el archivo base existe
+  siempre (genérico, sin PII, válido como instancia); la versión real del
+  operador vive en `<nombre>.local.md` (gitignored) y los consumidores la
+  prefieren si existe. Convención de industria (`.env`/`.env.local`,
+  `settings.local.json`) — se explica sola.
+
+**La distinción público vs personal no se resuelve con presencia/ausencia,
+se resuelve con override.** El archivo base existe siempre; el override vive
+en la instancia. Mismo desacople de esta familia: la señal ("el archivo
+existe") estaba desacoplada del estado ("el contenido personal existe") por
+la ausencia — el override los re-acopla.
+
+⚠ **Caveat empírico:** redactar el tracked cambia el corpus vivo → la
+fidelidad del eval congelado (fixture 2026-08-13 con contenido original) puede
+degradar aunque el archivo exista. El skip por corpus_hash sigue siendo
+probablemente necesario: se redacta → se corre el eval → se mide la fidelidad.
+Sin excepción para BUFFY-PC-CONTEXT/BUFFY-CURRENT-STATE (C3): cero
+consumidores de sistema y estado personal puro → ausencia correcta ahí.
+
 ## Meta-propiedad: el sistema se aplica a sí mismo
 
 Registrado como propiedad del sistema, no como anécdota — dos incidentes del

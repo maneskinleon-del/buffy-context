@@ -21,7 +21,7 @@ This repository provides the infrastructure for an AI agent to maintain persiste
 |---|---|
 | **Memory persistence** | Protocol for loading/saving session context so the AI never starts blank |
 | **Knowledge base** | 19 files of curated technical reference across 8 categories + Vision.md |
-| **43 skills** | Especializadas por dominio, cada una con `skill.yaml` machine-readable |
+| **44 skills** | Especializadas por dominio, cada una con `skill.yaml` machine-readable |
 | **Android Agent** | Dedicated skill that auto-detects Android projects and activates relevant tools |
 | **Detection scripts** | Shell scripts for system snapshots and Android diagnostics |
 | **Self-diagnostics** | doctor --json detecta drift, repair corrige lo seguro, agent orquesta el ciclo |
@@ -130,7 +130,7 @@ buffy-context/
 │   └── tests/                         # run-tests.sh + 22 test_*.sh + bench-scale.sh + bench-context-selection.sh (suite 350 checks totales, 334 --quick)
 │
 ├── MCP_REGISTRY.md                    # Servidores MCP disponibles (ruta, estado, uso)
-├── SKILLS_INDEX.md                    # Índice de 43 skills por dominio (fuente de verdad)
+├── SKILLS_INDEX.md                    # Índice de 44 skills por dominio (fuente de verdad)
 ├── INSTALL.md                         # Setup instructions
 ├── LICENSE                            # MIT license
 └── .gitignore

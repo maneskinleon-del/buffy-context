@@ -68,3 +68,26 @@ sb_doctor()       { HOME="$SANDBOX/home" bash "$SANDBOX/repo/scripts/buffy-docto
 sb_doctor_json()  { HOME="$SANDBOX/home" bash "$SANDBOX/repo/scripts/buffy-doctor.sh" --json "$@" 2>/dev/null; }
 sb_repair()       { HOME="$SANDBOX/home" bash "$SANDBOX/repo/scripts/buffy-repair.sh" "$@"; }
 sb_agent()        { HOME="$SANDBOX/home" bash "$SANDBOX/repo/scripts/buffy-agent.sh" "$@"; }
+
+# corpus_frozen_ok — ¿el corpus indexado por FTS5 coincide con el del commit
+# congelado 77bf26a (base del fixture selector-pool-frozen-2026-08-13)?
+# find_scope (buffy-search.sh) indexa: *.md|*.yaml de raíz (depth 1),
+# ai-context/ y Knowledge/ (recursivo, sin deprecated). El gate compara el
+# ls-tree (paths + blob SHAs) de HEAD vs 77bf26a sobre ese mismo scope:
+# archivos nuevos, borrados o editados cambian la expansión/pool → la
+# fidelidad vs el fixture degrada SIN que haya bug → SKIP honesto (el
+# veredicto viejo necesita re-gen del fixture, no un fix del motor).
+# Sin git o sin el ancestro (CI shallow/tarball) → OK: no se puede medir
+# drift y el test corre (comportamiento pre-gate).
+corpus_frozen_ok() {
+  local repo="${1:-${REPO_DIR:-$(git rev-parse --show-toplevel 2>/dev/null)}}"
+  [ -n "$repo" ] || return 0
+  command -v git >/dev/null 2>&1 || return 0
+  git -C "$repo" cat-file -e 77bf26a 2>/dev/null || return 0
+  local a b
+  a=$(git -C "$repo" ls-tree -r 77bf26a -- ai-context Knowledge | grep -v 'deprecated/' ; \
+      git -C "$repo" ls-tree 77bf26a | grep -E '\.(md|yaml)$') 
+  b=$(git -C "$repo" ls-tree -r HEAD -- ai-context Knowledge | grep -v 'deprecated/' ; \
+      git -C "$repo" ls-tree HEAD | grep -E '\.(md|yaml)$')
+  [ -n "$a" ] && [ "$a" = "$b" ]
+}

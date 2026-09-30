@@ -193,9 +193,18 @@ fi
 section "📄 Contexto (ai-context/)"
 # ══════════════════════════════════════════════════════════
 
-# Archivos que LOAD_CONTEXT.md marca como SIEMPRE obligatorios
+# Archivos que LOAD_CONTEXT.md marca como SIEMPRE obligatorios.
+# Excepción (INSTANCE-STATE-DESIGN §3): los archivos de estado de instancia
+# se mantienen locales POR DISEÑO (gitignored, p.ej. CONTINUE.md). Si faltan
+# pero están gitignoreados → OK, no error: un clone fresco es válido así.
 for f in LOAD_CONTEXT.md INFO-core.md CONTINUE.md; do
-  if [ -f "$REPO_DIR/ai-context/$f" ]; then ok "$f"; else err "$f (obligatorio según LOAD_CONTEXT.md)" "MISSING_MANDATORY_FILE" "create_context_file" "$f"; fi
+  if [ -f "$REPO_DIR/ai-context/$f" ]; then
+    ok "$f"
+  elif git -C "$REPO_DIR" check-ignore -q "ai-context/$f" 2>/dev/null; then
+    ok "$f — estado local por diseño (gitignored, INSTANCE-STATE §3)"
+  else
+    err "$f (obligatorio según LOAD_CONTEXT.md)" "MISSING_MANDATORY_FILE" "create_context_file" "$f"
+  fi
 done
 
 # Bajo demanda / opcionales
