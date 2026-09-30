@@ -56,6 +56,30 @@ Este proyecto sigue el [Código de Conducta de Contributor Covenant](https://www
 
 ---
 
+## Autoría en commits (agentes)
+
+- Los commits generados con asistencia de un agente (Codebuff/Buffy u otro)
+  llevan el trailer de co-autoría al final del mensaje:
+
+  ```
+  🤖 Generated with Codebuff
+  Co-Authored-By: Codebuff <noreply@codebuff.com>
+  ```
+
+- **Origen**: apareció en la cadena el 2026-09-30 (onda 3 del plan PII).
+  Antes, todos los commits eran 100% del operador. Registrado como decisión
+  explícita de trazabilidad, no como accidente del tooling.
+- **Semántica**: el trailer es metadato de co-autoría del CONTENIDO, no cambio
+  de autoría — el git author sigue siendo quien opera el repo; el agente queda
+  como co-autor. Los commits 100% humanos no llevan trailer.
+- **Nota de parsing**: la línea 🤖 adyacente corta el bloque de trailers para
+  git (`%(trailers)` lo devuelve vacío); el trailer vive en el cuerpo (`%b`).
+  Verificar con: `git log --format='%b' | grep Co-Authored`.
+- **Formato multi-línea** de la casa: heredoc —
+  `git commit -m "$(cat <<'EOF' ... EOF)"`.
+
+---
+
 ## Estándares de código
 
 ### Bash
