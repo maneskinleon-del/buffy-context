@@ -96,21 +96,34 @@ test determinista; en CI (sin uv) pasaba siempre.
 test es independiente del entorno.
 **Fix:** `--no-live` (aislar la jerarquía del sistema real — `e9ab468`).
 
-### 5. Entorno de ejecución — working tree vs clone fresco (2026-09-30) · antes «4b»
+### 5. Entorno de ejecución — fidelidad de vista del simulador (2026-09-30) · antes «4b»
 
-**Caso:** CI rojo con suite full aunque `--quick` local pasara. No era "otra
-máquina" (caso 4): era **el mismo árbol de trabajo vs un clone fresco** —
-`--quick` corre contra el working tree (ve CONTINUE.md, memorias, `.local`),
-el CI corre contra un clone (no ve nada de eso). 4 checks full acoplados a
-un archivo de estado que C3 había hecho local-por-diseño. `--quick` verde es
-**condición necesaria pero no suficiente** para CI verde, y no hay forma de
-saberlo sin simular el clone.
+**Forma general (canónica 2026-09-30):** cualquier verificación que corre en
+un entorno simulado/anidado puede divergir del entorno de referencia en **lo
+que ve** — y la divergencia tiene TRES direcciones, todas del mismo fallo
+(«¿qué ve el runner?», P1):
 
-**Señal:** suite verde local · **Estado:** suite verde en un checkout que
-no es el mío.
+- **5a — la sim ve MENOS que el runner:** `--quick` local corre contra el
+  working tree pero salta el sandbox/clone — 4 checks full acoplados a
+  CONTINUE.md fallaban solo en CI (`3f512d0`). Verde local ≠ verde CI.
+- **5b — la sim ve MÁS que el runner (signo opuesto, contraintuitivo):** el
+  sandbox `cp -r` de test-verify arrastraba el `INFO-core.local.md` del
+  operador → los fixtures matcheaban contenido real → verde local; en CI, sin
+  `.local`, el genérico no matcheaba → rojo (`b6f63d1`). El sim ejercitaba un
+  path que CI nunca toca y dejaba sin ejercitar el que CI sí toca (fallback a
+  base). No fue defecto de fidelidad sino EXCESO accidental.
+- **5c — la sim ve DISTINTO:** el overlay de ci-sim omitía untracked
+  no-ignorados → un helper nuevo sin commitear dejaba al clone sin él → 25
+  FAILs en cascada, falso ❌ (`0420be1` lo arregla).
+
+**Señal:** la verificación simulada pasa (o falla) · **Estado:** el entorno
+de referencia vería otra cosa — por MENOS, por MÁS o por DISTINTO contenido
+en vista.
 **Fix:** desacoplar los tests del estado de instancia (criterio "ausente+
-gitignoreado = OK", `3f512d0`) + mitigación estructural: simular el clone
-antes de pushear (`scripts/tests/ci-sim.sh`), gateado por hook pre-push.
+gitignoreado = OK", `3f512d0`) + simular el clone antes de pushear
+(`scripts/tests/ci-sim.sh`, hook pre-push) + fixtures IDEMPOTENTES sobre el
+archivo EFECTIVO (resolver vía helper, no asumir contenido) + overlay fiel a
+`git status` (tracked modificado + untracked no-ignorados; gitignored fuera).
 
 ### 6. Ejecución — la señal dice "existe", el estado dice "no corre" · antes «5»
 
