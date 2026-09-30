@@ -13,6 +13,15 @@ system-id: mangonz-desktop
 
 # CHANGELOG.md — Historial de cambios del sistema
 
+### 2026-09-30 — buffy-context: C4-B COMPLETADO — Patrón B (.local override) con regla única, suite 366/366 (Freebuff, PC)
+
+- **`scripts/lib/resolve-path.sh` — fuente ÚNICA de la regla** (decisión (2) del operador): helper ejecutable consumido por bash (subshell) y Python (subprocess — facts_engine). Semántica: `X.local.<ext>` si existe = AUTORIDAD TOTAL (incluso vacío/corrupto — el fallback silencioso ocultaría el error); sin override → base tracked; missing → imprime base + exit 1 (el consumidor decide qué significa ausencia).
+- **Split**: contenidos reales del operador → `INFO-core/AGENTS/PROJECTS.local.md` (gitignored); tracked reescritos como genéricos honestos (mismas secciones, placeholders, cero PII — pasan lint/doctor en clone fresco).
+- **8 consumidores migrados al EFECTIVO**: ai-context-lint (check_file), doctor (obligatorios + opcionales), router (BASE_FILES), buffy-verify, buffy-source, facts_engine.py, selector_m3 (paridad — ruido ai-context/* ya cubría .local estructuralmente). No-lecturas confirmadas: repair:146, ci.yml, migrate-system.
+- **test-local-override.sh (13 checks)**: regla del helper en 6 ramas, delegación Python (anti-duplicación), paridad del selector, lint bidireccional (override válido → sano; override malo → falla sobre el override).
+- **Dos brechas de la instancia 5 cazadas en el camino**: (a) fixtures de verify no idempotentes — el sed asumía contenido del operador; en clone fresco el genérico no matchea → CI rojo (`b6f63d1` lo arregla: inyección idempotente + sandbox self-contained para reglas-lista); (b) ci-sim overlay sin untracked no-ignorados — un helper nuevo sin commitear dejaba al clone sin él → 25 FAILs en cascada falsa (falso ❌ del sim).
+- Suite: 360+6=366 full · 344+6=350 quick. CI verde final (36781193116). Verificado en ambos mundos: con override (PC) y sin override (clone).
+
 
 
 ### 2026-09-30 — buffy-context: onda 3 — taxonomía #7/#8 + ci-sim + hook pre-push, suite 353/353 (Freebuff, PC)
