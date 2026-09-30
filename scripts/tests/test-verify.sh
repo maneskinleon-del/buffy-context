@@ -80,9 +80,16 @@ test_verify_fixture_stale() {
   # inyección va sobre el archivo EFECTIVO (override .local si existe —
   # el sandbox cp -r arrastra el .local del operador y por diseño tiene
   # autoridad total). Resolución vía el helper, no re-implementada.
+  # INSERCIÓN IDEMPOTENTE: el efectivo puede ser el genérico (clone fresco,
+  # sin línea kernel) o el .local del operador (con línea) — el fixture
+  # GARANTIZA la línea en vez de asumirla (si no, solo pasaba con override).
   local EFF
   EFF="$(bash "$SCRIPTS_DIR/lib/resolve-path.sh" --repo "$BH/repo" ai-context/INFO-core.md)"
-  if ! sed -i 's/kernel [0-9][0-9.]*[-a-z0-9]*/kernel 5.0.0-fake/' "$BH/repo/$EFF" || ! grep -q 'kernel 5.0.0-fake' "$BH/repo/$EFF"; then
+  if ! sed -i 's/kernel [0-9][0-9.]*[-a-z0-9]*/kernel 5.0.0-fake/' "$BH/repo/$EFF"; then bad "fixture kernel (sed)"; return; fi
+  if ! grep -q 'kernel 5.0.0-fake' "$BH/repo/$EFF"; then
+    printf '%s\n' '- kernel 5.0.0-fake' >> "$BH/repo/$EFF"
+  fi
+  if ! grep -q 'kernel 5.0.0-fake' "$BH/repo/$EFF"; then
     bad "fixture kernel inyectado"
     return
   fi
@@ -98,7 +105,11 @@ test_verify_fixture_stale() {
   rm -rf "$BH/repo"
   cp -r "$REPO_DIR" "$BH/repo"
   rm -rf "$BH/repo/.git"
-  if ! sed -i 's/node v[0-9.]*/node v0.1.0/' "$BH/repo/$EFF" || ! grep -q 'node v0.1.0' "$BH/repo/$EFF"; then
+  if ! sed -i 's/node v[0-9.]*/node v0.1.0/' "$BH/repo/$EFF"; then bad "fixture node (sed)"; return; fi
+  if ! grep -q 'node v0.1.0' "$BH/repo/$EFF"; then
+    printf '%s\n' '- node v0.1.0' >> "$BH/repo/$EFF"
+  fi
+  if ! grep -q 'node v0.1.0' "$BH/repo/$EFF"; then
     bad "fixture node inyectado"
     return
   fi
@@ -170,10 +181,14 @@ open(p, 'w').write(yaml.dump(d, sort_keys=False, allow_unicode=True))
 "
   # INFO-core (EFECTIVO — el sandbox cp -r puede arrastrar el .local del
   # operador, que tiene autoridad total): codegraph con versión DISTINTA
-  # (contradice a facts.yaml)
+  # (contradice a facts.yaml). Inserción idempotente: el genérico fresco no
+  # tiene la línea codegraph.
   local EFF
   EFF="$(bash "$SCRIPTS_DIR/lib/resolve-path.sh" --repo "$BH/repo" ai-context/INFO-core.md)"
   sed -i 's/codegraph v[0-9.]*/codegraph v0.0.1/' "$BH/repo/$EFF"
+  if ! grep -q 'codegraph v0.0.1' "$BH/repo/$EFF"; then
+    printf '%s\n' '- **codegraph v0.0.1** (grafo de código local)' >> "$BH/repo/$EFF"
+  fi
   # --no-live: aísla la jerarquía del sistema real del runner (en CI no hay
   # código instalado, y en local el real-time siempre ganaría).
   local OUT
@@ -248,8 +263,21 @@ print('OK' if ok else 'FAIL')
     bad "hardening del motor: $OUT"
   fi
 
-  # Integración: verify con reglas YAML en forma de lista funciona igual
+  # Integración: verify con reglas YAML en forma de lista funciona igual.
+  # Sandbox SELF-CONTAINED (instancia 5 de señal-estado): el doc del repo real
+  # documenta lo que la MÁQUINA del operador tiene — con el genérico de C4-B,
+  # node/npm no están documentados y el motor (correctamente) no emite esas
+  # filas → el assert era dependiente del entorno. El fixture documenta
+  # git/node/npm en el EFECTIVO del sandbox y asserta presencia (cualquier
+  # level — compara versiones falsas contra las reales, eso da igual aquí).
+  local SB="${TMPDIR:-/tmp}/buffy-verify-list-$$"
+  rm -rf "$SB"; mkdir -p "$SB/repo/ai-context"
+  cp "$REPO_DIR/ai-context/facts_rules.yaml" "$SB/repo/ai-context/" 2>/dev/null
+  local EFFL
+  EFFL="$(bash "$SCRIPTS_DIR/lib/resolve-path.sh" --repo "$SB/repo" ai-context/INFO-core.md)"
+  printf '%s\n' '- git 0.0.1-list · node v0.0.1-list · npm 0.0.1-list' > "$SB/repo/$EFFL"
   local J
-  J=$(bash "$SCRIPTS_DIR/buffy-verify.sh" --json 2>/dev/null)
+  J=$(bash "$SCRIPTS_DIR/buffy-verify.sh" --json --repo "$SB/repo" 2>/dev/null)
   jassert "verify con reglas lista sigue reportando git/node/npm" "$J" 'import json,sys; d=json.load(sys.stdin); f={i["fact"] for i in d["items"]}; assert {"git","node","npm"}.issubset(f), f'
+  rm -rf "$SB"
 }
