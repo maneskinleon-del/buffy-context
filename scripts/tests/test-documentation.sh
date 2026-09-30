@@ -37,6 +37,12 @@ doc_truth_check() {
   local pass_functional="$1"
   local quick_mode="$2"
   suite "documental-truth: functional + meta representan el estado real"
+  # Instancia #8 (2026-09-30): comparar contra PASSED contamina la señal —
+  # cuando otro test falla, passed baja y el README (correcto) "miente".
+  # Comparar contra TOTALES (passed+failed): son invariantes ante fallos
+  # ajenos, así doc_truth solo muerde cuando la doc realmente miente.
+  local pre_fail="$FAIL"   # FAILs funcionales previos a esta fase (la fase meta aún no emitió)
+  local functional_total=$((pass_functional + pre_fail))
 
   local readme="$REPO_DIR/README.md"
   local load_ctx="$REPO_DIR/ai-context/LOAD_CONTEXT.md"
@@ -52,16 +58,16 @@ doc_truth_check() {
   decl_quick_func=$(sed -n 's/.*`--quick` con \([0-9][0-9]*\) functional.*/\1/p' "$readme" | head -1)
 
   if [ "$quick_mode" = true ]; then
-    if [ -n "$decl_quick_func" ] && [ "$decl_quick_func" = "$pass_functional" ]; then
-      ok "README: $decl_quick_func functional --quick == suite real ($pass_functional)"
+    if [ -n "$decl_quick_func" ] && [ "$decl_quick_func" = "$functional_total" ]; then
+      ok "README: $decl_quick_func functional --quick == suite real ($functional_total)"
     else
-      bad "README declara '$decl_quick_func' functional --quick pero la suite real tiene $pass_functional (¿olvidaste actualizar README?)"
+      bad "README declara '$decl_quick_func' functional --quick pero la suite total tiene $functional_total (¿olvidaste actualizar README?)"
     fi
   else
-    if [ -n "$decl_func" ] && [ "$decl_func" = "$pass_functional" ]; then
-      ok "README: $decl_func functional == suite real ($pass_functional)"
+    if [ -n "$decl_func" ] && [ "$decl_func" = "$functional_total" ]; then
+      ok "README: $decl_func functional == suite real ($functional_total)"
     else
-      bad "README declara '$decl_func' functional pero la suite real tiene $pass_functional (¿olvidaste actualizar README?)"
+      bad "README declara '$decl_func' functional pero la suite total tiene $functional_total (¿olvidaste actualizar README?)"
     fi
   fi
 
@@ -84,12 +90,27 @@ doc_truth_check() {
     ok "README: sin residuos de '3 sesiones'"
   fi
 
-  # 4. TOTAL — debe ser el ÚLTIMO check de esta función. Se calcula como
-  #    PASS + 1 (lo que PASS será tras emitir este check): así el check se
-  #    cuenta a sí mismo y el README declara el total FINAL de la suite.
-  #    Si la fase meta crece ANTES de este check, total_real crece y el README
-  #    (declarado con el total viejo) deja de matchear → CI rojo.
-  local total_real=$((PASS + 1))
+  # 4. Anti-cascada (instancia #8): doc_truth compara contra TOTALES
+  #    (passed+failed), nunca contra passed — los passed incorporan FAILs
+  #    ajenos: un FAIL en cualquier parte de la suite los baja y este check
+  #    diría "README miente" cuando en realidad falló OTRO test (la señal se
+  #    contamina). Guard de introspección: nadie puede reintroducir la
+  #    comparación contra passed en esta fase. (El test no puede assertionar
+  #    su propia no-cascada; la introspección sí — la no-cascada ya quedó
+  #    demostrada empíricamente en CI con la suite en 344+1.)
+  local src
+  src=$(declare -f doc_truth_check)
+  if echo "$src" | grep -qE '\$\{?PASS\}?\b|PASS \+ 1|PASS\+1'; then
+    bad "doc_truth vuelve a comparar contra passed (cascada, instancia #8 — comparar contra passed+failed)"
+  else
+    ok "doc_truth compara contra totales (anti-cascada #8)"
+  fi
+
+  # 5. TOTAL — debe ser el ÚLTIMO check de esta función. Se calcula como
+  #    PASS+FAIL+1 (todo lo emitido + este check): los TOTALES son invariantes
+  #    ante fallos ajenos (instancia #8) — si otro test falla, passed baja
+  #    pero passed+failed no cambia, y este check no se contagia.
+  local total_real=$((PASS + FAIL + 1))
   if [ "$quick_mode" = true ]; then
     if [ -n "$decl_quick_total" ] && [ "$decl_quick_total" = "$total_real" ]; then
       ok "README: total --quick $decl_quick_total == suite real ($total_real)"

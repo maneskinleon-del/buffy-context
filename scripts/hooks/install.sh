@@ -1,19 +1,27 @@
 #!/usr/bin/env bash
-# install.sh — instala/desinstala/verifica el pre-commit hook.
+# install.sh — instala/desinstala/verifica los hooks pre-commit y pre-push.
 #
 # Por qué escribe el archivo (y no un symlink): git ejecuta los hooks con exec
 # directo, resolviendo el shebang del archivo. En Termux `/usr/bin/env` no existe
 # (bash real: $PREFIX/bin/bash), así que un shebang `#!/usr/bin/env bash` falla
 # con "cannot exec ... No such file". Este installer resuelve la ruta real de
-# bash (command -v bash) y genera .git/hooks/pre-commit con ese shebang,
+# bash (command -v bash) y genera .git/hooks/<hook> con ese shebang,
 # funcionando en Termux y en Linux (Arch, etc.).
 #
+# Hooks gestionados:
+#   pre-commit  (pre-commit.sh) — suite --quick en cada commit
+#   pre-push    (pre-push.sh)   — ci-sim --quick: simula CI en clone fresco
+#                                 antes de pushear (instancia 4b de
+#                                 SIGNAL-STATE-COUPLING-FAILURES.md: quick
+#                                 verde no implica CI verde). Salteable con
+#                                 git push --no-verify.
+#
 # Uso: bash scripts/hooks/install.sh [OPCIÓN]
-#   --install    Instala el hook (predeterminado)
-#   --uninstall  Elimina el hook
-#   --check      Verifica que el hook esté instalado y con el shebang correcto
+#   --install    Instala ambos hooks (predeterminado)
+#   --uninstall  Elimina ambos hooks
+#   --check      Verifica que estén instalados y con el shebang correcto
 #   --force      Sobrescribe sin preguntar (o sin terminal interactiva)
-#   --no-test    Instala sin ejecutar la verificación (corre la suite --quick)
+#   --no-test    Instala sin ejecutar la verificación (corre suite --quick)
 #   --help       Muestra esta ayuda
 #
 # NOTA: invocar SIEMPRE con `bash scripts/hooks/install.sh` (este script
@@ -23,9 +31,11 @@ set -u
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"   # .../scripts/hooks
 REPO_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"                   # repo raíz
-HOOK_SRC="$SCRIPT_DIR/pre-commit.sh"
 BASH_PATH="$(command -v bash 2>/dev/null || echo /bin/bash)"
-HOOK_TARGET="$REPO_DIR/.git/hooks/pre-commit"
+# Cada entrada: "nombre-hook|fuente-versionada"
+HOOKS=("pre-commit|pre-commit.sh" "pre-push|pre-push.sh")
+hook_target() { printf '%s/.git/hooks/%s' "$REPO_DIR" "${1%%|*}"; }
+hook_src()    { printf '%s/%s' "$SCRIPT_DIR" "${1##*|}"; }
 
 show_help() {
   # Solo líneas de comentario del header (hasta la primera línea no-comentario)
@@ -52,73 +62,89 @@ while [ $# -gt 0 ]; do
   shift
 done
 
-if [ ! -f "$HOOK_SRC" ]; then
-  echo "❌ No encuentro $HOOK_SRC" >&2
-  exit 1
-fi
+for entry in "${HOOKS[@]}"; do
+  if [ ! -f "$(hook_src "$entry")" ]; then
+    echo "❌ No encuentro $(hook_src "$entry")" >&2
+    exit 1
+  fi
+done
 
 case "$ACTION" in
   install)
-    if [ -f "$HOOK_TARGET" ]; then
-      if [ "$FORCE" = true ]; then
-        : # sobrescribir sin preguntar
-      elif [ -t 0 ]; then
-        read -r -p "⚠️  El hook ya existe. ¿Sobrescribir? (y/N) " ans
-        case "$ans" in
-          y|Y) : ;;
-          *) echo "❌ Instalación cancelada."; exit 0 ;;
-        esac
-      else
-        echo "❌ El hook ya existe en $HOOK_TARGET" >&2
-        echo "   Usa --force para sobrescribir (o --check para verificar)." >&2
-        exit 1
-      fi
-    fi
-
     mkdir -p "$REPO_DIR/.git/hooks"
-    {
-      echo "#!$BASH_PATH"
-      tail -n +2 "$HOOK_SRC"
-    } > "$HOOK_TARGET"
-    chmod +x "$HOOK_TARGET"
+    for entry in "${HOOKS[@]}"; do
+      hname="${entry%%|*}"
+      target="$(hook_target "$entry")"
+      src="$(hook_src "$entry")"
+      if [ -f "$target" ]; then
+        if [ "$FORCE" = true ]; then
+          : # sobrescribir sin preguntar
+        elif [ -t 0 ]; then
+          read -r -p "⚠️  $hname ya existe. ¿Sobrescribir? (y/N) " ans
+          case "$ans" in
+            y|Y) : ;;
+            *) echo "❌ Instalación cancelada."; exit 0 ;;
+          esac
+        else
+          echo "❌ El hook $hname ya existe en $target" >&2
+          echo "   Usa --force para sobrescribir (o --check para verificar)." >&2
+          exit 1
+        fi
+      fi
 
-    echo "✅ Hook instalado: $HOOK_TARGET"
-    echo "   shebang: #!$BASH_PATH"
-    echo "   (corre scripts/tests/run-tests.sh --quick en cada commit; saltar con --no-verify)"
+      {
+        echo "#!$BASH_PATH"
+        tail -n +2 "$src"
+      } > "$target"
+      chmod +x "$target"
+      echo "✅ Hook instalado: $target (shebang: #!$BASH_PATH)"
+    done
+
+    echo "   pre-commit: corre scripts/tests/run-tests.sh --quick en cada commit"
+    echo "   pre-push:   corre scripts/tests/ci-sim.sh --quick antes de pushear"
+    echo "   (ambos saltables con --no-verify)"
 
     if [ "$RUN_TEST" = true ]; then
-      echo "🔍 Verificando hook (corre la suite --quick)..."
-      if bash "$HOOK_TARGET" >/dev/null 2>&1; then
-        echo "✅ Hook funciona correctamente."
+      echo "🔍 Verificando hook pre-commit (corre la suite --quick)..."
+      if bash "$(hook_target "pre-commit|x")" >/dev/null 2>&1; then
+        echo "✅ Hook pre-commit funciona correctamente."
       else
-        echo "⚠️  El hook falló. Revisa la configuración." >&2
+        echo "⚠️  El hook pre-commit falló. Revisa la configuración." >&2
       fi
     fi
     ;;
 
   uninstall)
-    if [ -f "$HOOK_TARGET" ]; then
-      rm -f "$HOOK_TARGET"
-      echo "✅ Hook desinstalado."
-    else
-      echo "ℹ️  No hay hook instalado."
-    fi
+    for entry in "${HOOKS[@]}"; do
+      target="$(hook_target "$entry")"
+      if [ -f "$target" ]; then
+        rm -f "$target"
+        echo "✅ ${entry%%|*} desinstalado."
+      else
+        echo "ℹ️  ${entry%%|*} no estaba instalado."
+      fi
+    done
     ;;
 
   check)
-    if [ -f "$HOOK_TARGET" ] && [ -x "$HOOK_TARGET" ]; then
-      FIRST=$(head -1 "$HOOK_TARGET")
-      if [ "$FIRST" = "#!$BASH_PATH" ]; then
-        echo "✅ Hook instalado y con el shebang correcto: $FIRST"
-        exit 0
+    rc=0
+    for entry in "${HOOKS[@]}"; do
+      hname="${entry%%|*}"
+      target="$(hook_target "$entry")"
+      if [ -f "$target" ] && [ -x "$target" ]; then
+        FIRST=$(head -1 "$target")
+        if [ "$FIRST" = "#!$BASH_PATH" ]; then
+          echo "✅ $hname instalado y con el shebang correcto: $FIRST"
+        else
+          echo "⚠️  $hname existe pero su shebang ($FIRST) no coincide con bash actual ($BASH_PATH)." >&2
+          echo "   Reinstala: bash scripts/hooks/install.sh --force" >&2
+          rc=1
+        fi
       else
-        echo "⚠️  Hook existe pero su shebang ($FIRST) no coincide con bash actual ($BASH_PATH)." >&2
-        echo "   Reinstala: bash scripts/hooks/install.sh --force" >&2
-        exit 1
+        echo "❌ $hname no instalado. Corre: bash scripts/hooks/install.sh" >&2
+        rc=1
       fi
-    else
-      echo "❌ Hook no instalado. Corre: bash scripts/hooks/install.sh" >&2
-      exit 1
-    fi
+    done
+    exit $rc
     ;;
 esac

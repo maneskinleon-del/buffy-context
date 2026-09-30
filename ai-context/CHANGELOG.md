@@ -5,8 +5,8 @@
 
 ---
 
-version: 1.8
-updated: 2026-09-27
+version: 1.9
+updated: 2026-09-30
 schema: system-profile
 system-id: mangonz-desktop
 ---
@@ -14,6 +14,21 @@ system-id: mangonz-desktop
 # CHANGELOG.md — Historial de cambios del sistema
 
 
+
+### 2026-09-30 — buffy-context: onda 3 — taxonomía #7/#8 + ci-sim + hook pre-push, suite 353/353 (Freebuff, PC)
+
+- **#8 anti-cascada:** doc_truth comparaba contra **passed** (incorporan FAILs ajenos → un fallo cualquiera hacía "mentir" al README correcto; 2 falsos positivos en el CI rojo). Ahora compara contra **TOTALES** (passed+failed, invariantes) + guard de introspección (nadie puede reintroducir la comparación contra passed). Demostración empírica de la no-cascada: el CI real corrió con 344+1 y doc_truth no mordió.
+- **#7 mitigado estructuralmente:** `scripts/tests/ci-sim.sh` — clone file:// + overlay de cambios tracked sin commitear (los untracked no: CI tampoco los ve) + HOME aislado = las condiciones exactas de CI en ~5-20s. Gateado por **hook pre-push** (`scripts/hooks/pre-push.sh`, instala con `bash scripts/hooks/install.sh --force`, saltable con `--no-verify`). Instalador extendido a ambos hooks (misma convención Termux de shebang real).
+- **Taxonomía** (`SIGNAL-STATE-COUPLING-FAILURES.md`): instancia **4b** (mismo árbol vs clone fresco — variante working-tree del entorno) + **6 cascada** (el verificador confunde su causa con la causa ajena) + meta-momento 3 (CI cazando su propio fix) + meta-sección "la verificación es un objeto más".
+- Suite 347+6=353 full · 331+6=337 quick (+2 lint de scripts nuevos). Verificada en clone fresco y working tree.
+
+### 2026-09-30 — buffy-context: CI verde + gate corpus_frozen_ok + desacople del estado de instancia, suite 350/350 (Freebuff, PC)
+
+- **CI rojo (venía desde commits del operador 2026-09-29) des-rompido en dos commits, con verificación en condiciones exactas de CI.** Capa prevista: doctor exigía CONTINUE.md como obligatorio (gitignored por diseño desde C3 — tolerancia nunca cableada) + README 43→44 skills. Capa no prevista: 4 checks de la suite FULL acoplados a CONTINUE.md (existe local, ausente en clone) + cascada del contador doc_truth (341≠345 — el contador resta FAILs; README nunca estuvo mal).
+- **`8431ed9` — gate `corpus_frozen_ok` v3 (extraído de C5 por necesidad):** compara ls-tree (paths+blob SHAs) del scope FTS5 (raíz *.md|*.yaml + ai-context/ + Knowledge/ sin deprecated) entre HEAD y 77bf26a (base del fixture del selector). Sin git/ancestro (CI shallow) → OK corre. Bug cazado en verificación: grep con `\\.` literal no matcheaba nada (scope raíz fuera de la comparación). Verificado en 3 ramas: HEAD hoy DISTINTO / worktree en el ancestro IGUAL / shallow file:// OK-corre. Skips honestos en fidelidad_expand y veredicto_15B (hoy skippean por drift del corpus: el doc de la taxonomía movió el corpus que la taxonomía diagnosticaba). fetch-depth:0 en ci.yml.
+- **`3f512d0` — criterio unificado "ausente+gitignoreado = OK estado local por diseño"** en doctor (ya existía), ai-context-lint check_file y router modo normal; tests de lint/router bifurcan existe/ausente. Contrato del router --quick verificado en código: omite inexistentes por diseño ("solo rutas existentes") — la omisión en clone fresco NO es drift. INFO-core ausente sigue siendo error duro.
+- **Verificación doble:** suite full 350/0 y quick 334/0 en clone fresco (file:// + working tree) y en working tree local. CI run 36747471665: 3/3 jobs ✓ (Suite 38s · Doctor · Verify). origin/main = `3f512d0`.
+- **Lecciones:** (a) --quick local NO predice CI full cuando la diferencia es estado de instancia — simular en clone fresco antes de pushear; (b) doc_truth en cascada: verificar aritmética del contador antes de tocar cifras del README; (c) --quick del hook pre-commit no cubre la capa full.
 
 ### 2026-09-27 — buffy-next: PR5 ejecutado — buffy ctx + buffy env (C1-c), suite 679/679 (Freebuff, PC)
 

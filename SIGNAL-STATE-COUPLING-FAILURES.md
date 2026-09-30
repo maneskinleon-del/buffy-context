@@ -16,7 +16,7 @@ fingido por la implementación que lo reporta.
 No es "el test está mal" ni "el servicio está caído": es la **tercera cosa**
 entre ambos — el mecanismo que se supone une señal y estado — la que falla.
 
-## Las 5 instancias registradas
+## Las instancias registradas (por dimensión)
 
 Cada caso ilustra una dimensión distinta del acoplamiento.
 
@@ -65,6 +65,22 @@ test determinista; en CI (sin uv) pasaba siempre.
 test es independiente del entorno.
 **Fix:** `--no-live` (aislar la jerarquía del sistema real — `e9ab468`).
 
+### 4b. Entorno de ejecución — variante working tree (2026-09-30)
+
+**Caso:** CI rojo con suite full aunque `--quick` local pasara. No era "otra
+máquina" (caso 4): era **el mismo árbol de trabajo vs un clone fresco** —
+`--quick` corre contra el working tree (ve CONTINUE.md, memorias, `.local`),
+el CI corre contra un clone (no ve nada de eso). 4 checks full acoplados a
+un archivo de estado que C3 había hecho local-por-diseño. `--quick` verde es
+**condición necesaria pero no suficiente** para CI verde, y no hay forma de
+saberlo sin simular el clone.
+
+**Señal:** suite verde local · **Estado:** suite verde en un checkout que
+no es el mío.
+**Fix:** desacoplar los tests del estado de instancia (criterio "ausente+
+gitignoreado = OK", `3f512d0`) + mitigación estructural: simular el clone
+antes de pushear (`scripts/tests/ci-sim.sh`), gateado por hook pre-push.
+
 ### 5. Ejecución — la señal dice "existe", el estado dice "no corre"
 
 **Caso:** hook pre-commit versionado en el repo pero ausente de `.git/hooks/`.
@@ -73,6 +89,23 @@ aspiracional: commits históricos nunca fueron gateados.
 
 **Señal:** el mecanismo está escrito · **Estado:** el mecanismo se ejecuta.
 **Fix:** instalar + verificar con corrida real (`e9ab468`).
+
+### 6. Cascada — el verificador confunde su causa con la causa ajena (2026-09-30)
+
+**Caso:** `doc_truth_check` comparaba el README contra los checks **passed**
+del runner. Los passed incorporan los FAILs ajenos: cuando cualquier otro
+test falla, passed baja, el total real se corrompe, y el README (correcto)
+aparece como mentiroso. En el CI rojo del 2026-09-30 produjo 2 falsos
+"README desactualizado" que no eran sino cascada de los 4 fallos reales.
+El test que debería decir "README miente" lo dice cuando en realidad
+"otro test falló" — la señal del verificador incluye el estado que no
+verifica.
+
+**Señal:** "la doc no coincide con la suite" · **Estado:** la doc no
+coincide con la suite **porque la doc miente** (no porque otro test falle).
+**Fix:** comparar contra TOTALES (passed+failed, invariantes ante fallos
+ajenos) + guard de introspección que impide reintroducir la comparación
+contra passed.
 
 ## Corolario operativo
 
@@ -117,16 +150,35 @@ consumidores de sistema y estado personal puro → ausencia correcta ahí.
 
 ## Meta-propiedad: el sistema se aplica a sí mismo
 
-Registrado como propiedad del sistema, no como anécdota — dos incidentes del
-mismo ciclo en que **la verificación cazó a quien la diseñaba**:
+Registrado como propiedad del sistema, no como anécdota — **tres** incidentes
+del mismo ciclo en que **la verificación cazó a quien la diseñaba**:
 
 1. Handoff del operador con la premisa "tree limpio" — el receptor la verificó
    antes de razonar (convención de trazabilidad, caso 7 en `LOAD_CONTEXT.md`).
 2. El guard de PII atrapando su propia nota de anuncio (el CHANGELOG que
    citaba la literal del patrón redactado) y auto-matcheándose al commitearse
    (resuelto con auto-exclusión de pathspec, `01f33e7`).
+3. **CI cazando el fix que iba a arreglar CI** (2026-09-30): el commit
+   `8431ed9` que des-rompía el CI destapó, vía la suite full, 4 fallos nuevos
+   — la verificación operó sobre la verificación, no sobre el objeto.
 
-La convención `[orig]/[verificado]` + tests ejecutables + guards que se
-auto-excluyen hacen trabajo que el diseño original no anticipó explícitamente.
-Es la diferencia entre "tenemos un proceso" y "el proceso funciona contra
-nosotros": **el sistema se aplica a sí mismo sin ceremonia extra.**
+En los tres, la herramienta de verificación falla **sobre la herramienta de
+verificación**, no sobre el objeto. Eso ya no es anécdota: es el patrón
+dominante del proyecto.
+
+### Meta-sección: la verificación es un objeto más
+
+La verificación es un artefacto del sistema como cualquier otro, y por lo
+tanto **tiene su propio acoplamiento señal-estado**: un test es una señal
+que afirma algo de un estado, y el pegamento entre ambas puede fallar igual
+que en cualquier contrato. Consecuencias operativas:
+
+- Todo verificador nuevo debe preguntarse: **¿mi señal incluye estados que
+  no verifico?** (cascada, caso 6) · **¿mi estado existe en todo entorno
+  donde corro?** (working tree vs clone, caso 4b).
+- Los guards que verifican verificadores (introspección de `doc_truth`,
+  auto-exclusión de pathspec) no son paranoia: son la única defensa cuando
+  el verificador es el objeto.
+- La verificación no puede assertionar su propia no-cascada desde adentro —
+  la demostración empírica (un FAIL forzado en CI real) es parte del
+  registro, no un lujo.
