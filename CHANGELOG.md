@@ -3,6 +3,15 @@
 > Generado con la skill `changelog-generator` a partir de los commits de git (2026-07-29 → 2026-08-02).
 > Historial de *sesiones* de memoria → `ai-context/CHANGELOG.md` (separado de este).
 
+## 2026-10-01
+
+### 🔒 Privacidad (F3b — decisión de identidad: aceptar linkage en metadata)
+
+- **Contexto — F3a ejecutado (2026-10-01):** purga de activos en la historia con `git filter-repo` (serial del dispositivo + 2 Script IDs de Apps Script → marcadores de redacción; mensaje del commit `00f088f` reescrito) + force-push de `main` y `v1.0.1`. 264 commits conservados, metadata de autoría idéntica (Categoría A intacta), tree de HEAD byte a byte idéntico, guard PII del repo intacto, tag re-anclado. Invariantes a–f verificados **antes** de pushear (scan de 0 matches PII fuera del guard en toda la historia alcanzable).
+- **Categoría A (email + nombre en metadata): ACEPTADA.** La vinculación ya es pública vía cuenta GitHub (usuario y noreply derivados del alias) y no es reversible con un purge de repo: los metadatos de autoría de los 264 commits son identidad histórica, no contenido del repo. Frontera LICENSE/seudónimo mantenida — el alias del operador no se amplía aquí; la decisión de alias/system-id sigue pendiente en D2.
+- **Categoría C (Telegram / api_hash): IDENTIFICADA, NO RESUELTA.** Pérdida de acceso a la cuenta del operador: no hay acción posible desde este repo. Decisión consciente de no actuar, registrada para no perderla.
+- **Evidencia adjunta — inventario F3** (sesión 2026-09-30; artefactos de sesión en `/tmp`, se limpian al reboot): `bc-history-audit-inventario.txt` (patrones × eventos pickaxe × paths), `bc-history-audit-inventario-metadata.txt` (identidades author/committer con ventanas temporales), `bc-inventario-v4.txt` (matches por commit/path). Si se necesita permanencia, moverlos a un canal privado fuera del repo público.
+
 ## 2026-09-29
 
 ### 🔒 Privacidad (C3 — estado de instancia a local) + taxonomía de fallos
