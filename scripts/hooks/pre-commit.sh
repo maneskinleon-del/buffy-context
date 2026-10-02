@@ -27,12 +27,18 @@ if [ ! -f "$RUNNER" ]; then
   exit 1
 fi
 
+# Aislamiento del entorno de commit (F3a-fix-2, verificado 2026-10-01): git
+# exporta GIT_INDEX_FILE=.git/index.lock al hook durante `git commit`, y los
+# tests que hacen git anidados (test-close-day.sh) heredan el índice del repo
+# real → 13 FAIL irreproducibles fuera del hook. Se unsetea solo para la
+# corrida de la suite (causa raíz reproducida: suite + GIT_INDEX_FILE = 337/13,
+# suite sin la var = 350/0).
 if [ "${BUFFY_HOOK_FULL:-}" = "1" ]; then
   echo "🔍 Ejecutando suite COMPLETA (BUFFY_HOOK_FULL=1)..."
-  OUT=$(bash "$RUNNER" 2>&1)
+  OUT=$(env -u GIT_INDEX_FILE bash "$RUNNER" 2>&1)
 else
   echo "🔍 Ejecutando suite (--quick)..."
-  OUT=$(bash "$RUNNER" --quick 2>&1)
+  OUT=$(env -u GIT_INDEX_FILE bash "$RUNNER" --quick 2>&1)
 fi
 RC=$?
 echo "$OUT" | tail -40
