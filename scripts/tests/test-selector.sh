@@ -222,12 +222,12 @@ test_selector_fidelidad_expand() {
     ok "skip fidelidad (fixture ausente)"
     return 0
   fi
-  # Gate de corpus: el fixture se generó sobre el corpus de 77bf26a. Si el
+  # Gate de corpus: el fixture se generó sobre el corpus de 40dd565. Si el
   # corpus indexable (find_scope) cambió, una fidelidad baja es drift esperado
   # (pide re-gen del fixture), no un bug del motor → SKIP honesto (cuenta
   # como PASS). Instancia del patrón: SIGNAL-STATE-COUPLING-FAILURES.md.
   if ! corpus_frozen_ok; then
-    ok "skip fidelidad — corpus vivo ≠ corpus congelado 77bf26a (drift; el veredicto pide re-gen del fixture, no fix del motor)"
+    ok "skip fidelidad — corpus vivo ≠ corpus congelado 40dd565 (drift; el veredicto pide re-gen del fixture, no fix del motor)"
     return 0
   fi
   # El módulo expand debe generar ≥98% de los pasajes rama-P del fixture (el
@@ -298,12 +298,12 @@ test_selector_veredicto_15b() {
   # Mismo gate de corpus que la fidelidad expand: veredicto congelado vs
   # corpus vivo → drift = SKIP honesto.
   if ! corpus_frozen_ok; then
-    ok "skip 15B — corpus vivo ≠ corpus congelado 77bf26a (drift; el veredicto pide re-gen del fixture, no fix del motor)"
+    ok "skip 15B — corpus vivo ≠ corpus congelado 40dd565 (drift; el veredicto pide re-gen del fixture, no fix del motor)"
     return 0
   fi
   # Reproduce el veredicto 15B (V6) sobre el fixture congelado: attr 19/20 con
   # Q02 3/3 · Q07 2/2 · Q08 2/2 · Q06 1/1. El synth de Q06 se lee del corpus
-  # congelado (77bf26a) para ser drift-proof (el fixture no trae el gold de Q06).
+  # congelado (40dd565) para ser drift-proof (el fixture no trae el gold de Q06).
   # timeout: techo duro — ni un wedge de Ollama a mitad de corrida puede colgar
   # la suite. 300s cubre ~60 embeds con serve degradado (~3s/embed, medido
   # 2026-09-28); con serve sano corre en ~60s.
@@ -318,7 +318,7 @@ snap = json.load(open(fixture, encoding="utf-8"))
 
 def frozen_lines(path):
     try:
-        out = subprocess.run(["git", "-C", repo, "show", "77bf26a:" + path],
+        out = subprocess.run(["git", "-C", repo, "show", "40dd565:" + path],
                              capture_output=True, timeout=20)
         if out.returncode == 0:
             return out.stdout.decode("utf-8", errors="replace").splitlines()

@@ -21,7 +21,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           # Historial completo: el gate corpus_frozen_ok (helpers.sh) compara el
-          # corpus vivo vs el commit congelado 77bf26a (base del fixture del
+          # corpus vivo vs el commit congelado 40dd565 (base del fixture del
           # selector). Con checkout shallow el ancestro no existe → el gate no
           # puede medir drift → el test de fidelidad correría y fallaría.
           fetch-depth: 0
