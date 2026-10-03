@@ -1,6 +1,6 @@
 # SKILLS_INDEX
 
-> Catálogo de los 43 skills instalados en `~/.agents/skills/`. Es el "marketplace"
+> Catálogo de los 44 skills instalados en `~/.agents/skills/`. Es el "marketplace"
 > propio de Buffy: cada skill cubre un dominio y se activa según el caso. Complementa
 > la ausencia de sistema de plugins en FreeBuff — estas skills son portátiles entre
 > cualquier cliente (FreeBuff, OpenCode, etc.) porque viven en el home del usuario.
@@ -10,7 +10,7 @@
 
 ---
 
-## Android / ADB / Mobile (12)
+## Android / ADB / Mobile (13)
 | Skill | Propósito | Disparador |
 |---|---|---|
 | `android-adb` | Control de dispositivo vía ADB crudo (discovery, launch, tap/swipe, screenshot, ui dump) | tareas ADB directas |
@@ -25,6 +25,7 @@
 | `xiaomi-adb-tricks` | Comandos ADB Xiaomi con root | tweaks Xiaomi |
 | `mobile-android-design` | Material Design 3 + Compose patterns | diseño UI Android |
 | `image-analyzer` | Análisis de screenshots Android para detectar/conceder permisos | diálogos de permisos en pantalla |
+| `android-package-origin-audit` | Auditoría read-only de procedencia de paquetes Android (preinstalado/usuario/restaurado) y ranking por riesgo | auditar qué apps trae el teléfono de fábrica |
 
 ## Frontend / Web (7)
 | Skill | Propósito | Disparador |

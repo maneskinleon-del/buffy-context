@@ -278,10 +278,16 @@ section "🎯 Skills (referenciadas en docs vs realidad)"
 # 1. Skills documentadas: extraídas dinámicamente de los .md del repo
 #    (patrón skills/nombre en cualquier doc + lista "Skills a cargar" de LOAD_CONTEXT)
 #    Se excluyen *-archive.md: son historial, no promesas activas.
+#    SKILLS_INDEX.md entra como fuente propia: es el catálogo oficial, y sus
+#    tablas no usan el patrón `skills/<nombre>` sino filas `| \`<nombre>\` |`.
+#    Sin esto el doctor reportaba 23 skills como "no referenciadas en ninguna
+#    doc" cuando 43/44 SÍ lo estaban en el índice.
 mapfile -t DOCUMENTED_SKILLS < <({
   grep -rhoE 'skills/[a-z0-9_-]+' "$REPO_DIR" --include='*.md' --exclude='*-archive.md' --exclude-dir=.agents 2>/dev/null | sed 's|skills/||'
   grep -n -A1 'Skills a cargar\|Skills relacionadas\|Skills relacionada' "$REPO_DIR/ai-context/LOAD_CONTEXT.md" "$REPO_DIR/Knowledge/README.md" 2>/dev/null \
     | grep -oE '`[a-z0-9_-]+`' | tr -d '`'
+  # Catálogo oficial: filas de tabla "| `nombre` | propósito | disparador |"
+  grep -oE '^\| `[a-z0-9_-]+`' "$REPO_DIR/SKILLS_INDEX.md" 2>/dev/null | tr -d '|` '
 } | sort -u)
 
 info "Skills documentadas extraídas: ${CYAN}${#DOCUMENTED_SKILLS[@]}${NC}"
@@ -333,6 +339,31 @@ for skill in "${HOME_FLAT_SKILLS[@]}"; do
     *) warn "$skill — en ~/.agents/skills/ como .md plano, no referenciada en docs" "FLAT_SKILL_UNREFERENCED" "migrate_flat_skill" "$skill" ;;
   esac
 done
+
+# 3b. Paridad skills-en-disco ↔ skills-en-SKILLS_INDEX.md.
+#     El índice es la fuente de verdad documentada; si una skill llega al disco
+#     sin pasar por el índice, el doctor antes no se enteraba (solo reportaba el
+#     drift inverso, y como el índice no era fuente, tampoco). Esto hubiera
+#     detectado que SKILLS_INDEX.md decía 43 con 44 en disco.
+if [ -f "$REPO_DIR/SKILLS_INDEX.md" ] && [ -d "$REPO_DIR/.agents/skills" ]; then
+  mapfile -t INDEXED_SKILLS < <(grep -oE '^\| `[a-z0-9_-]+`' "$REPO_DIR/SKILLS_INDEX.md" 2>/dev/null | tr -d '|` ' | sort -u)
+  for skill in "${REPO_SKILLS[@]}"; do
+    case " ${INDEXED_SKILLS[*]} " in
+      *" $skill "*) : ;;
+      *) warn "$skill — en disco pero ausente de SKILLS_INDEX.md" "SKILL_NOT_IN_INDEX" "update_index" "$skill" ;;
+    esac
+  done
+  for skill in "${INDEXED_SKILLS[@]}"; do
+    [ -d "$REPO_DIR/.agents/skills/$skill" ] && continue
+    warn "$skill — listado en SKILLS_INDEX.md pero no existe en .agents/skills/" "INDEX_STALE_SKILL" "remove_from_index" "$skill"
+  done
+  # El encabezado del índice declara un total ("Catálogo de los 43 skills").
+  # Si ese número se desvía del disco, el índice ya miente.
+  declared_total=$(sed -n 's/.*[Cc]atálogo de los \([0-9][0-9]*\) skills.*/\1/p' "$REPO_DIR/SKILLS_INDEX.md" | head -1)
+  if [ -n "$declared_total" ] && [ "$declared_total" -ne "${#REPO_SKILLS[@]}" ]; then
+    warn "SKILLS_INDEX.md declara $declared_total skills pero hay ${#REPO_SKILLS[@]} en disco" "INDEX_COUNT_DRIFT" "update_index" "$declared_total"
+  fi
+fi
 
 # 4. Conteo declarado en README vs entorno real (~/.agents/skills) — drift del número headline
 #    El entorno real es la fuente de verdad; el repo puede tener una copia desfasada.

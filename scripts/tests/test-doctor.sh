@@ -100,3 +100,120 @@ test_doctor_exit_honest() {
     bad "exit $RC incoherente con errors=$J"
   fi
 }
+
+# ── Fix: SKILLS_INDEX.md es fuente de DOCUMENTED_SKILLS + paridad índice↔disco ──
+# El doctor extraía las skills documentadas de los .md sueltos, no del catálogo
+# oficial: reportaba 23 skills como "no referenciadas en ninguna doc" cuando 43/44
+# SÍ estaban en SKILLS_INDEX.md. Además no existía ningún check de paridad, así
+# que el índice podía decir 43 con 44 en disco sin que nadie se enterara.
+test_doctor_skills_index_fuente() {
+  suite "doctor: SKILLS_INDEX.md es fuente + paridad con disco"
+  local OUT
+  OUT=$(bash "$SCRIPTS_DIR/buffy-doctor.sh" --json 2>/dev/null)
+
+  # (a) Ninguna skill del repo puede salir como UNDOCUMENTED_SKILL: todas
+  #     están en el índice, que ahora es fuente de verdad documentada.
+  jassert "0 skills UNDOCUMENTED_SKILL (falsos positivos)" "$OUT" \
+    'import json,sys; d=json.load(sys.stdin); bad=[i["message"] for i in d["items"] if i.get("id")=="UNDOCUMENTED_SKILL"]; assert not bad, bad'
+
+  # (b) Paridad disco ↔ índice: el doctor no debe reportar drift. Este check es
+  #     el que hubiera detectado que el índice decía 43 con 44 en disco.
+  jassert "0 warnings SKILL_NOT_IN_INDEX (skill en disco sin documentar)" "$OUT" \
+    'import json,sys; d=json.load(sys.stdin); bad=[i["message"] for i in d["items"] if i.get("id")=="SKILL_NOT_IN_INDEX"]; assert not bad, bad'
+  jassert "0 warnings INDEX_STALE_SKILL (fila del índice sin skill)" "$OUT" \
+    'import json,sys; d=json.load(sys.stdin); bad=[i["message"] for i in d["items"] if i.get("id")=="INDEX_STALE_SKILL"]; assert not bad, bad'
+  jassert "0 warnings INDEX_COUNT_DRIFT (el total del índice miente)" "$OUT" \
+    'import json,sys; d=json.load(sys.stdin); bad=[i["message"] for i in d["items"] if i.get("id")=="INDEX_COUNT_DRIFT"]; assert not bad, bad'
+
+  # (c) El número del encabezado del índice coincide con el disco, verificado
+  #     acá sin pasar por el doctor (si el check se rompe, esto lo delata).
+  local n_disk n_decl
+  n_disk=$(find "$REPO_DIR/.agents/skills" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')
+  n_decl=$(sed -n 's/.*[Cc]atálogo de los \([0-9][0-9]*\) skills.*/\1/p' "$REPO_DIR/SKILLS_INDEX.md" | head -1)
+  if [ -n "$n_decl" ] && [ "$n_decl" = "$n_disk" ]; then
+    ok "SKILLS_INDEX.md declara $n_decl skills = $n_disk en disco"
+  else
+    bad "SKILLS_INDEX.md declara '${n_decl:-nada}' pero hay $n_disk en disco"
+  fi
+
+  # (d) Toda skill en disco aparece como fila del índice (paridad real, no solo
+  #     el número del encabezado: un índice puede mentir en las dos formas).
+  local missing
+  missing=$(for d in "$REPO_DIR"/.agents/skills/*/; do
+    s=$(basename "$d")
+    grep -qE "^\| \`$s\`" "$REPO_DIR/SKILLS_INDEX.md" || printf '%s ' "$s"
+  done)
+  if [ -z "$missing" ]; then
+    ok "toda skill en disco tiene fila en SKILLS_INDEX.md ($n_disk/$n_disk)"
+  else
+    bad "skills en disco sin fila en SKILLS_INDEX.md: $missing"
+  fi
+}
+
+# El doctor debe DETECTAR una skill en disco que el índice no conoce. Con un
+# repo mínimo controlado: si el check de paridad desapareciera, esto daría
+# verde igual y el drift volvería a ser invisible.
+test_doctor_paridad_detecta_drift() {
+  suite "doctor: el check de paridad detecta drift del índice"
+  local FIX="${TMPDIR:-/tmp}/buffy-doctor-paridad-$$"
+  rm -rf "$FIX"
+  trap 'rm -rf "$FIX"' RETURN
+  mkdir -p "$FIX/.agents/skills/una-skill" "$FIX/ai-context"   # ai-context = requisito de repo válido
+  printf '%s\n' '---' 'name: una-skill' '---' > "$FIX/.agents/skills/una-skill/SKILL.md"
+  printf '%s\n' \
+    'id: una-skill' 'name: "una-skill"' 'version: 1.0.0' 'entry: SKILL.md' 'safe: true' \
+    'triggers:' '  - una' > "$FIX/.agents/skills/una-skill/skill.yaml"
+  local OUT
+
+  # Escenario A: el índice tiene la fila pero su total no cuadra con el disco.
+  cat > "$FIX/SKILLS_INDEX.md" <<'IDX'
+# SKILLS_INDEX
+
+> Catálogo de los 5 skills instalados en `~/.agents/skills/`.
+
+## Test (1)
+| Skill | Propósito | Disparador |
+|---|---|---|
+| `una-skill` | la única | algo |
+IDX
+  OUT=$(HOME="$FIX" bash "$SCRIPTS_DIR/buffy-doctor.sh" --json --repo "$FIX" 2>/dev/null)
+  jassert "detecta INDEX_COUNT_DRIFT (índice dice 5, disco tiene 1)" "$OUT" \
+    'import json,sys; d=json.load(sys.stdin); assert any(i.get("id")=="INDEX_COUNT_DRIFT" for i in d["items"]), [i.get("id") for i in d["items"] if i.get("level")=="warn"]'
+  # Y al revés de lo que era el bug: estar en SKILLS_INDEX.md CUENTA como estar
+  # documentado, así que no debe salir como "no referenciada en ninguna doc".
+  jassert "una skill listada en el índice NO es UNDOCUMENTED_SKILL" "$OUT" \
+    'import json,sys; d=json.load(sys.stdin); bad=[i["message"] for i in d["items"] if i.get("id")=="UNDOCUMENTED_SKILL"]; assert not bad, bad'
+
+  # Escenario B: el índice declara un fantasma que no existe en disco.
+  cat > "$FIX/SKILLS_INDEX.md" <<'IDX'
+# SKILLS_INDEX
+
+> Catálogo de los 1 skills instalados en `~/.agents/skills/`.
+
+## Test (2)
+| Skill | Propósito | Disparador |
+|---|---|---|
+| `una-skill` | la única | algo |
+| `fantasma` | no existe en disco | nada |
+IDX
+  OUT=$(HOME="$FIX" bash "$SCRIPTS_DIR/buffy-doctor.sh" --json --repo "$FIX" 2>/dev/null)
+  jassert "detecta INDEX_STALE_SKILL (fila sin skill en disco)" "$OUT" \
+    'import json,sys; d=json.load(sys.stdin); w=[i for i in d["items"] if i.get("id")=="INDEX_STALE_SKILL"]; assert len(w)==1 and w[0]["target"]=="fantasma", [i.get("id") for i in d["items"] if i.get("level")=="warn"]'
+  jassert "sin SKILL_NOT_IN_INDEX (la skill real sí está en el índice)" "$OUT" \
+    'import json,sys; d=json.load(sys.stdin); bad=[i["message"] for i in d["items"] if i.get("id")=="SKILL_NOT_IN_INDEX"]; assert not bad, bad'
+
+  # Escenario C: la skill del disco NO tiene fila → SKILL_NOT_IN_INDEX.
+  cat > "$FIX/SKILLS_INDEX.md" <<'IDX'
+# SKILLS_INDEX
+
+> Catálogo de los 1 skills instalados en `~/.agents/skills/`.
+
+## Test (3)
+| Skill | Propósito | Disparador |
+|---|---|---|
+| `fantasma` | no existe en disco | nada |
+IDX
+  OUT=$(HOME="$FIX" bash "$SCRIPTS_DIR/buffy-doctor.sh" --json --repo "$FIX" 2>/dev/null)
+  jassert "detecta SKILL_NOT_IN_INDEX (skill en disco sin fila)" "$OUT" \
+    'import json,sys; d=json.load(sys.stdin); w=[i for i in d["items"] if i.get("id")=="SKILL_NOT_IN_INDEX"]; assert len(w)==1 and w[0]["target"]=="una-skill", [i.get("id") for i in d["items"] if i.get("level")=="warn"]'
+}

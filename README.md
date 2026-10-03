@@ -27,7 +27,7 @@ This repository provides the infrastructure for an AI agent to maintain persiste
 | **Self-diagnostics** | doctor --json detecta drift, repair corrige lo seguro, agent orquesta el ciclo |
 | **Conditional loading** | Token-aware protocol: carga solo lo necesario según el tema |
 | **Auto-pruning** | SESION.md mantiene máximo 5 entradas, el resto se archiva |
-| **CI verde** | Suite 377 checks totales (371 functional + 6 meta · 361 `--quick` con 355 functional) + doctor baseline 0 + verify factual en cada push/PR. El check **documental-truth** (meta) rompe el CI si el README declara un número distinto al real — functional y total se validan por separado (anti-drift de documentación) |
+| **CI verde** | Suite 388 checks totales (382 functional + 6 meta · 372 `--quick` con 366 functional) + doctor baseline 0 + verify factual en cada push/PR. El check **documental-truth** (meta) rompe el CI si el README declara un número distinto al real — functional y total se validan por separado (anti-drift de documentación) |
 | **Provenance de hechos** | `facts.yaml` con source/confidence/scope/fecha/ttl por hecho (genera `buffy-verify.sh --update-facts`); TTL enforzado (`expired` si vence) |
 | **Jerarquía de fuentes** | `buffy-source.sh --resolve <fact>`: real-time → facts → SNAPSHOT → CONTINUE → INFO-core → inferred, con reporte de conflictos |
 | **Reglas declarativas** | `ai-context/facts_rules.yaml` + `scripts/lib/facts_engine.py` — agregar un hecho NO requiere tocar el motor; comandos en lista, ejecución sin shell (hardening) |
@@ -127,7 +127,7 @@ buffy-context/
 │   ├── kimi_vision.js                 # Detección de permisos con visión IA (Kimi K3)
 │   ├── lib/                           # yaml.sh (parsing compartido) + logger/utils.js
 │   ├── hooks/                         # install.sh + pre-commit.sh (suite --quick) + pre-push.sh (ci-sim: simula CI antes de pushear)
-│   └── tests/                         # run-tests.sh + 23 test_*.sh + ci-sim.sh (simula CI: clone fresco + working tree) + bench-scale.sh + bench-context-selection.sh (suite 377 checks totales, 361 --quick)
+│   └── tests/                         # run-tests.sh + 23 test_*.sh + ci-sim.sh (simula CI: clone fresco + working tree) + bench-scale.sh + bench-context-selection.sh (suite 388 checks totales, 372 --quick)
 │
 ├── MCP_REGISTRY.md                    # Servidores MCP disponibles (ruta, estado, uso)
 ├── SKILLS_INDEX.md                    # Índice de 44 skills por dominio (fuente de verdad)
@@ -223,8 +223,8 @@ La suite es **determinística y segura**: todo lo que escribe (repair `--auto`, 
 
 La suite termina con `doc_truth_check`, que valida **dos números por separado**:
 
-- **Functional** (los checks que prueban Buffy: 371 full / 355 `--quick`) — el README debe declarar exactamente el conteo real derivado del runner.- **Total** (functional + meta: 377 full / 361 `--quick`) — los meta-checks son los que validan la representación documental; el check de total se calcula al final contra passed+failed completo (invariante ante fallos ajenos, instancia 7 de SIGNAL-STATE-COUPLING-FAILURES), así que si la fase meta crece y nadie actualiza el README, el CI rompe.
-El resumen de la suite los muestra por separado: `Functional: 355 OK · Meta: 6 OK · Total: 361 OK`. También verifica que la regla de poda de `SESION.md` siga unificada ("5 entradas o ~30KB") y que no reaparezcan residuos viejos.
+- **Functional** (los checks que prueban Buffy: 382 full / 366 `--quick`) — el README debe declarar exactamente el conteo real derivado del runner.- **Total** (functional + meta: 388 full / 372 `--quick`) — los meta-checks son los que validan la representación documental; el check de total se calcula al final contra passed+failed completo (invariante ante fallos ajenos, instancia 7 de SIGNAL-STATE-COUPLING-FAILURES), así que si la fase meta crece y nadie actualiza el README, el CI rompe.
+El resumen de la suite los muestra por separado: `Functional: 366 OK · Meta: 6 OK · Total: 372 OK`. También verifica que la regla de poda de `SESION.md` siga unificada ("5 entradas o ~30KB") y que no reaparezcan residuos viejos.
 
 ### Benchmark de escala y contaminación (P0)
 
