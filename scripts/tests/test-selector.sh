@@ -470,6 +470,14 @@ test_selector_tmp_sin_escribir() {
     ok "SKIP: unshare no disponible (no se puede simular /tmp read-only)"
     return
   fi
+  # El binario puede existir y aun así no se poder crear el user namespace
+  # (observed en los runners de GitHub Actions: `unshare -rm` falla en silencio
+  # y el comando se come el RC del script). Sin este probe el test reportaba
+  # "RC=''" — un FAIL que no venía del código bajo prueba sino del arnés.
+  if ! unshare -rm true >/dev/null 2>&1; then
+    ok "SKIP: sin user namespaces utilizables (unshare -rm falla)"
+    return
+  fi
   # Si el repo vive DEBAJO de /tmp (ci-sim clona en mktemp -d), volver /tmp
   # read-only deja el propio repo inaccesible: la simulación mediría "el repo
   # no existe", no "el selector pierde el RC". No es un skip de conveniencia —
