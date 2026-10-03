@@ -4,6 +4,7 @@ name: android-game-opt
 version: 1.0.0
 description: "Optimización de rendimiento para juegos en Android: GPU, animaciones, termales y settings globales vía ADB."
 entry: SKILL.md
+origin: local
 safe: false
 requires_sudo: false
 platforms: [android, linux]

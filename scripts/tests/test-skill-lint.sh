@@ -80,6 +80,7 @@ PY
     'version: 1.0.0' \
     'description: "rota con "comillas" anidadas"' \
     'entry: SKILL.md' \
+    'origin: local' \
     'safe: true' \
     'triggers:' \
     '  - rota' > "$FIX/.agents/skills/rota/skill.yaml"
@@ -107,6 +108,7 @@ PY
     'description: >-' \
     '  texto con "comillas" sin escapar' \
     'entry: SKILL.md' \
+    'origin: local' \
     'safe: true' \
     'triggers:' \
     '  - bloque' > "$FIX2/.agents/skills/bloque/skill.yaml"
@@ -155,6 +157,40 @@ test_skill_lint_manifest_invalido() {
   expect_exit 0 "sin skills no es error (exit 0)" bash "$SCRIPTS_DIR/skill-lint.sh" --repo "$FIXE"
 }
 
+# D2.3: `origin` es obligatorio. Sin este test el gate es como el de PyYAML antes
+# del fix1 — el linter valida, nadie verifica que valga. Tres ramas: ausente,
+# inválido, y presente (para que el test no pase por el motivo equivocado).
+test_skill_lint_origin_obligatorio() {
+  suite "skill-lint: origin obligatorio (procedencia, D2.3)"
+  local BASE="${TMPDIR:-/tmp}/buffy-skilllint-origin-$$"
+  rm -rf "$BASE"
+  trap 'rm -rf "$BASE"' RETURN
+  local caso
+  for caso in ausente invalido valido; do
+    local FIX="$BASE/$caso"
+    mkdir -p "$FIX/.agents/skills/una-skill"
+    {
+      printf '%s\n' \
+        'id: una-skill' \
+        'name: Una Skill' \
+        'version: 1.0.0' \
+        'entry: SKILL.md'
+      case "$caso" in
+        invalido) printf '%s\n' 'origin: copiado-de-copiar' ;;
+        valido)   printf '%s\n' 'origin: local' ;;
+      esac
+      printf '%s\n' \
+        'safe: true' \
+        'triggers:' \
+        '  - test'
+    } > "$FIX/.agents/skills/una-skill/skill.yaml"
+    touch "$FIX/.agents/skills/una-skill/SKILL.md"
+  done
+  expect_exit 1 "origin ausente → exit 1" bash "$SCRIPTS_DIR/skill-lint.sh" --repo "$BASE/ausente"
+  expect_exit 1 "origin inválido → exit 1" bash "$SCRIPTS_DIR/skill-lint.sh" --repo "$BASE/invalido"
+  expect_exit 0 "origin: local → exit 0" bash "$SCRIPTS_DIR/skill-lint.sh" --repo "$BASE/valido"
+}
+
 test_skill_lint_require_all() {
   suite "skill-lint: --require-all"
   local FIX1="${TMPDIR:-/tmp}/buffy-skilllint-req1-$$"
@@ -166,6 +202,7 @@ test_skill_lint_require_all() {
     'name: Una Skill' \
     'version: 1.0.0' \
     'entry: SKILL.md' \
+    'origin: local' \
     'safe: true' \
     'triggers:' \
     '  - test' > "$FIX1/.agents/skills/una-skill/skill.yaml"
@@ -187,6 +224,7 @@ test_skill_lint_crosscheck_frontmatter() {
     'name: Mi Skill' \
     'version: 1.0.0' \
     'entry: SKILL.md' \
+    'origin: local' \
     'safe: true' \
     'triggers:' \
     '  - test' > "$FIX/.agents/skills/mi-skill/skill.yaml"

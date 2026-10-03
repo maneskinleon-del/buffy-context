@@ -4,6 +4,7 @@ name: scrcpy-freefire
 version: 1.0.0
 description: "Mirroring y control del teléfono con scrcpy, con foco en jugar Free Fire desde el PC."
 entry: SKILL.md
+origin: local
 safe: true
 requires_sudo: false
 platforms: [android, linux]

@@ -11,6 +11,7 @@ name: Android Agent
 version: 1.0.0
 description: "Agente Android dedicado: detecta proyectos Android, verifica conexión ADB, activa skills y knowledge de Android, y ofrece diagnóstico (logcat, dumpsys, device info)."
 entry: SKILL.md
+origin: local
 safe: true
 requires_sudo: false
 platforms: [android, linux]

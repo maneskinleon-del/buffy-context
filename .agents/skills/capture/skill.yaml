@@ -3,6 +3,7 @@ name: "capture"
 version: 1.0.0
 description: "Captures and organizes chaotic brain dumps into a structured, actionable system with zero information loss. Use this skill whenever the user says 'capture this', 'brain dump', 'let me dump some ide..."
 entry: SKILL.md
+origin: local
 safe: true
 triggers:
   - "capture"

@@ -3,6 +3,7 @@ name: "android-native-dev"
 version: 1.0.0
 description: "Android native application development and UI design guide. Covers Material Design 3, Kotlin/Compose development, project configuration, accessibility, and build troubleshooting. Read this before A..."
 entry: SKILL.md
+origin: local
 safe: true
 triggers:
   - "android native dev"

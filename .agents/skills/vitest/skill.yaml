@@ -3,6 +3,7 @@ name: "vitest"
 version: 1.0.0
 description: "Vitest fast unit testing framework powered by Vite with Jest-compatible API. Use when writing tests, mocking, configuring coverage, or working with test filtering and fixtures."
 entry: SKILL.md
+origin: local
 safe: true
 triggers:
   - "vitest"

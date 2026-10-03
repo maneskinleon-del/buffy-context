@@ -3,6 +3,7 @@ name: "playwright-cli"
 version: 1.0.0
 description: "Automate browser interactions, test web pages and work with Playwright tests."
 entry: SKILL.md
+origin: local
 safe: true
 triggers:
   - "playwright cli"

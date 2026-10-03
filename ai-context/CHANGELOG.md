@@ -13,6 +13,17 @@ system-id: buffy-desktop
 
 # CHANGELOG.md — Historial de cambios del sistema
 
+### 2026-10-03 — D2.3 — `origin` obligatorio en todo manifest: procedencia visible cuando el nombre colisiona (Freebuff, PC)
+
+- **La premisa del ítem era falsa y el trabajo se redirigió antes de ejecutar.** "Skills vendored" asumía copias de upstream. La historia lo desmiente: las 5 skills sospechosas (`vercel-react-best-practices`, `vite`, `context7`, `tailwind-design-system`, `typescript-advanced-types`) tienen 2 commits en total — el de autoría `5d08120` (2026-08-03) y el de D2.1. Nunca fueron sobrescritas. Son **propias**, y el contenido lo delata: `vite/SKILL.md` dice "El stack del usuario es React + TypeScript + Tailwind v4 + Vite", que no lo escribe nadie más.
+- **Por lo tanto no hay nada que atribuir ni contra qué medir drift.** El "check que detecte drift contra el upstream" no tenía upstream; y aunque lo tuviera, uno que golpea la red en CI es la clase de gate que este repo ya aprendió a no querer.
+- **El problema real es peor que la atribución faltante:** esas 5 tienen el MISMO nombre que skills de comunidad, y la resolución de skills es por `name`. Instalar la de arriba no se distingue de la del repo y nada dice cuál gana. Dos skills, mismo nombre, contenido distinto, sin marca de procedencia.
+- **Solución (decisión del operador): declarar origen, sin rename.** Renombrar altera qué se dispara y cuándo, así que no se hizo. En cambio `origin` pasa a ser campo **obligatorio** en los 44 manifests (`local` en todos: son del repo), y las 5 colisionantes llevan la nota de por qué el campo existe. `origin` no es un campo decorativo — es lo que hace visible la procedencia justo en el caso donde el nombre no la muestra.
+- **El gate tiene test, no solo validación.** `test_skill_lint_origin_obligatorio` (3 checks: ausente → exit 1, inválido → exit 1, `local` → exit 0). Sin esto el check sería como el de PyYAML antes del fix1 — el linter valida, nadie verifica que valga. Verificado a mano además: quitar `origin` y poner un valor inválido → `ERR` en ambos casos.
+- **Los fixtures del test de skill-lint se actualizaron** (4 manifests inline): el contrato nuevo los volvía inválidos y los 2 tests de `--require-all` caían. No era regresión del código — eran fixtures que describían el contrato viejo.
+- Suite **392/0 full · 376/0 quick** (+3). Doctor CONSISTENTE. README a 386/392 full y 370/376 quick — lo exige el check documental-truth.
+- **Alias `buffy-maint` confirmado con doble f** (el repo se llama buffy; la opción original decía `bufy`).
+
 ### 2026-10-03 — D2.1 — identidad de sistema: alias `buffy-maint`, `system-id: buffy-desktop`, alias personal al guard PII (Freebuff, PC)
 
 - **Decisión del operador**: seudónimo de SISTEMA (`buffy-maint`), no alias personal. El repo se declara infra de un operador, no perfil de una persona. Anterior: el alias personal era el identificador en authoring de skills, prosa de docs y `system-id`.

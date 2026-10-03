@@ -4,6 +4,7 @@ name: android-adb
 version: 1.0.0
 description: "Comandos ADB generales: dispositivos, logcat, dumpsys, pm/am, appops y shell. Base para el resto de skills Android."
 entry: SKILL.md
+origin: local
 safe: false
 requires_sudo: false
 platforms: [android, linux]

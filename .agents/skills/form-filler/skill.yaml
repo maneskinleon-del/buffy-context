@@ -4,6 +4,7 @@ name: form-filler
 version: 1.0.0
 description: "Llenado automatico de formularios web (Node.js + Puppeteer + SmartMapper)."
 entry: SKILL.md
+origin: local
 safe: false
 requires_sudo: false
 platforms: [linux]

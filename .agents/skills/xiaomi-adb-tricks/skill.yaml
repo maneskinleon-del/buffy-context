@@ -4,6 +4,7 @@ name: xiaomi-adb-tricks
 version: 1.0.0
 description: "Trucos y workarounds ADB/rish/Shizuku para Xiaomi MIUI/HyperOS."
 entry: SKILL.md
+origin: local
 safe: false
 requires_sudo: false
 platforms: [android, linux]

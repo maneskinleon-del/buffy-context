@@ -4,6 +4,7 @@ name: android-package-origin-audit
 version: 1.0.0
 description: "Auditoría read-only de procedencia de paquetes Android (evidencia > nombre). Pipeline: collect.sh -> parse_full.py -> matriz_preinstalados.py -> generar_reporte_matriz.py. Cat 8 = shortlist reversible. No-eliminación automática (safe: true)."
 entry: SKILL.md
+origin: local
 safe: true
 requires_sudo: false
 platforms: [linux]

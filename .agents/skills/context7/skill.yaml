@@ -4,6 +4,13 @@ name: context7
 version: 1.0.0
 description: "Documentación actualizada de librerías, frameworks, APIs y SDKs vía el CLI ctx7. Se activa siempre que se necesite documentación de una librería."
 entry: SKILL.md
+# origin: local — esta skill es PROPIA del repo (escrita el 2026-08-03, tailorea
+# el stack del operador), no una copia de upstream. Existe una skill de comunidad
+# con este MISMO nombre y la resolución de skills es por `name`: instalar la de
+# arriba no se distingue de esta, y nada en el nombre dice cuál gana. `origin` es
+# un campo obligatorio justamente para eso — hacer visible la procedencia
+# cuando los nombres coinciden.
+origin: local
 safe: true
 requires_sudo: false
 platforms: [linux]

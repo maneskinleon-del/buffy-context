@@ -4,6 +4,13 @@ name: vite
 version: 1.0.0
 description: "Referencia de Vite para React + TypeScript: config básica, plugins, path aliases, env vars y PWA."
 entry: SKILL.md
+# origin: local — esta skill es PROPIA del repo (escrita el 2026-08-03, tailorea
+# el stack del operador), no una copia de upstream. Existe una skill de comunidad
+# con este MISMO nombre y la resolución de skills es por `name`: instalar la de
+# arriba no se distingue de esta, y nada en el nombre dice cuál gana. `origin` es
+# un campo obligatorio justamente para eso — hacer visible la procedencia
+# cuando los nombres coinciden.
+origin: local
 safe: true
 requires_sudo: false
 platforms: [linux]

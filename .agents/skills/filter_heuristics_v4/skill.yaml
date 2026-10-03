@@ -4,6 +4,7 @@ name: filter_heuristics_v4
 version: 1.0.0
 description: "Fase 2 del framework v4: filtra fuentes candidatas por vigencia, autoridad, consistencia y especificidad. Produce una lista priorizada de fuentes."
 entry: SKILL.md
+origin: local
 safe: true
 requires_sudo: false
 platforms: [linux]

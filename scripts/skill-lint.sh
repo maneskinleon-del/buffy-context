@@ -67,7 +67,7 @@ err() {  # <msg> — cuenta y muestra (solo en modo humano)
 # ── validar un directorio de skill ──
 validate_manifest() {
   local d="$1" mf="$d/skill.yaml" before=$ERRORS
-  local id name version entry safe fm_name rel
+  local id name version entry safe origin fm_name rel
   [ -f "$mf" ] || { WARNINGS=$((WARNINGS+1)); return; }
   N_MANIFESTS=$((N_MANIFESTS+1))
 
@@ -76,6 +76,7 @@ validate_manifest() {
   version=$(yaml_val "$mf" version)
   entry=$(yaml_val "$mf" entry)
   safe=$(yaml_val "$mf" safe)
+  origin=$(yaml_val "$mf" origin)
   rel="${d#"$REPO_DIR"/}"
 
   if [ "$id" != "$(basename "$d")" ]; then
@@ -89,6 +90,17 @@ validate_manifest() {
   fi
   if [ -z "$entry" ] || [ ! -e "$d/$entry" ]; then
     err "$rel: entry '$entry' no existe en el directorio"
+  fi
+  # D2.3: procedencia obligatoria. No por Taste — 5 skills del repo tienen el
+  # MISMO nombre que skills de comunidad (vercel-react-best-practices, vite,
+  # context7, tailwind-design-system, typescript-advanced-types). La resolución
+  # de skills es por `name`, así que sin `origin` no hay forma de saber si lo
+  # que se cargó es la copia del repo o la de arriba. Sin campo, "vendorizado"
+  # es un hecho sin contrato.
+  if [ -z "$origin" ]; then
+    err "$rel: falta 'origin' (local|upstream) — procedencia obligatoria (D2.3)"
+  elif [ "$origin" != local ] && [ "$origin" != upstream ]; then
+    err "$rel: origin '$origin' no es válido (local|upstream)"
   fi
   if [ "$safe" != true ] && [ "$safe" != false ]; then
     err "$rel: safe debe ser true|false (es '$safe')"
@@ -104,7 +116,7 @@ validate_manifest() {
   fi
 
   if [ "$JSON" = false ] && [ "$ERRORS" -eq "$before" ]; then
-    echo "  OK   $rel (id, entry, safe, triggers)"
+    echo "  OK   $rel (id, entry, origin, safe, triggers)"
   fi
 }
 
