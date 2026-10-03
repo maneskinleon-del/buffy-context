@@ -49,6 +49,8 @@ fi
 SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_SRC")" && pwd)"
 REPO_DIR="${SCRIPT_DIR%/scripts}"
 ENGINE="$SCRIPT_DIR/lib/selector_m3.py"
+# shellcheck source=lib/common.sh
+source "$SCRIPT_DIR/lib/common.sh"
 
 QUERY=""
 CANDIDATES=""
@@ -107,6 +109,14 @@ else
   fi
 fi
 
+# Dir temporal privado (limpieza por trap EXIT) para capturar el stderr de los
+# motores sin perder su RC. Sin esto, un /tmp no escribible (Termux, sandbox)
+# rompe el redirect 2>/tmp/... y devolvía RC=1 en vez del RC=3 documentado
+# (ollama_unavailable), además de comerse el diagnóstico real.
+buffy_tmpdir || exit 2
+EXP_ERR_FILE="$BUFFY_TMPDIR/expand.err"
+SEL_ERR_FILE="$BUFFY_TMPDIR/selector.err"
+
 # ── Expansión F2 (rama P) — si --kno: genera pasajes de los archivos del
 # router + top-K del pool (cierra el candidate gap Q08/Q06), los mezcla con
 # los candidatos originales y delega el scoring al motor.
@@ -115,8 +125,8 @@ if [ -n "$KNO" ]; then
   # candidatos base: el pool del search (si --candidates, se usa ese; si no,
   # el stdin ya cargado en INPUT[passages])
   BASE_PASSAGES="$(printf '%s' "$INPUT" | python3 -c 'import json,sys; d=json.load(sys.stdin); print(json.dumps(d.get("passages", d if isinstance(d,list) else []), ensure_ascii=False))' 2>/dev/null || printf '[]')"
-  EXP_OUT="$(printf '%s' "$BASE_PASSAGES" | bash "$EXPAND_BIN" --kno "$KNO" --repo "$REPO_DIR" --top-k "$TOP_K" --max-passages "${MAX_PASSAGES:-400}" --json 2>/tmp/buffy-expand.err)" \
-    || { RC=$?; echo "⚠️  expansión falló: $(cat /tmp/buffy-expand.err)" >&2; RC="$RC"; }
+  EXP_OUT="$(printf '%s' "$BASE_PASSAGES" | bash "$EXPAND_BIN" --kno "$KNO" --repo "$REPO_DIR" --top-k "$TOP_K" --max-passages "${MAX_PASSAGES:-400}" --json 2>"$EXP_ERR_FILE")" \
+    || { RC=$?; echo "⚠️  expansión falló: $(cat "$EXP_ERR_FILE")" >&2; RC="$RC"; }
   if [ "${EXP_OUT:-}" != "" ] && printf '%s' "$EXP_OUT" | python3 -c 'import json,sys; json.load(sys.stdin)' 2>/dev/null; then
     INPUT="$(printf '%s' "$EXP_OUT" | python3 -c '
 import json, sys
@@ -144,8 +154,8 @@ print(json.dumps(d, ensure_ascii=False))
 fi
 
 OUT="$(printf '%s' "$INPUT" | python3 "$ENGINE" --top-k "$TOP_K" --theta "$THETA" \
-      --rescue-low "$RESCUE_LOW" --repo "$REPO_DIR" 2>/tmp/buffy-selector.err)" \
-  || { RC=$?; cat /tmp/buffy-selector.err >&2; exit "$RC"; }
+      --rescue-low "$RESCUE_LOW" --repo "$REPO_DIR" 2>"$SEL_ERR_FILE")" \
+  || { RC=$?; cat "$SEL_ERR_FILE" >&2; exit "$RC"; }
 
 if [ "$JSON_OUT" = true ]; then
   # compacto en una línea (robusto para encadenar: search --select --json → router)

@@ -39,8 +39,11 @@ echo "---"
 
 START=$(date +%s.%N)
 
-# Crear payload JSON en archivo temporal para evitar límite de argumentos
-PAYLOAD=$(mktemp /tmp/see_payload.XXXXXX)
+# Crear payload JSON en archivo temporal para evitar límite de argumentos.
+# ${TMPDIR:-/tmp} en vez de /tmp fijo: mktemp ya es atómico (no hay symlink
+# que acuñar desde otro usuario) y el trap de abajo lo borra; lo que faltaba
+# era la portabilidad a entornos sin /tmp escribible (Termux, sandbox).
+PAYLOAD=$(mktemp "${TMPDIR:-/tmp}/see_payload.XXXXXX")
 trap 'rm -f "$PAYLOAD"' EXIT
 python3 -c "
 import json, base64

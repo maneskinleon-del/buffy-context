@@ -397,3 +397,104 @@ PY
     bad "mecánica S3/S4 v6 ($out)"
   fi
 }
+
+# ── Fix: /tmp hardcodeado → mktemp + trap (buffy_tmpdir en lib/common.sh) ──
+# Con rutas /tmp fijas, en un entorno sin /tmp escribible (Termux, sandbox) el
+# redirect 2>/tmp/x.err falla y el RC real del motor se pierde: el selector
+# devolvía RC=1 en vez del RC=3 documentado (ollama_unavailable) y el `cat` del
+# .err se comía el diagnóstico. Además el nombre fijo permite symlink de otro
+# usuario. El repo ya usaba mktemp/trap en otros sitios — acá era la excepción.
+test_selector_tmp_no_hardcodeado() {
+  suite "selector: temporales sin /tmp hardcodeado"
+  # (a) Guarda estática: los scripts de runtime no deben escribir en /tmp fijo.
+  local offenders
+  offenders=$(grep -nE '(2>|mktake?mp? +)?>[[:space:]]*/tmp/|mktemp[[:space:]]+/tmp/' \
+    "$SCRIPTS_DIR/buffy-selector.sh" "$SCRIPTS_DIR/buffy-expand.sh" "$SCRIPTS_DIR/see.sh" 2>/dev/null \
+    | grep -vE ':[[:space:]]*#' || true)
+  if [ -z "$offenders" ]; then
+    ok "sin rutas /tmp hardcodeadas en selector/expand/see"
+  else
+    bad "quedan rutas /tmp hardcodeadas"
+    printf '%s\n' "$offenders" | sed 's/^/       → /'
+  fi
+
+  # (b) El helper crea un dir privado bajo $TMPDIR (se comprueba DENTRO del
+  #     subshell: el trap EXIT ya lo limpió cuando vuelve el control).
+  local TD="${TMPDIR:-/tmp}/buffy-test-tmpdir-$$"
+  rm -rf "$TD"; mkdir -p "$TD"
+  trap 'rm -rf "$TD"' RETURN
+  local out
+  out=$(TMPDIR="$TD" bash -c '
+    SCRIPT_DIR="'"$SCRIPTS_DIR"'"
+    source "$SCRIPT_DIR/lib/common.sh"
+    buffy_tmpdir || exit 1
+    # el dir debe existir Y estar bajo el TMPDIR que le pasamos
+    [ -d "$BUFFY_TMPDIR" ] || { echo "NO_EXISTE"; exit 2; }
+    case "$BUFFY_TMPDIR" in "'"$TD"'/"*) echo OK ;; *) echo "FUERA_DE_TMPDIR:$BUFFY_TMPDIR"; exit 3 ;; esac
+  ')
+  if [ "$out" = "OK" ]; then
+    ok "buffy_tmpdir crea un dir privado bajo \$TMPDIR"
+  else
+    bad "buffy_tmpdir no creó un dir bajo \$TMPDIR ($out)"
+  fi
+
+  # (c) El contrato RC=3 se mantiene con TMPDIR propio y no deja residuos.
+  local TD2="${TMPDIR:-/tmp}/buffy-test-rc3-$$"
+  rm -rf "$TD2"; mkdir -p "$TD2"
+  trap 'rm -rf "$TD" "$TD2"' RETURN
+  local rc
+  printf '%s' '[{"path":"README.md","lineno":2}]' \
+    | TMPDIR="$TD2" OLLAMA_URL=http://127.0.0.1:1 \
+      bash "$SCRIPTS_DIR/buffy-selector.sh" --query "x" --json >/dev/null 2>&1
+  rc=$?
+  if [ "$rc" -eq 3 ]; then
+    ok "wrapper sale 3 sin Ollama usando TMPDIR propio"
+  else
+    bad "wrapper sin Ollama con TMPDIR propio → RC=$rc (esperado 3)"
+  fi
+  local left
+  left=$(ls -A "$TD2" 2>/dev/null | wc -l)
+  if [ "$left" -eq 0 ]; then
+    ok "el trap limpió el temporal (0 residuos)"
+  else
+    bad "quedan $left residuos en TMPDIR tras buffy-selector.sh"
+  fi
+}
+
+# La regresión de verdad necesita /tmp NO escribible, que requiere un mount
+# namespace. Donde unshare no está disponible se dice explícitamente en vez de
+# dar verde por omisión.
+test_selector_tmp_sin_escribir() {
+  suite "selector: RC correcto con /tmp no escribible (entorno Termux)"
+  if ! command -v unshare >/dev/null 2>&1; then
+    ok "SKIP: unshare no disponible (no se puede simular /tmp read-only)"
+    return
+  fi
+  # El TMPDIR de esta corrida debe vivir FUERA de /tmp: dentro del namespace
+  # /tmp va a estar read-only, así que un temporal ahí sería inaccesible.
+  local TD
+  TD="$(mktemp -d "$REPO_DIR/.tmp-selro-XXXXXX" 2>/dev/null)" \
+    || TD="$(mktemp -d "$HOME/buffy-selro-XXXXXX" 2>/dev/null)" \
+    || { ok "SKIP: sin dónde crear el temporal del test"; return; }
+  trap 'rm -rf "$TD"' RETURN
+
+  local res rc
+  res=$(unshare -rm bash -c '
+    mount -t tmpfs tmpfs /tmp 2>/dev/null || exit 90
+    mount -o remount,ro /tmp 2>/dev/null || exit 90
+    touch /tmp/_probe 2>/dev/null && exit 91        # /tmp sigue escribible → no sirve
+    cd "'"$REPO_DIR"'"
+    printf "%s" "[{\"path\":\"README.md\",\"lineno\":2}]" \
+      | TMPDIR="'"$TD"'" OLLAMA_URL=http://127.0.0.1:1 \
+        bash scripts/buffy-selector.sh --query "x" --json >/dev/null 2>&1
+    echo $?
+  ' 2>/dev/null)
+  rc=$?
+  case "$res" in
+    90)  ok "SKIP: sin permisos de mount namespace (exit 90)" ;;
+    91)  ok "SKIP: /tmp no se pudo volver read-only (exit 91)" ;;
+    3)   ok "con /tmp read-only y TMPDIR propio → RC=3 (no el RC=1 enmascarado)" ;;
+    *)   bad "con /tmp read-only → RC='$res' (esperado 3; RC=1 = bug del /tmp fijo)" ;;
+  esac
+  [ "$rc" -eq 0 ] || ok "unshare terminó con rc=$rc (skip accounted)"
+}

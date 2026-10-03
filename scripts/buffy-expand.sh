@@ -38,6 +38,8 @@ fi
 SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_SRC")" && pwd)"
 REPO_DIR="${SCRIPT_DIR%/scripts}"
 ENGINE="$SCRIPT_DIR/lib/expand_passages.py"
+# shellcheck source=lib/common.sh
+source "$SCRIPT_DIR/lib/common.sh"
 
 KNO=""
 POOL_FILE=""
@@ -62,19 +64,24 @@ done
 
 [ -f "$ENGINE" ] || { echo "❌ No encuentro el motor: $ENGINE" >&2; exit 2; }
 
+# Dir temporal privado (limpieza por trap EXIT). Sin esto, un /tmp no escribible
+# (Termux, sandbox) rompe el redirect de stderr y el error real se pierde.
+buffy_tmpdir || exit 2
+ERR_FILE="$BUFFY_TMPDIR/expand.err"
+
 if [ -n "$POOL_FILE" ]; then
   [ -f "$POOL_FILE" ] || { echo "❌ No encuentro --pool: $POOL_FILE" >&2; exit 2; }
   OUT="$(python3 "$ENGINE" --repo "$REPO_DIR" --kno "${KNO:-[]}" --top-k "$TOP_K" \
-         --max-passages "$MAX_PASSAGES" --pool "$(cat "$POOL_FILE")" 2>/tmp/buffy-expand.err)" \
-    || { RC=$?; cat /tmp/buffy-expand.err >&2; exit "$RC"; }
+         --max-passages "$MAX_PASSAGES" --pool "$(cat "$POOL_FILE")" 2>"$ERR_FILE")" \
+    || { RC=$?; cat "$ERR_FILE" >&2; exit "$RC"; }
 else
   if [ -t 0 ]; then
     echo "❌ Sin --pool, falta stdin (JSON de candidatos del search)" >&2
     exit 1
   fi
   OUT="$(python3 "$ENGINE" --repo "$REPO_DIR" --kno "${KNO:-[]}" --top-k "$TOP_K" \
-         --max-passages "$MAX_PASSAGES" 2>/tmp/buffy-expand.err)" \
-    || { RC=$?; cat /tmp/buffy-expand.err >&2; exit "$RC"; }
+         --max-passages "$MAX_PASSAGES" 2>"$ERR_FILE")" \
+    || { RC=$?; cat "$ERR_FILE" >&2; exit "$RC"; }
 fi
 
 if [ "$JSON_OUT" = true ]; then
