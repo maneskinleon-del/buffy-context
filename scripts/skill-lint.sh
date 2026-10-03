@@ -17,6 +17,15 @@
 #   bash scripts/skill-lint.sh --json         → resumen JSON a stdout (stderr limpio)
 #   bash scripts/skill-lint.sh --help
 #
+# Dos capas de validación:
+#   1. Forma    — yaml_val/yaml_items (sed/awk, lib/yaml.sh): id, version, entry, safe, triggers.
+#   2. Sintaxis — parseo YAML real con PyYAML. Sin esto el linter aprueba YAML inválido:
+#      seis manifests con comillas dobles anidadas sin escapar pasaban la capa 1 y
+#      rompían a todo consumidor que parsea YAML de verdad (Claude Code, OpenCode,
+#      loaders de terceros) — para un repo cuyo valor es la portabilidad, eso es 6/44.
+#      Si PyYAML no está instalado NO se da falso verde: se avisa y --json reporta
+#      yaml_validated=false.
+#
 # Exit: 0 sano · 1 errores de manifiesto (o cobertura incompleta con --require-all) · 2 uso.
 
 set -u
@@ -107,14 +116,40 @@ while IFS= read -r d; do
   validate_manifest "$d"
 done < <(find "$SKILLS_DIR" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | sort)
 
+# ── capa 2: sintaxis YAML real (PyYAML) ──
+# Sin esto la capa 1 (sed/awk) aprueba YAML que ningún parser real puede cargar.
+YAML_VALIDATED=false
+if python3 -c 'import yaml' >/dev/null 2>&1; then
+  YAML_VALIDATED=true
+  while IFS= read -r bad; do
+    [ -n "$bad" ] || continue
+    err "$bad"
+  done < <(python3 - "$REPO_DIR" "$SKILLS_DIR" <<'PY'
+import glob, os, sys, yaml
+repo, skills_dir = sys.argv[1], sys.argv[2]
+for f in sorted(glob.glob(os.path.join(skills_dir, '*', 'skill.yaml'))):
+    rel = os.path.relpath(f, repo)
+    try:
+        with open(f, encoding='utf-8') as fh:
+            yaml.safe_load(fh)
+    except Exception as e:
+        print("%s: YAML inválido — %s" % (rel, str(e).split('\n')[0]))
+PY
+)
+else
+  # Degradación honesta: sin PyYAML no se puede afirmar que los manifests cargan.
+  WARNINGS=$((WARNINGS+1))
+  [ "$JSON" = true ] || echo "  WARN  PyYAML no disponible: sintaxis YAML NO validada (yaml_validated=false)"
+fi
+
 # ── resumen ──
 COVERAGE=0
 [ "$N_SKILLS" -gt 0 ] && COVERAGE=$((N_MANIFESTS * 100 / N_SKILLS))
 
 if [ "$JSON" = true ]; then
-  python3 - "$REPO_DIR" "$N_SKILLS" "$N_MANIFESTS" "$ERRORS" "$WARNINGS" <<'PY'
+  python3 - "$REPO_DIR" "$N_SKILLS" "$N_MANIFESTS" "$ERRORS" "$WARNINGS" "$YAML_VALIDATED" <<'PY'
 import json, sys
-repo, skills, mans, errs, warns = sys.argv[1:6]
+repo, skills, mans, errs, warns, yv = sys.argv[1:7]
 print(json.dumps({
     "repo": repo,
     "skills": int(skills),
@@ -122,11 +157,13 @@ print(json.dumps({
     "errors": int(errs),
     "warnings": int(warns),
     "healthy": int(errs) == 0,
+    # False = no se parseó con PyYAML: 'healthy' no cubre la capa de sintaxis.
+    "yaml_validated": yv == "true",
 }))
 PY
 else
   echo
-  echo "skill-lint: manifestos $N_MANIFESTS/$N_SKILLS (${COVERAGE}%) · errores $ERRORS · skills sin manifest: $WARNINGS"
+  echo "skill-lint: manifestos $N_MANIFESTS/$N_SKILLS (${COVERAGE}%) · errores $ERRORS · skills sin manifest: $WARNINGS · yaml parseado: $YAML_VALIDATED"
   [ "$REQUIRE_ALL" = true ] && echo "  (--require-all activo: TODAS las skills deben tener skill.yaml)"
 fi
 

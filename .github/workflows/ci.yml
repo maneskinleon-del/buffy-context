@@ -26,13 +26,26 @@ jobs:
           # puede medir drift → el test de fidelidad correría y fallaría.
           fetch-depth: 0
 
+      - name: Instalar PyYAML
+        # El linter de manifests tiene dos capas: forma (sed/awk) y SINTAXIS
+        # (PyYAML). Sin PyYAML la segunda capa se degrada a warning y el gate
+        # sería un falso verde — seis manifests con comillas anidadas pasaban
+        # así. Se instala explícitamente para que el gate sea real en CI.
+        run: python3 -m pip install --quiet PyYAML
+
       - name: Ejecutar suite completa
         run: bash scripts/tests/run-tests.sh --json
 
       - name: Linter de manifests (--require-all)
         # Gate: TODAS las skills de .agents/skills/ deben tener skill.yaml válido
-        # (contrato B2). Falla si alguna skill nueva no trae manifest.
-        run: bash scripts/skill-lint.sh --require-all
+        # (contrato B2) y ser YAML parseable. Falla si alguna skill nueva no trae
+        # manifest o si su YAML no carga en un parser real.
+        run: |
+          set -euo pipefail
+          bash scripts/skill-lint.sh --require-all
+          # yaml_validated debe ser true: si PyYAML faltara, el exit 0 de arriba
+          # no cubriría la sintaxis y el gate mentiría.
+          bash scripts/skill-lint.sh --json | grep -q '"yaml_validated": true'
 
   doctor:
     name: Doctor — drift vs baseline

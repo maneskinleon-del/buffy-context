@@ -24,14 +24,93 @@ test_skill_lint_repo_sano() {
   else
     bad "exit $RC (esperado 0)"
   fi
-  jassert "--json: claves y coherencia" "$OUT" 'import json,sys; d=json.load(sys.stdin); assert set(d.keys())=={"repo","skills","manifests","errors","warnings","healthy"}, d.keys(); assert d["manifests"]>=1, "android-agent debe tener manifest"; assert d["errors"]==0, d; assert d["healthy"] is True'
+  jassert "--json: claves y coherencia" "$OUT" 'import json,sys; d=json.load(sys.stdin); assert set(d.keys())=={"repo","skills","manifests","errors","warnings","healthy","yaml_validated"}, d.keys(); assert d["manifests"]>=1, "android-agent debe tener manifest"; assert d["errors"]==0, d; assert d["healthy"] is True'
   jassert "--json: warnings = skills sin manifest" "$OUT" 'import json,sys; d=json.load(sys.stdin); assert d["warnings"]==d["skills"]-d["manifests"], (d["warnings"], d["skills"], d["manifests"]); assert d["manifests"]<=d["skills"]'
+  jassert "--json: yaml_validated=true (PyYAML presente)" "$OUT" 'import json,sys; d=json.load(sys.stdin); assert d["yaml_validated"] is True, "sin PyYAML el linter no debe declarar sano el repo"'
   ERR=$(bash "$SCRIPTS_DIR/skill-lint.sh" --json 2>&1 1>/dev/null)
   if [ -z "$ERR" ]; then
     ok "stderr vacío en --json"
   else
     bad "stderr vacío en --json (${#ERR} chars)"
   fi
+}
+
+# ── Fix: el linter debe PARSEAR el YAML, no solo mirarle la forma ──────────
+# Los 6 manifests con comillas dobles anidadas (roast, weekly-review, ...) pasaban
+# el linter (que sólo usa sed/awk) y rompían a todo consumidor que parsea YAML real.
+test_skill_lint_yaml_real() {
+  suite "skill-lint: sintaxis YAML real (PyYAML)"
+
+  if ! python3 -c 'import yaml' >/dev/null 2>&1; then
+    bad "PyYAML disponible (requisito de este test)"
+    return
+  fi
+  ok "PyYAML disponible"
+
+  # (a) Los 44 manifiestos del repo parsean.
+  local BAD
+  BAD=$(python3 - "$REPO_DIR" <<'PY'
+import glob, os, sys, yaml
+repo = sys.argv[1]
+for f in sorted(glob.glob(os.path.join(repo, ".agents/skills/*/skill.yaml"))):
+    try:
+        with open(f, encoding="utf-8") as fh:
+            yaml.safe_load(fh)
+    except Exception as e:
+        print("%s: %s" % (os.path.relpath(f, repo), str(e).split("\n")[0]))
+PY
+)
+  if [ -z "$BAD" ]; then
+    ok "los 44 manifiestos son YAML válido (PyYAML)"
+  else
+    bad "manifiestos con YAML inválido"
+    printf '%s\n' "$BAD" | sed 's/^/       → /'
+  fi
+
+  # (b) El linter DETECTA un YAML inválido (regresión real: sin la capa 2
+  #     el fixture de abajo pasaba con exit 0).
+  local FIX="${TMPDIR:-/tmp}/buffy-skilllint-yaml-$$"
+  rm -rf "$FIX"
+  mkdir -p "$FIX/.agents/skills/rota"
+  printf '%s\n' '---' 'name: rota' '---' > "$FIX/.agents/skills/rota/SKILL.md"
+  # description con comillas dobles anidadas sin escapar = el bug original
+  printf '%s\n' \
+    'id: rota' \
+    'name: "rota"' \
+    'version: 1.0.0' \
+    'description: "rota con "comillas" anidadas"' \
+    'entry: SKILL.md' \
+    'safe: true' \
+    'triggers:' \
+    '  - rota' > "$FIX/.agents/skills/rota/skill.yaml"
+  trap 'rm -rf "$FIX"' RETURN
+  expect_exit 1 "YAML inválido (comillas anidadas) → exit 1" bash "$SCRIPTS_DIR/skill-lint.sh" --repo "$FIX"
+  local MSG
+  MSG=$(bash "$SCRIPTS_DIR/skill-lint.sh" --repo "$FIX" 2>&1 || true)
+  if echo "$MSG" | grep -q 'YAML inválido'; then
+    ok "el error nombra la causa (YAML inválido), no solo la forma"
+  else
+    bad "el error nombra la causa (YAML inválido)"
+    printf '%s\n' "$MSG" | sed 's/^/       → /'
+  fi
+
+  # (c) Un manifiesto con block scalar (la forma que adoptamos en los 6) es válido.
+  local FIX2="${TMPDIR:-/tmp}/buffy-skilllint-blk-$$"
+  rm -rf "$FIX2"
+  trap 'rm -rf "$FIX" "$FIX2"' RETURN
+  mkdir -p "$FIX2/.agents/skills/bloque"
+  printf '%s\n' '---' 'name: bloque' '---' > "$FIX2/.agents/skills/bloque/SKILL.md"
+  printf '%s\n' \
+    'id: bloque' \
+    'name: "bloque"' \
+    'version: 1.0.0' \
+    'description: >-' \
+    '  texto con "comillas" sin escapar' \
+    'entry: SKILL.md' \
+    'safe: true' \
+    'triggers:' \
+    '  - bloque' > "$FIX2/.agents/skills/bloque/skill.yaml"
+  expect_exit 0 "block scalar (>- ) con comillas → exit 0" bash "$SCRIPTS_DIR/skill-lint.sh" --repo "$FIX2"
 }
 
 test_skill_lint_require_all_gate() {
