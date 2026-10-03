@@ -13,6 +13,14 @@ system-id: buffy-desktop
 
 # CHANGELOG.md — Historial de cambios del sistema
 
+### 2026-10-03 — D2.3 follow-up — las excepciones del guard PII son POR PATRÓN, no globales (Freebuff, PC)
+
+- **Regresión encontrada al revisarla, no antes.** La primera versión de D2.3 puso las exclusiones en un array compartido por TODOS los patrones. Eso tapó el email real y el nombre real dentro de `scripts/tests/evals/` — exactamente lo que C5 había LEVANTADO a propósito para que el guard llegara ahí. No se notaba porque hoy hay 0 matches en cualquier escenario; la regresión era de cobertura futura, silenciosa y sin síntoma. **Una excepción de un patrón no puede ser excepción de los otros**: el motivo de exceptuar el alias (sobrevive en artefactos congelados) no dice nada sobre un email real. (Las literales no se reproducen acá: esta entrada está bajo el guard, y escribirlas para explicar el guard lo dispara — es la segunda vez que pasa en esta misma sesión.)
+- **La política se vuelve testeable.** `pii_excl_for <patrón>` extrae la selección de pathspecs a una función propia, y el guard la consume. Sin eso, "agregar una exclusión" es un cambio invisible hasta que alguien lee el array.
+- **`test_pii_guard_excepciones_por_patron` (4 checks)** hace lo que antes no hacia nadie: (a) que la excepción siga siendo la DECLARADA — falla si alguien agrega un pathspec más sin revisarlo, así que el array deja de crecer en silencio; (b) que sea real — si el fixture se limpia, la excepción queda vacía y hay que revisarla; (c) que NO se derrame — un patrón de PII real dentro de `evals/` tiene que seguir siendo cazado.
+- **Verificado que el test muerde.** Con la excepción global restaurada (la regresión) el suite da 2 FAIL independientes: `un patrón real tiene 4 exclusiones (esperado 1)` y `PII real en evals/ pasa desapercibida`. Con la corrección, ambos verdes.
+- Suite **396/0 full · 380/0 quick** (+4). README a 390/396 full y 374/380 quick.
+
 ### 2026-10-03 — D2.3 — `origin` obligatorio en todo manifest: procedencia visible cuando el nombre colisiona (Freebuff, PC)
 
 - **La premisa del ítem era falsa y el trabajo se redirigió antes de ejecutar.** "Skills vendored" asumía copias de upstream. La historia lo desmiente: las 5 skills sospechosas (`vercel-react-best-practices`, `vite`, `context7`, `tailwind-design-system`, `typescript-advanced-types`) tienen 2 commits en total — el de autoría `5d08120` (2026-08-03) y el de D2.1. Nunca fueron sobrescritas. Son **propias**, y el contenido lo delata: `vite/SKILL.md` dice "El stack del usuario es React + TypeScript + Tailwind v4 + Vite", que no lo escribe nadie más.
