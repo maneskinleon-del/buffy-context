@@ -35,7 +35,7 @@ mkdir -p "$(dirname "$SNAPSHOT")" || { echo "❌ No se pudo crear $(dirname "$SN
 
 # ── Construir snapshot en temp file ──────────────────────
 {
-  echo "# 🧠 SNAPSHOT — Contexto vivo de mangonz"
+  echo "# 🧠 SNAPSHOT — Contexto vivo del sistema"
   echo ""
   echo "> Generado automáticamente por buffy-context.sh."
   echo "> Cargar este archivo para contexto fresco del sistema."

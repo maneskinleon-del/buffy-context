@@ -2,7 +2,7 @@
 name: form-filler
 description: "Llenado automatico de formularios web (Node.js + Puppeteer + SmartMapper)."
 version: 1.0.0
-author: "mangonz"
+author: "buffy-maint"
 ---
 
 # Form Filler — Llenado Automático de Formularios Web

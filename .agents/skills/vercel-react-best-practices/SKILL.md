@@ -2,7 +2,7 @@
 name: vercel-react-best-practices
 description: "Buenas prácticas React + TypeScript para proyectos deployados en Vercel: patrones de componentes, state, performance (memo/useMemo/useCallback) y testing con Vitest."
 version: 1.0.0
-author: "mangonz"
+author: "buffy-maint"
 ---
 
 # vercel-react-best-practices — React + TypeScript en Vercel

@@ -15,7 +15,7 @@
 
 Buffy Context es un proyecto **personal** (no una librería pública): infraestructura Bash +
 knowledge base + skills para dar memoria persistente a asistentes IA. El autor lo usa en su
-propio teléfono (Termux) y PC. `system-id: mangonz-desktop`.
+propio teléfono (Termux) y PC. `system-id: buffy-desktop`.
 
 Componentes reales y funcionales:
 

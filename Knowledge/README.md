@@ -1,4 +1,4 @@
-# 📚 Knowledge Base — mangonz
+# 📚 Knowledge Base — Buffy Context
 
 > Base de conocimiento estructurada para consulta rápida por agentes IA.
 > Contenido extraído y resumido de skills, proyectos y experiencia acumulada.
@@ -55,7 +55,7 @@ Para **agentes IA**: cuando necesites información sobre un tema:
 2. Si no está o necesitas más detalle, consulta las skills en `.agents/skills/`
 3. Si aún falta, usa búsqueda web o documentación oficial
 
-Para **mangonz**: cuando aprendas algo nuevo y quieras guardarlo:
+Para **el operador**: cuando aprendas algo nuevo y quieras guardarlo:
 
 1. Identifica la categoría correcta
 2. Agrega o modifica el archivo `.md` correspondiente

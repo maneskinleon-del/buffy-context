@@ -6,12 +6,35 @@
 ---
 
 version: 1.9
-updated: 2026-09-30
+updated: 2026-10-03
 schema: system-profile
-system-id: mangonz-desktop
+system-id: buffy-desktop
 ---
 
 # CHANGELOG.md — Historial de cambios del sistema
+
+### 2026-10-03 — D2.1 — identidad de sistema: alias `buffy-maint`, `system-id: buffy-desktop`, alias personal al guard PII (Freebuff, PC)
+
+- **Decisión del operador**: seudónimo de SISTEMA (`buffy-maint`), no alias personal. El repo se declara infra de un operador, no perfil de una persona. Anterior: el alias personal era el identificador en authoring de skills, prosa de docs y `system-id`.
+- **Lo que esta decisión NO hace (dicho antes de implementarla, no después):** no desanonimiza nada. La historia ya tenía 5 identidades, 2 con nombre real, y los metadatos de 264 commits son inmutables — coherente con C5: "la vinculación ya es pública vía cuenta GitHub y no es reversible con un purge de repo". El alias nuevo es el cuarto nombre; su valor es consistencia hacia adelante y quitar una excepción del guard, no privacidad.
+- **Vinculación canónica (documentada, NO reescrita)** — una sola tabla que dice qué es qué:
+
+  | Identidad en la historia | Commits | Qué es |
+  |---|---|---|
+  | email real del operador (3 variantes de nombre) | 181+13+2 | identidad legal — metadatos de git, públicos por diseño |
+  | nombre real + email personal | 20 | ya estaba fuera del patrón A-list (D0): 0 matches tracked |
+  | `maneskinleon-del@users.noreply.github.com` | 56 | usuario público de GitHub por diseño (D0.2) |
+  | alias personal (patrón en `scripts/tests/test-pii-guard.sh`) | 0 commits | aparece solo en contenido, nunca como autor |
+
+  Las literales no se reproducen acá a propósito: esta entrada está bajo el guard, y escribir el patrón para explicar el guard lo dispara (mismo modo de falla que la auto-exclusión del propio archivo de test).
+
+  Regla vigente: **el autor de un commit no es seudónimo.** El seudónimo es la marca del contenido (`author:` de skills, `system-id`); la identidad legal del autor queda en los metadatos de git y es pública por diseño. Confundir las dos era lo que hacía que "redactar el alias" pareciera estar protegiendo algo.
+- **Guard PII: el alias personal entra al patrón** (litera en `scripts/tests/test-pii-guard.sh`). 91 ocurrencias en tracked, clasificadas en 5 familias: 9 `author:` de SKILL.md → `buffy-maint`; 3 `system-id` → `buffy-desktop`; ~8 de prosa → "del sistema" / "del operador"; 3 en `CHANGELOG-archive.md`; 63 en el fixture congelado + `selector-pool-frozen`.
+- **Excepciones por pathspec, no allowlist del patrón** (precedente: el guard ya se autoexcluía):
+  - `scripts/tests/evals/fixtures/` + `selector-pool-frozen-2026-08-13.json` — editar el corpus rompe `corpus_hash`, validado contra el manifest por `EVAL-REGISTRY.md:2307`, y reabre la decisión C5. Son snapshots de un corpus cerrado: no pueden reintroducir PII solos, solo por un re-gen deliberado, que es el momento de revisarlos a mano.
+  - `ai-context/CHANGELOG-archive.md` — registra acciones reales sobre la máquina (un archivo en `/etc/sudoers.d/` y su línea `ALL=(ALL) NOPASSWD`). Redactarlo haría que la entrada afirmara algo que no ocurrió. El valor de un changelog es ser fiel, no higienizado.
+- **Verificado**: reintroducir el alias en `INFO-core.md` → `FAIL PII reintroducida (1 matches)` (el gate muerde, no solo está bien). Suite **389/0 full · 373/0 quick**; doctor CONSISTENTE (0 errores); skill-lint 44/44 con `yaml_validated=true`. README actualizado a 383 functional / 389 total. Lo exige el propio check documental-truth: agregar un check cambia los totales, y esta vez no es cascada porque el check nuevo es real.
+- **Pendiente deliberadamente NO aplicado**: `git config user.name/user.email` → `buffy-maint`. Configurarlo antes de que exista la cuenta GitHub deja commits nuevos sin vincular a nada, y un commit sin vincular es irreversible igual que uno mal vinculado. El comando, cuando la cuenta exista: `git config user.name "buffy-maint" && git config user.email "buffy-maint@users.noreply.github.com"`.
 
 ### 2026-09-30 — buffy-context: C4-B COMPLETADO — Patrón B (.local override) con regla única, suite 366/366 (Freebuff, PC)
 

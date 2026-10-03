@@ -1,7 +1,7 @@
 # 🔄 PROTOCOLO DE CARGA — Memoria Persistente
 
 > Este archivo explica a CUALQUIER agente IA (Buffy, Claude, Antigravity, etc.)
-> cómo cargar el contexto de mangonz al inicio de una sesión.
+> cómo cargar el contexto del sistema al inicio de una sesión.
 >
 > ⚠️ **IMPORTANTE — Presupuesto de tokens**: DeepSeek V4 Flash tiene una ventana
 > de contexto limitada. NO cargues archivos completos si no los necesitas.
@@ -11,7 +11,7 @@
 
 ## 📋 Protocolo obligatorio al iniciar sesión
 
-Cuando comiences una sesión con mangonz, DEBES cargar estos archivos en este orden:
+Cuando comiences una sesión con el operador, DEBES cargar estos archivos en este orden:
 
 ### Paso 1 — Contexto base del sistema (SIEMPRE, ~3KB)
 ```markdown
@@ -26,7 +26,7 @@ Esto te da: OS, WM, shell, herramientas, reglas personales, stack de proyectos.
 ### Paso 1.5 — Memoria curada (SIEMPRE — snapshot Congelado)
 ```markdown
 ~/.buffy/memories/MEMORY.md  (2.200 chars máx — notas del agente)
-~/.buffy/memories/USER.md    (1.375 chars máx — perfil de mangonz)
+~/.buffy/memories/USER.md    (1.375 chars máx — perfil del operador)
 ```
 Se leen UNA vez al iniciar la sesión y **NO se re-leen en el medio** (snapshot
 congelado, patrón Hermes — caché de prefijo). Para ver el bloque de prompt:

@@ -2,7 +2,7 @@
 name: xiaomi-adb-tricks
 description: "Trucos y workarounds ADB/rish/Shizuku para Xiaomi MIUI/HyperOS."
 version: 1.0.0
-author: "mangonz"
+author: "buffy-maint"
 ---
 
 # Xiaomi ADB Tricks — Trucos para MIUI/HyperOS

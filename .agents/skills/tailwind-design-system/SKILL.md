@@ -2,7 +2,7 @@
 name: tailwind-design-system
 description: "Design system con Tailwind CSS v4 + convención de colores estilo Material Design 3 (surface, on-surface, primary, outline). El usuario usa Tailwind v4 con Vite."
 version: 1.0.0
-author: "mangonz"
+author: "buffy-maint"
 ---
 
 # tailwind-design-system — Design System Tailwind v4

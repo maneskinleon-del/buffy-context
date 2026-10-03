@@ -2,7 +2,7 @@
 version: 1.0
 updated: 2026-07-05
 schema: system-profile
-system-id: mangonz-desktop
+system-id: buffy-desktop
 ---
 
 # Si eres un agente

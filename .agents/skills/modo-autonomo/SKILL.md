@@ -2,7 +2,7 @@
 name: modo-autonomo
 description: "Protocolo de operación autónoma: cuando el usuario delega autonomía, el agente decide por sí mismo con verificación de hechos, validación completa y reporte final. Basado en el flujo real de esta sesión."
 version: 1.0.0
-author: "mangonz"
+author: "buffy-maint"
 ---
 
 # modo-autonomo — Operación Autónoma

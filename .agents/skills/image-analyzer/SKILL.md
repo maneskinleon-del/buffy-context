@@ -2,7 +2,7 @@
 name: image-analyzer
 description: "Analisis y procesamiento de imagenes (Python + Pillow + Tesseract OCR)."
 version: 1.0.0
-author: "mangonz"
+author: "buffy-maint"
 ---
 
 # Image Analyzer — Procesamiento de Imágenes

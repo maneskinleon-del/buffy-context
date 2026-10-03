@@ -1,4 +1,4 @@
-# 🖥️ INFO-FULL — Detalle exhaustivo (mangonz)
+# 🖥️ INFO-FULL — Detalle exhaustivo del sistema
 
 > Cargar solo bajo demanda (ver criterios en INFO-core.md). Este archivo no debe inyectarse completo en cada prompt: es referencia, no contexto base.
 > Actualizado: 2026-07-26

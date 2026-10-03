@@ -2,7 +2,7 @@
 name: context7
 description: "Documentación actualizada de librerías, frameworks, APIs y SDKs vía el CLI ctx7. Se activa SIEMPRE que se necesite documentación de una librería."
 version: 1.0.0
-author: "mangonz"
+author: "buffy-maint"
 ---
 
 # context7 — Documentación de Librerías al Día

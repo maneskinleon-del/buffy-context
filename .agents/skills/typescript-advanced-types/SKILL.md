@@ -2,7 +2,7 @@
 name: typescript-advanced-types
 description: "Patrones de tipos avanzados de TypeScript para el stack React + TS del usuario: narrowing, template literal types, utility types, discriminated unions."
 version: 1.0.0
-author: "mangonz"
+author: "buffy-maint"
 ---
 
 # typescript-advanced-types — Tipos Avanzados

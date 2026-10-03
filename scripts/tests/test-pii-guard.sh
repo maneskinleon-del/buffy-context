@@ -11,8 +11,19 @@
 # Allowlist consciente (no-PII o fuera de alcance):
 #   - AKIAIOSFODNN7EXAMPLE / hf_xxx — fixtures del propio linter PII (en evals/).
 #   - `maneskinleon-del` — usuario público de GitHub por diseño (D0.2).
-#   - alias `mangonz` — FUERA del patrón hasta D2.1 (decisión pendiente:
-#     identificador neutro vs identificador personal).
+#
+# D2.1 (2026-10-03): el alias personal `mangonz` ENTRA al patrón. El repo
+# declara identidad de SISTEMA — alias `buffy-maint`, `system-id: buffy-desktop`
+# — y el alias personal solo sobrevive en artefactos congelados (abajo).
+# Excepciones por pathspec, NO allowlist del patrón:
+#   - este archivo (contiene las literales del array de patrones).
+#   - fixture congelado + selector-pool: son snapshots de un corpus ya cerrado.
+#     Editarlos rompe `corpus_hash` (validado por el manifest) y reabre la
+#     decisión C5. No pueden reintroducir PII solos: solo cambian por un re-gen
+#     deliberado, que es exactamente el momento de revisarlos a mano.
+#   - CHANGELOG-archive: registra acciones reales sobre la máquina del operador
+#     (`/etc/sudoers.d/...`). Redactarlo haría que la entrada dijera algo que no
+#     ocurrió — el valor de un changelog es ser faithful, no higienizado.
 
 test_pii_guard_patrones() {
   suite "pii-guard: patrones A-list ausentes en tracked (incl. evals — C5)"
@@ -20,6 +31,7 @@ test_pii_guard_patrones() {
   local -a patrones=(
     'mangonz970@gmail.com'
     'Manuel Gonzalez'
+    'mangonz'
     '320344802623'
     '1yqqZXC4kysIlMMbY57Bi6Ft5Jf5mtO3fUX9EnT41BJtCOnMXmQ01I_sK'
     '1TW8pIdyQAUeAI7ZznVY4KCZgZtGirq_leLUX8vXWQa1e0i6prPIpzBOu'
@@ -28,7 +40,12 @@ test_pii_guard_patrones() {
   # contiene las literales de los patrones (este array) y se auto-matchearía —
   # misma familia que el pkill/pgrep que se auto-detecta (lección 2026-09-28:
   # bracket-trick o exclusión de pathspec).
-  local -a excl=(':!scripts/tests/test-pii-guard.sh')
+  local -a excl=(
+    ':!scripts/tests/test-pii-guard.sh'
+    ':!scripts/tests/evals/fixtures/'
+    ':!scripts/tests/evals/selector-pool-frozen-2026-08-13.json'
+    ':!ai-context/CHANGELOG-archive.md'
+  )
   local p hits
   for p in "${patrones[@]}"; do
     hits=$(git -C "$REPO_DIR" grep -c -F "$p" -- "${excl[@]}" 2>/dev/null \

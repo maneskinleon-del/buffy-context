@@ -2,7 +2,7 @@
 name: vite
 description: "Referencia de Vite para React + TypeScript: config básica, plugins, path aliases, env vars y PWA. El stack del usuario es React + TypeScript + Tailwind v4 + Vite."
 version: 1.0.0
-author: "mangonz"
+author: "buffy-maint"
 ---
 
 # vite — Build Tool (React + TypeScript)
