@@ -470,6 +470,18 @@ test_selector_tmp_sin_escribir() {
     ok "SKIP: unshare no disponible (no se puede simular /tmp read-only)"
     return
   fi
+  # Si el repo vive DEBAJO de /tmp (ci-sim clona en mktemp -d), volver /tmp
+  # read-only deja el propio repo inaccesible: la simulación mediría "el repo
+  # no existe", no "el selector pierde el RC". No es un skip de conveniencia —
+  # acá el test no puede medir lo que dice medir. ci-sim es quien clona bajo
+  # /tmp; en CI real (Actions) el repo vive en /home/runner/work y el test
+  # corre de verdad.
+  case "$REPO_DIR" in
+    /tmp/*)
+      ok "SKIP: el repo está bajo /tmp — la simulación lo volvería inaccesible"
+      return
+      ;;
+  esac
   # El TMPDIR de esta corrida debe vivir FUERA de /tmp: dentro del namespace
   # /tmp va a estar read-only, así que un temporal ahí sería inaccesible.
   local TD
