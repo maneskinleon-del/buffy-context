@@ -85,7 +85,7 @@ echo ""
 # ── 2. Dispositivo ADB ───────────────────────────────────
 echo -e "${YELLOW}🔌 Dispositivo ADB:${NC}"
 
-DEVICES=$(adb devices -l 2>/dev/null | grep -w device)
+DEVICES=$(adb devices -l 2>/dev/null | grep -w device || true)
 if [ -n "$DEVICES" ]; then
     echo -e "  ${GREEN}✅ Dispositivo(s) conectado(s):${NC}"
     echo "$DEVICES" | while IFS= read -r line; do

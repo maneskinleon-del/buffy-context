@@ -20,6 +20,8 @@ source "$SCRIPT_DIR/lib/common.sh"
 SNAPSHOT="$(buffy_snapshot)"
 TEMP="${SNAPSHOT}.tmp"
 INCLUDE_HISTORY=false
+CLIP=false
+WATCH=false
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -56,12 +58,14 @@ mkdir -p "$(dirname "$SNAPSHOT")" || { echo "❌ No se pudo crear $(dirname "$SN
   echo "| **Disco /** | $(df -h / | awk 'NR==2 {print $3 " / " $2 " (" $5 ")"}') |"
   echo "| **Kernel** | $(uname -r) |"
   # Detectar WM: XDG_CURRENT_DESKTOP > DESKTOP_SESSION > loginctl
-  if [[ -n "$XDG_CURRENT_DESKTOP" ]]; then
+  # Variables de entorno opcionales: se leen con ${VAR:-} porque en Termux
+  # ninguna está definida y `set -u` abortaría el snapshot entero.
+  if [[ -n "${XDG_CURRENT_DESKTOP:-}" ]]; then
     echo "| **WM** | $XDG_CURRENT_DESKTOP |"
-  elif [[ -n "$DESKTOP_SESSION" ]]; then
+  elif [[ -n "${DESKTOP_SESSION:-}" ]]; then
     echo "| **WM** | $DESKTOP_SESSION |"
   else
-    wm_detected=$(loginctl show-session "$XDG_SESSION_ID" 2>/dev/null | grep ^DesktopNames | cut -d= -f2)
+    wm_detected=$(loginctl show-session "${XDG_SESSION_ID:-}" 2>/dev/null | grep ^DesktopNames | cut -d= -f2 || true)
     echo "| **WM** | ${wm_detected:-desconocido} |"
   fi
   echo ""
@@ -86,7 +90,7 @@ mkdir -p "$(dirname "$SNAPSHOT")" || { echo "❌ No se pudo crear $(dirname "$SN
       branch=$(cd "$proj" && git branch --show-current 2>/dev/null || echo "N/A")
       gcount=$(cd "$proj" && git status --short 2>/dev/null | wc -l)
       git_status="✅ limpio"
-      [ "$gcount" -gt 0 ] && git_status="⚠️ $gcount modificados"
+      if [ "$gcount" -gt 0 ]; then git_status="⚠️ $gcount modificados"; fi
       last=$(cd "$proj" && git log -1 --format='%ci' 2>/dev/null | cut -d' ' -f1-2 || echo "N/A")
       echo "| **$name** | $branch | $git_status | $last |"
     else
