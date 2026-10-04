@@ -74,9 +74,16 @@ done
 
 QUERY="${1:-}"
 
+# REVIEW-BASELINE.md queda FUERA del scope a propósito: es un documento que se
+# actualiza cada vez que cambia el proyecto (por eso vive fuera del gate
+# documental-truth). Indexarlo haría que CADA edición suya perturbara el corpus
+# indexable — y con eso `corpus_frozen_ok` (helpers.sh) devolvería falso y los
+# tests de fidelidad del selector pasarían a SKIP sin que nadie lo note. Es el
+# acoplamiento señal-estado descrito en SIGNAL-STATE-COUPLING-FAILURES.md §5.
 find_scope() {
   {
-    find "$REPO" -maxdepth 1 -type f \( -name '*.md' -o -name '*.yaml' \) -print0 2>/dev/null
+    find "$REPO" -maxdepth 1 -type f \( -name '*.md' -o -name '*.yaml' \) \
+         ! -name 'REVIEW-BASELINE.md' -print0 2>/dev/null
     find "$REPO/ai-context" "$REPO/Knowledge" \
          -path '*/deprecated' -prune -o \
          -type f \( -name '*.md' -o -name '*.yaml' \) -print0 2>/dev/null
