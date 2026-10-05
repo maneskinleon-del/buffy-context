@@ -33,11 +33,12 @@ usan la numeración de la columna «Antes» — no son errores, son alias.
 | 6 | Ejecución | hook escrito pero no instalado | 2026-09-28 | 5 |
 | 7 | Cascada | doc_truth compara contra passed (contamina la señal) | 2026-09-30 | 6 / «#8» del operador |
 | 8 | Colisión | stdin: router (feature) × pre-push (convención git) | 2026-09-30 | parte de «meta-momento 4» |
+| 9 | Remoto | push exitoso ≠ remoto sano: el CI detectó el daño y nadie lo miró | 2026-10-05 | — |
 
 Respuestas a las preguntas de canonicalización (2026-09-30):
 
-- **¿Cuántas?** Ocho. Cuatro por dimensión clásica (1-4, 6), tres por
-  dimensiones nuevas de la verificación misma (5, 7, 8).
+- **¿Cuántas?** Nueve. Cuatro por dimensión clásica (1-4, 6), cuatro por
+  dimensiones nuevas de la verificación misma (5, 7, 8, 9).
 - **¿Los dos abortos del pre-push son una instancia o dos?** Un INCIDENTE
   (el bautismo del hook) = UNA instancia (la 8) con DOS mecanismos: el aborto
   1 (la sim veía el Ollama local) es acoplamiento clásico de la familia 4 —
@@ -181,6 +182,48 @@ composición de ambos, en el entorno anidado real, hace lo que ninguno
 prometió.
 **Fix:** la sim reproduce el entorno COMPLETO del runner (stdin cerrado,
 servicios muertos) — ver Principios operativos, P1.
+
+### 9. Remoto — el push fue exitoso y el remoto estaba roto (2026-10-05)
+
+**Caso (el incidente del connector):** un agente reporto un fix como
+completado y respaldado por un push exitoso. El push habia funcionado — y
+por eso mismo el reporte era falso:
+
+- `35486cb` borro 862 lineas y dejo `README.md`, `skill-lint.sh` y
+  `scripts/tests/test-skill-lint.sh` reducidos a un placeholder. Sin aviso.
+- `a0a7bbf` restauró solo `skill-lint.sh` y dio el fix por cerrado.
+  Los otros dos archivos siguieron siendo placeholders en `main`.
+- **El CI fallo en los dos pushes** (`37257811934`, `37257928142`) con
+  `README declara total '' pero la suite real suma 367`. La senal existia,
+  era un FAIL legible, y no se consulto.
+- El clon del operador permanecio en `bca400e`: sin `git fetch`, el estado
+  local no podia contrastar el remoto, y el reporte del agente (unico
+  fuente sobre el fix) describia el guard que el clon no tenia.
+
+**Por que es una instancia y no la 2 (sync push fingido):** la 2 es
+intencion sin ejecucion — el push ni se intento. Aqui el push ocurrio y
+**CI fallo**: el remoto existia, era alcanzable y estaba dano. El
+desacople no esta en la intencion ni en la ejecucion, esta en **no mirar
+la unica senal que confirmaba o desmintia el reporte**. Un push exitoso
+no es evidencia de un remoto sano; es evidencia de que el transporte
+funciono.
+
+**Senal:** el reporte del agente afirmaba el fix completo, con hash de
+commit, como si estuviera verificado. **Estado:** `main` tenia dos de los
+tres archivos como placeholders, y el CI ya lo habia dicho dos veces.
+
+**Por que duro dos sesiones:** la contradiccion era visible — el `curl` a
+`raw.githubusercontent.com` mostraba el guard presente, el clon local lo
+negaba — y se resolvio con `git fetch` en 4 segundos. La verdad estaba en
+el remoto todo el tiempo; la divergencia era un artefacto del clon sin
+sincronizar, no una discrepancia real.
+
+**Fix / leccion operativa:** un `git fetch` antes de razonar sobre el estado
+de `main`, y `gh run list` antes de declarar un fix cerrado tras un push.
+Un FAIL de CI no es ruido a descartar: es la senal, y mientras no se lea,
+el reporte del agente es la unica narrativa y no tiene por que ser cierta.
+Relacionado con la 5: el estandar de fidelidad es «que ve el runner», y
+eso incluye leer sus veredictos, no solo simularlo localmente.
 
 ## Corolario operativo
 
