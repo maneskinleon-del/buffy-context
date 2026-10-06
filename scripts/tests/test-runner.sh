@@ -24,3 +24,30 @@ test_runner_quick_skip_logic() {
     bad "runner: no soporta QUICK_MODE"
   fi
 }
+
+test_runner_expect_exit_diagnostics() {
+  # C-1: expect_exit descartaba stdout+stderr con >/dev/null 2>&1 → un FAIL no
+  # daba pista de por qué. Ahora captura la salida y la muestra en FAIL (y con
+  # BUFFY_TEST_VERBOSE=1 / `--verbose` también en verde). Se prueba en subshell
+  # para no contaminar los contadores PASS/FAIL del runner real.
+  suite "runner: diagnóstico de checks (expect_exit, C-1)"
+  local out
+  out=$(BUFFY_TEST_VERBOSE=0 bash -c "source \"$SCRIPT_DIR/helpers.sh\"; expect_exit 0 'x' bash -c 'echo DIAGNOSTICO_C1; exit 1'" 2>&1)
+  if echo "$out" | grep -q 'DIAGNOSTICO_C1'; then
+    ok "FAIL muestra la salida del comando"
+  else
+    bad "FAIL no muestra la salida del comando: $out"
+  fi
+  out=$(BUFFY_TEST_VERBOSE=0 bash -c "source \"$SCRIPT_DIR/helpers.sh\"; expect_exit 0 'y' bash -c 'echo RUIDO_VERDE; exit 0'" 2>&1)
+  if echo "$out" | grep -q 'RUIDO_VERDE'; then
+    bad "check verde sin --verbose no debería imprimir salida"
+  else
+    ok "check verde sin --verbose descarta salida"
+  fi
+  out=$(BUFFY_TEST_VERBOSE=1 bash -c "source \"$SCRIPT_DIR/helpers.sh\"; expect_exit 0 'z' bash -c 'echo VERBOSE_C1; exit 0'" 2>&1)
+  if echo "$out" | grep -q 'VERBOSE_C1'; then
+    ok "BUFFY_TEST_VERBOSE=1 muestra salida en verde"
+  else
+    bad "BUFFY_TEST_VERBOSE=1 no mostró salida en verde: $out"
+  fi
+}

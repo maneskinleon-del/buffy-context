@@ -7,6 +7,7 @@
 #   bash scripts/tests/run-tests.sh            → suite completa
 #   bash scripts/tests/run-tests.sh --json     → resumen en JSON (CI/protocolo)
 #   bash scripts/tests/run-tests.sh --quick    → salta los ciclos de sandbox (rápido, para hooks/CI)
+#   bash scripts/tests/run-tests.sh --verbose  → muestra la salida de cada check (aun si pasa)
 #   bash scripts/tests/run-tests.sh NOMBRE     → solo tests cuyo nombre contiene NOMBRE
 #
 # Exit: 0 si todos pasan · 1 si hay fallos.
@@ -22,6 +23,7 @@ for a in "$@"; do
   case "$a" in
     --json) JSON_SUMMARY=true ;;
     --quick) QUICK_MODE=true ;;
+    --verbose) export BUFFY_TEST_VERBOSE=1 ;;
     *) FILTER="$a" ;;
   esac
 done

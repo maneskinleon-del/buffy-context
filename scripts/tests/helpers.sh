@@ -22,15 +22,29 @@ check() {
   fi
 }
 
+# BUFFY_TEST_VERBOSE=1 (o `run-tests.sh --verbose`) → muestra stdout+stderr de
+# los checks aunque PASEN — diagnóstico de flaky. Por defecto se descarta para
+# no ensuciar. En FAIL el diagnóstico SIEMPRE se muestra (C-1: antes expect_exit
+# descartaba toda salida con >/dev/null 2>&1 → "falló" sin pista de por qué).
+TEST_VERBOSE="${BUFFY_TEST_VERBOSE:-0}"
+# dump_out <texto> — imprime salida capturada, acotada y prefijada.
+dump_out() {
+  [ -n "$1" ] || return 0
+  printf '%s\n' "$1" | head -20 | sed 's/^/       │ /'
+}
+
 # expect_exit <esperado> <desc> <cmd...> — pasa si el exit code coincide
+# Captura la salida del comando (rc igual) para poder mostrarla si falla.
 expect_exit() {
   local expected="$1" desc="$2"; shift 2
-  "$@" >/dev/null 2>&1
-  local rc=$?
+  local out rc
+  out=$("$@" 2>&1); rc=$?
   if [ "$rc" -eq "$expected" ]; then
     ok "$desc (exit $rc)"
+    [ "$TEST_VERBOSE" = "1" ] && dump_out "$out"
   else
     bad "$desc (esperado $expected, obtuve $rc)"
+    dump_out "$out"
   fi
 }
 
@@ -38,11 +52,14 @@ expect_exit() {
 # El python va entre comillas simples en el caller; usar comillas dobles DENTRO del código.
 jassert() {
   local desc="$1" json="$2" code="$3"
-  if printf '%s' "$json" | python3 -c "$code" >/dev/null 2>&1; then
+  local out rc
+  out=$(printf '%s' "$json" | python3 -c "$code" 2>&1); rc=$?
+  if [ "$rc" -eq 0 ]; then
     ok "$desc"
+    [ "$TEST_VERBOSE" = "1" ] && dump_out "$out"
   else
     bad "$desc"
-    printf '%s' "$json" | python3 -c "$code" 2>&1 | head -1 | sed 's/^/       → /'
+    printf '%s\n' "$out" | head -1 | sed 's/^/       → /'
   fi
 }
 
