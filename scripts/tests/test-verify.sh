@@ -207,6 +207,42 @@ open(p, 'w').write(yaml.dump(d, sort_keys=False, allow_unicode=True))
   rm -rf "$BH"
 }
 
+test_source_json_quoting() {
+  # B-1: el JSON de --resolve interpolaba los valores DENTRO de comillas simples
+  # de `python3 -c` → un valor con apóstrofe (p.ej. WM "it's") rompía la línea
+  # (SyntaxError en stderr) y el script salía 0 SIN JSON en stdout — falso verde
+  # silencioso. El fix pasa fact/value/source/conflicts por sys.argv.
+  # Hermético: fixture con facts.yaml propio (value con apóstrofe) + INFO-core
+  # con apóstrofe (conflicto); --no-live aísla del sistema real del runner.
+  suite "source: JSON con apóstrofe (B-1)"
+  local BH="${TMPDIR:-/tmp}/buffy-source-quote-$$-fixture"
+  rm -rf "$BH"; mkdir -p "$BH"
+  cp -r "$REPO_DIR" "$BH/repo"
+  rm -rf "$BH/repo/.git"
+  python3 - "$BH/repo/ai-context/facts.yaml" <<'PY'
+import sys, datetime, yaml
+today = datetime.date.today().isoformat()
+def fact(v):
+    return {"value": v, "source": "system", "confidence": 1.0, "status": "verified",
+            "verified": today, "scope": "test", "ttl_days": 30}
+d = {"facts": {"shell": fact("it's-winner"), "wm": fact("safe-wm")}}
+open(sys.argv[1], "w").write(yaml.dump(d, sort_keys=False, allow_unicode=True))
+PY
+  # INFO-core: wm distinto (→ conflicto) con apóstrofe. El valor EFECTIVO usa
+  # resolve-path (Patrón B: puede existir INFO-core.local.md en el checkout).
+  local EFF
+  EFF="$(bash "$SCRIPTS_DIR/lib/resolve-path.sh" --repo "$BH/repo" ai-context/INFO-core.md)"
+  grep -viE '(\*\*)?(wm|shell)(\*\*)?[[:space:]]*[:|]' "$BH/repo/$EFF" > "$BH/repo/$EFF.tmp" || true
+  mv "$BH/repo/$EFF.tmp" "$BH/repo/$EFF"
+  printf '%s\n' "- **WM** | it's-conflict" '- **shell** | safe-shell-conflict' >> "$BH/repo/$EFF"
+  local OUT
+  OUT=$(bash "$SCRIPTS_DIR/buffy-source.sh" --resolve shell --json --no-live --repo "$BH/repo" 2>/dev/null)
+  jassert "value con apóstrofe sobrevive al JSON" "$OUT" 'import json,sys; d=json.load(sys.stdin); assert d["value"]=="it\x27s-winner", d'
+  OUT=$(bash "$SCRIPTS_DIR/buffy-source.sh" --resolve wm --json --no-live --repo "$BH/repo" 2>/dev/null)
+  jassert "conflicto con apóstrofe sobrevive al JSON" "$OUT" 'import json,sys; d=json.load(sys.stdin); assert any("it\x27s-conflict" in c for c in d["conflicts"]), d'
+  rm -rf "$BH"
+}
+
 test_verify_provenance() {
   suite "verify: provenance (--update-facts)"
   # Sandbox ligero: genera facts.yaml en un repo temporal para no tocar el real.

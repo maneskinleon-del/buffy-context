@@ -192,7 +192,10 @@ resolve_fact() {
   [ -n "$info" ] && [ "$(norm "$info")" != "$wnorm" ] && conflicts+="info-core($info) "
 
   if [ "$JSON_MODE" = true ]; then
-    python3 -c "import json; print(json.dumps({'fact':'$f','value':'$wvalue' if '$wvalue' else None,'source':'$wlevel','conflicts':'$conflicts'.strip().split() if '$conflicts'.strip() else []}, ensure_ascii=False))"
+    # Valores por sys.argv, NUNCA interpolados en el código Python: un valor
+    # con apóstrofe (p.ej. WM "it's broken") rompía el string → SyntaxError en
+    # stderr + exit 0 sin JSON en stdout (falso verde silencioso).
+    python3 -c "import json,sys; f,v,l,c=sys.argv[1:5]; print(json.dumps({'fact':f,'value':v if v else None,'source':l,'conflicts':c.strip().split() if c.strip() else []}, ensure_ascii=False))" "$f" "$wvalue" "$wlevel" "$conflicts"
   else
     if [ "$wlevel" = "inferred" ]; then
       echo -e "  ${YELLOW}➖${NC} $f → (inferido — sin fuente) [inferred]"
