@@ -390,8 +390,18 @@ def main():
                 print(f"   {i:02d}: {e[:80]}{'…' if len(e) > 80 else ''}", file=sys.stderr)
         return 0 if result.get("success") else 1
 
+    # B-3: los lectores DEBEN propagar el read_ok de _load_target — un archivo
+    # que existe pero no se puede leer (UTF-8 inválido, permiso, block) no es un
+    # store vacío. Antes list/render/stats lo ignoraban → success:true + exit 0
+    # con cero entradas (promesa del docstring incumplida por los lectores).
+    def unreadable_error(targets):
+        return store._fail(
+            "Archivo ilegible — no se trata como store vacío: "
+            + ", ".join(path_for(t) for t in targets), targets[0])
+
     if cmd == "list":
-        store._load_target(target)
+        if not store._load_target(target):
+            return emit(unreadable_error([target]))
         entries = store.entries[target]
         u = store._usage(target)
         if as_json:
@@ -403,16 +413,19 @@ def main():
         return 0
 
     if cmd == "render":
-        store._load_target(target)
+        if not store._load_target(target):
+            return emit(unreadable_error([target]))
         print(store.render_block(target))
         return 0
 
     if cmd == "stats":
+        bad = [t for t in ("memory", "user") if not store._load_target(t)]
+        if bad:
+            return emit(unreadable_error(bad))
         if as_json:
-            print(json.dumps({"success": True, "stores": {t: (store._load_target(t), store._usage(t))[1] for t in ("memory", "user")}}, ensure_ascii=False))
+            print(json.dumps({"success": True, "stores": {t: store._usage(t) for t in ("memory", "user")}}, ensure_ascii=False))
         else:
             for t in ("memory", "user"):
-                store._load_target(t)
                 u = store._usage(t)
                 print(f"  {t:6s} {u['pct']:3d}%   {u['chars']:>5,}/{u['limit']:,} chars   {u['entries']} entradas")
             print(f"  → {memory_dir()}")

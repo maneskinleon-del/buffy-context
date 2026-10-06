@@ -89,6 +89,31 @@ test_memory_drift() {
   jassert "replace con drift → rechazado también" "$J" 'import json,sys; d=json.load(sys.stdin); assert not d["success"] and "DRIFT" in d["error"]'
 }
 
+test_memory_unreadable_store() {
+  suite "memory: archivo ilegible NO se trata como store vacío (B-3)"
+  mem_setup
+  # mem_setup registra un trap RETURN que borra el dir al retornar mem_setup
+  # (los tests que mutan lo recrean vía _write_file/makedirs; este escribe
+  # directo), así que lo recreamos antes de sembrar el archivo ilegible.
+  mkdir -p "$MEM_T"
+  # MEMORY.md existe pero con UTF-8 inválido → _read_raw_checked devuelve
+  # read_ok=False. Los LECTORES (list/render/stats) deben rechazarlo, no
+  # reportar success con store vacío (el docstring lo promete y las mutaciones
+  # ya lo cumplían; los lectores lo ignoraban).
+  printf '\xff\xfe\x00\x01' > "$MEM_T/MEMORY.md"
+  local J
+  J=$(run_mem_json list)
+  jassert "list rechaza store ilegible" "$J" 'import json,sys; d=json.load(sys.stdin); assert not d["success"], d; assert "ilegible" in d["error"].lower(), d'
+  J=$(run_mem_json stats)
+  jassert "stats rechaza store ilegible" "$J" 'import json,sys; d=json.load(sys.stdin); assert not d["success"], d'
+  expect_exit 1 "list ilegible → exit 1" run_mem --json list
+  expect_exit 1 "render ilegible → exit 1" run_mem render memory
+  # Store inexistente = vacío LEGÍTIMO (no ilegible): sigue siendo success.
+  rm -f "$MEM_T/MEMORY.md"
+  J=$(run_mem_json list)
+  jassert "store inexistente sigue siendo vacío legítimo" "$J" 'import json,sys; d=json.load(sys.stdin); assert d["success"] and d["entries"]==[], d'
+}
+
 test_memory_batch() {
   suite "memory: batch atómico"
   mem_setup
