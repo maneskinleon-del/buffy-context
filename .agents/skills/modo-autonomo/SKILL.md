@@ -1,7 +1,7 @@
 ---
 name: modo-autonomo
 description: "Protocolo de operación autónoma: cuando el usuario delega autonomía, el agente decide por sí mismo con verificación de hechos, validación completa y reporte final. Basado en el flujo real de esta sesión."
-version: 1.0.0
+version: 1.0.1
 author: "buffy-maint"
 ---
 
@@ -21,7 +21,7 @@ Definir cómo opera el agente cuando el usuario le delega autonomía (p. ej. "tr
 1. **Reunir contexto primero**: leer los archivos relevantes y verificar hechos ANTES de decidir.
 2. **Decidir con evidencia**: si una recomendación externa contradice un hecho verificado, el hecho gana (p. ej. "modo local de visión" no existe: verificado en el código).
 3. **Validar todo cambio**:
-   - `bash scripts/tests/run-tests.sh --quick` (54 OK esperado)
+   - `bash scripts/tests/run-tests.sh --quick` (395 OK esperado — 389 functional + 6 meta; full = 411. Los conteos los gatea `doc_truth` contra el README)
    - `bash scripts/buffy-doctor.sh --json` (sin drift nuevo)
 4. **No introducir drift**: en docs, nunca escribir patrones `skills/<nombre>` de skills inexistentes.
 5. **Commit + push** con el hook corriendo la suite como prueba final; árbol limpio al terminar.
