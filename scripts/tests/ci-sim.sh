@@ -63,8 +63,15 @@ git status --porcelain --untracked-files=normal | while IFS= read -r line; do
   elif [[ "$status" == *D* ]]; then
     rm -f "$SIM/repo/$path"
   else
-    mkdir -p "$SIM/repo/$(dirname "$path")"
-    cp "$REPO_DIR/$path" "$SIM/repo/$path"
+    if [ -d "$REPO_DIR/$path" ]; then
+      # Directorio untracked (ej. scripts/tests/fixtures/): `cp` sin -r falla
+      # y set -e abortaba la sim ANTES de la suite — copiar contenidos.
+      mkdir -p "$SIM/repo/$path"
+      cp -r "$REPO_DIR/$path/." "$SIM/repo/$path/"
+    else
+      mkdir -p "$SIM/repo/$(dirname "$path")"
+      cp "$REPO_DIR/$path" "$SIM/repo/$path"
+    fi
   fi
 done
 

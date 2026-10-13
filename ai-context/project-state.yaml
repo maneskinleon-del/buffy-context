@@ -1,0 +1,123 @@
+# project-state.yaml — fixture del experimento PASO 6 (escrito a mano, 2026-10-11)
+# Esquema: ai-context/project-state-design.md (Paso 2 §ESTRUCTURA)
+# Contrato de check: ai-context/project-state-engine-design.md (Paso 3 §EJECUCIÓN)
+#   - command es lista estricta (S-04), sin SHELL_METACHARS (Q-07)
+#   - exact/contains requieren expected; exists/exit_code son autocontenidos
+# Todos los valores fueron verificados con los comandos citados en evidence.
+# NO commiteado (Q-02: versionado manual — decide el operador).
+
+project:
+  name: buffy-context
+  version: 2026-10-11
+
+assertions:
+  # ── Tipo A: machine-verifiable ─────────────────────────────
+  - key: main-branch-head
+    type: A
+    value: 74a6374ec2cc592d9d9ab2d213b6ccc00f34a8c1
+    source: system
+    confidence: 1.0
+    status: verified
+    verified: 2026-10-11
+    scope: buffy-context
+    ttl_days: 30
+    evidence: "[verificado 2026-10-11] git rev-parse HEAD → 74a6374ec2cc592d9d9ab2d213b6ccc00f34a8c1"
+    check:
+      command: [git, rev-parse, HEAD]
+      comparison: exact
+      expected: 74a6374ec2cc592d9d9ab2d213b6ccc00f34a8c1
+
+  - key: ci-latest-run-green
+    type: A
+    value: true
+    source: system
+    confidence: 1.0
+    status: verified
+    verified: 2026-10-11
+    scope: buffy-context
+    ttl_days: 30
+    evidence: "[verificado 2026-10-11] gh run list --limit 1 --json conclusion → success (exit 0)"
+    notes: "Salida cruda es JSON; se usa comparison contains sin --jq porque el arg .[0].conclusion sería rechazado por SHELL_METACHARS (Q-07) — hallazgo H-1 corregido en el diseño 2026-10-12 (el ejemplo ci-green del Paso 2 ahora documenta este mismo comando seguro)."
+    check:
+      command: [gh, run, list, --limit, "1", --json, conclusion]
+      comparison: contains
+      expected: '"conclusion":"success"'
+
+  - key: readme-present
+    type: A
+    value: true
+    source: system
+    confidence: 1.0
+    status: verified
+    verified: 2026-10-11
+    scope: buffy-context
+    ttl_days: 30
+    evidence: "[verificado 2026-10-11] test -f README.md → exit 0"
+    check:
+      command: [test, -f, README.md]
+      comparison: exists
+
+  - key: repo-tree-clean-at-last-close
+    type: A
+    value: true
+    source: system
+    confidence: 0.4
+    status: stale
+    verified: 2026-10-10
+    scope: buffy-context
+    ttl_days: 30
+    evidence: "[verificado 2026-10-10] git diff --quiet HEAD → exit 0 al cierre de la sesión (CONTINUE.md CHECKPOINT 2026-10-10)"
+    notes: "Hoy difiere: el árbol tiene cambios sin commitear (documentos project-state). El valor afirmado (limpio) ya no corresponde al estado real."
+    check:
+      command: [git, diff, --quiet, HEAD]
+      comparison: exit_code
+
+  - key: project-state-linter-passes
+    type: A
+    value: true
+    source: system
+    confidence: 0.2
+    status: unknown
+    verified: 2026-10-11
+    scope: buffy-context
+    ttl_days: 30
+    evidence: "[verificado 2026-10-11] check no ejecutable hoy: scripts/lib/project_state_linter.py no existe (Paso 5 pendiente de autorización)"
+    notes: "unknown = el check no pudo ejecutarse (binario/archivo ausente). NO significa verificado ni verificado-falso. La fecha verified: 2026-10-11 es de REGISTRO (nunca hubo verificación exitosa) — definición H-3 corregida 2026-10-12."
+    check:
+      command: [python3, scripts/lib/project_state_linter.py, --check]
+      comparison: exit_code
+
+  # ── Tipo B: human judgment (sin check — prohibido por D3) ──
+  - key: q02-versionado-manual
+    type: B
+    value: "Versionado manual: el operador modifica y commitea project-state.yaml; el motor no escribe en Git ni crea commits"
+    source: user
+    confidence: 0.9
+    status: judged
+    verified: 2026-10-11
+    scope: buffy-context
+    ttl_days: 30
+    evidence: "[orig] project-state-design.md §PREGUNTAS ABIERTAS Q-02 — decisión del operador 2026-10-11"
+
+  - key: s08-snapshot-sync-not-required
+    type: B
+    value: "La sincronización project-state ↔ SNAPSHOT.md no es requisito del Paso 5; M-07 permanece como riesgo potencial aceptado"
+    source: user
+    confidence: 0.9
+    status: judged
+    verified: 2026-10-11
+    scope: buffy-context
+    ttl_days: 30
+    evidence: "[orig] project-state-engine-design.md §REMANENTES S-08 — decisión del operador 2026-10-11"
+
+  - key: paso4-approval
+    type: B
+    value: "El diseño del Paso 4 aún no tiene aprobación explícita del operador"
+    source: user
+    confidence: 0.4
+    status: pending
+    verified: 2026-10-11
+    scope: buffy-context
+    ttl_days: 30
+    evidence: "[orig] project-state-paso5-plan.md §0 criterio 4 ⏳"
+    notes: "Esperando decisión del operador; no es un hecho verificado por máquina."

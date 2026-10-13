@@ -144,7 +144,7 @@ project-state.yaml
 | Carga | `parse_rules` de facts_engine (safe_load + `except → {}`) | Archivo propio, no `facts_rules.yaml`. |
 | Clasificación | — (nuevo) | El tipo A/B (D3) bifurca aquí: B **nunca** llega a ejecución. |
 | Ejecución | `normalize_command` + `run_cmd` (facts_engine L31/L56) | Lista estricta (S-04); comparación configurable (§EJECUCIÓN). |
-| TTL | `ttl_check` de buffy-verify.sh (fecha de facts.yaml vs hoy) | Sobre el campo `verified` de cada assertion, no sobre facts.yaml. |
+| TTL | `ttl_check` de buffy-verify.sh (fecha de facts.yaml vs hoy) | Sobre el campo `verified` de cada assertion, no sobre facts.yaml. Se evalúa **solo** con la fecha almacenada: puede producir `expired` **sin ejecutar el check** (H-3). |
 | Reporte | TSV `level<TAB>fact<TAB>...` (facts_engine L7) | Claves JSON propias (Q-03), no las de buffy-verify. |
 
 ### Lenguaje y dependencias
@@ -160,9 +160,9 @@ project-state.yaml
 
 ```yaml
 check:
-  command: [git, rev-parse, HEAD]   # lista estricta (S-04)
-  comparison: exact                  # exact | contains | regex (default: exact)
-  expected: <string>                 # opcional — valor esperado de la salida
+  command: [git, rev-parse, --short=7, HEAD]   # lista estricta (S-04); salida abreviada (7 chars) coherente con value/expected/evidence del ejemplo main-branch-head del Paso 2 (H-2)
+  comparison: exact                            # exact | contains | regex (default: exact)
+  expected: <string>                          # condicional (ver tabla): obligatorio en exact/contains — valor esperado de la salida
 ```
 
 | Campo | Requerido | Semántica |
@@ -192,7 +192,7 @@ en el código de salida, no hace falta un valor esperado separado.)*
    - coincide → `verified`, confidence 1.0
    - difiere → `stale`, confidence 0.4
    - no evaluable (sin expected, salida vacía en contains) → `unknown`, confidence 0.2
-6. **Escribir `verified: <hoy>`** solo si resultado es `verified` (para TTL futuro).
+6. **Escribir `verified: <hoy>`** solo si resultado es `verified` (para TTL futuro). En cualquier otro caso (`stale`/`unknown`, y también `expired` — estado **derivado del TTL** que parte de esa misma fecha, no un resultado de ejecución) la fecha **se conserva**: `verified` registra la última verificación **exitosa**, no el último intento — conservarla no significa vigencia ni éxito del intento actual; eso lo dice `status` (Paso 2 §SEMÁNTICA VERIFIED, corrección H-3 2026-10-12).
 
 ### Sin `shell=True` — invariante
 
@@ -211,7 +211,7 @@ hereda idéntico.
 | `verified` | 1.0 | `check` ejecuta y la salida coincide con `expected`. |
 | `stale` | 0.4 | `check` ejecuta y la salida **difiere** de `expected`. |
 | `unknown` | 0.2 | `check` no se puede ejecutar o evaluar (Q-04, §EJECUCIÓN). |
-| `expired` | 0.2 | `check` fue verificado pero `(hoy − verified).days > ttl_days` (30, heredado de facts.yaml). |
+| `expired` | 0.2 | `check` **fue** verificado en su día, pero `(hoy − verified).days > ttl_days` (30, heredado de facts.yaml) — estado **derivado del TTL** sobre la fecha almacenada, **sin ejecutar el check** en esta pasada (H-3); no es un resultado de ejecución. |
 
 **Transición `expired` → `verified`**: cuando el motor corre con `--update` y
 el check resulta `verified`, actualiza `verified: <hoy>` — el próximo ciclo
@@ -317,7 +317,7 @@ trust_project = round(100 * verified_A / max(1, verified_A + stale_A + expired_A
 | **No verifica hipótesis abiertas como A** (Q-05) | B con `status: pending` cubre decisiones esperando input; hipótesis abiertas son pending hasta que se cierren. |
 | **No genera `project-state.yaml`** | Es un archivo versionado que el operador edita o llena con `--update` (futuro). |
 | **No modifica `facts.yaml`** | Dominio separado. |
-| **No sync con SNAPSHOT.md** (S-08) | Mecanismo de sincronización fuera de alcance de este diseño — es un riesgo reconocido en §SUPUESTOS PENDIENTES. |
+| **No sync con SNAPSHOT.md** (S-08) | Mecanismo de sincronización fuera de alcance de este diseño — es un riesgo reconocido en §SUPUESTOS PENDIENTES. **Decisión del operador (2026-10-11): la sync NO es requisito del Paso 5 — no se diseña ni implementa, y `buffy-context.sh` no se modifica para este propósito.** |
 | **No resuelve S-06/S-07** | Promoción B→A y granularidad de fecha son decisiones de implementación futura. |
 
 ---
@@ -354,7 +354,7 @@ Solo lee y reporta. El motor es **read-only** por defecto — misma filosofía q
 | M-04 | `trust_project` no se consume en ningún dashboard todavía | Si buffy-doctor o buffy-verify lo necesitan, requiere integración explícita (y Q-03 se reabre). |
 | M-05 | `timeout=10` es suficiente para todos los checks de repo | Algunos checks (ej. `git fsck`) pueden exceder 10s — se marca `unknown` + `TIMEOUT`. |
 | M-06 | B con `pending` cubre hipótesis abiertas (Q-05) | Si se necesita distinción explícita `hypothesis` vs `decision`, agregar un campo `subtype` a B en Paso 4 (linter) — no rompe esquema actual. |
-| M-07 | No hay sync con SNAPSHOT (S-08) | **Riesgo más concreto** — dos fuentes de "estado del repo" pueden divergir. No resuelto aquí. |
+| M-07 | No hay sync con SNAPSHOT (S-08) | **Riesgo más concreto** — dos fuentes de "estado del repo" pueden divergir. **Riesgo potencial aceptado (decisión del operador, 2026-10-11)**: se acepta sin cerrarlo — la divergencia NO se declara imposible. |
 
 ---
 
@@ -366,7 +366,8 @@ Solo lee y reporta. El motor es **read-only** por defecto — misma filosofía q
 | Q-06 | ¿Motor reporta conflictos A↔B? | No — documentado como fuera de alcance. |
 | Q-08 | **RESUELTO (2026-10-07): linter ANTES del motor.** El linter es validación estática barata (gate del pipeline); el motor conserva `schema_violations` como safety net standalone (defense en depth — dos capas independientes, no una secuencia obligada). | Resuelto |
 | S-01 | Nombre exacto del archivo | No — asumido `ai-context/project-state.yaml`. |
-| S-08 | Sync con SNAPSHOT | Sí — si es requerido, diseñar mecanismo de sync antes de Paso 5. |
+| **S-08** | **RESUELTO (2026-10-11): sync con SNAPSHOT NO es requisito del Paso 5** — decisión del operador sobre esta misma condición ("si es requerido" → declarado "no requerido") | **No** — no bloquea. No se diseña ni implementa sync; M-07 queda como riesgo potencial aceptado. |
+| **Q-02** | **RESUELTO (2026-10-11): versionado MANUAL** — el operador edita y commitea `project-state.yaml`; el motor no escribe en Git ni crea commits | **No** — resuelto; coherente con §LÍMITE "No genera `project-state.yaml`" y con el motor read-only por defecto. (Añadida el 2026-10-11: antes faltaba en esta tabla.) |
 
 ---
 
@@ -396,7 +397,7 @@ Solo lee y reporta. El motor es **read-only** por defecto — misma filosofía q
 - ✅ 5 bloqueantes resueltas (Q-03/Q-04/Q-07/S-04/S-05)
 - ✅ Paso 3 — diseño del motor (este documento)
 - ✅ Q-08 resuelto: **linter ANTES** del motor
-- ⏭ **Paso 6 — experimento a mano** (reordenado 2026-10-07): `project-state.yaml` escrito a mano sobre el esquema del Paso 2 + agente nuevo con solo ese archivo y una tarea. Valida el riesgo mayor (¿el esquema sirve al agente?) ANTES de construir infraestructura. Responde de paso la pregunta "cómo se puebla el primer YAML" (respuesta: a mano = UX validada).
+- ⏭ **Paso 6 — experimento a mano** (reordenado 2026-10-07): `project-state.yaml` escrito a mano sobre el esquema del Paso 2 + agente nuevo con solo ese archivo y una tarea. Valida el riesgo mayor (¿el esquema sirve al agente?) ANTES de construir infraestructura. Responde de paso la pregunta "cómo se puebla el primer YAML" (respuesta: a mano = UX validada). **Requisito previo del Paso 5 (decisión del operador, 2026-10-11)** — debe completarse antes de autorizar el Paso 5; no es implementación anticipada del motor.
 - ⏭ Paso 4 — diseño del linter (mismo patrón: documento, no código)
 - ⏭ Paso 5 — implementación real (motor + linter)
 

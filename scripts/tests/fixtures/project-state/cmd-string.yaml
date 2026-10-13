@@ -1,0 +1,24 @@
+# Fixture compartido I-4 (plan Paso 5 §2) — check.command como STRING.
+# Un SOLO archivo para las dos salidas (sin copias divergentes); ambos lados
+# lo deben rechazar con su contrato:
+#   linter → exit 1 + LINT-19 (forma estricta, S-04)
+#   motor  → status unknown + COMMAND_NOT_LIST (S-04: sin retrocompat)
+# "grep de aceptación" = ninguno lo da por verificado.
+project:
+  name: cmd-string-fixture
+  version: 2026-10-13
+assertions:
+  - key: cmd-is-string
+    type: A
+    value: true
+    source: system
+    confidence: 1.0
+    status: verified
+    verified: 2026-10-13
+    scope: cmd-string-fixture
+    ttl_days: 30
+    evidence: "fixture I-4: check.command como string (debe rechazarse en ambos)"
+    check:
+      command: "git rev-parse HEAD"
+      comparison: exact
+      expected: "74a6374"

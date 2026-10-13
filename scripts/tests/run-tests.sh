@@ -62,6 +62,10 @@ source "$SCRIPT_DIR/test-close-day.sh"
 source "$SCRIPT_DIR/test-documentation.sh"
 # shellcheck source=test-local-override.sh
 source "$SCRIPT_DIR/test-local-override.sh"
+# shellcheck source=test-project-state-linter.sh
+source "$SCRIPT_DIR/test-project-state-linter.sh"
+# shellcheck source=test-project-state-engine.sh
+source "$SCRIPT_DIR/test-project-state-engine.sh"
 # shellcheck source=test-scale.sh
 source "$SCRIPT_DIR/test-scale.sh"
 # shellcheck source=test-context-selection.sh

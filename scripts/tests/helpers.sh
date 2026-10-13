@@ -63,6 +63,23 @@ jassert() {
   fi
 }
 
+# ps_expect <rc_esperado> <grep-patrón> <desc> <cmd...> — una fila = UN check:
+# pasa si el exit code coincide Y la salida combinada matchea el patrón.
+# Pensado para matrices con ID por fila (project-state §5): además del código
+# de salida documentado, asienta el hallazgo esperado (ID de regla/código).
+ps_expect() {
+  local want="$1" pat="$2" desc="$3"; shift 3
+  local out rc
+  out=$("$@" 2>&1); rc=$?
+  if [ "$rc" -eq "$want" ] && printf '%s\n' "$out" | grep -qE "$pat"; then
+    ok "$desc (exit $rc)"
+    [ "$TEST_VERBOSE" = "1" ] && dump_out "$out"
+  else
+    bad "$desc — esperado exit $want + /$pat/, obtuve exit $rc"
+    dump_out "$out"
+  fi
+}
+
 # ── Sandbox (HOME aislado + repo copiado) ──────────────────
 # Crea drift artificial: sin ~/ai-context y sin skills → el doctor reporta
 # errores reparables (MISSING_SNAPSHOT, MISSING_SKILL, NO_AI_CONTEXT_DIR).

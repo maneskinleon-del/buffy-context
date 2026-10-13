@@ -64,8 +64,8 @@ assertions:
 | `value` | any | ✅ | valor observado (string, bool, int) | valor afirmado | ✅ (facts.yaml) | Lo que se afirma. |
 | `source` | enum `system\|user\|inferred` | ✅ | `system` (observado) o `inferred` | `user` o `inferred` | ✅ (facts.yaml L213-227) | Origen del assertion. |
 | `confidence` | float 0.0–1.0 | ✅ | 1.0 verified / 0.4 stale / 0.2 unknown | 0.2–0.9 (según consenso) | ✅ (facts.yaml L213-227) | Nivel de confianza. **B: nunca 1.0 por verificación automática.** |
-| `status` | enum | ✅ | `verified\|stale\|unknown\|expired` | `judged\|pending\|disputed` | ✅ (facts.yaml) | Estado de verificación o juicio. **B: nunca `verified`.** |
-| `verified` | date `YYYY-MM-DD` | ✅ | fecha de última verificación machine | fecha de último juicio humano | ✅ (facts.yaml) | Marca de tiempo de la última actualización de estado. |
+| `status` | enum | ✅ | `verified\|stale\|unknown\|expired` | `judged\|pending\|disputed` | ✅ (facts.yaml) | En A: resultado del **último intento** de verificación (`verified`/`stale`/`unknown`) o estado **derivado del TTL** (`expired` — se calcula sobre la fecha `verified` almacenada, sin ejecutar el check). En B: último juicio registrado. **B: nunca `verified`.** |
+| `verified` | date `YYYY-MM-DD` | ✅ | fecha de última verificación exitosa | fecha de último juicio humano | ✅ (facts.yaml) | Fecha (YYYY-MM-DD) de la **última verificación exitosa** (A: check ejecutado y coincidente con `expected`; B: último juicio registrado). Si nunca hubo verificación exitosa, fecha de **registro** de la aserción. Es un dato **histórico**: conservarla **no** significa que la afirmación esté vigente ni que el último intento haya sido exitoso — eso lo dice `status` (ver §SEMÁNTICA VERIFIED, `status` vs `verified`). |
 | `scope` | string | ✅ | nombre del repo | nombre del repo | ✅ (facts.yaml, *adaptado*) | Siempre el repo. facts.yaml usa hostname; project-state usa repo (D1). |
 | `ttl_days` | int | opcional | 30 | 30 | ✅ (facts.yaml — siempre 30) | Tiempo antes de reconsiderar. Heredado para consistencia. |
 | `evidence` | string | ✅ | comando, hash, URL de CI, path | decisión, notas, enlace a discusión | ❌ (nuevo) | Referencia a la prueba que sustenta la aserción. |
@@ -101,10 +101,11 @@ assertions:
     verified: 2026-10-06
     scope: buffy-context
     ttl_days: 30
-    evidence: "git rev-parse HEAD"
+    evidence: "git rev-parse --short=7 HEAD"
     check:
-      command: [git, rev-parse, HEAD]
+      command: [git, rev-parse, --short=7, HEAD]
       comparison: exact
+      expected: a1b2c3d   # salida abreviada (7 chars, igual que value): en una captura de un valor conocido, expected coincide con value
 
   - key: ci-green
     type: A
@@ -117,9 +118,9 @@ assertions:
     ttl_days: 30
     evidence: "GH Actions run 36781193116 — conclusion: success"
     check:
-      command: [gh, run, list, --limit, 1, --json, conclusion, --jq, '.[0].conclusion']
-      comparison: exact
-      expected: "success"
+      command: [gh, run, list, --limit, 1, --json, conclusion]
+      comparison: contains
+      expected: '"conclusion":"success"'   # contains sobre el JSON crudo (sin --jq: '.[0].conclusion' contendría metacaracteres rechazados por Q-07/S-04; con --limit 1 hay exactamente 1 elemento, así que equivale a '.[0].conclusion' == 'success')
 
   # ── Tipo B: human judgment ───────────────────────────
   - key: arch-decision-mvc
@@ -150,7 +151,7 @@ propia de `project-state`, o (c) restricción del esquema de tipos A/B (D3).
 | `source` | facts.yaml L213 (`system`/`user`/`inferred`) | idéntico | `source` distingue hecho observado (system) de preferencia (user) e inferencia. Sin él, confidence es imposible de interpretar. |
 | `confidence` | facts.yaml L213-227 (1.0/0.4/0.2) | idéntico *escala* | La escala 0-1 con puntos 1.0/0.4/0.2 es parte del contrato de facts.yaml. Reusarla evita inventar una escala paralela (riesgo de duplicación (a)). Para tipo B, la escala sigue siendo 0-1 pero el punto 1.0 está reservado. |
 | `status` | facts.yaml (`verified`/`stale`/`unknown`/`expired`) | **A**: idéntico; **B**: `judged`/`pending`/`disputed` | Tipo A hereda los mismos valores para coherencia con facts.yaml. Tipo B usa valores que **nunca** dicen "verified" (D3). |
-| `verified` | facts.yaml: fecha de verificación | idéntico | Marca de tiempo de la última operación de estado. En facts.yaml se serializa con `date +%F`; aquí se requiere el mismo formato. |
+| `verified` | facts.yaml: fecha de verificación | idéntico | Fecha de la **última verificación exitosa** (o de registro si nunca hubo) — misma semántica que la tabla de campos, §SEMÁNTICA VERIFIED. En facts.yaml se serializa con `date +%F`; aquí se requiere el mismo formato. |
 | `scope` | facts.yaml L49: hostname | **repo** (no hostname) | facts.yaml usa hostname porque verifica el *sistema*; project-state usa el *repo* porque D1 lo define. La adaptación se documenta explícitamente. |
 | `ttl_days` | facts.yaml: siempre 30 | idéntico (30) | Consistencia con facts.yaml. No se inventa un TTL distinto — el valor 30 es parte del contrato. |
 
@@ -219,7 +220,7 @@ Per `buffy-source.sh --resolve <fact>`, la jerarquía de autoridad es:
 
 LOAD_CONTEXT.md L149+ establece: `[orig]` para heredado no re-verificado; `[verificado YYYY-MM-DD]` para comprobado contra el sistema. `project-state` adopta ambas marcas dentro del campo `evidence`:
 
-- Tipo A: `evidence: "[verificado 2026-10-06] git rev-parse HEAD → a1b2c3d"`
+- Tipo A: `evidence: "[verificado 2026-10-06] git rev-parse --short=7 HEAD → a1b2c3d"`
 - Tipo B: `evidence: "[orig] SESION.md 2026-10-03 — discusión arquitectura"`
 
 ---
@@ -234,10 +235,17 @@ El campo `status` es el corazón del esquema de tipos A/B. Su semántica **no es
 
 | `status` | `confidence` asociada | Condición |
 |---|---|---|
-| `verified` | 1.0 | El `check` produce resultado que confirma `value`. |
-| `stale` | 0.4 | El `check` produce resultado que **difiere** de `value`. |
+| `verified` | 1.0 | El `check` ejecuta y su salida **coincide con `check.expected`** (en una captura de un valor conocido, `expected` coincide con `value`). |
+| `stale` | 0.4 | El `check` ejecuta y su salida **difiere de `check.expected`** (el `value` registrado queda como afirmación histórica). |
 | `unknown` | 0.2 | El `check` no pudo ejecutarse (comando no disponible, error). |
-| `expired` | 0.0 (sistema marca expirado) | El `ttl_days` (30) se ha cumplido desde `verified`; requiere reverificación. |
+| `expired` | 0.2 | El `ttl_days` (30) se ha cumplido desde `verified`; requiere reverificación. Confianza **heredada del contrato**: `buffy-verify.sh` L301 asigna `0.2` a todo nivel que no sea `verified` (`1.0`) ni `stale` (`0.4`), así que `expired` reutiliza la escala de tres puntos 1.0/0.4/0.2 de `facts.yaml` (los `0.0` anteriores eran un cuarto punto paralelo, fuera de esa escala). Coherente con Paso 3 (§pipeline + §SEMÁNTICA). |
+
+#### `status` vs `verified` — último intento vs histórico (corrección H-3, 2026-10-12)
+
+- `status` = en A: resultado del **último intento** de verificación (`verified` / `stale` / `unknown`) o estado **derivado del TTL** (`expired`: se calcula sobre la fecha `verified` almacenada **sin ejecutar el check** — Paso 3, etapa TTL); en B: último juicio registrado.
+- `verified` = fecha de la **última verificación exitosa** (A: check ejecutado y coincidente con `expected`; B: último juicio registrado). Si nunca hubo una verificación exitosa, es la fecha de **registro** de la aserción.
+- Si una comprobación posterior **no puede ejecutarse** (binario ausente, timeout, metacaracteres — Q-04), el motor registra `status: unknown` y **conserva la fecha anterior** de `verified` (Paso 3, §EJECUCIÓN paso 6). Conservar esa fecha **no** significa que la afirmación esté vigente, ni que el último intento haya sido exitoso: indica únicamente cuándo se verificó por última vez con éxito.
+- Vigencia vs. historia: una afirmación A está **vigente** solo si `status: verified`, `confidence: 1.0` y `(hoy − verified) ≤ ttl_days`; `stale` / `expired` / `unknown` son datos **históricos** (el valor afirmado ya no coincide, venció, o no pudo verificarse).
 
 #### Adaptación del trust_score de facts.yaml
 
@@ -279,16 +287,16 @@ El campo `evidence` captura **qué prueba sustenta** una aserción. La represent
 
 | Formato de `evidence` | Ejemplo | Verificable por motor? |
 |---|---|---|
-| Salida de comando | `"git rev-parse HEAD → a1b2c3d"` | ✅ Sí — el motor puede re-run el comando. |
-| Hash de commit | `"commit a1b2c3d (2026-10-03)"` | ✅ Sí — `git log --format=%H -1`. |
-| Resultado de CI | `"GH Actions run 36781193116 — conclusion: success"` | ✅ Sí — `gh run view --json conclusion`. |
+| Salida de comando | `"git rev-parse --short=7 HEAD → a1b2c3d"` | ✅ Sí — el motor puede re-run el comando. `--short=7` devuelve 7 chars, coherentes con `value`/`expected`; `git rev-parse HEAD` devuelve 40 chars y `exact` divergiría siempre (control H-2). |
+| Hash de commit | `"commit a1b2c3d (2026-10-03)"` | ✅ Sí — `git log --format=%h -1` (hash abreviado, coherente con la evidencia; `%H` daría 40 chars). |
+| Resultado de CI | `"GH Actions run 36781193116 — conclusion: success"` | ✅ Sí — `gh run list --limit 1 --json conclusion` (con `contains`; `gh run view` sin run-id falla: "run or job ID required", exit 1 — verificado 2026-10-12). |
 | Existencia de archivo | `"test -f ai-context/project-state.yaml → true"` | ✅ Sí — el motor puede testear el path. |
 | Count de tests | `"test suite: 411 passed, 0 failed"` | ✅ Sí — re-run suite. |
 
 La convención `[verificado YYYY-MM-DD]` de LOAD_CONTEXT.md L149+ se aplica a Tipo A:
 
 ```
-evidence: "[verificado 2026-10-06] git rev-parse HEAD → a1b2c3d"
+evidence: "[verificado 2026-10-06] git rev-parse --short=7 HEAD → a1b2c3d"
 ```
 
 ### Tipo B — evidencia documental
@@ -432,7 +440,7 @@ Estos supuestos se marcan como **pendientes** porque el esquema los referencia p
 | S-05 | Un `trust_score` para project-state se calcula solo sobre aserciones A, igual que el de facts.yaml excluye `unknown` | Si se incluyen B en el cálculo, el trust_score mezcla tipos incompatibles. Se propone: `trust_project = round(100 * verified_A / max(1, verified_A + stale_A + expired_A), 1)` — B se reporta como `human_assertions`. |
 | S-06 | Las aserciones B pueden "promocionarse" a A si se añade un `check` | Esto requiere mecanismo explícito (Paso 3+), no una edición casual del YAML. |
 | S-07 | `verified` usa formato `YYYY-MM-DD` (igual que facts.yaml) | Si se requiere granularidad de horas, el formato cambia y la comparación con facts.yaml se rompe. |
-| S-08 | project-state se genera/combina con `buffy-context.sh` (SNAPSHOT) | Si project-state escribe en el repo pero SNAPSHOT vive en buffy-context, hay una brecha de sincronización. |
+| S-08 | project-state se genera/combina con `buffy-context.sh` (SNAPSHOT) — **[resuelto 2026-10-11] Decisión del operador: la sincronización NO es requisito del Paso 5.** No se diseña ni implementa sync y `buffy-context.sh` no se modifica para esto (trazabilidad: M-07 en `project-state-engine-design.md`) | Si project-state escribe en el repo pero SNAPSHOT vive en buffy-context, hay una brecha de sincronización — **riesgo potencial aceptado** (M-07), no declarado imposible. |
 
 ### Supuesto crítico: no hay verificación automática de B
 
@@ -445,7 +453,7 @@ S-06 contiene el supuesto más delicado: **una aserción B no puede ser "promovi
 | # | Pregunta | Impacto |
 |---|---|---|
 | Q-01 | ¿Debe project-state tener un `trust_score` propio, o basta con el de facts.yaml? | Afecta cómo se reporta confianza al operador. Ver S-05. |
-| Q-02 | ¿Cómo se versiona project-state dentro del repo? ¿Commit automático, o manual? | Si es automático, el motor necesita git write access al repo (riesgo de colisión con commits del operador). |
+| **Q-02** | **RESUELTO (2026-10-11): versionado MANUAL** — `project-state.yaml` viaja por Git, pero modificarlo y commitear es responsabilidad del operador; el motor NO necesita git write access ni crea commits automáticamente | Decisión del operador (2026-10-11) descarta la variante automática (git write access + riesgo de colisión con commits del operador) y es coherente con el motor read-only por defecto (Paso 3 §LÍMITE). |
 | Q-03 | ¿Las aserciones A de project-state aparecen en la salida JSON de `buffy-verify.sh --json`? | Si sí, afecta los conteos `verified`/`stale`/`trust_score` del JSON (test-verify.sh L31 asserta claves exactas). Si no, project-state es un canal paralelo. |
 | Q-04 | ¿Qué sucede con `check.command` si el comando no existe en la máquina del verificador? | facts.yaml marca `unknown`; project-state debe decidir: `unknown` (machine no disponible) o `stale` (el assertion no se pudo verificar). |
 | Q-05 | ¿Debe project-state registrar hipótesis **abiertas** (no solo descartadas)? | D3 menciona "hipótesis descartadas" pero no "hipótesis abiertas". Tipo B con `status: pending` podría cubrirlo, pero necesita aclaración semántica. |

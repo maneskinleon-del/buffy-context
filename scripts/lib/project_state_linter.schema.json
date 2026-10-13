@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "project_state_linter.schema.json",
+  "title": "Salida --json del linter project-state (Paso 4 §4)",
+  "description": "Contrato I-2: healthy ⇔ errors == 0. items = findings (error y advertencia); errors/warnings son los conteos autoritativos.",
+  "type": "object",
+  "required": ["healthy", "errors", "warnings", "items"],
+  "additionalProperties": false,
+  "properties": {
+    "healthy": { "type": "boolean" },
+    "errors": { "type": "integer", "minimum": 0 },
+    "warnings": { "type": "integer", "minimum": 0 },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["rule", "key", "detail"],
+        "additionalProperties": false,
+        "properties": {
+          "rule": { "type": "string", "pattern": "^LINT-[0-9]{2}[ab]?$" },
+          "key": { "type": "string" },
+          "detail": { "type": "string" }
+        }
+      }
+    }
+  },
+  "if": { "required": ["errors"], "properties": { "errors": { "const": 0 } } },
+  "then": { "properties": { "healthy": { "const": true } } },
+  "else": { "properties": { "healthy": { "const": false } } }
+}
