@@ -34,3 +34,7 @@ BUFFY-PC-CONTEXT.md
 # Python cache
 __pycache__/
 *.pyc
+
+# Overrides locales de configuración (Patrón B de scripts/lib/resolve-path.sh:
+# autoridad solo en esta máquina, semántica .env.local — nunca viajan al artefacto)
+*.local.md
