@@ -6,12 +6,722 @@
 ---
 
 version: 1.9
-updated: 2026-10-03
+updated: 2026-10-13
 schema: system-profile
 system-id: buffy-desktop
 ---
 
 # CHANGELOG.md — Historial de cambios del sistema
+
+### 2026-10-13 — Release v1.1.0
+
+**Cambios incluidos** (commits desde `v1.0.1`):
+- chore(git): *.local.md al gitignore — los overrides nunca viajan al artefacto
+- feat(project-state): Paso 5 — motor + linter con matriz de 45 checks (suite 508/0)
+- docs(skill): modo-autonomo — conteos reales de suite (54 → 395/411) + semver 1.0.1
+- docs(project-state): diseño del esquema y del motor (Pasos 2-3)
+- test(helpers): los checks muestran diagnóstico en fallo (C-1)
+- fix(memory): los lectores rechazan un store ilegible (B-3)
+- fix(source): JSON válido con valores especiales en --resolve (B-1)
+- docs(instancia 9): registrar el incidente del connector — push exitoso ≠ remoto sano
+- fix(lint): cierra el false-green de skill-lint y restaura README/test
+- fix: prevent skill lint false-green
+- fix: prevent skill lint false-green
+- fix(search): REVIEW-BASELINE.md fuera del find_scope — indexar un documento que se actualiza solo perturbaba el gate de corpus
+- fix(scripts): los 3 scripts sin guarda quedan seguros bajo modo estricto — sin activarlo
+- fix(guard): las exclusiones del PII son por patrón, no globales — tapaban email y nombre reales en evals/
+- feat(skills): origin obligatorio en los 44 manifests — la procedencia tiene que ser visible cuando el nombre colisiona (D2.3)
+- refactor(identity): D2.1 — el repo declara identidad de sistema y el alias personal entra al guard PII
+- fix(tests): el test de /tmp read-only reportaba FAIL cuando unshare no puede crear namespace [verificado 2026-10-02]
+- fix(tests): el test de /tmp read-only se auto-saboteba cuando el repo vive bajo /tmp [verificado 2026-10-02]
+- fix(doctor): SKILLS_INDEX.md era catálogo oficial pero no contaba como fuente [verificado 2026-10-02]
+- fix(scripts): /tmp hardcodeado hacía que buffy-selector periera su RC en Termux [verificado 2026-10-02]
+- fix(skills): 6 manifiestos eran YAML inválido y el linter los aprobaba [verificado 2026-10-02]
+- docs(pii): decisión de identidad — aceptar linkage en metadata [verificado 2026-10-01]
+- fix(tests): gate corpus_frozen_ok re-apunta al corpus congelado post-rewrite 40dd565 [verificado 2026-10-01]
+- fix(hooks): pre-commit aísla la suite de GIT_INDEX_FILE [verificado 2026-10-01]
+- docs(taxonomía): instancia 5 reformulada — fidelidad de vista (5a/5b/5c)
+- feat(c5): corpus sanitizado — guard PII cubre evals/ sin exclusión (0 absoluto)
+- docs(changelog): cierre C4-B — Patrón B, lecciones y números finales
+- fix(tests): fixtures de verify self-contained — idempotentes ante Patrón B
+- docs+fix: nota del Patrón B en LOAD_CONTEXT + overlay de untracked en ci-sim
+- feat(c4): Patrón B — override .local con regla única en resolve-path.sh
+- docs(changelog): entrada de la convención de autoría (CONTRIBUTING)
+- docs: registrar convención de autoría en commits (agentes co-autores)
+- docs(taxonomía): precedente buffy ctx en P3 + carácter de los principios
+- docs(changelog): normalizar referencias a la numeración canónica
+- docs(taxonomía): numeración canónica de instancias + Principios operativos
+- docs(changelog): bautismo del pre-push hook + lección de simulador
+- docs: meta-momento 4 en la taxonomía — el hook pre-push se gateó a sí mismo
+- fix(ci-sim): stdin cerrado en la suite — el hook heredaba las ref-lines de git
+- fix(ci-sim): OLLAMA_URL muerta en la simulación — fidelidad al runner de CI
+- feat(ci): ci-sim + hook pre-push + doc_truth anti-cascada (instancias 4b/6)
+- fix(ci): lint/router/tests desacoplados del estado de instancia (INSTANCE-STATE §3)
+- fix(ci): des-romper CI — gate corpus_frozen_ok + doctor tolera estado local + README 44 skills
+- privacy(c3)+docs: estado de instancia a local + taxonomía señal-estado
+- privacy(c2): redacciones A-list en HEAD + guard de regresión PII
+- fix(sync)+privacy: guards anti-falso-éxito en sync push + canal privado de memoria (D0.1b Opción 1)
+- fix(tests): Ollama fuera del camino crítico — probe de capacidad + techos timeout (preparatorio C1)
+- fix(skills): android-package-origin-audit reproducibility + honestidad de clasificacion
+- feat(skills): android-package-origin-audit (read-only)
+- docs(changelog-archive): rotate SESION entries parte 7-8 and PR1 (from 2026-09-27 session)
+- docs: convention case 7 (operator premise unverified) + PR5 changelog entry
+- changelog: PR3+PR4 executed — H1-H8 cycle closed, suite 668/668
+- changelog: PR2 executed — H2+H5 fixed, suite 654/654 (parte 9)
+- changelog: PR1 executed — H4+H1b fixed, suite 648/648 (parte 8)
+- changelog: src map H1-H8 — root causes, H7=(c), H3 retracted (parte 7)
+- changelog: CLI surface round — 8 findings from direct standalone use (parte 6)
+- changelog: Q2 handoff-timestamp rule + precision summary (parte 5)
+- protocol: mandatory handoff cut-off timestamp (sender + receiver sides)
+- checkpoint: dangling buffy-tools resolved — repointed + verified MCP handshake
+- docs: precision C5-B — p=0.114 inconclusive, task-sensitivity only exploratory
+- checkpoint: post-ciclo C5-B — anotación e438f29 aplicada (parte 3)
+- changelog: C5-B round — buffy_context routing is task-sensitive (contract-correct)
+- checkpoint: BUFFY-CURRENT-STATE.md v1.1 — sello de vigencia y estado real de la suite
+- checkpoint: BUFFY-CURRENT-STATE.md v1 + convención [orig]/[verificado] en LOAD_CONTEXT
+- checkpoint: GameBoostPro fix H6 pushed (073cea9 + evidence 65b4bab), session 2026-09-22
+- docs(shizuku): consolidate reboot-persistence findings — token board through af14a39, boot-glue scope, autonomous recovery NOT_TESTED
+- docs(shizuku): record watchdog v1 + failure storm + force-stop evidence — canonical token board through 075ff50
+- docs(shizuku): record serial-change + watchdog v0 evidence — precise token board
+- docs(shizuku): record LADB recovery evidence — functional recovery VERIFIED
+- docs(shizuku): update shizuku-rikka recovery procedure
+- docs(shizuku): close watchdog recovery evidence
+- docs: preregister field ablation experiment
+- feat(port): Production Port V1 + DICT_H1_B ADOPTED — §7.3 aplicado, §7.4 gate 8/8, §7.5 veredicto
+- evals(port): paso §7.2 — sanity V1 sin gold_files PASADO (idéntico a 17E-T: attr 13/20, leak 0.307, pRel 0.630; ningún gold es noise)
+- evals(port): paso §7.1 — baseline repo vivo ×2 G2 registrado (attr 12/20, leak 0.442, pRel 0.415, contain 1.0; reproduce 17B-A)
+- docs(evals): Production Port Spec congelada — V1 + DICT_H1_B al pipeline (puntos de integración verificados, gate conservado, rollback, sin mejoras adicionales)
+- docs(evals): CONTEXT-REQUIREMENTS — separar gate/objetivo/resultado-fixture/requisito-producción + auditoría reproducibilidad 17E
+- docs(evals): spec de requisitos formales del motor de contexto — derivada de 17B/17C/17E (10/10 cumplidos por T)
+- 17E infraestructura: orquestador + analizador + tests sin Ollama
+- docs(evals): Paso 17E spec congelada — V1 + DICT_H1_B sobre fixture fx-2026-08-15-001
+- docs(sesion): cierre de día 2026-08-15 — Fase D cerrada D0-D5 (infraestructura)
+- docs(evals): Fase D5 — gate final PASADO, Fase D cerrada como infraestructura
+- docs(evals): Fase D4 — validación multi-dispositivo PASADA
+- feat(evals): Fase D3 — runner --fixture + barrera de mutación
+- feat(evals): Fase D2 — fixture congelado fx-2026-08-15-001
+- feat(evals): Fase D1 — build-fixture.sh + corpus_hash por contenido
+- docs(evals): Fase D — diseño del fixture experimental congelado (spec congelada)
+- docs(arquitectura): contrato sincronizado con la realidad de Fase B/C
+- docs(instancia): Fase B — SESION/CONTINUE/SESION-archive pasan a estado local
+- docs(arquitectura): contrato estado de instancia local vs compartido (INSTANCE-STATE-DESIGN)
+- docs(sesion): cierre de día 2026-08-15 — handoff tras 17D STOP metodológico
+- docs(evals): cierre 17D — STOP metodológico / NO EVALUADO (drift de corpus entre pasos)
+- docs(evals): Paso 17D spec congelada — combinación V1 + DICT_H1_B con sanity de igualdad exacta
+- fix(skills): cobertura completa de manifests skill.yaml + fixes de suite
+- feat(evals): evidencia 17C — runner con --variant {A,V1,V2,V3} + JSONs G2 + veredicto
+- docs(evals): Paso 17C spec congelada — reducción del leak estructural del pool
+- feat(evals): evidencia 17B — runner con --dict (DICT_PATH) + JSONs A/B G2
+- docs(eval): veredicto 17B — puente semántico PASS experimental / NO ADOPTED
+- feat(evals): Paso 17 runner 17B (A/B DICT_H1) + variante B congelada + test sin Ollama
+- docs(evals): Paso 17 spec congelada — experimento A/B del puente semántico (DICT_H1 actual vs variante acotada)
+- docs(evals): Paso 17.1 diagnóstico del puente semántico — Q01/Q05 pierden señal en S1 con golds en pool
+- docs(evals): sello de aprobación del usuario — 16B PASS experimental, granularidad descartada, ±4 conservado
+- feat(evals): Paso 16B ejecutado — granularidad uniforme descartada (H16 confirmada); puente semántico H1 = límite
+- docs(evals): Paso 16 corrección documental — 15B = diagnóstico con oráculo H2; baseline H1 11/20; retractación "Q03 es granularidad"; spec congelada 16B
+- docs(handoff): auditoría pendiente para Freebuff — integración hooks/compaction
+- docs(shizuku): caso de éxito activación ADB 13.6.0 — protocolo de diagnóstico global
+- docs(evals): Paso 16 DISEÑO — granularidad del pasaje (spec para aprobación)
+- docs(sesion): cerrar día — 2026-08-14
+- docs(evals): Q03 aceptado como límite documentado — veredicto rama X (granularidad, no modelo)
+- feat(selector): rama X del Paso 10 al pipeline — query expansion opt-in (--expand-query)
+- docs(sesion): cerrar día — 2026-08-14
+- feat(close-day): tarea "cerrar día+1" — buffy-close-day.sh --poweroff apaga el PC
+- docs(sesion): handoff 2026-08-14 — V6 adoptado (15B), próximo: rama X Q03/Q05
+- feat(selector): veredicto 15B — V6 (S3 condicionado a query + S4 clase sesión) adoptado
+- docs(sesion): plan de retomar Q03 con rama X del Paso 10 (próxima sesión)
+- docs(sesion): cierre 2026-08-14 Freebuff — Pasos 12/13 preservados (16739bc, sin push)
+- docs(evals): preservar registro Pasos 12/13 (serie E/F del autor anterior)
+- docs(sesion): cierre 2026-08-13 Freebuff — integración M3 + expansión F2 al pipeline real (Q08 cerrado)
+- test(selector): regla de compresión para modo autónomo + test de fidelidad expand vs fixture
+- docs(sesion): expansión F2 (rama P) al pipeline — candidate gap de Q08 cerrado en vivo
+- feat(selector): expansión F2 (rama P) al pipeline — cierra el candidate gap de Q08 en vivo
+- docs(sesion): integrar selector M3 al pipeline real — buffy-selector.sh + search --select + router --context
+- feat(selector): integrar M3 rescue 0.545 al pipeline real — buffy-selector.sh + search --select + router --context
+- docs(sesion): compactación 2026-08-13 — EVAL PC Pasos 14A/15A cerrados: phi3.5 descartado (5/11, Rama B) + selector M3 rescue 0.545 ADOPTADO (gold_over 5/11→9/11, leak 0.242, Q08-P_TERM_OPACITY atribuido, attr 16/20); hallazgo S3 documentado; artefactos 12/13 intactos y fuera de este commit (autor anterior)
+- eval: Paso 14A ejecutado (phi3.5 no pasa gate -> Rama B, sin 14B) + Paso 15 M3 rescue 0.545 ADOPTADO
+- eval: Paso 11 CERRADO (Q1/Q2 no adoptados; x_density != evidence_quality; tres conceptos found/selected/attributed) + Paso 12 DISEÑO evidence-aware passage selection — diagnóstico medido HOY sobre contexto R1: S1/S2 muertas (1.0x), S3 heading 17.7x (prec 1.0 rec 0.35), S4 bge-m3 cosine(pasaje, query+X) prec 0.867 rec 0.765 @ theta=0.55 (13 TP/2 FP) — la señal de calidad vive en el CONTENIDO; E1-S3/E2-S4/E3-S4+0.5S3, ablación por señal; tres conceptos separados por query; review: bug E3 corregido (ponderación medida, no 0.5/0.5) + riesgos declarados (sesgo theta, mismatch población, dict H2 techo) + pre-flight FWD
+- eval: Paso 11 EJECUTADO — Q1-DEDUP/Q2-DEDUP+DENS no pasan el gate (pRel 0.118/0.066, leak 0.540/0.478) — medido en worktree aislado en 5e2e97c (incidente FWD: otra sesion modifico el corpus del EVAL entre R1 y el lanzamiento; D de control reproduce Paso 7); determinismo x2 (Q1 f0f398c5, Q2 e2a1821a); agujas_preservadas 6/6; Q03 resuelto, Q06 recuperado por Q2, Q04 regresion de ATRIBUCION en Q2; sRec = seleccion post-poda (instrumento pasajes, consistente G1->R1); review: 3 correcciones aplicadas
+- docs(sesion): marca sync de skills 23->43 como resuelto y pusheado
+- docs(design): FWD registrado en Roadmap Buffy 2.0 (punto 6, spec aprobada — implementación post-Fase 3; incidentes simétricos 2ca7fca/5596345 documentados)
+- fix(skills): sincroniza .agents/skills a 43 skills reales y corrige drift del doctor
+- docs(design): Foreign Worktree Detection (FWD) — spec Buffy 2.0 sin implementar (caso real 2026-08-12: OpenCode+Freebuff en el mismo checkout; señales S1-S6, manifest como corazón de la atribución, política detecta/clasifica/protege-nunca-adopta, gate pre-escritura con re-hash, commit selectivo propio OK, excepción adopción por decisión del usuario, alcance declarado: ignorados/symlinks/origin fuera)
+- eval: Paso 10B cerrado (R1/R2 no adoptados; ranking = cuello de botella, calidad de contexto = problema dominante) + diseño Paso 11 quality-aware passage selection — evidencia medida: contexto R1 = 60 pasajes con solo 25% con aguja; q_hits/cmds INVERTIDAS (no usar como calidad); densidad evidencia X discrimina 2.7x (0.071 vs 0.026); dedup estructural elimina 28% sin perder agujas; variantes Q1-DEDUP (overlap>4 geométrico) y Q2-DEDUP+DENS (θ=0.050 a priori); gate 6 criterios + agujas_preservadas por-gold-fact
+- docs(sesion): compactación 2026-08-12 — EVAL PC Pasos 7→10B cerrados (semantic ❌, hybrid ❌, passages ✅hipótesis, expansion ✅gap, rerank R1 0.750 récord → cuello de botella = ranking); siguiente: diseñar Paso 11 quality-aware
+- eval: Paso 10B ejecutado — reranking sobre pool H2 congelado (R1=LEX 0.750, R2=LEX+SEM 0.700): sRec récord serie 2.0× sobre H2, gap_to_top10 4/6, leakage 0.441 — el cuello de botella ERA el ranking; ablación: x_overlap crítica (sin ella gap 0/6), embedding empeora como señal (r2_no_sem > r2_full); falla pRel/leakage, no se adopta
+- eval: Paso 10 cerrado (H1/H2 no adoptados; generación resuelta 6/6, ranking = cuello de botella) + diseño Paso 10B reranking — overlap léxico query↔gold = 0 en 10/13 casos, señal de expansión X discrimina (Q10=5), curated vs ai-context para Q08; R1-LEX/R2-LEX+SEM con pesos 1.0 normalizados, pool H2 congelado, gate 6 criterios + baseline_regression
+- eval: Paso 10 ejecutado — query expansion (H1=DICT-MIN 0.317, H2=DICT-FULL 0.367): candidate gap CERRADO (5/6 con diccionario genérico, 6/6 techo) pero todas las agujas quedan ranked_out — Caso D confirmado: generación resuelta, selección rota → 10B justificado; pRel/leakage fallan el gate, no se adopta
+- eval: Paso 9 cerrado (G1/G2 no adoptados, passage-level validado) + diseño Paso 10 query expansion — candidate gap 100% recuperable léxicamente (6/6 agujas out_of_pool de G1, verificado); variantes H1-DICT-MIN (realista) vs H2-DICT-FULL (techo oráculo); gate 5 criterios + candidate_gap_recovery; lectura por capas (generación vs selección)
+- eval: Paso 9 ejecutado — passage-level context selection (G1=VENTANA 0.417, G2=SECCIÓN 0.333): gold_containment Q04/Q06=1.0 y tokens ~2.6k resuelven el truncamiento del Paso 8, pero pRel/leakage fallan el gate — no se adopta; recall mejor de la serie
+- eval: Paso 8 cerrado (E/F descartados) + diseño Paso 9 passage-level context selection (G1-VENTANA/G2-SECCIÓN, gate con gold_containment y passage_relevance, G-H0 re-derivado sobre pasajes)
+- eval: Paso 8 ejecutado — Hybrid bounded (E=RRF, F=POOL): coste controlado (~10k tokens) pero relevance/leakage fallan el gate — no se adopta; G-H0 confirma candidate gap Q03 y recuperación parcial Q08 vía rama L
+- eval: Paso 8 — diseño Hybrid bounded candidate retrieval (V1-RRF + V1-POOL, G-H0 pre-gate, sin implementar); Paso 7 cerrado con D descartado
+- eval: Paso 7 — experimento semántico (D) ejecutado: bge-m3 + coseno, Q06 resuelto, gate falla (relevance/leakage/tokens) — no se adopta nada
+- docs: roadmap Buffy 2.0 post-Fase 3 registrado (Router → Domain Agent → Skills → Context Pack)
+- docs(memory): sync memoria curada desde localhost
+- eval: Paso 6b — auditoría Q06 + gold definitivo + diseño Paso 7 (experimento semántico)
+- eval: Paso 6 — fixture gold corregido (Q04/Q06) + A/B/C regenerados (instrumento v3)
+- eval: Paso 5 — auditoría de gold/cobertura de evidencia completada
+- eval: Paso 4 — AND normalizado ejecutado (instrumento v2, métricas crudas)
+- eval: Paso 4 — diseño AND normalizado aprobado (sin implementar)
+- eval: diagnóstico Q03/Q04/Q06/Q08 — patrón AND-falla/OR-acierta + artefactos cross-file
+- docs(tests): Paso 3 — Baseline B (Search OR/BM25) sobre EVAL PC, medición cruda sin veredicto; runner parametrizado por estrategia; comparación A vs B registrada en EVAL-REGISTRY
+- docs(tests): nota de estado de suite PC (5 FAIL preexistentes, fuera de alcance de la Fase 3) + veredicto Paso 2 aprobado y recomendación Paso 3 en CONTINUE
+- docs(tests): Baseline A del perfil PC medida (Paso 2) — pipeline actual router→search sobre EVAL congelado, sin tocar runtime; runner run-baseline-PC.sh + baseline-A-PC JSON; agregado registrado en EVAL-REGISTRY y CONTINUE
+- docs(tests): EVAL PC congelado y aprobado — eval-ctx-PC-2026-08-11 (10 queries, hash 8e42d119, perfil sabrewulf-a320ms2h) + EVAL-REGISTRY + .sha256; Paso 1 Fase 3 cerrado, baseline A pendiente de autorización
+- docs(sesion): cerrar día — 2026-08-11 · Fase 1 medida + Fase 2 diagnóstica aprobada + Fase 3 spec v2 (EVAL congelado)
+- docs: contrato del benchmark realista (B/C) — bench-realistic-DESIGN.md
+- docs(memory): sync memoria curada desde telefono-mi10
+- fix(memory): sync sin ruido git — estado .sync-state es local por dispositivo
+- docs(memory): sync memoria curada desde telefono-mi10
+- feat(close-day): buffy-close-day.sh — protocolo 'cerrar día' automatizado
+- docs(memory): sync memoria curada desde telefono-mi10
+- feat(memory): buffy-memory.sh sync — puente PC↔teléfono para la memoria curada (P0)
+- docs(memory): sync memoria curada desde telefono-mi10
+- docs(sesion): borrado de etiquetas implementado en organiza_gmail_V3 (cleanupLabels + applyCleanupOnce one-shot vía trigger); lección: token clasp sin scope de ejecución (404 en scripts.run)
+- docs(sesion): recuperar sesión cortada — auditoría Apps Scripts con Google Studio API, pendiente borrado de etiquetas huérfanas en organiza_gmail_V3; verificado PC sin cambios nuevos (origin/main = b3cdd54)
+- docs(sesion): cierre de día — data_car pusheado (aea4e15), SESION podada a 3 entradas (08-09 → archive), acuerdo 'cerrar día' registrado en CONTINUE como palabra de cierre
+- docs(sesion): P1 data_car completado — precios de la IA asignados a la lista + total CLP en Mi compra; CONTINUE con ambos pendientes (P0 benchmark + P1) cerrados
+- feat(bench): bench-context-selection.sh — pipeline completo router→search (P0, desbloquea el congelamiento)
+- docs(sesion): reconstruir y registrar sesión 2026-08-10 — scripts Google Apps Script (Gmail Organizer V3 + Drive Organizer Pro) sincronizados con la web vía clasp, opencode actualizado a 1.18.16; la sesión previa no había quedado en buffy-context (hueco recuperado del historial de prompts)
+- docs(sesion): cierre 2026-08-09 noche — evaluación Lyxel+Mantis (falsos caminos), lección retroalimentación activa registrada; SESION.md a 5 entradas, 2026-08-06 archivado; CONTINUE actualizado
+- docs(knowledge): lección de retroalimentación activa — verificar que una herramienta cubre el caso de uso ANTES de instalarla (Mantis=gamepad no sirve para teclado/mouse; Lyxel Linux sin mapeador; APK parchado rompe Google Sign-In). GG Mouse Pro 2 confirmado como keymapper correcto
+- docs(knowledge): corregir Mantis vs Octopus en keymappers — Mantis sigue activo (v3.4.8+, suscripción v3.x) y es NMC no-cloning (riesgo bajo); el baneable por clonación es Octopus. Paquete actualizado a app.mantispro.gamepad, activación on-device Wireless Debugging en Android 11+
+- docs(sesion): registrar DECISIÓN DE CONGELAMIENTO en CONTINUE — buffy-context congelado hasta que bench-context-selection.sh justifique el próximo cambio (benchmark primero, feature después)
+- docs(tests): quitar números obsoletos de los comentarios de test-documentation.sh — el anti-drift también vigila sus propios metadatos; los conteos son derivados dinámicamente, no se escriben a mano
+- docs(sesion): cierre v2 2026-08-09 — paradoja del contador resuelta + benchmark adversarial; SESION/CONTINUE actualizados
+- fix(tests): paradoja del contador anti-drift + RC muerto + benchmark adversarial — contador canónico functional/meta/total (doc_truth_check valida functional estable + total auto-contado); quitado || true que enmascaraba el exit code del benchmark; bench-scale.sh --adversarial con irrelevantes que comparten vocabulario (mide límite real de FTS5: recall 1/2 ante competidores léxicos, medición no gate); suite 205 OK (200 functional + 5 meta)
+- docs(sesion): cierre 2026-08-09 — anti-drift documental + benchmark escala P0; SESION/CONTINUE actualizados
+- feat(tests): anti-drift documental + benchmark de escala P0 — doc_truth_check deriva el conteo real de la suite y rompe el CI si el README desincroniza (verificado adversarial); bench-scale.sh siembra 500 hechos FTS5 (2 relevantes) y mide recall/contaminación/presupuesto de contexto; suite 202 OK (186 --quick)
+- docs(sesion): cierre 2026-08-09 — adquisición memoria curada + fixes symlinks; poda SESION a 5 entradas (2 archivadas); CHANGELOG actualizado
+- fix(scripts): resolver symlinks del PATH (readlink -f) en buffy-memory/context/router — los scripts fuenteaban lib/ desde ~/.local/bin y fallaban al invocarse por symlink
+- docs(memoria): sincronizar versiones con sistema — kernel 6.18.42, node 26.7.0, npm 12.0.2 (detectado por buffy-source/buffy-verify, trust 100%)
+- feat(memory): memoria curada estilo Hermes — buffy-memory.sh + memory_engine.py (brecha 2); doctor/LOAD_CONTEXT/AGENTS + tests; suite 196 OK
+- feat(search): buffy-search.sh — índice FTS5 de sesiones/Knowledge (brecha vs Hermes); CONTINUE + CHANGELOG
+- feat(shizuku): watchdog Termux sobre adb loopback 5555 + doc
+- chore(sesion): entrada 2026-08-08 (opencode) — data_car lista de compra + buffy-context→opencode; poda SESION.md a máx 5, archivadas 11 sesiones; CONTINUE + CHANGELOG actualizados
+- docs(shizuku): resuelto — revert a clásico RikkaApps funciona con rish -c; skill sin bitácora fechada
+- docs(shizuku): limitante rish en fork Shizuku+ (attach rechazado) — volver a clásico; workaround AutoJS
+- docs: Buffy también corre en opencode — actualiza identidad del agente en README, USER-MANU, INFO-core, LOAD_CONTEXT y skills (code-search, vision-adapter) para reflejar opencode + modelos free
+- Sesión 2026-08-07 noche: scrcpy-freefire sin auto-open de Free Fire + purga 16 apps ZTE (69→53)
+- docs(escritorio): super+Escape eliminado, DPMS off, monitor-alert CPU corregido + umbrales
+- chore(scripts): marcar buffy-agent y buffy-repair como ejecutables (requerido por los symlinks del PATH)
+- chore(housekeeping): gitignore __pycache__; sincronizar estado 2026-08-07 (rice vista, sesión, changelog)
+- docs(CONTINUE): handoff 2026-08-07 — hallazgo del TTL (test adversarial → fix 890d5c6), jerarquía de fuentes (d4df1f9), fixes de CI (9d1208b, b2c43ba); corrige npm 12.0.1 → resuelve el conflicto que buffy-source detectaba
+- fix(ci): assert de schema valida hechos presentes (cualquier level), no verified — en runners ajenos kernel/os salen stale y codegraph unknown; CI verde
+- fix(ci): tests de verify auto-generan sus fixtures (facts.yaml y SNAPSHOT.md son gitignored y no existen en checkout fresco) — suite 168 checks verde en CI
+- feat(source-hierarchy): buffy-source.sh resuelve el valor autoritativo de hechos (real-time > facts > SNAPSHOT > CONTINUE > INFO-core > inferred) con reporte de conflictos; detecta npm 12.0.1 vs CONTINUE 11.18.0; +4 tests; suite 168 checks
+- fix(ttl): enforce TTL de facts.yaml previo — hechos vencidos reportados como expired (trust baja); hallazgo de test adversarial E2E; +3 tests; suite 164 checks
+- hardening(facts_engine): comandos en lista, ejecución sin shell (shell=False) — reglas con metacaracteres son rechazadas; retrocompatible; +2 tests; suite 161 checks
+- feat(fact-registry): reglas declarativas (facts_rules.yaml + facts_engine.py) — agregar hechos sin tocar el motor; kernel con stale real; scope+ttl en provenance; fixtures controlados de stale; suite 159 checks
+- feat(provenance): buffy-verify.sh --update-facts genera ai-context/facts.yaml con source/confidence/status/verified por hecho; documentado en LOAD_CONTEXT (Paso 2.5); gitignored; +5 tests; suite 153 checks
+- docs(INFO-core): reflejar realidad verificada por buffy-verify — rice vista (Windows Vista Aero), npm 12.0.1, quitar uv; fix parser rice en verify (tolera markdown y gh0stzk/nombre) → trust 100%
+- feat(verify): buffy-verify.sh — validación factual de INFO-core.md vs sistema real (OS/kernel/WM/rice/herramientas/versiones); job verify informativo en CI; suite 148 checks
+- fix(router): ADB como señal de entorno no disparador (falso positivo React); unifica política SESION.md a 5 entradas/30KB; README 106→132 checks
+- docs: ejemplos verificados de agy (Antigravity) con MCP en Knowledge/Tools/CodeGraph.md
+- docs: registra pruebas end-to-end de CodeGraph con agy (Antigravity) en SESION y CHANGELOG 2026-08-06
+- docs: Knowledge/Tools/CodeGraph.md — referencia completa de comandos, MCP y troubleshooting + indice actualizado (categoria Tools) y doctor
+- docs: CodeGraph visible para cualquier IA — INFO-core, LOAD_CONTEXT (Code Search primero) e INFO-full
+- docs: changelog 2026-08-06 — setup CodeGraph (MCP en 4 agentes, indexado autoscript + ManUninstaller)
+- docs: sesion 2026-08-06 — setup CodeGraph completo (MCP en 4 agentes, indexado autoscript + ManUninstaller, documentacion global)
+- docs: indexar ManUninstaller con CodeGraph (31 archivos, 486 nodos) + entrada en PROJECTS.md
+- docs: sesion 2026-08-05 (2a parte) — fixes extractor MG 350 pusheados (6b3e352) + investigacion Freebuff busy 429 y wrapper fb-wait
+- docs: sesion 2026-08-05 — data_car sync Base Tecnica -> ficha pusheado (89f74cf) + auto-carga de contexto Freebuff (~/.AGENTS.md)
+- docs: Knowledge/Android/NubiaLab.md — setup del laboratorio ZTE Nubia (inventario, qué no tocar, comandos de purga); doctor + indices sincronizados
+- docs: sesion 08-03 completa — laboratorio ZTE Nubia (ManUninstaller revisado+instalado, purga 22 apps + 25 bloat) registrado en SESION.md y CONTINUE.md
+- docs: sesion 2026-08-03 registrada en SESION.md — router manifests, migracion SYSTEM, versiones scrcpy/Ollama, README, fix H2, schema-lite B1, BUFFY_HOME C2
+- feat: BUFFY_HOME/common.sh (C2 opt-in) — estado generado redirigible, 6 tests, suite 116/132 OK
+- feat: schema-lite B1 — ai-context-lint.sh valida secciones obligatorias de INFO-core/CONTINUE/LOAD_CONTEXT + front-matter semver-lite (5 tests, suite 105/121 OK)
+- fix: android-agent/SKILL.md referencia solo skills del repo — reemplaza android-native-dev/clean-arch/mobile-design (entorno) por project-setup/hardening/xiaomi-tricks
+- docs: README al dia con disco — arbol de 23 skills agrupadas por dominio, Knowledge con AI/+Vision, scripts completos, tabla de categorias
+- docs: versiones minimas de scrcpy (>=3.3.1, UHID v2.0 + fix power-off 3.3.1) y Ollama (>=0.30) verificadas desde el PC con fuente — Knowledge/Android/scrcpy.md + Knowledge/Vision.md
+- feat: migrar stubs SYSTEM.md/SYSTEM_FULL.md a deprecated/ — referencias corregidas a INFO-core/full, doctor sin DEPRECATED_FILE (warnings 3→1)
+- docs: CONTINUE handoff — sesión 2026-08-03 (router con manifests implementado)
+- feat: router consume skill.yaml manifests (B2) — add_skill + discover_skills por triggers, lib/yaml.sh compartido, fix mensaje vacío exit 1, tests router (suite 75→90 quick / 91→106 full)
+- fix: limpiar CHANGELOG (A2) — poda a 13 entradas recientes (661 a 216 lineas), front-matter unico, entradas <= 07-31 movidas a archive con dedupe + heading REVIRTIO restaurado
+- docs: BUFFY-PC-CONTEXT.md — digest verificado de sesiones para la Buffy del PC (commits, estado actual, convenciones, pendientes, flujo de continuacion) + cross-ref en REVIEW-BASELINE
+- feat: skill manifests (B2) completo — 23/23 skills con skill.yaml + gate --require-all activo en suite y CI (75 OK quick / 91 OK full)
+- feat: skill manifests (B2) — skill.yaml de ejemplo en android-agent + linter scripts/skill-lint.sh integrado en la suite (74 OK quick / 90 OK full)
+- fix: resolver drift del doctor — crear 13 skills documentadas (10 nuevas + 3 migradas), baseline CI a 0, sanitizar notas historicas y false positive, fix test doctor --quick
+- docs: REVIEW-BASELINE.md — contexto verificado de primera mano para revisiones de IA (estado real, hechos comprobados, problemas pendientes)
+- docs: unificar ruta SNAPSHOT.md a ~/ai-context/ (fuera del repo) en README + aclarar HF_TOKEN siempre requerido en INSTALL
+- docs: INSTALL.md — guards de dependencias, mkdir/chmod para symlinks, caveat Termux /usr/bin/env, HF_TOKEN aclarado, cp -rn con backup opcional
+- docs: INSTALL.md robusto — URL real, verificacion de dependencias, PATH/chmod, Termux+hooks, dependencias opcionales, sandbox, smoke test post-instalacion
+- ci: GitHub Actions — suite completa + doctor con baseline de drift (16) en cada push/PR
+- feat: entrada de release automatica en CHANGELOG (changelog-entry.sh + set-version integrado + tests sandbox)
+
+**Archivos modificados/creados:**
+- `.agents/skills/…/skill.yaml` — creado
+- `.agents/skills/…/SKILL.md` — modificado
+- `.agents/skills/…/skill.yaml` — creado
+- `.agents/skills/…/SKILL.md` — creado
+- `.agents/skills/…/skill.yaml` — creado
+- `.agents/skills/…/skill.yaml` — creado
+- `.agents/skills/…/SKILL.md` — creado
+- `.agents/skills/…/references/accessibility.md` — creado
+- `.agents/skills/…/references/adaptive-screens.md` — creado
+- `.agents/skills/…/references/design-style-guide.md` — creado
+- `.agents/skills/…/references/functional-requirements.md` — creado
+- `.agents/skills/…/references/motion-system.md` — creado
+- `.agents/skills/…/references/performance-stability.md` — creado
+- `.agents/skills/…/references/privacy-security.md` — creado
+- `.agents/skills/…/references/testing.md` — creado
+- `.agents/skills/…/references/visual-design.md` — creado
+- `.agents/skills/…/skill.yaml` — creado
+- `.agents/skills/…/SKILL.md` — creado
+- `.agents/skills/…/scripts/collect.sh` — creado
+- `.agents/skills/…/scripts/generar_reporte_matriz.py` — creado
+- `.agents/skills/…/scripts/matriz_preinstalados.py` — creado
+- `.agents/skills/…/scripts/parse_full.py` — creado
+- `.agents/skills/…/skill.yaml` — creado
+- `.agents/skills/…/SKILL.md` — modificado
+- `.agents/skills/…/references/devices.md` — modificado
+- `.agents/skills/…/scripts/grant_permissions.sh` — modificado
+- `.agents/skills/…/skill.yaml` — creado
+- `.agents/skills/…/SKILL.md` — creado
+- `.agents/skills/…/references/complexity_matching.md` — creado
+- `.agents/skills/…/references/voice_preservation.md` — creado
+- `.agents/skills/…/references/workspace_detection.md` — creado
+- `.agents/skills/…/scripts/complexity_estimator.py` — creado
+- `.agents/skills/…/scripts/dump_classifier.py` — creado
+- `.agents/skills/…/scripts/workspace_inventory.py` — creado
+- `.agents/skills/…/skill.yaml` — creado
+- `.agents/skills/…/SKILL.md` — creado
+- `.agents/skills/…/skill.yaml` — creado
+- `.agents/skills/…/SKILL.md` — creado
+- `.agents/skills/…/skill.yaml` — creado
+- `.agents/skills/…/SKILL.md` — eliminado
+- `.agents/skills/…/SKILL.md` — creado
+- `.agents/skills/…/skill.yaml` — creado
+- `.agents/skills/…/SKILL.md` — creado
+- `.agents/skills/…/skill.yaml` — creado
+- `.agents/skills/…/SKILL.md` — creado
+- `.agents/skills/…/assets/example_time_block_plan.md` — creado
+- `.agents/skills/…/assets/shutdown_checklist.md` — creado
+- `.agents/skills/…/references/deep_work_canon.md` — creado
+- `.agents/skills/…/references/shallow_work_budget.md` — creado
+- `.agents/skills/…/references/time_blocking_method.md` — creado
+- `.agents/skills/…/scripts/focus_session_logger.py` — creado
+- `.agents/skills/…/scripts/shallow_work_auditor.py` — creado
+- `.agents/skills/…/scripts/time_block_planner.py` — creado
+- `.agents/skills/…/skill.yaml` — creado
+- `.agents/skills/…/SKILL.md` — creado
+- `.agents/skills/…/skill.yaml` — creado
+- `.agents/skills/…/SKILL.md` — creado
+- `.agents/skills/…/references/goal_prompt_patterns.md` — creado
+- `.agents/skills/…/scripts/goal_prompt_self_check.py` — creado
+- `.agents/skills/…/skill.yaml` — creado
+- `.agents/skills/…/SKILL.md` — creado
+- `.agents/skills/…/skill.yaml` — creado
+- `.agents/skills/…/SKILL.md` — creado
+- `.agents/skills/…/skill.yaml` — creado
+- `.agents/skills/…/SKILL.md` — creado
+- `.agents/skills/…/skill.yaml` — creado
+- `.agents/skills/…/SKILL.md` — creado
+- `.agents/skills/…/agents/openai.yaml` — creado
+- `.agents/skills/…/scripts/block-dangerous-git.sh` — creado
+- `.agents/skills/…/skill.yaml` — creado
+- `.agents/skills/…/ADR-FORMAT.md` — creado
+- `.agents/skills/…/CONTEXT-FORMAT.md` — creado
+- `.agents/skills/…/SKILL.md` — creado
+- `.agents/skills/…/references/adr_practice.md` — creado
+- `.agents/skills/…/references/context_md_as_artifact.md` — creado
+- `.agents/skills/…/references/ubiquitous_language.md` — creado
+- `.agents/skills/…/scripts/adr_scanner.py` — creado
+- `.agents/skills/…/scripts/context_md_linter.py` — creado
+- `.agents/skills/…/scripts/glossary_code_consistency.py` — creado
+- `.agents/skills/…/skill.yaml` — creado
+- `.agents/skills/…/README.md` — creado
+- `.agents/skills/…/SKILL.md` — creado
+- `.agents/skills/…/assets/example_handoff.md` — creado
+- `.agents/skills/…/references/configuration.md` — creado
+- `.agents/skills/…/references/deduplication_discipline.md` — creado
+- `.agents/skills/…/references/handoff_prompt.md` — creado
+- `.agents/skills/…/references/handoff_structure.md` — creado
+- `.agents/skills/…/references/redaction_checklist.md` — creado
+- `.agents/skills/…/scripts/cleanup.py` — creado
+- `.agents/skills/…/scripts/config_loader.py` — creado
+- `.agents/skills/…/scripts/handoff_self_check.py` — creado
+- `.agents/skills/…/scripts/handoff_template_generator.py` — creado
+- `.agents/skills/…/scripts/redaction_linter.py` — creado
+- `.agents/skills/…/scripts/setup.py` — creado
+- `.agents/skills/…/scripts/skill_recommender.py` — creado
+- `.agents/skills/…/skill.yaml` — creado
+- `.agents/skills/…/skill.yaml` — creado
+- `.agents/skills/…/SKILL.md` — creado
+- `.agents/skills/…/skill.yaml` — creado
+- `.agents/skills/…/SKILL.md` — creado
+- `.agents/skills/…/skill.yaml` — creado
+- `.agents/skills/…/SKILL.md` — creado
+- `.agents/skills/…/skill.yaml` — creado
+- `.agents/skills/…/SKILL.md` — creado
+- `.agents/skills/…/references/android-navigation.md` — creado
+- `.agents/skills/…/references/compose-components.md` — creado
+- `.agents/skills/…/references/details.md` — creado
+- `.agents/skills/…/references/material3-theming.md` — creado
+- `.agents/skills/…/skill.yaml` — creado
+- `.agents/skills/…/SKILL.md` — creado
+- `.agents/skills/…/skill.yaml` — creado
+- `.agents/skills/…/SKILL.md` — creado
+- `.agents/skills/…/references/element-attributes.md` — creado
+- `.agents/skills/…/references/playwright-tests.md` — creado
+- `.agents/skills/…/references/request-mocking.md` — creado
+- `.agents/skills/…/references/running-code.md` — creado
+- `.agents/skills/…/references/session-management.md` — creado
+- `.agents/skills/…/references/storage-state.md` — creado
+- `.agents/skills/…/references/test-generation.md` — creado
+- `.agents/skills/…/references/tracing.md` — creado
+- `.agents/skills/…/references/video-recording.md` — creado
+- `.agents/skills/…/skill.yaml` — creado
+- `.agents/skills/…/SKILL.md` — creado
+- `.agents/skills/…/skill.yaml` — creado
+- `.agents/skills/…/SKILL.md` — creado
+- `.agents/skills/…/references/cognitive_bias_canon.md` — creado
+- `.agents/skills/…/references/conversation_reflection_practice.md` — creado
+- `.agents/skills/…/references/honest_output_discipline.md` — creado
+- `.agents/skills/…/scripts/bias_pattern_detector.py` — creado
+- `.agents/skills/…/scripts/conversation_depth_analyzer.py` — creado
+- `.agents/skills/…/scripts/directional_recommendation_validator.py` — creado
+- `.agents/skills/…/skill.yaml` — creado
+- `.agents/skills/…/README.md` — creado
+- `.agents/skills/…/SKILL.md` — creado
+- `.agents/skills/…/assets/example_roast_verdict.md` — creado
+- `.agents/skills/…/assets/roast_brief_worksheet.md` — creado
+- `.agents/skills/…/references/adversarial_panel_canon.md` — creado
+- `.agents/skills/…/references/cheapest_test_canon.md` — creado
+- `.agents/skills/…/references/verdict_synthesis_method.md` — creado
+- `.agents/skills/…/scripts/brief_builder.py` — creado
+- `.agents/skills/…/scripts/cheapest_test_designer.py` — creado
+- `.agents/skills/…/scripts/verdict_synthesizer.py` — creado
+- `.agents/skills/…/skill.yaml` — creado
+- `.agents/skills/…/skill.yaml` — creado
+- `.agents/skills/…/skill.yaml` — creado
+- `.agents/skills/…/SKILL.md` — creado
+- `.agents/skills/…/references/architecture_patterns.md` — creado
+- `.agents/skills/…/references/system_design_workflows.md` — creado
+- `.agents/skills/…/references/tech_decision_guide.md` — creado
+- `.agents/skills/…/scripts/architecture_diagram_generator.py` — creado
+- `.agents/skills/…/scripts/dependency_analyzer.py` — creado
+- `.agents/skills/…/scripts/project_architect.py` — creado
+- `.agents/skills/…/skill.yaml` — creado
+- `.agents/skills/…/SKILL.md` — modificado
+- `.agents/skills/…/skill.yaml` — creado
+- `.agents/skills/…/LICENSE.txt` — creado
+- `.agents/skills/…/SKILL.md` — creado
+- `.agents/skills/…/scripts/init_skill.py` — creado
+- `.agents/skills/…/scripts/package_skill.py` — creado
+- `.agents/skills/…/scripts/quick_validate.py` — creado
+- `.agents/skills/…/skill.yaml` — creado
+- `.agents/skills/…/SKILL.md` — creado
+- `.agents/skills/…/skill.yaml` — creado
+- `.agents/skills/…/SKILL.md` — creado
+- `.agents/skills/…/skill.yaml` — creado
+- `.agents/skills/…/SKILL.md` — creado
+- `.agents/skills/…/skill.yaml` — creado
+- `.agents/skills/…/SKILL.md` — eliminado
+- `.agents/skills/…/SKILL.md` — creado
+- `.agents/skills/…/skill.yaml` — creado
+- `.agents/skills/…/GENERATION.md` — creado
+- `.agents/skills/…/SKILL.md` — creado
+- `.agents/skills/…/references/advanced-environments.md` — creado
+- `.agents/skills/…/references/advanced-projects.md` — creado
+- `.agents/skills/…/references/advanced-type-testing.md` — creado
+- `.agents/skills/…/references/advanced-vi.md` — creado
+- `.agents/skills/…/references/core-cli.md` — creado
+- `.agents/skills/…/references/core-config.md` — creado
+- `.agents/skills/…/references/core-describe.md` — creado
+- `.agents/skills/…/references/core-expect.md` — creado
+- `.agents/skills/…/references/core-hooks.md` — creado
+- `.agents/skills/…/references/core-test-api.md` — creado
+- `.agents/skills/…/references/features-benchmarking.md` — creado
+- `.agents/skills/…/references/features-concurrency.md` — creado
+- `.agents/skills/…/references/features-context.md` — creado
+- `.agents/skills/…/references/features-coverage.md` — creado
+- `.agents/skills/…/references/features-filtering.md` — creado
+- `.agents/skills/…/references/features-mocking.md` — creado
+- `.agents/skills/…/references/features-reporters.md` — creado
+- `.agents/skills/…/references/features-snapshots.md` — creado
+- `.agents/skills/…/references/features-test-tags.md` — creado
+- `.agents/skills/…/skill.yaml` — creado
+- `.agents/skills/…/SKILL.md` — creado
+- `.agents/skills/…/assets/example_weekly_review.md` — creado
+- `.agents/skills/…/assets/weekly_review_checklist.md` — creado
+- `.agents/skills/…/references/gtd_weekly_review_canon.md` — creado
+- `.agents/skills/…/references/open_loop_psychology.md` — creado
+- `.agents/skills/…/references/review_cadence_design.md` — creado
+- `.agents/skills/…/scripts/commitment_auditor.py` — creado
+- `.agents/skills/…/scripts/open_loop_scanner.py` — creado
+- `.agents/skills/…/scripts/weekly_review_gate.py` — creado
+- `.agents/skills/…/skill.yaml` — creado
+- `.agents/skills/…/SKILL.md` — creado
+- `.agents/skills/…/skill.yaml` — creado
+- `.agents/skills/…/SKILL.md` — creado
+- `.agents/skills/…/skill.yaml` — creado
+- `.github/workflows/ci.yml` — creado
+- `.gitignore` — modificado
+- `CHANGELOG.md` — modificado
+- `CONTRIBUTING.md` — modificado
+- `FIXTURE-EXPERIMENTAL-DESIGN.md` — creado
+- `FWD-DESIGN.md` — creado
+- `INSTALL.md` — modificado
+- `INSTANCE-STATE-DESIGN.md` — creado
+- `Knowledge/Android/Keymappers.md` — modificado
+- `Knowledge/Android/NubiaLab.md` — creado
+- `Knowledge/Android/Shizuku.md` — modificado
+- `Knowledge/Android/scrcpy.md` — modificado
+- `Knowledge/Git/Commands.md` — modificado
+- `Knowledge/README.md` — modificado
+- `Knowledge/Tools/Benchmark-realista.md` — creado
+- `Knowledge/Tools/CodeGraph.md` — creado
+- `Knowledge/Vision.md` — modificado
+- `MCP_REGISTRY.md` — creado
+- `README.md` — modificado
+- `REVIEW-BASELINE.md` — creado
+- `SIGNAL-STATE-COUPLING-FAILURES.md` — creado
+- `SKILLS_INDEX.md` — creado
+- `ai-context/AGENTS.md` — modificado
+- `ai-context/AUDITORIA-HANDOFF-FREEBUFF.md` — creado
+- `ai-context/CHANGELOG-archive.md` — modificado
+- `ai-context/CHANGELOG.md` — modificado
+- `ai-context/CONTINUE.md` — eliminado
+- `ai-context/INFO-core.md` — modificado
+- `ai-context/INFO-full.md` — modificado
+- `ai-context/LOAD_CONTEXT.md` — modificado
+- `ai-context/PROJECTS.md` — modificado
+- `ai-context/README.md` — modificado
+- `ai-context/SESION-archive.md` — eliminado
+- `ai-context/SESION.md` — eliminado
+- `ai-context/SHIZUKU-RISH-BUG.md` — creado
+- `ai-context/deprecated/README.md` — creado
+- `ai-context/deprecated/SYSTEM.md.20260803_150816` — renombrado
+- `ai-context/deprecated/SYSTEM_FULL.md.20260803_150816` — renombrado
+- `ai-context/facts_rules.yaml` — creado
+- `ai-context/project-state-design.md` — creado
+- `ai-context/project-state-engine-design.md` — creado
+- `ai-context/project-state-linter-design.md` — creado
+- `ai-context/project-state-paso5-plan.md` — creado
+- `ai-context/project-state-paso6-experiment.md` — creado
+- `ai-context/project-state.yaml` — creado
+- `ai-context/v4_MANIFIESTO.md` — modificado
+- `scripts/ai-context-lint.sh` — creado
+- `scripts/android-detect.sh` — modificado
+- `scripts/buffy-agent.sh` — modificado
+- `scripts/buffy-close-day.sh` — creado
+- `scripts/buffy-context.sh` — modificado
+- `scripts/buffy-doctor.sh` — modificado
+- `scripts/buffy-expand.sh` — creado
+- `scripts/buffy-memory.sh` — creado
+- `scripts/buffy-repair.sh` — modificado
+- `scripts/buffy-router.sh` — modificado
+- `scripts/buffy-search.sh` — creado
+- `scripts/buffy-selector.sh` — creado
+- `scripts/buffy-source.sh` — creado
+- `scripts/buffy-verify.sh` — creado
+- `scripts/changelog-entry.sh` — creado
+- `scripts/hooks/install.sh` — modificado
+- `scripts/hooks/pre-commit.sh` — modificado
+- `scripts/hooks/pre-push.sh` — creado
+- `scripts/lib/buffy-memory-sync.sh` — creado
+- `scripts/lib/common.sh` — creado
+- `scripts/lib/expand_passages.py` — creado
+- `scripts/lib/expand_query.py` — creado
+- `scripts/lib/facts_engine.py` — creado
+- `scripts/lib/memory_engine.py` — creado
+- `scripts/lib/project_state_engine.py` — creado
+- `scripts/lib/project_state_linter.py` — creado
+- `scripts/lib/project_state_linter.schema.json` — creado
+- `scripts/lib/resolve-path.sh` — creado
+- `scripts/lib/selector_m3.py` — creado
+- `scripts/lib/yaml.sh` — creado
+- `scripts/see.sh` — modificado
+- `scripts/set-version.sh` — modificado
+- `scripts/skill-lint.sh` — creado
+- `scripts/tests/bench-context-selection.sh` — creado
+- `scripts/tests/bench-realistic-DESIGN.md` — creado
+- `scripts/tests/bench-realistic-FASE1-Search.md` — creado
+- `scripts/tests/bench-realistic-FASE2-Router.md` — creado
+- `scripts/tests/bench-realistic-FASE3-Hybrid.md` — creado
+- `scripts/tests/bench-realistic.sh` — creado
+- `scripts/tests/bench-scale.sh` — creado
+- `scripts/tests/ci-sim.sh` — creado
+- `scripts/tests/evals/CONTEXT-REQUIREMENTS.md` — creado
+- `scripts/tests/evals/EVAL-REGISTRY.md` — creado
+- `scripts/tests/evals/PRODUCTION-PORT-SPEC.md` — creado
+- `scripts/tests/evals/ablation-campos-DESIGN.md` — creado
+- `scripts/tests/evals/analiza-17C.py` — creado
+- `scripts/tests/evals/analiza-17E.py` — creado
+- `scripts/tests/evals/and-normalizado-DESIGN.md` — creado
+- `scripts/tests/evals/baseline-A-PC-2026-08-11.json` — creado
+- `scripts/tests/evals/baseline-B-PC-2026-08-11.json` — creado
+- `scripts/tests/evals/baseline-C-andnorm-PC-2026-08-11.json` — creado
+- `scripts/tests/evals/baseline-D-semantic-PC-2026-08-11.json` — creado
+- `scripts/tests/evals/baseline-E-hybrid-rrf-PC-2026-08-11.json` — creado
+- `scripts/tests/evals/baseline-E1-evidence-PC-2026-08-12-r2.json` — creado
+- `scripts/tests/evals/baseline-E1-evidence-PC-2026-08-12.json` — creado
+- `scripts/tests/evals/baseline-E2-evidence-PC-2026-08-12-r2.json` — creado
+- `scripts/tests/evals/baseline-E2-evidence-PC-2026-08-12.json` — creado
+- `scripts/tests/evals/baseline-E3-evidence-PC-2026-08-12-r2.json` — creado
+- `scripts/tests/evals/baseline-E3-evidence-PC-2026-08-12.json` — creado
+- `scripts/tests/evals/baseline-F-hybrid-pool-PC-2026-08-11.json` — creado
+- `scripts/tests/evals/baseline-F1-expansion-PC-2026-08-13-r2.json` — creado
+- `scripts/tests/evals/baseline-F1-expansion-PC-2026-08-13.json` — creado
+- `scripts/tests/evals/baseline-F2-expansion-PC-2026-08-13-r2.json` — creado
+- `scripts/tests/evals/baseline-F2-expansion-PC-2026-08-13.json` — creado
+- `scripts/tests/evals/baseline-G1-passage-ventana-PC-2026-08-11.json` — creado
+- `scripts/tests/evals/baseline-G2-passage-seccion-PC-2026-08-11.json` — creado
+- `scripts/tests/evals/baseline-H1-expansion-PC-2026-08-12.json` — creado
+- `scripts/tests/evals/baseline-H2-expansion-PC-2026-08-12.json` — creado
+- `scripts/tests/evals/baseline-Q1-quality-PC-2026-08-12-r2.json` — creado
+- `scripts/tests/evals/baseline-Q1-quality-PC-2026-08-12.json` — creado
+- `scripts/tests/evals/baseline-Q2-quality-PC-2026-08-12-r2.json` — creado
+- `scripts/tests/evals/baseline-Q2-quality-PC-2026-08-12.json` — creado
+- `scripts/tests/evals/baseline-R1-rerank-PC-2026-08-12.json` — creado
+- `scripts/tests/evals/baseline-R2-rerank-PC-2026-08-12.json` — creado
+- `scripts/tests/evals/baseline-and-PC-2026-08-11.json` — creado
+- `scripts/tests/evals/baseline-and-norm-PC-2026-08-11.json` — creado
+- `scripts/tests/evals/baseline-or-PC-2026-08-11.json` — creado
+- `scripts/tests/evals/bridge-17B-DESIGN.md` — creado
+- `scripts/tests/evals/bridge-17B-PC-2026-08-14-control-A.json` — creado
+- `scripts/tests/evals/bridge-17B-PC-2026-08-14-treatment-B-r1.json` — creado
+- `scripts/tests/evals/bridge-17B-PC-2026-08-14-treatment-B-r2.json` — creado
+- `scripts/tests/evals/build-fixture.sh` — creado
+- `scripts/tests/evals/combine-17D-DESIGN.md` — creado
+- `scripts/tests/evals/combine-17D-PC-2026-08-15-B-solo-r2.json` — creado
+- `scripts/tests/evals/combine-17D-PC-2026-08-15-B-solo.json` — creado
+- `scripts/tests/evals/combine-17D-PC-2026-08-15-V1-solo-r2.json` — creado
+- `scripts/tests/evals/combine-17D-PC-2026-08-15-V1-solo.json` — creado
+- `scripts/tests/evals/combine-17D-PC-2026-08-15-control-A-r2.json` — creado
+- `scripts/tests/evals/combine-17D-PC-2026-08-15-control-A.json` — creado
+- `scripts/tests/evals/combine-17E-DESIGN.md` — creado
+- `scripts/tests/evals/diag-17A-REPORT.md` — creado
+- `scripts/tests/evals/diag-17A-bridge.sh` — creado
+- `scripts/tests/evals/dict_h1_b.json` — creado
+- `scripts/tests/evals/eval-ctx-PC-2026-08-11.json` — creado
+- `scripts/tests/evals/eval-ctx-PC-2026-08-11.json.sha256` — creado
+- `scripts/tests/evals/evidence-passage-DESIGN.md` — creado
+- `scripts/tests/evals/fixtures/fx-2026-08-15-001/corpus/BUFFY-PC-CONTEXT.md` — creado
+- `scripts/tests/evals/fixtures/fx-2026-08-15-001/corpus/CHANGELOG.md` — creado
+- `scripts/tests/evals/fixtures/fx-2026-08-15-001/corpus/CONTRIBUTING.md` — creado
+- `scripts/tests/evals/fixtures/fx-2026-08-15-001/corpus/FIXTURE-EXPERIMENTAL-DESIGN.md` — creado
+- `scripts/tests/evals/fixtures/fx-2026-08-15-001/corpus/FWD-DESIGN.md` — creado
+- `scripts/tests/evals/fixtures/fx-2026-08-15-001/corpus/INSTALL.md` — creado
+- `scripts/tests/evals/fixtures/fx-2026-08-15-001/corpus/INSTANCE-STATE-DESIGN.md` — creado
+- `scripts/tests/evals/fixtures/fx-2026-08-15-001/corpus/Knowledge/AI/Kimi-K3.md` — creado
+- `scripts/tests/evals/fixtures/fx-2026-08-15-001/corpus/Knowledge/Android/ADB.md` — creado
+- `scripts/tests/evals/fixtures/fx-2026-08-15-001/corpus/Knowledge/Android/GameOptimization.md` — creado
+- `scripts/tests/evals/fixtures/fx-2026-08-15-001/corpus/Knowledge/Android/HyperOS.md` — creado
+- `scripts/tests/evals/fixtures/fx-2026-08-15-001/corpus/Knowledge/Android/Keymappers.md` — creado
+- `scripts/tests/evals/fixtures/fx-2026-08-15-001/corpus/Knowledge/Android/NubiaLab.md` — creado
+- `scripts/tests/evals/fixtures/fx-2026-08-15-001/corpus/Knowledge/Android/Shizuku.md` — creado
+- `scripts/tests/evals/fixtures/fx-2026-08-15-001/corpus/Knowledge/Android/scrcpy.md` — creado
+- `scripts/tests/evals/fixtures/fx-2026-08-15-001/corpus/Knowledge/Git/Commands.md` — creado
+- `scripts/tests/evals/fixtures/fx-2026-08-15-001/corpus/Knowledge/Linux/Kernel.md` — creado
+- `scripts/tests/evals/fixtures/fx-2026-08-15-001/corpus/Knowledge/Linux/System.md` — creado
+- `scripts/tests/evals/fixtures/fx-2026-08-15-001/corpus/Knowledge/Node/Node.md` — creado
+- `scripts/tests/evals/fixtures/fx-2026-08-15-001/corpus/Knowledge/README.md` — creado
+- `scripts/tests/evals/fixtures/fx-2026-08-15-001/corpus/Knowledge/React/PWA.md` — creado
+- `scripts/tests/evals/fixtures/fx-2026-08-15-001/corpus/Knowledge/React/React.md` — creado
+- `scripts/tests/evals/fixtures/fx-2026-08-15-001/corpus/Knowledge/React/Tailwind.md` — creado
+- `scripts/tests/evals/fixtures/fx-2026-08-15-001/corpus/Knowledge/React/Vite.md` — creado
+- `scripts/tests/evals/fixtures/fx-2026-08-15-001/corpus/Knowledge/Shell/Shell.md` — creado
+- `scripts/tests/evals/fixtures/fx-2026-08-15-001/corpus/Knowledge/Tools/Benchmark-realista.md` — creado
+- `scripts/tests/evals/fixtures/fx-2026-08-15-001/corpus/Knowledge/Tools/CodeGraph.md` — creado
+- `scripts/tests/evals/fixtures/fx-2026-08-15-001/corpus/Knowledge/Vision.md` — creado
+- `scripts/tests/evals/fixtures/fx-2026-08-15-001/corpus/MCP_REGISTRY.md` — creado
+- `scripts/tests/evals/fixtures/fx-2026-08-15-001/corpus/README.md` — creado
+- `scripts/tests/evals/fixtures/fx-2026-08-15-001/corpus/REVIEW-BASELINE.md` — creado
+- `scripts/tests/evals/fixtures/fx-2026-08-15-001/corpus/SKILLS_INDEX.md` — creado
+- `scripts/tests/evals/fixtures/fx-2026-08-15-001/corpus/USER-MANU.md` — creado
+- `scripts/tests/evals/fixtures/fx-2026-08-15-001/corpus/ai-context/AGENTS.md` — creado
+- `scripts/tests/evals/fixtures/fx-2026-08-15-001/corpus/ai-context/AUDITORIA-HANDOFF-FREEBUFF.md` — creado
+- `scripts/tests/evals/fixtures/fx-2026-08-15-001/corpus/ai-context/CHANGELOG-archive.md` — creado
+- `scripts/tests/evals/fixtures/fx-2026-08-15-001/corpus/ai-context/CHANGELOG.md` — creado
+- `scripts/tests/evals/fixtures/fx-2026-08-15-001/corpus/ai-context/INFO-core.md` — creado
+- `scripts/tests/evals/fixtures/fx-2026-08-15-001/corpus/ai-context/INFO-full.md` — creado
+- `scripts/tests/evals/fixtures/fx-2026-08-15-001/corpus/ai-context/LOAD_CONTEXT.md` — creado
+- `scripts/tests/evals/fixtures/fx-2026-08-15-001/corpus/ai-context/PROJECTS.md` — creado
+- `scripts/tests/evals/fixtures/fx-2026-08-15-001/corpus/ai-context/README.md` — creado
+- `scripts/tests/evals/fixtures/fx-2026-08-15-001/corpus/ai-context/SHIZUKU-RISH-BUG.md` — creado
+- `scripts/tests/evals/fixtures/fx-2026-08-15-001/corpus/ai-context/facts_rules.yaml` — creado
+- `scripts/tests/evals/fixtures/fx-2026-08-15-001/corpus/ai-context/v4_MANIFIESTO.md` — creado
+- `scripts/tests/evals/fixtures/fx-2026-08-15-001/manifest.json` — creado
+- `scripts/tests/evals/granularity-16B-PC-2026-08-14-r2.json` — creado
+- `scripts/tests/evals/granularity-16B-PC-2026-08-14.json` — creado
+- `scripts/tests/evals/granularity-DESIGN.md` — creado
+- `scripts/tests/evals/hybrid-bounded-DESIGN.md` — creado
+- `scripts/tests/evals/leak-17C-DESIGN.md` — creado
+- `scripts/tests/evals/leak-17C-PC-2026-08-14-V1-r2.json` — creado
+- `scripts/tests/evals/leak-17C-PC-2026-08-14-V1.json` — creado
+- `scripts/tests/evals/leak-17C-PC-2026-08-14-V2-r1.json` — creado
+- `scripts/tests/evals/leak-17C-PC-2026-08-14-V2-r2.json` — creado
+- `scripts/tests/evals/leak-17C-PC-2026-08-14-V3-r1.json` — creado
+- `scripts/tests/evals/leak-17C-PC-2026-08-14-V3-r2.json` — creado
+- `scripts/tests/evals/leak-17C-PC-2026-08-14-control-A.json` — creado
+- `scripts/tests/evals/passage-candidate-expansion-DESIGN.md` — creado
+- `scripts/tests/evals/passage-level-DESIGN.md` — creado
+- `scripts/tests/evals/port-baseline-2026-08-16-repo-r1.json` — creado
+- `scripts/tests/evals/port-baseline-2026-08-16-repo-r2.json` — creado
+- `scripts/tests/evals/port-gate74-2026-08-16-repo-r1.json` — creado
+- `scripts/tests/evals/port-gate74-2026-08-16-repo-r2.json` — creado
+- `scripts/tests/evals/port-sanity72-2026-08-16-fixture-r1.json` — creado
+- `scripts/tests/evals/port-sanity72-2026-08-16-fixture-r2.json` — creado
+- `scripts/tests/evals/quality-passage-DESIGN.md` — creado
+- `scripts/tests/evals/query-expansion-DESIGN.md` — creado
+- `scripts/tests/evals/reranking-DESIGN.md` — creado
+- `scripts/tests/evals/run-baseline-PC.sh` — creado
+- `scripts/tests/evals/run-bridge-17B.sh` — creado
+- `scripts/tests/evals/run-combine-17E.sh` — creado
+- `scripts/tests/evals/run-evidence-PC.sh` — creado
+- `scripts/tests/evals/run-expansion-PC.sh` — creado
+- `scripts/tests/evals/run-granularity-PC.sh` — creado
+- `scripts/tests/evals/run-hybrid-PC.sh` — creado
+- `scripts/tests/evals/run-leak-17C.sh` — creado
+- `scripts/tests/evals/run-passage-PC.sh` — creado
+- `scripts/tests/evals/run-quality-PC.sh` — creado
+- `scripts/tests/evals/run-rerank-PC.sh` — creado
+- `scripts/tests/evals/run-selector-model-PC.sh` — creado
+- `scripts/tests/evals/run-selector-quality-PC.sh` — creado
+- `scripts/tests/evals/run-semantic-PC.sh` — creado
+- `scripts/tests/evals/selector-benchmark-14A.json` — creado
+- `scripts/tests/evals/selector-model-DESIGN.md` — creado
+- `scripts/tests/evals/selector-pool-frozen-2026-08-13.json` — creado
+- `scripts/tests/evals/selector-quality-15A-r2.json` — creado
+- `scripts/tests/evals/selector-quality-15A.json` — creado
+- `scripts/tests/evals/selector-quality-DESIGN.md` — creado
+- `scripts/tests/evals/semantic-retrieval-DESIGN.md` — creado
+- `scripts/tests/fixtures-realistic/dev-set.json` — creado
+- `scripts/tests/fixtures-realistic/domains.json` — creado
+- `scripts/tests/fixtures-realistic/eval-set.json` — creado
+- `scripts/tests/fixtures-realistic/generator.py` — creado
+- `scripts/tests/fixtures/project-state/cmd-string.yaml` — creado
+- `scripts/tests/fixtures/validate_json_schema.py` — creado
+- `scripts/tests/helpers.sh` — modificado
+- `scripts/tests/run-tests.sh` — modificado
+- `scripts/tests/test-ai-context-lint.sh` — creado
+- `scripts/tests/test-bridge-17B.sh` — creado
+- `scripts/tests/test-changelog.sh` — creado
+- `scripts/tests/test-close-day.sh` — creado
+- `scripts/tests/test-combine-17E.sh` — creado
+- `scripts/tests/test-common.sh` — creado
+- `scripts/tests/test-context-selection.sh` — creado
+- `scripts/tests/test-doctor.sh` — modificado
+- `scripts/tests/test-documentation.sh` — creado
+- `scripts/tests/test-expand-query.sh` — creado
+- `scripts/tests/test-granularity-16B.sh` — creado
+- `scripts/tests/test-local-override.sh` — creado
+- `scripts/tests/test-memory-sync-guards.sh` — creado
+- `scripts/tests/test-memory.sh` — creado
+- `scripts/tests/test-pii-guard.sh` — creado
+- `scripts/tests/test-project-state-engine.sh` — creado
+- `scripts/tests/test-project-state-linter.sh` — creado
+- `scripts/tests/test-router.sh` — creado
+- `scripts/tests/test-runner.sh` — modificado
+- `scripts/tests/test-scale.sh` — creado
+- `scripts/tests/test-selector.sh` — creado
+- `scripts/tests/test-skill-lint.sh` — creado
+- `scripts/tests/test-verify.sh` — creado
+
+---
 
 ### 2026-10-03 — D2.3 follow-up — las excepciones del guard PII son POR PATRÓN, no globales (Freebuff, PC)
 
