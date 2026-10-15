@@ -6,7 +6,8 @@
 
 ## Estado del repo
 
-- main = 2a33679 (último commit: docs: checkpoint-835e373 APK published)
+- **Estado: retomado 2026-10-15 → backlog en progreso**
+- main = 5dcb473 (retomada; cierre del checkpoint: 2a33679)
 - Tag: checkpoint-835e373 → 751eeff (versionCode=3)
 - Working tree limpio, todo pusheado.
 
@@ -29,7 +30,9 @@
 
 ## Backlog (por prioridad)
 
-1. TODO ShizukuExecutor — actualizar con decisión de NO migrar a UserService.
+1. ~~TODO ShizukuExecutor — actualizar con decisión de NO migrar a UserService.~~
+   **CERRADO 2026-10-15 en `5dcb473`**: decisión documentada en el KDoc de
+   `ShizukuExecutor.kt` (tests 125/0).
    Referencia: auditoría comparativa con GG Mouse Pro 3 (2026-10-14).
 2. docs/audits/2026-10-14-ggmouse-comparison.md — registrar el informe
    de la auditoría comparativa (evidencia que en 6 meses nadie recordará).
