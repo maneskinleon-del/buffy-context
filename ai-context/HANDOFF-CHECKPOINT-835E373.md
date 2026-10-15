@@ -34,8 +34,11 @@
    **CERRADO 2026-10-15 en `5dcb473`**: decisión documentada en el KDoc de
    `ShizukuExecutor.kt` (tests 125/0).
    Referencia: auditoría comparativa con GG Mouse Pro 3 (2026-10-14).
-2. docs/audits/2026-10-14-ggmouse-comparison.md — registrar el informe
-   de la auditoría comparativa (evidencia que en 6 meses nadie recordará).
+2. ~~docs/audits/2026-10-14-ggmouse-comparison.md — registrar el informe
+   de la auditoría comparativa (evidencia que en 6 meses nadie recordará).~~
+   **CERRADO 2026-10-15 en `3b30a9e`**: informe transcrito íntegro (tabla de
+   8 columnas, hallazgos, limitaciones) en
+   `docs/audits/2026-10-14-ggmouse-comparison.md` (64 líneas).
 3. Recomendación B (dead listener Shizuku Plus) — revisar changelog del fork,
    medir latencia actual del polling vs event-driven, decidir.
 4. R8/ProGuard — release hardening. Reglas -keep para Shizuku/Room/Compose.
