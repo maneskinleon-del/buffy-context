@@ -41,10 +41,25 @@
    `docs/audits/2026-10-14-ggmouse-comparison.md` (64 líneas).
 3. Recomendación B (dead listener Shizuku Plus) — revisar changelog del fork,
    medir latencia actual del polling vs event-driven, decidir.
-4. R8/ProGuard — release hardening. Reglas -keep para Shizuku/Room/Compose.
+4. ~~R8/ProGuard — release hardening. Reglas -keep para Shizuku/Room/Compose.~~
+   **CERRADO 2026-10-15 en `e7646b5` (R8 done vía FASE A).**
+   Registro: minify + shrinkResources sobre buildType DEBUG con
+   `-dontobfuscate`, 1 sola regla keep (`newProcess` de Shizuku,
+   private static/reflexión, consumer rules del AAR vacías);
+   APK 18.4 MB → 4.6 MB (−74.89%), tests 125/0, device checks 6/6
+   (Shizuku OK ×17, sin degradación, mapper `Perfil: mapper=false, ext=true`
+   en Room, prefs OK, crash 0 tras 2+ min con FF, Room íntegro).
+   **FASE B no aplicable en debug** — no es un fallo: AGP 8.5 desactiva
+   la ofuscación en builds debuggable por diseño (verificado: 6293/6344
+   clases identidad en mapping.txt, sin `-dontobfuscate` en ninguna config).
+   Referencia: issuetracker.google.com/issues/306202752.
 5. Selector de mapper parte 2 — UI + SharedPreferences + integración
    en checkExternalDevices. MapperDetection.kt ya está commiteado, sin caller.
 6. Schema migration explícita — prep para usuarios reales.
+7. Release signing config (BAJA prioridad) — si se quiere ofuscación real,
+   migrar de APK debug a APK release firmado. Requiere keystore +
+   signingConfig + ajustar el flujo de publicación (README, Release GitHub,
+   CI). Estimado: 2-3 rondas.
 
 ## Convenciones vigentes
 
