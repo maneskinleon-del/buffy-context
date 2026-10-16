@@ -60,6 +60,24 @@
    migrar de APK debug a APK release firmado. Requiere keystore +
    signingConfig + ajustar el flujo de publicación (README, Release GitHub,
    CI). Estimado: 2-3 rondas.
+8. ~~Métrica de temperatura en overlay ("🌡 0°C" siempre).~~
+   **CERRADO 2026-10-15 en `acdff69`** (no existía como item previo en el
+   backlog — se registra aquí ya cerrado).
+   - Fix aplicado. PREVENTIVO: el guard de `parseThermal()` (≤0 o >150°C →
+     null) no se activa en ningún device verificado.
+   - Causa raíz: `NaN.toInt() == 0` cosmético + SELinux bloquea `thermal_zone*`
+     a uid shell en ZTE (avc denied visible en logcat de la app).
+   - Descartados: B (vía Shizuku — shell uid 2000 tampoco lee) · D (battery
+     temp) queda como OPCIÓN FUTURA para recuperar el throttling del Watchdog
+     en devices sin sensor CPU legible (thresholds distintos: ~40/42/45°C
+     batería, no CPU).
+   - Nota: valores crudos entre 150 y 1000 se rechazan (un device que
+     reportara en décimas de grado, p.ej. "450" = 45,0°C, quedaría NaN;
+     antes devolvía 450°C — peor, no es regresión).
+   - Tests: 134/0 (125 + 9 ThermalParseTest).
+9. Verificar lectura de `thermal_zone0/temp` en Mi 10 y Poco M8 cuando
+   estén accesibles (deciden si el fix preventivo basta o el sensor es
+   legible en esos devices).
 
 ## Convenciones vigentes
 
