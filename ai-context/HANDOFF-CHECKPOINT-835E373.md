@@ -75,9 +75,28 @@
      reportara en décimas de grado, p.ej. "450" = 45,0°C, quedaría NaN;
      antes devolvía 450°C — peor, no es regresión).
    - Tests: 134/0 (125 + 9 ThermalParseTest).
+   - REFORZADO 2026-10-16: el check #3 original (volcado de 158 s) era
+     débil — buffer de logcat chico en el ZTE ⇒ "0 líneas térmicas" no
+     distinguía falta de acción de pérdida por rotación. Cerrado con dos
+     transportes independientes, ambos limpios:
+     (a) streaming `timeout 120 adb logcat -v time > /tmp/thermal-2min.log`
+         con FF foreground y app viva: 190.789 líneas / 25.1 MB; cero
+         matches de `battery_saver|BALANCED|Temperatura elevada|CRÍTICA|
+         Restaurando perfil`; las líneas del propio proceso (PID 6630,
+         ShizukuExecutor) presentes en el MISMO stream.
+     (b) Room `logs` (gameboost_database vía run-as + wal): 35.246 filas,
+         0 térmicas en TODO el historial (Room no rota). Cadena verificada:
+         WatchdogManager.kt:251/260/271 emiten vía repository.logAsync →
+         logDao.insertLog ⇒ Room; guard `cpuTemp.isNaN()` (F5, ~:246)
+         antes de las 3 ramas. El claim del commit `acdff69` queda
+         respaldado tal como está, sin amend.
 9. Verificar lectura de `thermal_zone0/temp` en Mi 10 y Poco M8 cuando
    estén accesibles (deciden si el fix preventivo basta o el sensor es
    legible en esos devices).
+   Nota 2026-10-16: GameBoosterManu está `ahead=2` de origin/main
+   (`acdff69` + `e7646b5` R8 FASE A, trabajo previo separado del PR
+   forense). Un push futuro empujaría AMBOS commits — verificar
+   `git log origin/main..HEAD --oneline` antes de empujar.
 
 ## Convenciones vigentes
 
