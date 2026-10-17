@@ -425,6 +425,10 @@ project-state no es un linter, static analyzer, ni coverage tool. No inspecciona
 
 project-state no es un protocolo de handoff ni un mecanismo de sincronización. No define cómo un assertion A verificado en una instancia se comunica a otra. Eso es del dominio de `CONTINUE.md` (handoff) y `MEMORY/` (curated memory), no de project-state.
 
+### 6. Invariantes del proyecto (decisión 2026-10-17)
+
+Los invariantes del proyecto (P1-P3 de `SIGNAL-STATE-COUPLING-FAILURES.md`, principio rector del README, "cambio mínimo") **no se representan en este esquema** ni en un archivo hermano: los que tienen riesgo de regresión ya tienen gate mecánico (LINT-08a/11/19, verificaciones I-1..I-5, doc_truth, pii-guard) y los sin gate son metaprincipios de diseño que un schema estático no puede enforcear — estructurarlos sería "marks without gates", el failure mode catalogado en la propia taxonomía. Decisión completa, justificación, deuda aceptada y condición de reapertura: CHANGELOG 2026-10-17. `[verificado 2026-10-17]`
+
 ---
 
 ## SUPUESTOS PENDIENTES
@@ -474,7 +478,7 @@ S-06 contiene el supuesto más delicado: **una aserción B no puede ser "promovi
 | Evidencia y convención de trazabilidad | ✅ Diseñada (§EVIDENCIA) |
 | Límites de contrato | ✅ Definidos (§LÍMITES) — 5 límites contra solapamiento |
 | Reglas de validación/lint | ✅ Especificadas (§REGLAS DE VALIDACIÓN/LINT) — 14 reglas |
-| Non-coverage | ✅ Documentado (§LO QUE NO CUBRE) — 5 límites |
+| Non-coverage | ✅ Documentado (§LO QUE NO CUBRE) — 6 límites |
 | Supuestos pendientes | ✅ Enumerados (§SUPUESTOS PENDIENTES) — 8 supuestos |
 | Preguntas abiertas | ✅ Listadas (§PREGUNTAS ABIERTAS) — 7 preguntas |
 

@@ -3,6 +3,39 @@
 > Generado con la skill `changelog-generator` a partir de los commits de git (2026-07-29 → 2026-08-02).
 > Historial de *sesiones* de memoria → `ai-context/CHANGELOG.md` (separado de este).
 
+## 2026-10-17 — Invariantes del proyecto: no estructurados (decisión)
+
+**Decisión:** los invariantes del proyecto (P1-P3, principio rector,
+"cambio mínimo", "no-runtime-coupling", "diagnose-never-executes",
+"evidence-over-interpretation") **no se agregan al esquema de
+project-state** ni se crea archivo hermano.
+
+**Justificación:**
+1. Todo invariante con riesgo real de regresión ya tiene gate
+   mecánico (LINT-08a/11/19, verificaciones I-1..I-5, doc_truth,
+   pii-guard). Estructurarlos no añade enforcement.
+2. Los invariantes sin gate (P1-P3, principio rector) son
+   metaprincipios de diseño. Un schema estático no puede hacer
+   cumplir "la complejidad debe ser proporcional". Estructurarlos
+   sería "marks without gates" — el failure mode de la instancia 2
+   de SIGNAL-STATE-COUPLING-FAILURES.md.
+3. Cero incidentes en el ciclo atribuibles a "invariante no
+   estructurado".
+4. Costo de reabrir schema aprobado (Pasos 2-5) desproporcionado
+   para 0 fallas demostradas.
+
+**Deuda aceptada (no resuelta aquí):**
+- "Cambio mínimo" duplicado en ≥4 docs. Consolidar cuando se toque
+  cualquiera de esos docs por otro motivo, no como tarea dedicada.
+- P1-P3 y principio rector permanecen en prosa.
+
+**Condición de reapertura:** una falla futura atribuible a un
+invariante no-enforced, con evidencia. Entonces la opción mínima es
+un índice (opción D), escalando a archivo hermano (C) o extensión
+del schema (B) solo si D no alcanza.
+
+[verificado 2026-10-17]
+
 ## 2026-10-16 — Retiro de kimi_vision
 
 - Eliminado: scripts/kimi_vision.js, scripts/lib/logger.js, scripts/lib/utils.js
