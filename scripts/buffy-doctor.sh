@@ -397,9 +397,9 @@ fi
 section "🛠️  Scripts (scripts/)"
 # ══════════════════════════════════════════════════════════
 
-for s in buffy-context.sh android-detect.sh kimi_vision.js see.sh ollama-kill.sh buffy-memory.sh; do
+for s in buffy-context.sh android-detect.sh see.sh ollama-kill.sh buffy-memory.sh; do
   if [ -f "$REPO_DIR/scripts/$s" ]; then
-    if [ -x "$REPO_DIR/scripts/$s" ] || [[ "$s" == *.js ]]; then
+    if [ -x "$REPO_DIR/scripts/$s" ]; then
       ok "$s"
     else
       warn "$s existe pero no es ejecutable (falta chmod +x)" "NOT_EXECUTABLE" "chmod_plus_x" "$REPO_DIR/scripts/$s"

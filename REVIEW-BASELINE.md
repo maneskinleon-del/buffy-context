@@ -25,7 +25,7 @@ Componentes reales y funcionales:
 | Knowledge base | `Knowledge/` (Android, Linux, React, Git, Node, Shell, AI) | ✅ 16 archivos |
 | Skills | `.agents/skills/` — **23 skills en disco** (10 originales + 10 creadas 2026-08-03 + 3 migradas de ~/.agents/skills/) | ✅ Funcionales, **23/23 con skill.yaml** (B2 completo) + linter con gate |
 | Orquestación | `scripts/buffy-doctor.sh`, `buffy-repair.sh`, `buffy-agent.sh`, `buffy-router.sh`, `buffy-verify.sh` | ✅ Ciclo doctor→repair→agent funcional + verificación factual |
-| Visión | `scripts/kimi_vision.js` + `Knowledge/AI/Kimi-K3.md` | ✅ Funcional (solo backend HF) |
+| Visión | `Knowledge/AI/Kimi-K3.md` (doc técnica) | ⚠️ `scripts/kimi_vision.js` retirado 2026-10-16 (ver CHANGELOG) |
 | Suite de tests | `scripts/tests/run-tests.sh` | ✅ 168 checks full / 152 quick |
 | CI | `.github/workflows/ci.yml` | ✅ En cada push/PR |
 | Hooks | `scripts/hooks/install.sh` + `pre-commit.sh` | ✅ Portable (Termux-safe) |
@@ -47,12 +47,13 @@ los han afirmado mal repetidamente:
   del entorno del usuario sigue con `$HOME` real. Doc: INSTALL.md.
 - README e INSTALL.md ya están corregidos y unificados (commit `eac6536` + C2).
 
-### 2.2 kimi_vision.js: NO existe modo local/Ollama
-- **Verdad:** usa **solo** la API hosted de Hugging Face (`KIMI_ENDPOINT` default
-  `https://router.huggingface.co/v1/chat/completions`). **HF_TOKEN es SIEMPRE obligatorio**
-  (línea 238: `throw new Error('Falta HF_TOKEN...')` si está vacío). No hay adaptador local.
-- Las revisiones que sugieren "modo local sin HF_TOKEN" o "aclarar si requiere API key" están
-  **desactualizadas** — ya está aclarado en INSTALL.md y README.
+### 2.2 kimi_vision.js: RETIRADO (2026-10-16)
+- **Estado:** `scripts/kimi_vision.js` (junto a `scripts/lib/logger.js` y `scripts/lib/utils.js`)
+  fue eliminado del repo — Node.js dejó de ser requisito del proyecto (ver CHANGELOG 2026-10-16).
+- **Histórico (ya no aplica):** el script usaba **solo** la API hosted de Hugging Face
+  (`KIMI_ENDPOINT` default `https://router.huggingface.co/v1/chat/completions`) y exigía
+  `HF_TOKEN` siempre; no existía modo local/Ollama. Queda `Knowledge/AI/Kimi-K3.md`
+  como documentación técnica.
 
 ### 2.3 NO hay rutas absolutas hardcoded en los scripts
 - **Verdad:** los scripts usan `$HOME/ai-context/` (diseño deliberado) y rutas relativas al

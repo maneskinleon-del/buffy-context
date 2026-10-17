@@ -3,6 +3,16 @@
 > Generado con la skill `changelog-generator` a partir de los commits de git (2026-07-29 → 2026-08-02).
 > Historial de *sesiones* de memoria → `ai-context/CHANGELOG.md` (separado de este).
 
+## 2026-10-16 — Retiro de kimi_vision
+
+- Eliminado: scripts/kimi_vision.js, scripts/lib/logger.js, scripts/lib/utils.js
+- Node.js deja de ser requisito del proyecto.
+- Motivo: kimi_vision deprecado; uso condicionado a HF_TOKEN + licencia
+  externa (Hugging Face).
+- Conservado: Knowledge/AI/Kimi-K3.md (documentación técnica) y
+  node/npm en facts_rules.yaml (hechos del sistema, no requisitos).
+- [verificado 2026-10-16]
+
 ## 2026-10-01
 
 ### 🔒 Privacidad (F3b — decisión de identidad: aceptar linkage en metadata)

@@ -5,7 +5,6 @@
 - Linux (probado en Arch/EndeavourOS) o Termux
 - Bash 5+ (o Zsh; los scripts se ejecutan con `bash`)
 - Git
-- Node.js 18+ — **solo** para `scripts/kimi_vision.js` (usa `fetch` global)
 - (Opcional) ADB, scrcpy, Ollama — ver [Dependencias opcionales](#dependencias-opcionales)
 
 ### Verificar dependencias
@@ -13,15 +12,14 @@
 ```bash
 bash --version | head -1     # Bash 5+
 git --version                # Git
-node -v                      # Node 18+ (solo kimi_vision.js)
 
 # Opcionales (si falta la herramienta, no pasa nada — son opcionales)
 adb version || echo "adb no instalado"
 scrcpy --version || echo "scrcpy no instalado"
 ollama version || echo "ollama no instalado"
 
-# Salida aceptable: node → v18.x o superior. Las opcionales no tienen versión
-# mínima documentada — usa la del repositorio de tu distro.
+# Las opcionales no tienen versión mínima documentada — usa la del repositorio
+# de tu distro.
 ```
 
 ## Setup rápido
@@ -113,14 +111,9 @@ command -v buffy-doctor.sh >/dev/null 2>&1 && buffy-doctor.sh --quick
 
 | Herramienta | Para qué | Instalación (ejemplos) |
 |---|---|---|
-| **Node 18+** | `scripts/kimi_vision.js` (visión IA) | Arch: `pacman -S nodejs` · Debian/Ubuntu: `apt install nodejs` · Termux: `pkg install node` |
 | **ADB** | Diagnóstico y automatización Android | Arch: `pacman -S android-tools` · Debian/Ubuntu: `apt install adb` · Termux: `pkg install android-tools` |
 | **scrcpy** | Mirroring de Android | Arch: `pacman -S scrcpy` · Debian/Ubuntu: `apt install scrcpy` · Termux: `pkg install scrcpy` |
 | **Ollama** | LLM local (opcional) | [ollama.com](https://ollama.com) — script oficial de instalación |
-
-> `kimi_vision.js` necesita **siempre** `HF_TOKEN` — token de Hugging Face (scope read/inference),
-> **no** una API key de Kimi — y aceptar la licencia del modelo gated. No hay modo local:
-> el script solo llama a la API hosted de HF. Ver `Knowledge/AI/Kimi-K3.md`.
 
 ## Seguridad / sandbox
 

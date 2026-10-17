@@ -38,3 +38,7 @@ __pycache__/
 # Overrides locales de configuración (Patrón B de scripts/lib/resolve-path.sh:
 # autoridad solo en esta máquina, semántica .env.local — nunca viajan al artefacto)
 *.local.md
+
+# Temporales de proceso — nunca viajan al artefacto
+FASE2-REPORT.md
+commit_msg.txt

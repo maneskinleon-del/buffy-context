@@ -124,8 +124,7 @@ buffy-context/
 │   ├── buffy-memory.sh                # Memoria curada (Hermes): add/replace/remove/batch
 │   ├── ollama-kill.sh                 # Libera RAM de modelos VLM (mantiene serve) — Ollama es enhancement opcional, fuera del camino crítico (CONTRIBUTING §Tests)
 │   ├── see.sh                         # Analiza imágenes con VLM local
-│   ├── kimi_vision.js                 # Detección de permisos con visión IA (Kimi K3)
-│   ├── lib/                           # yaml.sh (parsing compartido) + logger/utils.js
+│   ├── lib/                           # yaml.sh (parsing compartido) + scripts Python/sh del motor
 │   ├── hooks/                         # install.sh + pre-commit.sh (suite --quick) + pre-push.sh (ci-sim: simula CI antes de pushear)
 │   └── tests/                         # run-tests.sh + 25 test_*.sh + ci-sim.sh (simula CI: clone fresco + working tree) + bench-scale.sh + bench-context-selection.sh (suite 508 checks totales, 491 --quick)
 │
