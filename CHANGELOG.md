@@ -3,24 +3,34 @@
 > Generado con la skill `changelog-generator` a partir de los commits de git (2026-07-29 → 2026-08-02).
 > Historial de *sesiones* de memoria → `ai-context/CHANGELOG.md` (separado de este).
 
-## 2026-10-17 — buffy-continuity.sh: emisión JSON de CONTINUE.md
+## 2026-10-17 — buffy-continuity.sh: contenido raw de CONTINUE.md
 
 **Agregado:** `scripts/buffy-continuity.sh` — nuevo script que lee
 EXCLUSIVAMENTE `$REPO_DIR/ai-context/CONTINUE.md` (fuente canónica,
-Rama C) y emite JSON estructurado: `{repo, source_file, last_checkpoint,
-last_inline_checkpoint, summary, pending[], stack, _info}`.
+Rama C) y emite el contenido íntegro como JSON (raw content, **no
+parseo**): `{source, path, exists, readable, size_bytes, line_count,
+content}`. El campo `content` preserva markdown, headers y orden
+original byte a byte — el MCP handler pasa stdout directamente al
+cliente sin interpretar.
 
 **Motivo:** Next expone la continuidad de sesión como tool MCP
-(`buffy_continuity`). `buffy-source.sh` solo extrae hechos con `md_value`
-(no emite el archivo completo) — se necesita script dedicado.
+(`buffy_continuity`). El handler en `src/mcp.ts` retorna el stdout JSON
+directamente al cliente MCP, que es quien interpreta. Por tanto el
+script debe emitir el contenido completo, no extraer secciones.
+`buffy-source.sh` solo extrae hechos con `md_value` (no emite el
+archivo completo) — se necesita script dedicado.
 
 **Contract:**
 - `REPO_DIR = ${SCRIPT_DIR%/scripts}` (idéntico a `buffy-source.sh`)
 - NO fallback a `buffy_ai_context()` (`$HOME/ai-context/` = snapshot 2026-10-15)
-- Exit: 0 OK / 1 arg inválido / 2 CONTINUE.md inexistente / 3 sin JSON parser
-- `python3` primero, `jq` fallback, error si ninguno
+- NO parseo: el campo `content` contiene el archivo completo, sin extracción
+- Exit codes: 0 OK / 1 not_found / 2 unreadable / 3 empty / 4 is_directory / 5 internal_error
+- Orden de verificación: is_directory → not_found → unreadable → empty
+- `python3` primero, `jq` fallback, JSON de error si ninguno
 
-**Validación:** `buffy ctx continuity --json` → 8 keys. `test-buffy-continuity.sh` → 6 checks.
+**Validación:** `test-buffy-continuity.sh` → 9 funciones (help, arg
+inválido, content raw + byte-for-byte, not_found, empty, unreadable,
+is_directory, sha256 read-only, no-$HOME).
 
 [verificado 2026-10-17]
 
