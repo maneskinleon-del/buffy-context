@@ -42,3 +42,4 @@ __pycache__/
 # Temporales de proceso — nunca viajan al artefacto
 FASE2-REPORT.md
 commit_msg.txt
+node_modules/
