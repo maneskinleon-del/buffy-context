@@ -3,6 +3,27 @@
 > Generado con la skill `changelog-generator` a partir de los commits de git (2026-07-29 → 2026-08-02).
 > Historial de *sesiones* de memoria → `ai-context/CHANGELOG.md` (separado de este).
 
+## 2026-10-17 — buffy-continuity.sh: emisión JSON de CONTINUE.md
+
+**Agregado:** `scripts/buffy-continuity.sh` — nuevo script que lee
+EXCLUSIVAMENTE `$REPO_DIR/ai-context/CONTINUE.md` (fuente canónica,
+Rama C) y emite JSON estructurado: `{repo, source_file, last_checkpoint,
+last_inline_checkpoint, summary, pending[], stack, _info}`.
+
+**Motivo:** Next expone la continuidad de sesión como tool MCP
+(`buffy_continuity`). `buffy-source.sh` solo extrae hechos con `md_value`
+(no emite el archivo completo) — se necesita script dedicado.
+
+**Contract:**
+- `REPO_DIR = ${SCRIPT_DIR%/scripts}` (idéntico a `buffy-source.sh`)
+- NO fallback a `buffy_ai_context()` (`$HOME/ai-context/` = snapshot 2026-10-15)
+- Exit: 0 OK / 1 arg inválido / 2 CONTINUE.md inexistente / 3 sin JSON parser
+- `python3` primero, `jq` fallback, error si ninguno
+
+**Validación:** `buffy ctx continuity --json` → 8 keys. `test-buffy-continuity.sh` → 6 checks.
+
+[verificado 2026-10-17]
+
 ## 2026-10-17 — Invariantes del proyecto: no estructurados (decisión)
 
 **Decisión:** los invariantes del proyecto (P1-P3, principio rector,
