@@ -34,11 +34,17 @@ usan la numeración de la columna «Antes» — no son errores, son alias.
 | 7 | Cascada | doc_truth compara contra passed (contamina la señal) | 2026-09-30 | 6 / «#8» del operador |
 | 8 | Colisión | stdin: router (feature) × pre-push (convención git) | 2026-09-30 | parte de «meta-momento 4» |
 | 9 | Remoto | push exitoso ≠ remoto sano: el CI detectó el daño y nadie lo miró | 2026-10-05 | — |
+| 10 | Herramienta | Commit tool (Codebuff) modifica contenido ajeno durante amend | 2026-10-19 | — |
 
 Respuestas a las preguntas de canonicalización (2026-09-30):
 
-- **¿Cuántas?** Nueve. Cuatro por dimensión clásica (1-4, 6), cuatro por
-  dimensiones nuevas de la verificación misma (5, 7, 8, 9).
+- **¿Cuántas?** Diez. Cinco por dimensión clásica (1-4, 6), cinco por
+  dimensiones nuevas de la verificación misma (5, 7, 8, 9, 10).
+- **¿La instancia 10 encaja en una dimensión existente?** No — introduce
+  la dimensión "Herramienta": el signal (commit message) está acoplado al
+  state (contenido modificado), pero el agente intermedio (commit tool)
+  muta el state sin que el signal lo refleje. Las instancias 1-9 no
+  cubren este caso de herramienta que muta state durante la señal.
 - **¿Los dos abortos del pre-push son una instancia o dos?** Un INCIDENTE
   (el bautismo del hook) = UNA instancia (la 8) con DOS mecanismos: el aborto
   1 (la sim veía el Ollama local) es acoplamiento clásico de la familia 4 —
@@ -294,6 +300,28 @@ degradar aunque el archivo exista. El skip por corpus_hash sigue siendo
 probablemente necesario: se redacta → se corre el eval → se mide la fidelidad.
 Sin excepción para BUFFY-PC-CONTEXT/BUFFY-CURRENT-STATE (C3): cero
 consumidores de sistema y estado personal puro → ausencia correcta ahí.
+
+### 10. Herramienta — el commit tool modifica contenido ajeno durante amend
+
+**Caso:** Commit `e49ca9ec` (amend de `4ea620a`) reporta "Handoff B4 FASE B
+GameBoost: estado + items 8-9 del operador". Durante el amend, la herramienta
+de commit (Codebuff) modificó el contenido de `HANDOFF-FASE-B-GOVERNOR.md`:
+"realizado" → "activado de verdad" (línea 13) y la sección "Admin posterior"
+fue reescrita como "Post-merge" con redacción distinta. Ningún script en
+`scripts/tests/` referencia el archivo ni contiene esos strings. Fue el
+commit tool, no un test, quien mutó el state durante el amend.
+
+**Señal:** commit message ("Handoff B4 FASE B GameBoost...").
+**Estado:** contenido real del archivo (modificado por el commit tool
+durante el amend, no por el operador ni por un test).
+**Fix:** separar "commit message" de "contenido del commit". Si la tool de
+commit necesita editar archivos durante un amend, debe hacerlo en un commit
+separado con mensaje explícito. El amend reescribe historial; no es el lugar
+para mutaciones de contenido ajeno.
+**Detectado:** 2026-10-19.
+**Estado de la instancia:** CONFIRMADO por `git diff 4ea620a e49ca9ec --
+ai-context/HANDOFF-FASE-B-GOVERNOR.md` (cambios: "realizado"→"activado de
+verdad"; "Admin posterior"→"Post-merge").
 
 ## Meta-propiedad: el sistema se aplica a sí mismo
 
