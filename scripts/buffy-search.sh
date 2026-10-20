@@ -73,6 +73,15 @@ while [[ $# -gt 0 ]]; do
 done
 
 QUERY="${1:-}"
+# Verificar sqlite3 availability after flag parsing (error code 3: sqlite_unavailable)
+if ! command -v sqlite3 >/dev/null 2>&1; then
+  if [[ "${JSON_OUT:-false}" == true ]]; then
+    printf '{"query":"","error":"sqlite_unavailable","message":"sqlite3 binary not found","results":[]}\n'
+    exit 3
+  fi
+  echo "error: sqlite3 no está instalado" >&2
+  exit 3
+fi
 
 # REVIEW-BASELINE.md queda FUERA del scope a propósito: es un documento que se
 # actualiza cada vez que cambia el proyecto (por eso vive fuera del gate
@@ -201,8 +210,26 @@ build_query() {
   printf '%s' "$q"
 }
 
+# ── JSON string escaper helper ────────────────────────────────────
+# Usa python3 para RFC 8259 escaping (maneja control chars, unicode, etc.)
+# Si python3 no está, usa sed fallback (escapa \ y ").
+json_str() {
+  if command -v python3 >/dev/null 2>&1; then
+    python3 -c 'import json,sys; print(json.dumps(sys.argv[1]))' "$1"
+  else
+    printf '"%s"' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g'
+  fi
+}
+
 search() {
   local q raw="$1"
+  if [ -z "${raw// /}" ]; then
+    if [[ "$JSON_OUT" == true ]]; then
+      printf '{"query":"","error":"empty_query","message":"query is empty","results":[]}\n'
+      return 1
+    fi
+    sed -n '2,13p' "$0"; exit 1
+  fi
   if [[ "$SELECT" == true && "$STRATEGY" == "and" ]]; then
     # El default `and` no genera candidatos para queries naturales (medido en el
     # EVAL: search_recall 0.000 — una query de N palabras exige las N en la misma
@@ -215,12 +242,30 @@ search() {
     q="$(build_query "$raw")"
   fi
   q="${q//\'/''}"
-  [[ -n "$q" ]] || return 0
+  if [[ -z "$q" ]]; then
+    if [[ "$JSON_OUT" == true ]]; then
+      printf '{"query":%s,"repo":%s,"results":[],"total":0,"limit":%d,"has_more":false,"_info":"FTS5 search over buffy-context"}\n' \
+        "$(json_str "$raw")" "$(json_str "$REPO")" "$LIMIT"
+      return 0
+    fi
+    return 0
+  fi
   local out n=0 path lineno snip
-  out="$(search_query "$q")" || { echo "error de búsqueda: $raw" >&2; return 1; }
+  out="$(search_query "$q")" || {
+    local rc=$?
+    if [[ "$JSON_OUT" == true ]]; then
+      printf '{"query":%s,"error":"invalid_query","message":"FTS5 query syntax error","results":[]}\n' "$(json_str "$raw")"
+      return 2
+    fi
+    echo "error de búsqueda: $raw" >&2
+    return "$rc"
+  }
   if [[ -z "$out" ]]; then
     if [[ "$SELECT" == true && "$JSON_OUT" == true ]]; then
       printf '{"model":"M3","selected":[],"error":"sin_resultados","degraded":true}\n'
+    elif [[ "$JSON_OUT" == true ]]; then
+      printf '{"query":%s,"repo":%s,"results":[],"total":0,"limit":%d,"has_more":false,"_info":"FTS5 search over buffy-context"}\n' \
+        "$(json_str "$raw")" "$(json_str "$REPO")" "$LIMIT"
     else
       echo "Sin resultados para: $raw"
     fi
@@ -300,6 +345,30 @@ search() {
     printf '%s\n' "$sel_out"
     return 0
   fi
+  if [[ "$JSON_OUT" == true ]]; then
+    # JSON output mode — emit structured results
+    local results_json="["
+    local first=1
+    while IFS="$SEP" read -r path lineno snip; do
+      [ -z "$path" ] && continue
+      [ "$first" = 1 ] && first=0 || results_json+=","
+      results_json+="{\"path\":$(json_str "$path"),\"lineno\":$lineno,\"snippet\":$(json_str "$snip")}"
+      n=$((n+1))
+    done <<<"$out"
+    results_json+="]"
+
+    local has_more=false
+    [ "$n" -ge "$LIMIT" ] && has_more=true
+
+    printf '{"query":%s,"repo":%s,"results":%s,"total":%d,"limit":%d,"has_more":%s,"_info":"FTS5 search over buffy-context"}\n' \
+      "$(json_str "$raw")" \
+      "$(json_str "$REPO")" \
+      "$results_json" \
+      "$n" \
+      "$LIMIT" \
+      "$has_more"
+    return 0
+  fi
   while IFS="$SEP" read -r path lineno snip; do
     printf '%s:%s: %s\n' "$path" "$lineno" "$snip"
     n=$((n+1))
@@ -320,8 +389,16 @@ case "$CMD" in
   update)  reindex_changed ;;
   stats)   do_stats ;;
   search)
-    [[ -n "$QUERY" ]] || { sed -n '2,13p' "$0"; exit 1; }
     [[ -f "$DB" ]] || do_reindex >/dev/null
+    # Check DB readability before reindex_changed/query (error code 4: db_unreadable)
+    if ! sqlite3 "$DB" "SELECT 1;" >/dev/null 2>&1; then
+      if [[ "$JSON_OUT" == true ]]; then
+        printf '{"query":%s,"error":"db_unreadable","message":"cannot open search.db","results":[]}\n' "$(json_str "$QUERY")"
+        exit 4
+      fi
+      echo "error: no se puede abrir $DB" >&2
+      exit 4
+    fi
     reindex_changed
     search "$QUERY"
     ;;
