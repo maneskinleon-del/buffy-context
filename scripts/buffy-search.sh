@@ -251,9 +251,19 @@ search() {
     return 0
   fi
   local out n=0 path lineno snip
-  out="$(search_query "$q")" || {
+  # Capture stderr (2>&1) so we can inspect the error message and
+  # distinguish FTS5 query syntax error (exit 2) from internal failure
+  # (exit 5: timeout, I/O, OOM, unexpected sqlite3 failure). On success
+  # sqlite3 emits nothing to stderr, so the results are not contaminated.
+  out="$(search_query "$q" 2>&1)" || {
     local rc=$?
     if [[ "$JSON_OUT" == true ]]; then
+      # Distinguish FTS5 query syntax error (exit 2) from internal
+      # failure (exit 5: timeout, I/O, OOM, unexpected sqlite3 failure).
+      if printf '%s' "$out" | grep -qiE 'timeout|database is locked|I/O error|disk I/O|out of memory|malloc'; then
+        printf '{"query":%s,"error":"internal_error","message":"unexpected search failure","results":[]}\n' "$(json_str "$raw")"
+        return 5
+      fi
       printf '{"query":%s,"error":"invalid_query","message":"FTS5 query syntax error","results":[]}\n' "$(json_str "$raw")"
       return 2
     fi

@@ -7,7 +7,7 @@
 #
 # Contrato JSON: ["query","repo","results[]","total","limit","has_more","_info"]
 #   total = len(results)  ·  has_more = (total == limit)
-# Exit codes: 0 ok · 1 empty_query · 2 invalid_query · 3 sqlite_unavailable · 4 db_unreadable
+# Exit codes: 0 ok · 1 empty_query · 2 invalid_query · 3 sqlite_unavailable · 4 db_unreadable · 5 internal_error
 
 SEARCH_SCRIPT="$SCRIPTS_DIR/buffy-search.sh"
 # En CI (clone fresco) buffy-search.sh defaulting BUFFY_REPO a $HOME/buffy-context
@@ -191,4 +191,74 @@ test_search_readonly() {
   BUFFY_REPO="$REPO_DIR" bash "$SEARCH_SCRIPT" --json "ADB" >/dev/null 2>&1
   sha2=$(sha256sum "$db_path" 2>/dev/null | awk '{print $1}')
   check "SHA256 de la BD estable tras 2 searches" test "$sha1" = "$sha2"
+}
+
+# S-11 — DB corrupta (no es SQLite): error db_unreadable, exit 4
+#      Ya implementado en el check case-statement (sqlite3 "SELECT 1;" falla).
+test_search_json_corrupt_db() {
+  suite "buffy-search: --json DB corrupta → db_unreadable"
+  local fake_cache fake_db out
+  fake_cache=$(mktemp -d)
+  fake_db="$fake_cache/buffy-search/search.db"
+  mkdir -p "$(dirname "$fake_db")"
+  # Archivo existe (pasa [[ -f "$DB" ]] pero no es SQLite válido)
+  echo "not a database file" > "$fake_db"
+  export XDG_CACHE_HOME="$fake_cache"
+  out=$(BUFFY_REPO="$REPO_DIR" bash "$SEARCH_SCRIPT" --json "ADB" 2>/dev/null)
+  expect_exit 4 "exit 4 — db_unreadable (DB corrupta)" env BUFFY_REPO="$REPO_DIR" XDG_CACHE_HOME="$fake_cache" bash "$SEARCH_SCRIPT" --json "ADB" 2>&1
+  jassert "error == db_unreadable" "$out" '
+  import json,sys
+  d=json.load(sys.stdin)
+  assert d["error"] == "db_unreadable"
+  '
+  rm -rf "$fake_cache"
+  unset XDG_CACHE_HOME
+}
+
+# S-12 — sqlite3 timeout (mock): error internal_error, exit 5
+#      El mock sqlite3 delega al real para todo excepto queries con MATCH,
+#      que fallan con "database is locked (timeout)".
+test_search_json_internal_error() {
+  suite "buffy-search: --json timeout interno → internal_error"
+  local fake_cache fake_bin real_cache DB out
+  fake_cache=$(mktemp -d)
+  fake_bin=$(mktemp -d)
+  # DB real para pasar el check [[ -f "$DB" ]] y db_unreadable (SELECT 1)
+  real_cache="${XDG_CACHE_HOME:-$HOME/.cache}/buffy-search"
+  if [ -d "$real_cache" ]; then
+    cp -r "$real_cache" "$fake_cache/buffy-search"
+  else
+    # Si no hay DB real, crear una mínima con FTS5
+    mkdir -p "$fake_cache/buffy-search"
+    DB="$fake_cache/buffy-search/search.db"
+    sqlite3 "$DB" "CREATE VIRTUAL TABLE docs USING fts5(path, lineno, line, tokenize='unicode61');"
+    sqlite3 "$DB" "INSERT INTO docs(path, lineno, line) VALUES('test.md', 1, 'ADB');"
+  fi
+  DB="$fake_cache/buffy-search/search.db"
+  # Mock sqlite3: delega al real, excepto queries con MATCH → timeout
+  cat > "$fake_bin/sqlite3" << MOCK
+#!/usr/bin/env bash
+REAL=/usr/bin/sqlite3
+if [[ "\$*" == *"MATCH"* ]]; then
+  echo "Error: database is locked (timeout)" >&2
+  exit 1
+fi
+exec "\$REAL" "\$@"
+MOCK
+  chmod +x "$fake_bin/sqlite3"
+  export XDG_CACHE_HOME="$fake_cache"
+  out=$(BUFFY_REPO="$REPO_DIR" PATH="$fake_bin:$PATH" bash "$SEARCH_SCRIPT" --json "ADB" 2>/dev/null)
+  expect_exit 5 "exit 5 — internal_error (timeout simulado)" env BUFFY_REPO="$REPO_DIR" XDG_CACHE_HOME="$fake_cache" PATH="$fake_bin:$PATH" bash "$SEARCH_SCRIPT" --json "ADB" 2>&1
+  jassert "error == internal_error" "$out" '
+  import json,sys
+  d=json.load(sys.stdin)
+  assert d["error"] == "internal_error"
+  '
+  jassert "message contiene 'unexpected search failure'" "$out" '
+  import json,sys
+  d=json.load(sys.stdin)
+  assert "unexpected" in d.get("message","")
+  '
+  rm -rf "$fake_cache" "$fake_bin"
+  unset XDG_CACHE_HOME
 }
