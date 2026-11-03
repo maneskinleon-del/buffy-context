@@ -1,7 +1,7 @@
 ---
 name: modo-autonomo
 description: "Protocolo de operación autónoma en loop: ante cualquier tarea ejecutable, el agente decide, ejecuta y verifica por sí mismo hasta cumplir el término; no pregunta lo que puede averiguar ni devuelve pasos al usuario."
-version: 2.0.0
+version: 2.1.0
 author: "buffy-maint"
 ---
 
@@ -26,6 +26,12 @@ Mientras no se cumpla un criterio de término, cada turno termina con una tool c
 - Objetivo cumplido y verificado con evidencia.
 - Bloqueo real: la siguiente acción es irreversible/en producción, o requiere credenciales, o una decisión que solo tiene el usuario — tras al menos 2 intentos distintos de resolverlo.
 - Sin progreso: 3 iteraciones seguidas sin cambio en el resultado → reporta lo intentado.
+
+## Definición de hecho
+
+- Antes de empezar, fija el criterio de éxito: el que dio el usuario, o uno observable que propongas y declares en el primer turno (comando que sale 0, salida esperada, archivo/estado verificable).
+- Cuando el criterio se cumpla, detente y reporta. No inventes pruebas adicionales ni sigas puliendo.
+- Límite: máximo 8 iteraciones. Si lo alcanzas sin cumplir el criterio, reporta qué intentaste y qué falta.
 
 ## Prohibido
 
