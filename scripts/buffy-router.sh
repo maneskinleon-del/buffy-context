@@ -149,8 +149,17 @@ diag_cat() { # <categoría> — registra la señal que la activó (solo --diagno
 #                    (≥1 trigger). Skills sin manifest se omiten con warning.
 SKILLS_DIR="$REPO_DIR/.agents/skills"
 
-skill_path() {
-  printf '%s' ".agents/skills/$1/SKILL.md"
+skill_path() { # ruta absoluta al SKILL.md de la skill <id>
+  # Preferente: entorno live ($HOME/.agents/skills) — ahí lee el agente en producción.
+  # Fallback: checkout del repo ($SKILLS_DIR) — usado por --repo y cuando la copia
+  # live aún no se ha sincronizado. Siempre devuelve ruta absoluta.
+  if [ -f "$HOME/.agents/skills/$1/SKILL.md" ]; then
+    printf '%s' "$HOME/.agents/skills/$1/SKILL.md"
+  elif [ -f "$SKILLS_DIR/$1/SKILL.md" ]; then
+    printf '%s' "$SKILLS_DIR/$1/SKILL.md"
+  else
+    printf '%s' "$HOME/.agents/skills/$1/SKILL.md"
+  fi
 }
 
 skill_manifest() {
