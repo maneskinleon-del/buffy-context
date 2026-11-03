@@ -1,38 +1,46 @@
 ---
 name: modo-autonomo
-description: "Protocolo de operación autónoma: cuando el usuario delega autonomía, el agente decide por sí mismo con verificación de hechos, validación completa y reporte final. Basado en el flujo real de esta sesión."
-version: 1.0.1
+description: "Protocolo de operación autónoma en loop: ante cualquier tarea ejecutable, el agente decide, ejecuta y verifica por sí mismo hasta cumplir el término; no pregunta lo que puede averiguar ni devuelve pasos al usuario."
+version: 2.0.0
 author: "buffy-maint"
 ---
 
-# modo-autonomo — Operación Autónoma
+# modo-autonomo — Operación Autónoma (loop verificado)
 
-## Propósito
+Aplica por defecto ante cualquier tarea ejecutable (corregir, implementar, configurar, diagnosticar). El usuario no necesita decir "autónomo".
 
-Definir cómo opera el agente cuando el usuario le delega autonomía (p. ej. "trabaja de manera autónoma", "tú decides"). Evita preguntar lo obvio, pero nunca actúa sin verificar.
+## Regla de turno
 
-## Cuándo se activa
+Mientras no se cumpla un criterio de término, cada turno termina con una tool call. El texto final solo se emite al salir del loop. Nunca cierres un turno con solo texto y sin tool call si el objetivo sigue abierto.
 
-- El usuario delega explícitamente la decisión ("toma la mejor decisión", "trabaja autónomo").
-- La tarea tiene una decisión con alternativa clara y el usuario ya delegó.
+## Loop
 
-## Protocolo (verificado en esta sesión)
+1. **OBSERVAR**: memoria/contexto del proyecto primero (CONTINUE.md, INFO-core.md), luego filesystem, luego comandos.
+2. **DECIDIR**: la acción reversible de menor costo que avance. Si falta un dato, resuélvelo con un comando en lugar de preguntar.
+3. **EJECUTAR**: edita, compila, instala y corre tú mismo.
+4. **VERIFICAR con evidencia** (salida de comando, test, lectura del archivo). "Debería funcionar" no cuenta.
+5. Falló o quedó incompleto → vuelve a 1 con lo aprendido. Pasó pero queda parte del objetivo → vuelve a 1. Todo cubierto → término.
 
-1. **Reunir contexto primero**: leer los archivos relevantes y verificar hechos ANTES de decidir.
-2. **Decidir con evidencia**: si una recomendación externa contradice un hecho verificado, el hecho gana (p. ej. "modo local de visión" no existe: verificado en el código).
-3. **Validar todo cambio**:
-   - `bash scripts/tests/run-tests.sh --quick` (395 OK esperado — 389 functional + 6 meta; full = 411. Los conteos los gatea `doc_truth` contra el README)
-   - `bash scripts/buffy-doctor.sh --json` (sin drift nuevo)
-4. **No introducir drift**: en docs, nunca escribir patrones `skills/<nombre>` de skills inexistentes.
-5. **Commit + push** con el hook corriendo la suite como prueba final; árbol limpio al terminar.
-6. **Reportar**: qué se hizo, qué se validó, qué quedó pendiente (si algo requiere decisión humana, decirlo explícito).
+## Término (solo estos)
 
-## Reglas de seguridad
+- Objetivo cumplido y verificado con evidencia.
+- Bloqueo real: la siguiente acción es irreversible/en producción, o requiere credenciales, o una decisión que solo tiene el usuario — tras al menos 2 intentos distintos de resolverlo.
+- Sin progreso: 3 iteraciones seguidas sin cambio en el resultado → reporta lo intentado.
 
-- Las acciones irreversibles o de producción requieren confirmación explícita.
-- `repair --auto` solo aplica fixes AUTO_SAFE; REVIEW_REQUIRED → decisión humana.
-- El sandbox de la suite protege el repo real (solo lectura fuera de sandbox).
+## Prohibido
 
-## Salida
+- Cerrar con "próximos pasos para ti", "prueba esto y avísame" o bloques para copiar/pegar.
+- Preguntar algo que un comando pueda responder.
+- Reportar antes de verificar.
 
-Siempre terminar con un resumen: cambios aplicados, validaciones verdes, y el estado del árbol git.
+## Criterios
+
+- Un hecho verificado gana a una recomendación externa.
+- No conviertas una hipótesis en decisión si depende de información que puedes obtener ahora.
+- Si el proyecto tiene suite de tests o validador, córrelo antes de cerrar (en buffy-next: `run-tests --quick` y `buffy-doctor --json`).
+
+## Reporte final (una sola vez, al salir del loop)
+
+- Hecho.
+- Verificado (con evidencia: salida de comando/test/lectura de archivo).
+- Pendiente y por qué (solo si aplica, con el bloqueo real).
