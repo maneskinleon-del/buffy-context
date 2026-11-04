@@ -367,7 +367,9 @@ fi
 
 # 4. Conteo declarado en README vs entorno real (~/.agents/skills) — drift del número headline
 #    El entorno real es la fuente de verdad; el repo puede tener una copia desfasada.
-LIVE_SKILL_COUNT=$(find "$HOME/.agents/skills" -maxdepth 2 -name SKILL.md 2>/dev/null | wc -l | tr -d ' ')
+# -L: sigue symlinks (p.ej. ~/.agents/skills/<skill> -> repo) así una skill
+    # instalada como symlink se cuenta como presente en el entorno live.
+LIVE_SKILL_COUNT=$(find -L "$HOME/.agents/skills" -maxdepth 2 -name SKILL.md 2>/dev/null | wc -l | tr -d ' ')
 if [ "$LIVE_SKILL_COUNT" -gt 0 ]; then
   DECLARED_COUNTS=$(grep -oE '\*\*[0-9]+ skills\*\*|[0-9]+ AI agent skills|Skills \([0-9]+ en disco\)' "$REPO_DIR/README.md" 2>/dev/null \
     | grep -oE '[0-9]+' | sort -u)
