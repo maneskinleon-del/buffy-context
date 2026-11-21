@@ -4,7 +4,7 @@
 # El manifest machine-readable complementa al SKILL.md (documentación humana):
 #   id       → DEBE ser igual al nombre del directorio (.agents/skills/<id>/)
 #   name     → nombre legible (reportes/logs)
-#   version  → semver (X.Y.Z)
+#   version  → semver (X.Y.Z); si el entry declara 'version:' en su front-matter, debe coincidir
 #   entry    → archivo principal relativo al directorio (normalmente SKILL.md)
 #   safe     → true/false: true = AUTO_SAFE (ejecutable sin confirmación humana)
 #   triggers → señales textuales de activación (las usa buffy-router.sh)
@@ -112,6 +112,16 @@ validate_manifest() {
     fm_name=$(sed -n '1,8p' "$d/SKILL.md" | sed -n 's/^name:[[:space:]]*//p' | head -1)
     if [ -n "$fm_name" ] && [ "$fm_name" != "$id" ]; then
       err "$rel: front-matter de SKILL.md (name: $fm_name) != id ($id)"
+    fi
+  fi
+  # Versión: manifest y front-matter del entry no pueden divergir. Sin este cruce
+  # el linter daba verde con 6 skills cuyo SKILL.md declaraba otra versión (las
+  # _v4 nacieron en 1.0.0 con SKILL.md en 4.0.0). Solo se compara si el entry
+  # declara 'version:' — muchas skills aún no lo hacen; ahí no hay deriva que medir.
+  if [ -f "$d/$entry" ]; then
+    fm_version=$(sed -n '1,10p' "$d/$entry" | sed -n 's/^version:[[:space:]]*//p' | head -1 | sed -e 's/^"//' -e 's/"$//' -e "s/^'//" -e "s/'$//" -e 's/[[:space:]]*$//')
+    if [ -n "$fm_version" ] && [ "$fm_version" != "$version" ]; then
+      err "$rel: version de skill.yaml ($version) != front-matter de $entry ($fm_version)"
     fi
   fi
 

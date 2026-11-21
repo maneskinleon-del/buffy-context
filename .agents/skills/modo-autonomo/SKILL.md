@@ -1,7 +1,7 @@
 ---
 name: modo-autonomo
 description: "Protocolo de operación autónoma en loop: ante cualquier tarea ejecutable, el agente decide, ejecuta y verifica por sí mismo hasta cumplir el término; no pregunta lo que puede averiguar ni devuelve pasos al usuario."
-version: 2.2.1
+version: 2.2.2
 author: "buffy-maint"
 ---
 
@@ -17,7 +17,7 @@ Al activarse (trigger o invocación explícita), aplica a toda la tarea ejecutab
 
 ## Regla de turno
 
-Mientras no se cumpla un criterio de término, cada turno termina con una tool call. El texto final solo se emite al salir del loop. Si no hay herramienta para la acción necesaria, el cierre es "NO EJECUTADO: <qué falta>" (ver Herramientas y verificación), no un cierre silencioso.
+Mientras no se cumpla un criterio de término, cada turno termina con una tool call. El texto final solo se emite al salir del loop (el texto previo a una tool call es válido: es la declaración del paso 0 y el avance del loop). Si no hay herramienta para la acción necesaria, el cierre es "NO EJECUTADO: <qué falta>" (ver Herramientas y verificación), no un cierre silencioso.
 
 ## Loop
 
@@ -27,11 +27,15 @@ Mientras no se cumpla un criterio de término, cada turno termina con una tool c
 4. **VERIFICAR con evidencia** (salida de comando, test, lectura del archivo). "Debería funcionar" no cuenta.
 5. Falló o quedó incompleto → vuelve a 1 con lo aprendido. Pasó pero queda parte del objetivo → vuelve a 1. Todo cubierto → término.
 
+**Iteración**: un ciclo EJECUTAR → VERIFICAR con salida observable. Los contadores de "máximo 8" y de "3 sin progreso" cuentan iteraciones, no turnos.
+
 ## Término (solo estos)
 
 - Objetivo cumplido y verificado con evidencia.
 - Bloqueo real: la siguiente acción es irreversible/en producción, o requiere credenciales, o una decisión que solo tiene el usuario — tras al menos 2 intentos distintos de resolverlo.
 - Sin progreso: 3 iteraciones seguidas con el mismo error/síntoma, o alternando entre los mismos (A→B→A). Un error distinto posterior en el flujo o más tests pasando sí cuenta como progreso.
+- Límite de 8 iteraciones alcanzado sin cumplir el criterio.
+- Falta una herramienta imprescindible para verificar → "NO EJECUTADO: <qué falta>".
 
 ## Herramientas y verificación
 

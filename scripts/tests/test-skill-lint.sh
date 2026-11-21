@@ -233,6 +233,45 @@ test_skill_lint_crosscheck_frontmatter() {
   expect_exit 1 "front-matter name ≠ id → exit 1" bash "$SCRIPTS_DIR/skill-lint.sh" --repo "$FIX"
 }
 
+# Deriva real: 6 skills tenían el manifest en 1.0.0 y su SKILL.md en 4.0.0
+# (o 1.3.0). El linter pasaba en verde porque solo miraba el manifest.
+test_skill_lint_crosscheck_version() {
+  suite "skill-lint: cross-check version SKILL.md ↔ skill.yaml"
+  local BASE="${TMPDIR:-/tmp}/buffy-skilllint-ver-$$"
+  rm -rf "$BASE"
+  trap 'rm -rf "$BASE"' RETURN
+  local caso
+  for caso in coincide diverge ausente; do
+    local FIX="$BASE/$caso"
+    mkdir -p "$FIX/.agents/skills/una-skill"
+    printf '%s\n' \
+      'id: una-skill' \
+      'name: Una Skill' \
+      'version: 1.0.0' \
+      'entry: SKILL.md' \
+      'origin: local' \
+      'safe: true' \
+      'triggers:' \
+      '  - test' > "$FIX/.agents/skills/una-skill/skill.yaml"
+    case "$caso" in
+      coincide) printf '%s\n' '---' 'name: una-skill' 'version: 1.0.0' '---' > "$FIX/.agents/skills/una-skill/SKILL.md" ;;
+      diverge)  printf '%s\n' '---' 'name: una-skill' 'version: 4.0.0' '---' > "$FIX/.agents/skills/una-skill/SKILL.md" ;;
+      ausente)  printf '%s\n' '---' 'name: una-skill' '---' > "$FIX/.agents/skills/una-skill/SKILL.md" ;;
+    esac
+  done
+  expect_exit 0 "misma version → exit 0" bash "$SCRIPTS_DIR/skill-lint.sh" --repo "$BASE/coincide"
+  expect_exit 1 "version distinta → exit 1" bash "$SCRIPTS_DIR/skill-lint.sh" --repo "$BASE/diverge"
+  local MSG
+  MSG=$(bash "$SCRIPTS_DIR/skill-lint.sh" --repo "$BASE/diverge" 2>&1 || true)
+  if echo "$MSG" | grep -q 'version de skill.yaml (1.0.0) != front-matter de SKILL.md (4.0.0)'; then
+    ok "el error nombra ambas versiones"
+  else
+    bad "el error nombra ambas versiones"
+    printf '%s\n' "$MSG" | sed 's/^/       → /'
+  fi
+  expect_exit 0 "SKILL.md sin version: no se inventa deriva → exit 0" bash "$SCRIPTS_DIR/skill-lint.sh" --repo "$BASE/ausente"
+}
+
 # ── Regresión: el linter NUNCA puede reportar sano un escaneo que no ocurrió ──
 # Si la enumeración de skills falla (p. ej. process substitution no disponible
 # porque falta /dev/fd), el `while read` recorría cero líneas y el linter
