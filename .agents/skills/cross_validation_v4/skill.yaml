@@ -1,7 +1,7 @@
 # skill.yaml — manifiesto machine-readable (contrato B2). Validado por scripts/skill-lint.sh.
 id: cross_validation_v4
 name: cross_validation_v4
-version: 1.0.0
+version: 4.0.0
 description: "Fase 4 del framework v4: contrasta fuentes primarias vs secundarias (y los conflictos de filter_heuristics_v4) y produce el nivel de confianza final."
 entry: SKILL.md
 origin: local

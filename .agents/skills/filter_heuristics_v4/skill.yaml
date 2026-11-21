@@ -1,7 +1,7 @@
 # skill.yaml — manifiesto machine-readable (contrato B2). Validado por scripts/skill-lint.sh.
 id: filter_heuristics_v4
 name: filter_heuristics_v4
-version: 1.0.0
+version: 4.0.0
 description: "Fase 2 del framework v4: filtra fuentes candidatas por vigencia, autoridad, consistencia y especificidad. Produce una lista priorizada de fuentes."
 entry: SKILL.md
 origin: local
